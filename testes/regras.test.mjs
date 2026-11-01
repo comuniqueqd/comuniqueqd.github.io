@@ -1,7 +1,7 @@
 import { initializeTestEnvironment, assertSucceeds, assertFails } from "@firebase/rules-unit-testing";
 import { readFileSync } from "node:fs";
 import { doc, getDoc, setDoc, addDoc, deleteDoc, updateDoc, collection, getDocs } from "firebase/firestore";
-const env = await initializeTestEnvironment({ projectId: "demo-teste", firestore: { rules: readFileSync(new URL("../firestore.rules", import.meta.url), "utf8"), host: "127.0.0.1", port: 8080 } });
+const env = await initializeTestEnvironment({ projectId: "demo-teste", firestore: { rules: readFileSync(new URL("../firestore.rules", import.meta.url), "utf8").replace(/function emailDono\(\) \{ return "[^"]*"; \}/, 'function emailDono() { return "dono@exemplo.com"; }'), host: "127.0.0.1", port: 8080 } });
 const ctx = (uid, email) => env.authenticatedContext(uid, { email, email_verified: true }).firestore();
 const dono = ctx("uDono", "Dono@Exemplo.com"), membro = ctx("uMembro", "membro@x.com"), estranho = ctx("uEstranho", "estranho@x.com");
 const anon = env.unauthenticatedContext().firestore();

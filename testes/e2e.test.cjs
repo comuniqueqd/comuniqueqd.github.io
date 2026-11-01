@@ -19,7 +19,7 @@ let fails = 0;
 const ok = (cond, msg) => { console.log((cond ? 'ok    ' : 'FALHOU ') + msg); if (!cond) fails++; };
 (async () => {
   fs.mkdirSync(__dirname + '/prints', { recursive: true });
-  const regras = fs.readFileSync(path.join(ROOT, 'firestore.rules'), 'utf8');
+  const regras = fs.readFileSync(path.join(ROOT, 'firestore.rules'), 'utf8').replace(/function emailDono\(\) \{ return "[^"]*"; \}/, 'function emailDono() { return "dono@exemplo.com"; }');
   const rr = await fetch('http://127.0.0.1:8080/emulator/v1/projects/demo-teste:securityRules', { method: 'PUT', body: JSON.stringify({ rules: { files: [{ content: regras }] } }) });
   if (!rr.ok) throw new Error('não carregou as regras: ' + await rr.text());
   await fetch('http://127.0.0.1:8080/v1/projects/demo-teste/databases/(default)/documents/membros?documentId=membro@x.com', { method: 'POST', headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' }, body: '{"fields":{}}' });
@@ -62,6 +62,7 @@ const ok = (cond, msg) => { console.log((cond ? 'ok    ' : 'FALHOU ') + msg); if
   const d = await entrar('Dono@Exemplo.com', 'Dona Responsável', '#pendentes');
   await d.waitForSelector('.card', { timeout: 15000 }).catch(() => {});
   ok(await d.isVisible('a[data-view=pendentes]'), 'dono vê aba Pendentes');
+  await d.waitForFunction(() => document.querySelector('#queue').textContent.includes('Enviado por Membro Teste'), null, { timeout: 10000 }).catch(() => {});
   ok((await d.textContent('#queue')).includes('Enviado por Membro Teste'), 'card mostra nome de quem enviou');
   await d.screenshot({ path: __dirname + '/prints/s3-pendentes.png' });
   await d.click('.card >> text=Aprovar');

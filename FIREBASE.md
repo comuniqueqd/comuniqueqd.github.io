@@ -19,7 +19,7 @@ Fora do claude.ai, o banco de dados e o login vêm do Firebase. São uns 15 minu
 1. No menu: **Criação → Firestore Database → Criar banco de dados**.
 2. Local: `southamerica-east1 (São Paulo)`.
 3. Modo: **produção**.
-4. Aba **Regras**: apague tudo, cole o conteúdo de [`firestore.rules`](firestore.rules), troque `dono@exemplo.com` pelo e-mail de quem aprova (em minúsculas) e clique em **Publicar**.
+4. Aba **Regras**: apague tudo, cole o conteúdo de [`firestore.rules`](firestore.rules), confira se o e-mail em `emailDono()` é o de quem aprova (em minúsculas) e clique em **Publicar**. Sempre que mudar esse arquivo, publique de novo.
 
 ## 4. Ligar a página ao projeto
 
