@@ -266,6 +266,9 @@ tr:last-child td { border-bottom: 0; }
 </main>
 <div class="toast" id="toast" role="status" hidden></div>
 
+<!-- Fora do claude.ai, o Firebase faz o papel de banco e login (ver FIREBASE.md). -->
+<script src="firebase-config.js"></script>
+<script src="firebase-adapter.js"></script>
 <script>
 (() => {
   "use strict";
@@ -603,9 +606,12 @@ tr:last-child td { border-bottom: 0; }
       for (const k of ["idApp", "cpf", "observacao"]) if (!doc[k]) delete doc[k];
       await S.db.collection("cadastros").add(doc);
       const cidade = v.cidade;
-      form.reset(); setTimeout(() => ($("#f-cidade").value = cidade));
-      $("#dup-msg").hidden = true; dupConfirmCpf = null;
-      const ok = $("#ok-msg"); ok.textContent = `Cadastro ${titulo(v)} enviado. Já está na fila de pendentes.`; ok.hidden = false;
+      form.reset();
+      // o handler de reset limpa as mensagens num setTimeout; a de sucesso precisa vir depois dele
+      setTimeout(() => {
+        $("#f-cidade").value = cidade;
+        const ok = $("#ok-msg"); ok.textContent = `Cadastro ${titulo(v)} enviado. Já está na fila de pendentes.`; ok.hidden = false;
+      });
       $("#f-idapp").focus();
     } catch (e) { falhaEscrita(e); }
     finally { btn.disabled = false; }
@@ -646,7 +652,7 @@ tr:last-child td { border-bottom: 0; }
     try { db = await window.claude?.use?.("db"); } catch (_) {}
     if (!db) {
       $("#who").textContent = "Sem conexão com o banco";
-      notice("Para ver e enviar cadastros, abra este link com sua conta do claude.ai conectada.");
+      notice("Para ver e enviar cadastros, abra pelo claude.ai com sua conta conectada ou configure o Firebase (veja FIREBASE.md).");
       S.gotCad = S.gotDec = true; S.roleKnown = true; route(); return;
     }
     S.db = db;

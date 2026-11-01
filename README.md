@@ -1,5 +1,10 @@
 # aprovacao-entregs
 
-**Cadastro de Entregadores** — página para enviar cadastros de entregadores e aprovar ou reprovar cada um, com painel de números e histórico.
+**Cadastro de Entregadores**: página para enviar cadastros de entregadores e aprovar ou reprovar cada um, com painel de números e histórico.
 
-O código está todo em [`index.html`](index.html). Ele foi feito como artefato do claude.ai e usa o banco de dados do próprio artefato, por isso só funciona de verdade quando aberto pelo link do claude.ai. Abrindo o arquivo direto no navegador, a tela aparece, mas mostra "Sem conexão com o banco".
+Funciona de dois jeitos, com o mesmo [`index.html`](index.html):
+
+- **Como artefato do claude.ai**, usando o banco do próprio artefato.
+- **No GitHub Pages ou no seu computador**, usando Firebase (login com Google e banco Firestore). Veja o passo a passo em [FIREBASE.md](FIREBASE.md).
+
+Sem o Firebase configurado, a página abre mas mostra "Sem conexão com o banco".
