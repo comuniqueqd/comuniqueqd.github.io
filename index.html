@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cadastro de Entregadores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: uma coluna central; abas no topo levam às 4 telas (fila, formulário, painel, histórico). */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --ink: #17202e;
+  --muted: #5b6678;
+  --line: #dde2ea;
+  --accent: #1f5fbf;
+  --accent-ink: #ffffff;
+  --accent-soft: #e6eefb;
+  --ok: #1b7a46;   --ok-soft: #e3f4ea;
+  --bad: #b3261e;  --bad-soft: #fbe7e5;
+  --warn: #8a5a00; --warn-soft: #fff1d6;
+  --font-display: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --radius: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10151d; --surface: #18202b; --ink: #e7ecf3; --muted: #9aa6b8; --line: #2a3442;
+    --accent: #6ea2ff; --accent-ink: #0c1420; --accent-soft: #1c2a42;
+    --ok: #5fd08e; --ok-soft: #15301f; --bad: #ff8a80; --bad-soft: #3a1a18; --warn: #f0c060; --warn-soft: #35290f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10151d; --surface: #18202b; --ink: #e7ecf3; --muted: #9aa6b8; --line: #2a3442;
+  --accent: #6ea2ff; --accent-ink: #0c1420; --accent-soft: #1c2a42;
+  --ok: #5fd08e; --ok-soft: #15301f; --bad: #ff8a80; --bad-soft: #3a1a18; --warn: #f0c060; --warn-soft: #35290f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font-body); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 48px; }
+header.top { background: var(--surface); border-bottom: 1px solid var(--line); }
+header.top .wrap { padding-top: 18px; padding-bottom: 0; }
+.titlebar { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+h1 { font-family: var(--font-display); font-size: 22px; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.who { color: var(--muted); font-size: 13px; }
+nav.tabs { display: flex; gap: 4px; margin-top: 14px; overflow-x: auto; }
+nav.tabs a {
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; color: var(--muted);
+  text-decoration: none; font-weight: 500; border-bottom: 3px solid transparent; white-space: nowrap;
+}
+nav.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
+nav.tabs a:hover { color: var(--ink); }
+nav.tabs a[hidden] { display: none; }
+.count { font-size: 12px; font-variant-numeric: tabular-nums; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 1px 8px; font-weight: 600; }
+
+.notice { margin: 16px 0 0; padding: 10px 14px; border-radius: var(--radius); background: var(--warn-soft); color: var(--warn); font-size: 14px; }
+.notice[hidden] { display: none; }
+section.view { padding-top: 22px; }
+section.view[hidden] { display: none; }
+h2 { font-family: var(--font-display); font-size: 18px; margin: 0 0 4px; text-wrap: balance; }
+.sub { color: var(--muted); margin: 0 0 16px; font-size: 14px; }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.toolbar input, .toolbar select { flex: 1 1 200px; min-width: 0; }
+input, select, textarea {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; width: 100%;
+}
+textarea { resize: vertical; min-height: 70px; }
+
+.btn {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 14px;
+  font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.approve { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.btn.reject { color: var(--bad); border-color: var(--bad); background: transparent; }
+.btn.small { padding: 5px 10px; font-size: 13px; }
+.btn.link { border: 0; background: none; color: var(--accent); padding: 4px 6px; }
+.btn[disabled] { opacity: .55; cursor: not-allowed; }
+
+.queue { display: grid; gap: 12px; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--warn);
+  border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 10px;
+}
+.card .head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; align-items: baseline; }
+.card .name { font-weight: 600; font-size: 16px; }
+.age { font-size: 13px; color: var(--warn); font-weight: 600; font-variant-numeric: tabular-nums; }
+.age.old { color: var(--bad); }
+.fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px 16px; margin: 0; }
+.fields div { min-width: 0; }
+.fields dt { font-size: 12px; color: var(--muted); }
+.fields dd { margin: 0; overflow-wrap: anywhere; }
+.mono { font-family: var(--font-mono); font-size: 14px; }
+.obs { background: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 14px; overflow-wrap: anywhere; }
+.meta { font-size: 13px; color: var(--muted); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.rejectbox { display: grid; gap: 8px; border-top: 1px dashed var(--line); padding-top: 10px; }
+.rejectbox[hidden] { display: none; }
+.dup { font-size: 13px; color: var(--bad); background: var(--bad-soft); border-radius: 6px; padding: 4px 8px; justify-self: start; }
+
+.empty { text-align: center; padding: 40px 16px; color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); }
+.empty strong { display: block; color: var(--ink); font-size: 16px; margin-bottom: 4px; }
+
+form.cad { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: grid; gap: 14px; max-width: 720px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+label { display: grid; gap: 5px; font-size: 14px; font-weight: 500; }
+label .hint { font-weight: 400; color: var(--muted); font-size: 12px; }
+.req { color: var(--bad); }
+.err { color: var(--bad); font-size: 13px; font-weight: 400; min-height: 0; }
+.ok-msg { background: var(--ok-soft); color: var(--ok); padding: 10px 12px; border-radius: 8px; font-weight: 500; }
+.warn-msg { background: var(--warn-soft); color: var(--warn); padding: 10px 12px; border-radius: 8px; }
+.ok-msg[hidden], .warn-msg[hidden] { display: none; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+.tile .k { font-size: 13px; color: var(--muted); }
+.tile .v { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.tile .d { font-size: 12px; color: var(--muted); }
+.tile.hl { border-top: 3px solid var(--warn); }
+.tile.good .v { color: var(--ok); }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 18px; }
+.panel h3 { margin: 0 0 10px; font-size: 15px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+.two .panel { margin-bottom: 0; }
+.legend { display: flex; gap: 14px; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.chart { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--muted); font-size: 11px; font-family: var(--font-body); }
+.chart .grid { stroke: var(--line); }
+
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; color: var(--muted); font-weight: 600; background: var(--bg); position: sticky; top: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill.pendente { background: var(--warn-soft); color: var(--warn); }
+.pill.aprovado { background: var(--ok-soft); color: var(--ok); }
+.pill.reprovado { background: var(--bad-soft); color: var(--bad); }
+.tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--accent); background: var(--accent-soft); border-radius: 4px; padding: 1px 6px; margin-left: 6px; vertical-align: 2px; }
+.bar { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--bad); }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 14px; max-width: calc(100% - 32px); z-index: 10; }
+.toast[hidden] { display: none; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="titlebar">
+      <h1>Cadastro de Entregadores</h1>
+      <span class="who" id="who">Conectando…</span>
+    </div>
+    <nav class="tabs" aria-label="Telas">
+      <a href="#pendentes" data-view="pendentes" class="owner-only" hidden>Pendentes <span class="count" id="c-pend">0</span></a>
+      <a href="#novo" data-view="novo">Novo cadastro</a>
+      <a href="#painel" data-view="painel">Painel</a>
+      <a href="#historico" data-view="historico" class="owner-only" hidden>Histórico <span class="count" id="c-all">0</span></a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="notice" id="notice" hidden></p>
+
+  <!-- PENDENTES -->
+  <section class="view" id="v-pendentes" hidden>
+    <h2>Cadastros aguardando análise</h2>
+    <p class="sub">Do mais antigo para o mais recente. Ao aprovar ou reprovar, o cadastro sai da fila e vai para o histórico.</p>
+    <div class="toolbar">
+      <input id="q-pend" type="search" placeholder="Buscar por ID, CPF ou cidade" aria-label="Buscar pendentes">
+      <select id="f-pend-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
+    </div>
+    <div class="queue" id="queue"></div>
+  </section>
+
+  <!-- NOVO -->
+  <section class="view" id="v-novo" hidden>
+    <h2>Novo cadastro</h2>
+    <p class="sub">O cadastro entra na fila de pendentes na hora e fica registrado em seu nome.</p>
+    <form class="cad" id="form" novalidate>
+      <p class="sub" style="margin:0">Obrigatório: <strong>cidade</strong> e pelo menos um entre <strong>ID do entregador</strong> e <strong>CPF</strong>.</p>
+      <div class="grid2">
+        <label for="f-idapp">ID do entregador <span class="hint">Letras e números</span>
+          <input id="f-idapp" name="idApp" class="mono" autocomplete="off" spellcheck="false" maxlength="40" placeholder="697a33d1077ba0166df76d91">
+          <span class="err" id="e-idapp"></span>
+        </label>
+        <label for="f-cpf">CPF <span class="hint">Opcional se tiver o ID</span>
+          <input id="f-cpf" name="cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" class="mono">
+          <span class="err" id="e-cpf"></span>
+        </label>
+      </div>
+      <label for="f-cidade"><span>Cidade <span class="req">*</span></span> <span class="hint">Escolha da lista ou digite no formato CIDADE - UF</span>
+        <input id="f-cidade" name="cidade" list="cidades" autocomplete="off" placeholder="ITABAIANA - SE">
+        <span class="err" id="e-cidade"></span>
+      </label>
+      <label for="f-obs">Observação <span class="hint">Opcional</span>
+        <textarea id="f-obs" name="observacao" maxlength="600"></textarea>
+      </label>
+      <p class="warn-msg" id="dup-msg" hidden></p>
+      <p class="ok-msg" id="ok-msg" hidden></p>
+      <div class="actions">
+        <button class="btn primary" type="submit" id="b-enviar">Enviar cadastro</button>
+        <button class="btn" type="reset">Limpar</button>
+      </div>
+    </form>
+    <datalist id="cidades"></datalist>
+  </section>
+
+  <!-- PAINEL -->
+  <section class="view" id="v-painel" hidden>
+    <h2>Painel de aprovações</h2>
+    <p class="sub" id="painel-sub">Números atualizados em tempo real.</p>
+    <div class="tiles" id="tiles"></div>
+    <div class="panel">
+      <h3>Decisões por dia, últimos 14 dias</h3>
+      <div class="legend"><span><i style="background:var(--ok)"></i>Aprovados</span><span><i style="background:var(--bad)"></i>Reprovados</span></div>
+      <div id="chart"></div>
+    </div>
+    <div class="two">
+      <div class="panel">
+        <h3>Por cidade</h3>
+        <div class="tablewrap" style="border:0"><table id="t-cidade"></table></div>
+      </div>
+      <div class="panel">
+        <h3>Motivos de reprovação</h3>
+        <div id="motivos"></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:18px">
+      <h3>Por quem enviou</h3>
+      <div class="tablewrap" style="border:0"><table id="t-pessoa"></table></div>
+    </div>
+  </section>
+
+  <!-- HISTÓRICO -->
+  <section class="view" id="v-historico" hidden>
+    <h2>Histórico de cadastros</h2>
+    <p class="sub">Todos os cadastros recebidos, com a situação de cada um.</p>
+    <div class="toolbar">
+      <input id="q-hist" type="search" placeholder="Buscar por ID, CPF ou cidade" aria-label="Buscar no histórico">
+      <select id="f-hist-status" aria-label="Filtrar por situação">
+        <option value="">Todas as situações</option><option value="pendente">Pendentes</option>
+        <option value="aprovado">Aprovados</option><option value="reprovado">Reprovados</option>
+      </select>
+      <select id="f-hist-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
+      <button class="btn" id="b-export" type="button" hidden>Baixar CSV</button>
+      <button class="btn" id="b-exemplos" type="button" hidden>Remover exemplos</button>
+    </div>
+    <div class="tablewrap"><table id="t-hist"></table></div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+  "use strict";
+  // ---------- utilidades ----------
+  const $ = (s) => document.querySelector(s);
+  const el = (tag, attrs = {}, ...kids) => {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v == null || v === false) continue;
+      if (k === "class") n.className = v;
+      else if (k === "text") n.textContent = v;
+      else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? "" : v);
+    }
+    for (const k of kids.flat()) if (k != null) n.append(k.nodeType ? k : document.createTextNode(String(k)));
+    return n;
+  };
+  const onlyDigits = (s) => String(s || "").replace(/\D/g, "");
+  const fmtCPF = (d) => { d = onlyDigits(d).slice(0, 11); return d.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2"); };
+  const fmtTel = (d) => { d = onlyDigits(d).slice(0, 11); if (d.length <= 2) return d; if (d.length <= 6) return `(${d.slice(0,2)}) ${d.slice(2)}`; if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`; return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`; };
+  function cpfValido(c) {
+    c = onlyDigits(c);
+    if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+    for (let t = 9; t < 11; t++) {
+      let s = 0;
+      for (let i = 0; i < t; i++) s += Number(c[i]) * (t + 1 - i);
+      if (((s * 10) % 11) % 10 !== Number(c[t])) return false;
+    }
+    return true;
+  }
+  const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const dt = (iso) => iso ? new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+  const dayKey = (d) => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`; };
+  function idade(iso) {
+    const min = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
+    if (min < 60) return { txt: `há ${min} min`, old: false };
+    const h = Math.round(min / 60);
+    if (h < 24) return { txt: `há ${h} h`, old: h >= 12 };
+    const d = Math.round(h / 24);
+    return { txt: `há ${d} dia${d > 1 ? "s" : ""}`, old: true };
+  }
+  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => (t.hidden = true), 3500); }
+  function notice(msg) { const n = $("#notice"); n.textContent = msg || ""; n.hidden = !msg; }
+
+  const CIDADES = ["ITABAIANA - SE","LAGARTO - SE","SERRINHA - BA","PAULO AFONSO - BA","TOBIAS BARRETO - SE","SALGADO - SE","SIMÃO DIAS - SE","CÍCERO DANTAS - BA","ITABERABA - BA","ALAGOINHAS - BA","ARCOVERDE - PE","CARPINA - PE","SANTA CRUZ DO CAPIBARIBE - PE","POJUCA - BA","CANDEIAS - BA","ESCADA - PE","BELO JARDIM - PE","VITÓRIA DE SANTO ANTÃO - PE","GRAVATÁ - PE","RECIFE - PE","RIACHÃO DO DANTAS - SE","SÃO LOURENÇO DA MATA - PE","PAULISTA - PE","RIBEIRA DO POMBAL - BA","POÇO VERDE - SE","PALMEIRA DOS ÍNDIOS - AL","ESTÂNCIA - SE","CABO DE SANTO AGOSTINHO - PE","BUÍQUE - PE","CAPELA - SE"];
+  const MOTIVOS = ["Documento ilegível","Documento pendente","Dados divergentes","CPF com restrição","Cadastro duplicado","Fora da área de atuação","Outro"];
+
+  // ---------- estado ----------
+  const S = {
+    db: null, user: null, me: null, isOwner: false, canWrite: null, names: {},
+    cad: new Map(), dec: new Map(), gotCad: false, gotDec: false, readOnly: false, roleKnown: false,
+  };
+  const statusOf = (id) => S.dec.get(id)?.status || "pendente";
+  const all = () => [...S.cad.entries()].map(([id, c]) => ({ id, ...c, status: statusOf(id), dec: S.dec.get(id) || null }));
+
+  // ---------- rotas ----------
+  const VIEWS = ["pendentes", "novo", "painel", "historico"];
+  function route() {
+    let v = location.hash.replace("#", "");
+    // Quem aprova (dono da página) vê as 4 telas; as demais pessoas veem só Novo cadastro e Painel.
+    const permitidas = S.isOwner ? VIEWS : ["novo", "painel"];
+    if (!permitidas.includes(v)) v = !S.roleKnown ? "painel" : S.isOwner ? "pendentes" : "novo";
+    document.querySelectorAll("nav.tabs a.owner-only").forEach((a) => (a.hidden = !S.isOwner));
+    for (const x of VIEWS) $("#v-" + x).hidden = x !== v;
+    document.querySelectorAll("nav.tabs a").forEach((a) => { if (a.dataset.view === v) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+    render();
+  }
+  addEventListener("hashchange", route);
+
+  // ---------- nomes de quem enviou/decidiu ----------
+  async function resolveNames(ids) {
+    const miss = [...new Set(ids.filter((i) => i && !(i in S.names)))];
+    if (!miss.length || !S.user?.profiles) return;
+    miss.forEach((i) => (S.names[i] = ""));
+    try { const ps = await S.user.profiles(miss); for (const i of miss) S.names[i] = ps?.[i]?.name || ""; render(); } catch (_) {}
+  }
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const nameOf = (id) => (id && id === S.me ? "você" : (S.names[id] || "alguém da equipe"));
+
+  // ---------- render ----------
+  function render() {
+    const rows = all();
+    const pend = rows.filter((r) => r.status === "pendente");
+    $("#c-pend").textContent = pend.length;
+    $("#c-all").textContent = rows.length;
+    resolveNames(rows.flatMap((r) => [r.criadoPor, r.dec?.por]));
+    fillCityFilters(rows);
+    const v = VIEWS.find((x) => !$("#v-" + x).hidden);
+    if (v === "pendentes") renderQueue(pend);
+    if (v === "painel") renderPainel(rows);
+    if (v === "historico") renderHist(rows);
+    $("#b-exemplos").hidden = !(S.isOwner && rows.some((r) => r.exemplo));
+  }
+
+  function fillCityFilters(rows) {
+    const cs = [...new Set(rows.map((r) => r.cidade).filter(Boolean))].sort();
+    for (const sel of [$("#f-pend-cidade"), $("#f-hist-cidade")]) {
+      const cur = sel.value; const have = [...sel.options].slice(1).map((o) => o.value).join("|");
+      if (have === cs.join("|")) continue;
+      sel.replaceChildren(el("option", { value: "", text: "Todas as cidades" }), ...cs.map((c) => el("option", { value: c, text: c })));
+      sel.value = cs.includes(cur) ? cur : "";
+    }
+  }
+
+  const matches = (r, q) => !q || norm([r.idApp, r.cpf, onlyDigits(r.cpf), r.cidade, r.nome].join(" ")).includes(norm(q));
+  const titulo = (r) => r.idApp ? "ID " + r.idApp : r.cpf ? "CPF " + r.cpf : (r.nome || "Sem identificação");
+  function duplicatesOf(r) {
+    const cpf = onlyDigits(r.cpf);
+    const idn = norm(r.idApp);
+    return all().filter((o) => o.id !== r.id && ((cpf && onlyDigits(o.cpf) === cpf) || (idn && norm(o.idApp) === idn)));
+  }
+
+  const openReject = new Set();
+  function renderQueue(pend) {
+    const box = $("#queue");
+    if (!S.gotCad || !S.gotDec) { box.replaceChildren(el("div", { class: "empty" }, el("strong", { text: "Carregando cadastros…" }))); return; }
+    const q = $("#q-pend").value, cid = $("#f-pend-cidade").value;
+    const list = pend.filter((r) => matches(r, q) && (!cid || r.cidade === cid)).sort((a, b) => String(a.criadoEm).localeCompare(String(b.criadoEm)));
+    if (!list.length) {
+      box.replaceChildren(el("div", { class: "empty" },
+        el("strong", { text: pend.length ? "Nenhum pendente com esse filtro" : "Fila zerada" }),
+        pend.length ? "Limpe a busca ou troque a cidade." : "Nenhum cadastro esperando análise. Os novos aparecem aqui assim que forem enviados."));
+      return;
+    }
+    // preserva o que estava digitado no motivo
+    const draft = {};
+    box.querySelectorAll("[data-motivo-txt]").forEach((t) => (draft[t.dataset.motivoTxt] = t.value));
+    box.querySelectorAll("[data-motivo-sel]").forEach((t) => (draft["s" + t.dataset.motivoSel] = t.value));
+    box.replaceChildren(...list.map((r) => card(r, draft)));
+  }
+
+  function card(r, draft) {
+    const ag = idade(r.criadoEm);
+    const dups = duplicatesOf(r);
+    const canDecide = S.isOwner && !S.readOnly;
+    const sel = el("select", { "data-motivo-sel": r.id, "aria-label": "Motivo da reprovação" }, el("option", { value: "", text: "Escolha o motivo" }), ...MOTIVOS.map((m) => el("option", { text: m })));
+    sel.value = draft["s" + r.id] || "";
+    const txt = el("input", { "data-motivo-txt": r.id, placeholder: "Detalhe (opcional)", "aria-label": "Detalhe do motivo", maxlength: "300" });
+    txt.value = draft[r.id] || "";
+    const rb = el("div", { class: "rejectbox", hidden: !openReject.has(r.id) },
+      el("div", { class: "grid2" }, sel, txt),
+      el("div", { class: "actions" },
+        el("button", { class: "btn reject small", type: "button", onclick: (e) => decidir(r.id, "reprovado", e.currentTarget, sel.value, txt.value) }, "Confirmar reprovação"),
+        el("button", { class: "btn link", type: "button", onclick: () => { openReject.delete(r.id); render(); } }, "Cancelar")));
+    return el("article", { class: "card" },
+      el("div", { class: "head" },
+        el("span", { class: "name mono" }, titulo(r), r.exemplo ? el("span", { class: "tag", text: "EXEMPLO" }) : null),
+        el("span", { class: "age" + (ag.old ? " old" : ""), title: dt(r.criadoEm), text: ag.txt })),
+      el("dl", { class: "fields" },
+        fld("ID do entregador", r.idApp, true), fld("CPF", r.cpf, true), fld("Cidade", r.cidade)),
+      r.observacao ? el("div", { class: "obs", text: r.observacao }) : null,
+      dups.length ? el("div", { class: "dup", text: `Atenção: CPF ou ID já aparece em ${dups.length} outro(s) cadastro(s) (${dups.map((d) => d.status).join(", ")}).` }) : null,
+      el("div", { class: "meta", text: `Enviado por ${nameOf(r.criadoPor)} em ${dt(r.criadoEm)}` }),
+      el("div", { class: "actions" },
+        canDecide ? el("button", { class: "btn approve", type: "button", onclick: (e) => decidir(r.id, "aprovado", e.currentTarget) }, "Aprovar") : null,
+        canDecide ? el("button", { class: "btn reject", type: "button", onclick: () => { openReject.add(r.id); render(); } }, "Reprovar") : null,
+        el("button", { class: "btn small", type: "button", onclick: () => copiar(r) }, "Copiar dados"),
+        !canDecide ? el("span", { class: "meta", text: "Aguardando análise do responsável." }) : null),
+      canDecide ? rb : null);
+  }
+  const fld = (k, v, mono) => el("div", {}, el("dt", { text: k }), el("dd", { class: mono ? "mono" : null, text: v || "—" }));
+
+  async function copiar(r) {
+    const t = [r.idApp ? `ID: ${r.idApp}` : "", r.cpf ? `CPF: ${r.cpf}` : "", `Cidade: ${r.cidade}`, r.observacao ? `Obs.: ${r.observacao}` : ""].filter(Boolean).join("\n");
+    try { await navigator.clipboard.writeText(t); toast("Dados copiados."); } catch (_) { toast("Não foi possível copiar neste navegador."); }
+  }
+
+  async function decidir(id, status, btn, motivo = "", detalhe = "") {
+    if (status === "reprovado" && !motivo) { toast("Escolha o motivo da reprovação."); return; }
+    btn.disabled = true;
+    const doc = { status, em: new Date().toISOString(), por: S.me || null };
+    if (status === "reprovado") { doc.motivo = motivo; if (detalhe.trim()) doc.detalhe = detalhe.trim().slice(0, 300); }
+    try {
+      await S.db.collection("decisoes").doc(id).set(doc);
+      openReject.delete(id);
+      toast(status === "aprovado" ? "Cadastro aprovado." : "Cadastro reprovado.");
+    } catch (e) { btn.disabled = false; falhaEscrita(e); }
+  }
+  async function desfazer(id, btn) {
+    btn.disabled = true;
+    try { await S.db.collection("decisoes").doc(id).delete(); toast("Decisão desfeita. O cadastro voltou para a fila."); }
+    catch (e) { btn.disabled = false; falhaEscrita(e); }
+  }
+  async function excluir(id, btn) {
+    btn.disabled = true;
+    try { await S.db.collection("decisoes").doc(id).delete(); await S.db.collection("cadastros").doc(id).delete(); toast("Cadastro excluído."); }
+    catch (e) { btn.disabled = false; falhaEscrita(e); }
+  }
+  function falhaEscrita(e) {
+    if (e?.code === "invalid_argument") toast("Você não tem permissão para essa ação.");
+    else if (e?.code === "quota_exceeded") toast("O banco está cheio. Exclua cadastros antigos para liberar espaço.");
+    else toast("Não foi possível salvar agora. Tente de novo em instantes.");
+  }
+
+  // ---------- painel ----------
+  function renderPainel(rows) {
+    const now = new Date(), hoje = dayKey(now), mes = hoje.slice(0, 7);
+    const dec = rows.filter((r) => r.dec);
+    const ap = dec.filter((r) => r.status === "aprovado"), rp = dec.filter((r) => r.status === "reprovado");
+    const apHoje = ap.filter((r) => dayKey(r.dec.em) === hoje).length;
+    const sete = now - 7 * 864e5;
+    const ap7 = ap.filter((r) => new Date(r.dec.em) >= sete).length;
+    const apMes = ap.filter((r) => dayKey(r.dec.em).startsWith(mes)).length;
+    const rpMes = rp.filter((r) => dayKey(r.dec.em).startsWith(mes)).length;
+    const taxa = apMes + rpMes ? Math.round((apMes / (apMes + rpMes)) * 100) : null;
+    const tempos = dec.map((r) => new Date(r.dec.em) - new Date(r.criadoEm)).filter((x) => x >= 0);
+    const medH = tempos.length ? tempos.reduce((a, b) => a + b, 0) / tempos.length / 36e5 : null;
+    const pend = rows.filter((r) => r.status === "pendente").length;
+    const mesNome = now.toLocaleDateString("pt-BR", { month: "long" });
+    const tile = (k, v, d, cls = "") => el("div", { class: "tile " + cls }, el("div", { class: "k", text: k }), el("div", { class: "v", text: v }), el("div", { class: "d", text: d }));
+    $("#tiles").replaceChildren(
+      tile("Pendentes agora", pend, pend ? "esperando análise" : "fila zerada", "hl"),
+      tile("Aprovados hoje", apHoje, now.toLocaleDateString("pt-BR"), "good"),
+      tile("Aprovados em 7 dias", ap7, "últimos 7 dias", "good"),
+      tile(`Aprovados em ${mesNome}`, apMes, `${rpMes} reprovado(s) no mês`, "good"),
+      tile("Taxa de aprovação", taxa == null ? "—" : taxa + "%", `decisões de ${mesNome}`),
+      tile("Tempo médio de análise", medH == null ? "—" : medH < 1 ? Math.round(medH * 60) + " min" : medH.toFixed(1).replace(".", ",") + " h", "do envio até a decisão"));
+
+    // gráfico 14 dias
+    const days = [...Array(14)].map((_, i) => { const d = new Date(now); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - 13 + i); return d; });
+    const data = days.map((d) => { const k = dayKey(d); return { d, a: ap.filter((r) => dayKey(r.dec.em) === k).length, r: rp.filter((r) => dayKey(r.dec.em) === k).length }; });
+    const max = Math.max(1, ...data.map((x) => x.a + x.r));
+    const step = max <= 4 ? 1 : max <= 10 ? 2 : Math.ceil(max / 5);
+    const top = Math.ceil(max / step) * step;
+    const W = 700, H = 230, L = 30, B = 26, T = 22, cw = (W - L - 6) / 14, bw = Math.min(28, cw * 0.62);
+    const y = (v) => T + (H - T - B) * (1 - v / top);
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("class", "chart"); svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Aprovados e reprovados por dia nos últimos 14 dias");
+    const add = (tag, at, txt) => { const n = document.createElementNS(ns, tag); for (const k in at) n.setAttribute(k, at[k]); if (txt != null) n.textContent = txt; svg.append(n); return n; };
+    for (let v = 0; v <= top; v += step) { add("line", { x1: L, x2: W - 4, y1: y(v), y2: y(v), class: "grid" }); add("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, v); }
+    data.forEach((x, i) => {
+      const cx = L + cw * i + cw / 2;
+      if (x.a) add("rect", { x: cx - bw / 2, y: y(x.a), width: bw, height: y(0) - y(x.a), fill: "var(--ok)", rx: 2 }).append(Object.assign(document.createElementNS(ns, "title"), { textContent: `${x.d.toLocaleDateString("pt-BR")}: ${x.a} aprovado(s)` }));
+      if (x.r) add("rect", { x: cx - bw / 2, y: y(x.a + x.r), width: bw, height: y(x.a) - y(x.a + x.r), fill: "var(--bad)", rx: 2 }).append(Object.assign(document.createElementNS(ns, "title"), { textContent: `${x.d.toLocaleDateString("pt-BR")}: ${x.r} reprovado(s)` }));
+      if (x.a + x.r) add("text", { x: cx, y: y(x.a + x.r) - 4, "text-anchor": "middle", style: "fill:var(--ink);font-weight:600" }, x.a + x.r);
+      if (i % 2 === 1 || i === 13) add("text", { x: cx, y: H - 8, "text-anchor": "middle" }, x.d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }));
+    });
+    $("#chart").replaceChildren(svg);
+
+    // por cidade
+    const by = {};
+    for (const r of rows) { const c = r.cidade || "(sem cidade)"; by[c] ??= { t: 0, p: 0, a: 0, r: 0 }; by[c].t++; by[c][r.status[0]]++; }
+    const cs = Object.entries(by).sort((a, b) => b[1].t - a[1].t);
+    $("#t-cidade").replaceChildren(
+      el("thead", {}, el("tr", {}, el("th", { text: "Cidade" }), el("th", { class: "num", text: "Recebidos" }), el("th", { class: "num", text: "Pendentes" }), el("th", { class: "num", text: "Aprovados" }), el("th", { class: "num", text: "Reprovados" }))),
+      el("tbody", {}, cs.length ? cs.map(([c, v]) => el("tr", {}, el("td", { text: c }), el("td", { class: "num", text: v.t }), el("td", { class: "num", text: v.p }), el("td", { class: "num", text: v.a }), el("td", { class: "num", text: v.r })))
+        : el("tr", {}, el("td", { colspan: "5", class: "meta", text: "Nenhum cadastro ainda." }))));
+
+    // motivos
+    const mc = {};
+    rp.forEach((r) => (mc[r.dec.motivo || "Outro"] = (mc[r.dec.motivo || "Outro"] || 0) + 1));
+    const ms = Object.entries(mc).sort((a, b) => b[1] - a[1]);
+    const mm = Math.max(1, ...ms.map((x) => x[1]));
+    $("#motivos").replaceChildren(...(ms.length ? ms.map(([m, n]) => el("div", { style: "display:grid;gap:4px;margin-bottom:10px" },
+      el("div", { style: "display:flex;justify-content:space-between;gap:8px;font-size:14px" }, el("span", { text: m }), el("strong", { style: "font-variant-numeric:tabular-nums", text: n })),
+      el("div", { class: "bar" }, el("span", { style: `width:${(n / mm) * 100}%` }))))
+      : [el("p", { class: "meta", text: "Nenhuma reprovação registrada." })]));
+    const bp = {};
+    for (const r of rows) { const k = r.criadoPor || "?"; bp[k] ??= { t: 0, p: 0, a: 0, r: 0 }; bp[k].t++; bp[k][r.status[0]]++; }
+    const ps = Object.entries(bp).sort((a, b) => b[1].t - a[1].t);
+    $("#t-pessoa").replaceChildren(
+      el("thead", {}, el("tr", {}, el("th", { text: "Pessoa" }), el("th", { class: "num", text: "Enviados" }), el("th", { class: "num", text: "Pendentes" }), el("th", { class: "num", text: "Aprovados" }), el("th", { class: "num", text: "Reprovados" }), el("th", { class: "num", text: "Taxa de aprovação" }))),
+      el("tbody", {}, ps.length ? ps.map(([k, v]) => el("tr", {}, el("td", { text: k === "?" ? "(não identificado)" : cap(nameOf(k)) }), el("td", { class: "num", text: v.t }), el("td", { class: "num", text: v.p }), el("td", { class: "num", text: v.a }), el("td", { class: "num", text: v.r }), el("td", { class: "num", text: v.a + v.r ? Math.round(v.a / (v.a + v.r) * 100) + "%" : "—" })))
+        : el("tr", {}, el("td", { colspan: "6", class: "meta", text: "Nenhum cadastro ainda." }))));
+    $("#painel-sub").textContent = `Números atualizados em tempo real. ${rows.length} cadastro(s) recebido(s) no total.`;
+  }
+
+  // ---------- histórico ----------
+  const confirmDel = new Set();
+  function renderHist(rows) {
+    const q = $("#q-hist").value, st = $("#f-hist-status").value, cid = $("#f-hist-cidade").value;
+    const list = rows.filter((r) => matches(r, q) && (!st || r.status === st) && (!cid || r.cidade === cid))
+      .sort((a, b) => String(b.criadoEm).localeCompare(String(a.criadoEm)));
+    const head = el("thead", {}, el("tr", {}, ...["Situação", "ID do entregador", "CPF", "Cidade", "Enviado por", "Enviado em", "Decisão"].map((h) => el("th", { text: h })), S.isOwner ? el("th", { text: "" }) : null));
+    const body = el("tbody");
+    if (!list.length) body.append(el("tr", {}, el("td", { colspan: S.isOwner ? "8" : "7", class: "meta", text: S.gotCad ? "Nenhum cadastro encontrado." : "Carregando…" })));
+    for (const r of list) {
+      const decTxt = r.dec ? `${dt(r.dec.em)} por ${nameOf(r.dec.por)}${r.dec.motivo ? ` · ${r.dec.motivo}${r.dec.detalhe ? ": " + r.dec.detalhe : ""}` : ""}` : "—";
+      let act = null;
+      if (S.isOwner) {
+        act = el("td", { style: "white-space:nowrap" });
+        if (r.dec) act.append(el("button", { class: "btn link", type: "button", onclick: (e) => desfazer(r.id, e.currentTarget) }, "Desfazer"));
+        if (confirmDel.has(r.id)) act.append(el("button", { class: "btn reject small", type: "button", onclick: (e) => excluir(r.id, e.currentTarget) }, "Confirmar exclusão"), el("button", { class: "btn link", type: "button", onclick: () => { confirmDel.delete(r.id); render(); } }, "Cancelar"));
+        else act.append(el("button", { class: "btn link", type: "button", onclick: () => { confirmDel.add(r.id); render(); } }, "Excluir"));
+      }
+      body.append(el("tr", {},
+        el("td", {}, el("span", { class: "pill " + r.status, text: { pendente: "Pendente", aprovado: "Aprovado", reprovado: "Reprovado" }[r.status] })),
+        el("td", { class: "mono" }, r.idApp || "—", r.exemplo ? el("span", { class: "tag", text: "EXEMPLO" }) : null),
+        el("td", { class: "mono", text: r.cpf || "—" }),
+        el("td", { text: r.cidade }), el("td", { text: r.criadoPor ? cap(nameOf(r.criadoPor)) : "—" }), el("td", { text: dt(r.criadoEm) }),
+        el("td", { class: "meta", text: decTxt }), act));
+    }
+    $("#t-hist").replaceChildren(head, body);
+  }
+
+  // ---------- formulário ----------
+  const form = $("#form");
+  $("#f-cpf").addEventListener("input", (e) => (e.target.value = fmtCPF(e.target.value)));
+  $("#f-idapp").addEventListener("input", (e) => (e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, "")));
+  $("#f-cidade").addEventListener("blur", (e) => (e.target.value = e.target.value.trim().toUpperCase()));
+  $("#cidades").append(...CIDADES.map((c) => el("option", { value: c })));
+  let dupConfirmCpf = null;
+  form.addEventListener("input", () => { $("#ok-msg").hidden = true; });
+  form.addEventListener("reset", () => { setTimeout(() => { ["idapp","cpf","cidade"].forEach((k) => ($("#e-" + k).textContent = "")); $("#dup-msg").hidden = true; $("#ok-msg").hidden = true; dupConfirmCpf = null; }); });
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    if (!S.db) { toast("Ainda conectando ao banco. Tente em instantes."); return; }
+    const v = {
+      idApp: $("#f-idapp").value.replace(/[^A-Za-z0-9]/g, ""),
+      cpf: fmtCPF($("#f-cpf").value),
+      cidade: $("#f-cidade").value.trim().replace(/\s+/g, " ").toUpperCase(),
+      observacao: $("#f-obs").value.trim(),
+    };
+    const temId = !!v.idApp, temCpf = !!onlyDigits(v.cpf);
+    const errs = {
+      idapp: !temId && !temCpf ? "Preencha o ID do entregador ou o CPF." : (temId && v.idApp.length < 4 ? "ID muito curto. Confira." : ""),
+      cpf: temCpf && !cpfValido(v.cpf) ? "CPF inválido. Confira os 11 números ou deixe em branco." : "",
+      cidade: !/^.+ - [A-Z]{2}$/.test(v.cidade) ? "Use o formato CIDADE - UF, ex.: LAGARTO - SE." : "",
+    };
+    for (const k in errs) $("#e-" + k).textContent = errs[k];
+    const first = Object.keys(errs).find((k) => errs[k]);
+    if (first) { $("#f-" + first).focus(); return; }
+    const dups = duplicatesOf({ id: null, cpf: v.cpf, idApp: v.idApp });
+    if (dups.length && dupConfirmCpf !== v.cpf) {
+      dupConfirmCpf = v.cpf;
+      const d = dups[0];
+      $("#dup-msg").textContent = `Este ID ou CPF já foi cadastrado (${titulo(d)}, ${d.status}, enviado em ${dt(d.criadoEm)}). Se quiser enviar mesmo assim, clique em Enviar cadastro de novo.`;
+      $("#dup-msg").hidden = false; return;
+    }
+    const btn = $("#b-enviar"); btn.disabled = true;
+    try {
+      const doc = { ...v, criadoEm: new Date().toISOString(), criadoPor: S.me || null };
+      for (const k of ["idApp", "cpf", "observacao"]) if (!doc[k]) delete doc[k];
+      await S.db.collection("cadastros").add(doc);
+      const cidade = v.cidade;
+      form.reset(); setTimeout(() => ($("#f-cidade").value = cidade));
+      $("#dup-msg").hidden = true; dupConfirmCpf = null;
+      const ok = $("#ok-msg"); ok.textContent = `Cadastro ${titulo(v)} enviado. Já está na fila de pendentes.`; ok.hidden = false;
+      $("#f-idapp").focus();
+    } catch (e) { falhaEscrita(e); }
+    finally { btn.disabled = false; }
+  });
+
+  // ---------- filtros ----------
+  ["#q-pend", "#f-pend-cidade", "#q-hist", "#f-hist-status", "#f-hist-cidade"].forEach((s) => $(s).addEventListener("input", render));
+
+  // ---------- exemplos ----------
+  $("#b-exemplos").addEventListener("click", async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try {
+      for (const r of all().filter((x) => x.exemplo)) { await S.db.collection("decisoes").doc(r.id).delete(); await S.db.collection("cadastros").doc(r.id).delete(); }
+      toast("Exemplos removidos.");
+    } catch (err) { falhaEscrita(err); } finally { b.disabled = false; }
+  });
+
+  // ---------- exportar CSV ----------
+  async function setupExport() {
+    let dl = null;
+    try { dl = await window.claude?.use?.("downloads"); } catch (_) {}
+    if (!dl) return;
+    const b = $("#b-export"); b.hidden = false;
+    b.addEventListener("click", async () => {
+      const cols = ["id_entregador", "cpf", "cidade", "observacao", "enviado_por", "enviado_em", "status", "decidido_em", "motivo", "detalhe"];
+      const esc = (x) => { x = x == null ? "" : String(x); return /[";\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x; };
+      const lines = [cols.join(";")].concat(all().sort((a, b) => String(a.criadoEm).localeCompare(String(b.criadoEm))).map((r) =>
+        [r.idApp, r.cpf, r.cidade, r.observacao, r.criadoPor ? cap(nameOf(r.criadoPor)) : "", r.criadoEm, r.status, r.dec?.em, r.dec?.motivo, r.dec?.detalhe].map(esc).join(";")));
+      try { await dl.save({ filename: `cadastros-entregadores-${dayKey(new Date())}.csv`, data: "﻿" + lines.join("\r\n") }); }
+      catch (_) { toast("Download cancelado ou indisponível."); }
+    });
+  }
+
+  // ---------- conexão ----------
+  async function start() {
+    route();
+    let db = null;
+    try { db = await window.claude?.use?.("db"); } catch (_) {}
+    if (!db) {
+      $("#who").textContent = "Sem conexão com o banco";
+      notice("Para ver e enviar cadastros, abra este link com sua conta do claude.ai conectada.");
+      S.gotCad = S.gotDec = true; S.roleKnown = true; route(); return;
+    }
+    S.db = db;
+    try { S.user = await window.claude.use("user"); } catch (_) {}
+    if (S.user) {
+      try { S.isOwner = !!S.user.isOwner(); } catch (_) {}
+      try { S.me = await S.user.id(); } catch (_) {}
+      try { S.canWrite = S.user.can ? S.user.can("data.write") : null; } catch (_) {}
+    }
+    S.roleKnown = true;
+    const papel = S.isOwner ? "aprova os cadastros" : (S.canWrite === false ? "somente leitura" : "envia cadastros e acompanha o painel");
+    $("#who").textContent = "Conectado · " + papel;
+    if (S.me && S.user?.profiles) S.user.profiles([S.me]).then((ps) => { const n = ps?.[S.me]?.name; if (n) { S.names[S.me] = n; $("#who").textContent = `Conectado como ${n} · ${papel}`; } }).catch(() => {});
+    if (S.canWrite === false) { S.readOnly = true; notice("Seu acesso é só de leitura. Peça ao responsável para te dar acesso de edição para enviar cadastros."); $("#b-enviar").disabled = true; }
+    route();
+    setupExport();
+
+    const timer = setTimeout(() => { if (!S.gotCad || !S.gotDec) notice("Os dados ainda não carregaram. Verifique a internet; a página tenta de novo sozinha."); }, 10000);
+    const settle = () => { if (S.gotCad && S.gotDec) { clearTimeout(timer); if ($("#notice").textContent.startsWith("Os dados")) notice(""); } };
+    db.collection("cadastros").onSnapshot((snap) => {
+      S.cad = new Map(snap.docs.map((d) => [d.id, d.data()]));
+      if (!snap.metadata.fromCache) S.gotCad = true;
+      settle(); render();
+    }, (e) => { S.gotCad = true; clearTimeout(timer); notice(e?.code === "revoked" ? "O acesso a esta página mudou. Recarregue para continuar." : "Não foi possível carregar os cadastros. Recarregue a página."); render(); });
+    db.collection("decisoes").onSnapshot((snap) => {
+      S.dec = new Map(snap.docs.map((d) => [d.id, d.data()]));
+      if (!snap.metadata.fromCache) S.gotDec = true;
+      settle(); render();
+    }, () => { S.gotDec = true; render(); });
+    setInterval(() => { if (!$("#v-pendentes").hidden) render(); }, 60000); // atualiza "há X min"
+  }
+  start();
+})();
+</script>
+</body>
+</html>
