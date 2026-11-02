@@ -46,3 +46,7 @@ Rodar o site localmente: `npx serve -l 8000` (o Supabase só aceita os redirecio
 ## Dados pessoais
 
 O repositório é público. Não commitar planilhas, CSVs ou SQL com dados de entregadores (a importação do histórico de bloqueios é entregue à parte, fora do repositório).
+
+## Pendências conhecidas
+
+- **Segurança (fazer na próxima migração `003`)**: funções auxiliares `security definer` estão executáveis por qualquer usuário logado, mesmo fora da equipe (o bloco final das migrações dá `grant execute` em tudo). Revogar de `authenticated` as que só são usadas dentro de outras funções definer (`dados_conhecidos`, `leves_acumuladas`, `calcular_ocorrencia`, `responsavel_da_cidade`, `nome_por_email`) e, nas que precisam continuar executáveis por serem chamadas por funções/policies `security invoker` (`nome_de`, `json_bloqueio`), devolver nulo quando `meu_papel()` for nulo. Hoje permitem a um não membro descobrir nome/cidade de um entregador pelo ID exato e o e-mail do responsável de cada cidade. Ativar também RLS em `parametros_bloqueio`.
