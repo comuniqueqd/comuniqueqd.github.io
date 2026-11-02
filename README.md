@@ -1,10 +1,8 @@
 # aprovacao-entregs
 
-**Cadastro de Entregadores**: página para enviar cadastros de entregadores e aprovar ou reprovar cada um, com painel de números e histórico.
+**Cadastro de Entregadores**: o suporte envia cadastros de entregadores, e moderadores e monitoradores aprovam, reprovam ou encerram. Tem painel de métricas com filtro por pessoa, histórico de cada cadastro e gestão de equipe com níveis de acesso.
 
-Funciona de dois jeitos, com o mesmo [`index.html`](index.html):
-
-- **Como artefato do claude.ai**, usando o banco do próprio artefato.
-- **No GitHub Pages ou no seu computador**, usando Firebase (login com Google e banco Firestore). Veja o passo a passo em [FIREBASE.md](FIREBASE.md).
-
-Sem o Firebase configurado, a página abre mas mostra "Sem conexão com o banco".
+- Página: [`index.html`](index.html), publicada no GitHub Pages.
+- Banco de dados: PostgreSQL no Supabase ([`supabase/schema.sql`](supabase/schema.sql)), com login Google.
+- Passo a passo de configuração: [SUPABASE.md](SUPABASE.md).
+- Consultas de análise em SQL: [`supabase/analises.sql`](supabase/analises.sql).

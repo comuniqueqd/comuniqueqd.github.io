@@ -4,38 +4,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## O que é
 
-"Cadastro de Entregadores": app de página única (`index.html`) para enviar cadastros de entregadores e aprovar/reprovar esses cadastros. Nasceu como **artefato do claude.ai** (slug `4225164a-c109-4ec6-aab8-47e4fb19916a`) e também roda fora dele (GitHub Pages / localhost) com Firebase. Sem build e sem dependências em runtime. Interface, textos, comentários e docs em português (pt-BR).
+"Cadastro de Entregadores": app de página única (`index.html`, publicado no GitHub Pages) em que o suporte envia cadastros de entregadores e moderadores/monitoradores aprovam, reprovam ou encerram. Banco: PostgreSQL no **Supabase** (login Google pelo Supabase Auth). Sem build e sem dependências em runtime além do `supabase-js` via CDN. Interface, textos, comentários e docs em português (pt-BR).
 
 ## Comandos
 
-Conferir a sintaxe do JS embutido no `index.html` e dos scripts:
-
-```bash
-python3 -c "import re;open('/tmp/app.js','w').write(re.search(r'<script>\n(.*)</script>',open('index.html').read(),re.S).group(1))" && node --check /tmp/app.js && node --check firebase-adapter.js
-```
-
-Testes (em `testes/`; precisam de Java para os emuladores do Firebase):
+Os testes precisam de um Postgres local (16+) e do Chromium do Playwright:
 
 ```bash
 cd testes && npm install && npx playwright install chromium
-npm run test:regras   # regras do Firestore (firestore.rules) no emulador
-npm run test:e2e      # index.html no Chromium contra emuladores de Auth + Firestore
+export DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste   # banco vazio; os testes recriam tudo
+npm run test:sql   # funções e permissões do supabase/schema.sql
+npm run test:e2e   # index.html no Chromium contra o Postgres, via testes/supabase-falso.mjs
 ```
 
-Os testes rodam totalmente offline: o e2e serve o SDK de `node_modules/firebase` no lugar de `gstatic.com` e faz login com credencial do emulador no lugar do popup do Google. Prints ficam em `testes/prints/`.
+- `testes/supabase-local.sql` cria num Postgres comum o mínimo do Supabase (papéis `anon`/`authenticated`, `auth.uid()`, `auth.jwt()`). Nunca rodar no Supabase real.
+- `testes/supabase-falso.mjs` imita o PostgREST: `POST /rest/v1/rpc/<fn>` → `select public.<fn>(...)` com `set local role authenticated` e as claims do JWT em `request.jwt.claims`. O e2e injeta a sessão no `localStorage` (`sb-127-auth-token`) no lugar do login Google e redireciona o CDN do supabase-js para `node_modules`.
+- Prints do e2e ficam em `testes/prints/`.
 
-Rodar localmente: `python3 -m http.server 8000`. Sem `firebase-config.js` preenchido, a página mostra "Sem conexão com o banco".
+Rodar a página localmente: `npx serve -l 8000` (o Supabase só aceita os redirecionamentos configurados, ver `SUPABASE.md`).
 
 ## Arquitetura
 
-- **`index.html` só conhece a API do runtime de artefatos:** `window.claude.use("db")` (banco estilo Firestore: `collection().onSnapshot/add/doc().set/delete`), `use("user")` (`isOwner()`, `id()`, `can("data.write")`, `profiles(ids)`) e `use("downloads")` (botão "Baixar CSV").
-- **`firebase-adapter.js` implementa essa mesma API com Firebase** quando `window.claude` não existe e `firebase-config.js` está preenchido. Ele mostra a tela de login Google, só libera o dono (`DONO_EMAIL`) ou e-mails em `membros/{email}`, grava `perfis/{uid}` (nome para o painel) e traduz códigos de erro do Firebase para os que o `index.html` trata (`invalid_argument`, `quota_exceeded`, `revoked`). Ao mudar o uso de `window.claude` no `index.html`, mantenha o adaptador compatível.
-- **Coleções:** `cadastros` (idApp, cpf, cidade, observacao, criadoEm, criadoPor) e `decisoes`, cujo doc tem **o mesmo id do cadastro** (status `aprovado|reprovado`, em, por, motivo, detalhe). Sem decisão = `pendente`. Desfazer = apagar o doc em `decisoes`; excluir = apagar nos dois. No Firebase existem também `membros` e `perfis`.
-- **Segurança fica em `firestore.rules`**, não na UI: só o dono decide/exclui/libera membros; membros leem e criam cadastros validados (campos permitidos, `criadoPor` = próprio uid). Um campo novo gravado pelo `index.html` precisa entrar em `cadastroValido`/`decisaoValida`, senão a gravação é negada. O e-mail do dono aparece em dois lugares: `firestore.rules` e `firebase-config.js` (os testes trocam o das regras por `dono@exemplo.com` ao carregá-las). Alterar `firestore.rules` no repositório não muda o Firebase: as regras precisam ser coladas e publicadas de novo no Console (projeto `comu-7293c`).
-- **Estado e render:** objeto `S` guarda os dois `Map`s alimentados por `onSnapshot`; `render()` recalcula tudo a partir de `all()` e redesenha só a aba visível. O DOM é montado pelo helper `el()` (via `textContent`, nunca `innerHTML`).
-- **Rotas por hash** (`#pendentes`, `#novo`, `#painel`, `#historico`). O dono vê as 4 abas; os demais só "Novo cadastro" e "Painel".
-- **Regras do formulário:** cidade no formato `CIDADE - UF` (sugestões em `CIDADES`) e pelo menos ID ou CPF (CPF validado por dígito verificador). Duplicidade por CPF/ID pede um segundo clique. Motivos de reprovação em `MOTIVOS`.
+- **Toda a lógica de negócio e permissão está em `supabase/schema.sql`.** O front só chama funções RPC (`enviar_cadastro`, `decidir`, `desfazer`, `excluir_cadastro`, `listar_cadastros`, `eventos_do_cadastro`, `metricas`, `entrar`, `pedir_acesso`, `listar_equipe`, `salvar_membro`, `remover_membro`, `recusar_pedido`, `pessoas`, `listar_motivos`). As tabelas não têm políticas de escrita; as funções `security definer` conferem o papel com `exigir_papel(...)`. Esconder um botão no front não é controle de acesso.
+- **Papéis** (`membros.papel`): `moderador` (tudo, inclusive Equipe, desfazer e excluir), `monitorador` (aprova/reprova/encerra), `suporte` (envia, vê só os próprios cadastros, painel agregado). `membros.admin_final` marca o moderador que ninguém pode remover nem alterar; o e-mail dele é semeado no fim do `schema.sql`.
+- **Status** (`status_cadastro`): `aguardando_analise` → aprovar | reprovar (→ `aguardando_contato`) | encerrar; `aguardando_contato` → aprovar | encerrar. As transições válidas estão em `decidir()`. Reprovar/encerrar exigem motivo da tabela `motivos` do tipo certo; "Outro" exige detalhe.
+- **`eventos`** registra cada ação (`enviado`, `aprovado`, `reprovado`, `encerrado`, `desfeito`). `cadastros` guarda só a situação atual. `desfazer()` só desfaz a última decisão; nas métricas, uma decisão seguida imediatamente de `desfeito` não conta.
+- **CPF guardado só com dígitos**, único; `id_app` único sem diferenciar maiúsculas (`lower(id_app)`). A mensagem amigável de duplicidade vem de `enviar_cadastro`.
+- **`listar_cadastros` e `eventos_do_cadastro` são `security invoker`**: o RLS (`cadastros_leitura`) garante que o suporte só receba os próprios. `metricas` é `security definer` e devolve só agregados (sem CPF) para todos os papéis; `p_pessoas` filtra cadastros enviados OU decididos por aquelas pessoas.
+- **Front (`index.html`)**: objeto `S` guarda listas por escopo (`pendentes`, `meus`, `todos`), métricas e equipe; `carregar()` busca o que a aba atual precisa e `render()` redesenha só ela (adiado enquanto há um campo focado dentro dos cards/tabela de equipe). Atualiza por Realtime (`postgres_changes`) e a cada 30 s. DOM montado por `el()` (via `textContent`, nunca `innerHTML`). Rotas por hash; `VIEWS` define quais abas cada papel vê.
+- `supabase-config.js` tem a URL do projeto e a chave publishable/anon (públicas). `supabase/analises.sql` traz consultas de análise e a manutenção dos motivos.
 
-## Sincronizar com o artefato
+## Mudanças no banco
 
-O artefato publicado no claude.ai não muda sozinho quando o `index.html` muda (e vice-versa). As tags `<script src="firebase-*.js">` não atrapalham no artefato: lá `window.claude` já existe e o adaptador não faz nada.
+`schema.sql` recria tudo e apaga os dados: serve só para instalação. Depois que houver dados reais, mudanças vão em arquivos novos de migração em `supabase/` (com `alter table`, `create or replace function`), aplicados no SQL Editor do Supabase, e o `schema.sql` é atualizado junto para refletir o estado final. Funções novas precisam de `grant execute ... to authenticated` (o `schema.sql` faz isso em bloco no fim).

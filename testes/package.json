@@ -1,15 +1,15 @@
 {
   "name": "testes-cadastro-entregadores",
   "private": true,
+  "type": "module",
   "scripts": {
-    "test": "npm run test:regras && npm run test:e2e",
-    "test:regras": "firebase emulators:exec --only firestore --project demo-teste \"node regras.test.mjs\"",
-    "test:e2e": "firebase emulators:exec --only firestore,auth --project demo-teste \"node e2e.test.cjs\""
+    "test": "npm run test:sql && npm run test:e2e",
+    "test:sql": "node sql.test.mjs",
+    "test:e2e": "node e2e.test.mjs"
   },
   "devDependencies": {
-    "@firebase/rules-unit-testing": "3.0.4",
-    "firebase": "10.12.2",
-    "firebase-tools": "13.29.1",
+    "@supabase/supabase-js": "2.117.3",
+    "pg": "8.13.1",
     "playwright": "1.48.2"
   }
 }
