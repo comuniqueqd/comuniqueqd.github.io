@@ -328,6 +328,7 @@ tr.clicavel:hover td { background: var(--bg); }
     <p class="sub" style="margin:0" id="gate-txt">Carregando…</p>
     <p class="err" id="gate-erro" hidden></p>
     <div class="actions">
+      <div id="g-google" hidden></div>
       <button class="btn primary" type="button" id="g-entrar" hidden>Entrar com Google</button>
       <button class="btn primary" type="button" id="g-pedir" hidden>Pedir acesso</button>
       <button class="btn" type="button" id="g-trocar" hidden>Usar outra conta</button>
@@ -337,6 +338,7 @@ tr.clicavel:hover td { background: var(--bg); }
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="supabase-config.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
 <script>
 (() => {
@@ -886,11 +888,43 @@ tr.clicavel:hover td { background: var(--bg); }
       pedido: `Pedido de acesso enviado para ${extra}. Assim que um moderador liberar, recarregue esta página.`,
     }[estado];
     $("#gate-txt").textContent = txt;
-    $("#g-entrar").hidden = estado !== "entrar";
+    $("#g-entrar").hidden = true;   // quem decide entre o botão do Google e o de reserva é botaoGoogle()
+    $("#g-google").hidden = estado !== "entrar";
     $("#g-pedir").hidden = estado !== "sem";
     $("#g-trocar").hidden = !["sem", "pedido"].includes(estado);
   }
   function gateErro(m) { $("#gate-erro").textContent = m || ""; $("#gate-erro").hidden = !m; }
+
+  // Login com o botão oficial do Google (Google Identity Services): a janela do Google mostra o
+  // endereço do site, não o do Supabase. O Google devolve um token, que o Supabase confere.
+  // Se o botão não carregar (ou faltar o GOOGLE_CLIENT_ID), usa o login por redirecionamento do Supabase.
+  const GOOGLE_ID = window.GOOGLE_CLIENT_ID && !/COLE/.test(window.GOOGLE_CLIENT_ID) ? window.GOOGLE_CLIENT_ID : null;
+  async function esperarGIS(ms = 6000) {
+    const fim = Date.now() + ms;
+    while (Date.now() < fim) { if (window.google?.accounts?.id) return true; await new Promise((r) => setTimeout(r, 100)); }
+    return false;
+  }
+  function pedirLogin() { gate("entrar"); botaoGoogle(); }
+  async function botaoGoogle() {
+    const alvo = $("#g-google");
+    if (!GOOGLE_ID || !(await esperarGIS())) { alvo.hidden = true; $("#g-entrar").hidden = false; return; }
+    // nonce: o Google recebe o hash; o Supabase recebe o valor original e confere que batem
+    const bruto = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))));
+    const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(bruto)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+    google.accounts.id.initialize({
+      client_id: GOOGLE_ID, nonce: hash, ux_mode: "popup", context: "signin", use_fedcm_for_prompt: true,
+      callback: async (resp) => {
+        gateErro(""); gate("carregando");
+        const { error } = await S.sb.auth.signInWithIdToken({ provider: "google", token: resp.credential, nonce: bruto });
+        if (error) { pedirLogin(); return gateErro("Não foi possível entrar: " + error.message); }
+        posLogin();
+      },
+    });
+    alvo.replaceChildren();
+    google.accounts.id.renderButton(alvo, { theme: "outline", size: "large", text: "signin_with", shape: "rectangular", locale: "pt-BR" });
+    alvo.hidden = false;
+  }
+  const sair = () => { try { window.google?.accounts?.id?.disableAutoSelect(); } catch (_) {} S.sb.auth.signOut(); };
 
   async function iniciar() {
     if (!window.supabase || !window.SUPABASE_URL || /COLE/.test(window.SUPABASE_URL)) return gate("config");
@@ -901,18 +935,22 @@ tr.clicavel:hover td { background: var(--bg); }
       const { error } = await S.sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } });
       if (error) gateErro("Não foi possível abrir o login do Google: " + error.message);
     });
-    $("#g-trocar").addEventListener("click", () => S.sb.auth.signOut());
-    $("#b-sair").addEventListener("click", () => S.sb.auth.signOut());
+    $("#g-trocar").addEventListener("click", sair);
+    $("#b-sair").addEventListener("click", sair);
     $("#g-pedir").addEventListener("click", async (e) => {
       e.currentTarget.disabled = true;
       try { await rpc("pedir_acesso"); gate("pedido", S.email); } catch (err) { gateErro(msgErro(err)); e.currentTarget.disabled = false; }
     });
 
     const { data: { session } } = await S.sb.auth.getSession();
-    if (!session) return gate("entrar");
+    if (!session) return pedirLogin();
+    posLogin();
+  }
+
+  async function posLogin() {
     let r;
     try { r = await rpc("entrar"); }
-    catch (e) { gate("entrar"); return gateErro(msgErro(e)); }
+    catch (e) { pedirLogin(); return gateErro(msgErro(e)); }
     S.email = r.email;
     if (!r.membro) return gate(r.pedido ? "pedido" : "sem", r.email);
 

@@ -47,9 +47,26 @@ let falhas = 0;
 const ok = (cond, msg) => { console.log((cond ? "ok     " : "FALHOU ") + msg); if (!cond) falhas++; };
 const b = await chromium.launch();
 
-async function abrir(p, hash = "") {
+// Imita o script do Google (Google Identity Services): o botão gera um token do Google com o nonce recebido.
+const GIS_FALSO = `window.google = { accounts: { id: {
+  initialize(o) { window.__gis = o; },
+  disableAutoSelect() {},
+  renderButton(el) {
+    const b = document.createElement("button"); b.id = "botao-google-falso"; b.textContent = "Fazer login com o Google";
+    b.onclick = () => {
+      const enc = (o) => btoa(JSON.stringify(o)).replace(/=+$/, "").replace(/\\+/g, "-").replace(/\\//g, "_");
+      const tok = enc({ alg: "RS256" }) + "." + enc({ iss: "https://accounts.google.com", aud: window.__gis.client_id,
+        email: window.__gisEmail, email_verified: true, name: window.__gisNome, nonce: window.__gis.nonce, sub: "g1",
+        exp: Math.floor(Date.now() / 1000) + 3600 }) + ".x";
+      window.__gis.callback({ credential: tok });
+    };
+    el.append(b);
+  } } } };`;
+
+async function abrir(p, hash = "", { googleId = null } = {}) {
   const c = await b.newContext({ viewport: { width: 1200, height: 900 }, acceptDownloads: true });
-  await c.route("**/supabase-config.js", (r) => r.fulfill({ contentType: "text/javascript", body: `window.SUPABASE_URL=${JSON.stringify(API)};window.SUPABASE_ANON_KEY="chave-anon-de-teste";` }));
+  await c.route("**/supabase-config.js", (r) => r.fulfill({ contentType: "text/javascript", body: `window.SUPABASE_URL=${JSON.stringify(API)};window.SUPABASE_ANON_KEY="chave-anon-de-teste";window.GOOGLE_CLIENT_ID=${JSON.stringify(googleId || "COLE_AQUI")};` }));
+  await c.route("https://accounts.google.com/**", (r) => r.fulfill({ contentType: "text/javascript", body: googleId ? GIS_FALSO : "" }));
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   if (p) {
@@ -200,6 +217,20 @@ try {
   ok(await esperar(n, "#papel:has-text('Suporte')"), "novata liberada entra como Suporte");
   await n.click("#b-sair");
   ok(await esperar(n, "#g-entrar:not([hidden])"), "Sair volta para o login");
+
+  // 9. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
+  const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });
+  ok(await esperar(g, "#g-google:not([hidden]) #botao-google-falso"), "com GOOGLE_CLIENT_ID, aparece o botão do Google");
+  ok(await g.isHidden("#g-entrar"), "e o botão de reserva fica escondido");
+  await g.evaluate(() => { window.__gisEmail = "mateuslopesmb@gmail.com"; window.__gisNome = "Mateus Lopes"; });
+  await g.click("#botao-google-falso");
+  ok(await esperar(g, "#papel:has-text('Moderador')"), "login pelo botão do Google entra como Moderador (nonce conferido)");
+  await g.evaluate(() => { window.__gis.nonce = "nonce-adulterado"; });
+  await g.click("#b-sair");
+  await esperar(g, "#botao-google-falso");
+  await g.evaluate(() => { window.__gisEmail = "mateuslopesmb@gmail.com"; window.__gis.nonce = "0".repeat(64); });
+  await g.click("#botao-google-falso");
+  ok(await esperar(g, "#gate-erro:not([hidden])"), "token com nonce errado é recusado: " + (await texto(g, "#gate-erro")));
 } finally {
   await b.close(); site.close(); await api.fechar();
 }
