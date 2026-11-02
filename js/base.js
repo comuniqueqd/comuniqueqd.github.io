@@ -186,18 +186,20 @@
     if (carregando) { deNovo = true; return carregando; }
     carregando = (async () => {
       const mod = App.modulos[App.atual.mod];
-      try {
-        await Promise.all([
-          mod?.carregar?.(App.atual.aba),
-          rpc("resumo_inicio").then((d) => (S.resumo = d)),
-          rpc("minhas_notificacoes").then((d) => (S.notif = d)),
-          papelAtiv() === "moderador" ? rpc("listar_equipe").then((d) => (S.equipe = d)) : null,
-        ]);
-        notice("");
-      } catch (e) {
-        console.error(e);
-        notice(e?.code === "42501" ? "Seu acesso mudou. Recarregue a página." : "Não foi possível atualizar os dados. Verifique a internet; a página tenta de novo sozinha.");
-      }
+      // cada consulta independente: uma falha não apaga as outras, e o aviso diz qual falhou
+      const r = await Promise.allSettled([
+        mod?.carregar?.(App.atual.aba),
+        rpc("resumo_inicio").then((d) => (S.resumo = d)),
+        rpc("minhas_notificacoes").then((d) => (S.notif = d)),
+        papelAtiv() === "moderador" ? rpc("listar_equipe").then((d) => (S.equipe = d)) : null,
+      ]);
+      const nomes = ["tela atual", "resumo_inicio", "minhas_notificacoes", "listar_equipe"];
+      const falhas = r.map((x, i) => (x.status === "rejected" ? [nomes[i], x.reason] : null)).filter(Boolean);
+      falhas.forEach(([n, e]) => console.error("Falha em", n, e));
+      if (!falhas.length) notice("");
+      else if (falhas.some(([, e]) => e?.code === "42501")) notice("Seu acesso mudou. Recarregue a página.");
+      else if (falhas.every(([, e]) => /fetch|network/i.test(e?.message || ""))) notice("Não foi possível atualizar os dados. Verifique a internet; a página tenta de novo sozinha.");
+      else notice("Erro ao carregar dados (" + falhas.map(([n, e]) => `${n}: ${e?.message || e}`).join(" · ") + "). Mande um print desta mensagem para o suporte do sistema.");
       App.render();
     })();
     await carregando;
