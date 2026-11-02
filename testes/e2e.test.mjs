@@ -333,12 +333,63 @@ try {
   ok(await esperar(a, "#bq-t-hist tbody tr:has-text('Fulano de Tal')"), "histórico de bloqueios para o moderador");
   ok((await texto(a, "#bq-hist-total")).startsWith("5 de 5"), "histórico com 5 bloqueios");
   const [dlb] = await Promise.all([a.waitForEvent("download"), a.click("#bq-export")]);
-  ok(fs.readFileSync(await dlb.path(), "utf8").includes("id_entregador;nome;cidade;infracao"), "CSV de bloqueios");
+  ok(fs.readFileSync(await dlb.path(), "utf8").includes("id_entregador;nome;cidade;tipo;infracao"), "CSV de bloqueios");
   await a.click("#bq-t-hist tr:has-text('Rápido') >> text=Excluir");
   await a.click("#bq-t-hist tr:has-text('Rápido') >> text=Confirmar exclusão");
   ok(await esperar(a, "#bq-hist-total:has-text('4 de 4')"), "moderador exclui bloqueio");
   await ir(s, "#bloqueios/historico");
   ok((await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).indexOf("historico") === -1 && await esperar(s, "#v-bq-novo:not([hidden])"), "suporte não abre o histórico geral");
+
+  // 15. infrações leves
+  await ir(s, "#bloqueios/novo"); await s.reload(); await esperar(s, "#bq-form");
+  await s.click("[data-tipo-bq=leve]");
+  ok(await s.isHidden("#bq-nome") && await s.isHidden("#bq-cidade"), "infração leve: só ID e motivo");
+  await s.fill("#bq-id", "mal00001"); await s.selectOption("#bq-infracao", { label: "Reabertura de Pedido (aviso)" });
+  ok(await esperar(s, "#bq-previa >> text=Aplicar aviso de 30 min"), "prévia da leve: aviso de 30 min");
+  ok((await texto(s, "#bq-previa")).includes("Entregador: Fulano de Tal · LAGARTO - SE"), "prévia da leve: nome e cidade vêm do histórico");
+  await s.screenshot({ path: path.join(PRINTS, "b7-leve-previa.png"), fullPage: true });
+  await s.click("#bq-enviar");
+  ok(await esperar(s, "#bq-previa >> text=Aplique aviso de 30 min"), "leve registrada");
+  await s.click("text=Registrar outra");
+  await s.fill("#bq-id", "desc0001"); await s.selectOption("#bq-infracao", { label: "Atraso na Coleta (aviso)" });
+  ok(await esperar(s, "#bq-previa >> text=ID sem registro"), "ID desconhecido: avisa que o monitoramento completa os dados");
+  await s.click("#bq-enviar"); await esperar(s, "#bq-previa >> text=Aplique aviso de 30 min");
+  { const c2 = new pg.Client({ connectionString: DB }); await c2.connect();
+    await c2.query("update bloqueios set inicio = inicio - interval '1 day', fim = fim - interval '1 day' where id_app = 'desc0001'"); await c2.end(); }
+  await s.click("text=Registrar outra");
+  await s.fill("#bq-id", "desc0001"); await s.selectOption("#bq-infracao", { label: "Reabertura de Pedido (aviso)" });
+  await esperar(s, "#bq-previa >> text=2ª infração leve"); await s.click("#bq-enviar"); await esperar(s, "#bq-previa >> text=Aplique aviso");
+  await s.click("text=Registrar outra");
+  await s.fill("#bq-id", "desc0001"); await s.selectOption("#bq-infracao", { label: "Atraso na Coleta (aviso)" });
+  ok(await esperar(s, "#bq-previa >> text=Gera também: bloqueio de 24 h"), "3ª leve: prévia avisa que gera bloqueio normal");
+  await s.click("#bq-enviar");
+  ok(await esperar(s, "#bq-previa >> text=Aplique também: bloqueio de 24 h"), "3ª leve: bloqueio normal gerado e mostrado ao suporte");
+  await s.screenshot({ path: path.join(PRINTS, "b8-leve-gerou.png"), fullPage: true });
+
+  // monitorador completa os dados; a tarefa de contato vai para o responsável da cidade
+  await ir(m, "#bloqueios/tratativas"); await m.reload();
+  await m.click("[data-trat=pendente]");
+  ok(await esperar(m, ".grupo:has-text('Completar dados do entregador') .card"), "monitorador vê os IDs para completar");
+  await m.screenshot({ path: path.join(PRINTS, "b9-completar.png"), fullPage: true });
+  const cardC = ".grupo:has-text('Completar dados do entregador') .card >> nth=0";
+  await m.click(`${cardC} >> button:has-text("Completar dados")`);
+  await m.fill(".grupo:has-text('Completar dados do entregador') .card .box input", "Desconhecido Silva");
+  await m.selectOption(".grupo:has-text('Completar dados do entregador') .card .box select", "LAGARTO - SE");
+  await m.click("text=Salvar dados");
+  ok(await esperar(m, "#toast:has-text('Dados do entregador completados')"), "dados completados");
+  await m.waitForTimeout(1200);
+  ok(!(await m.isVisible(".grupo:has-text('Completar dados do entregador')")), "todas as tarefas de completar daquele ID saem");
+  ok(await esperar(m, ".grupo:has-text('Contato por infrações leves') >> text=Desconhecido Silva"), "tarefa de contato (3 leves) chega ao responsável da cidade");
+
+  // regras das leves e filtro no histórico
+  await ir(a, "#bloqueios/regras"); await a.reload();
+  ok(await esperar(a, "#bq-t-leves tbody tr"), "regras: tabela das infrações leves");
+  ok((await a.inputValue("#bq-leves-limite")) === "3" && (await a.inputValue("#bq-leves-janela")) === "50", "regras: 3 leves em 50 dias");
+  await a.fill("#bq-leves-limite", "4"); await a.click("#bq-f-leves button[type=submit]");
+  ok(await esperar(a, "#toast:has-text('Regra das infrações leves atualizada')"), "moderador altera a regra das leves");
+  await ir(a, "#bloqueios/historico"); await a.reload(); await esperar(a, "#bq-t-hist tbody tr");
+  await a.selectOption("#bq-hist-tipo", "leve");
+  ok((await texto(a, "#bq-hist-total")).startsWith("4 de"), "histórico filtra só as infrações leves: " + (await texto(a, "#bq-hist-total")));
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

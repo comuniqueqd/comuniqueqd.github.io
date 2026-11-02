@@ -168,19 +168,24 @@
     <p class="sub">A ocorrência e o tempo de bloqueio são calculados automaticamente pelas regras. Confira antes de registrar.</p>
     <div class="two" style="align-items:start">
       <form class="cad" id="bq-form" novalidate>
+        <div class="seg" role="group" aria-label="Tipo de registro" style="justify-self:start">
+          <button type="button" data-tipo-bq="normal" aria-pressed="true">Bloqueio</button>
+          <button type="button" data-tipo-bq="leve" aria-pressed="false">Infração leve (aviso)</button>
+        </div>
+        <p class="sub" id="bq-tipo-ajuda" style="margin:0"></p>
         <div class="grid2">
           <label for="bq-id"><span>ID do entregador <span class="req">*</span></span>
             <input id="bq-id" class="mono" autocomplete="off" spellcheck="false" maxlength="40" placeholder="ID no aplicativo de entregas">
           </label>
-          <label for="bq-nome"><span>Nome do entregador <span class="req">*</span></span>
+          <label for="bq-nome" data-so-normal><span>Nome do entregador <span class="req">*</span></span>
             <input id="bq-nome" autocomplete="off" maxlength="120">
           </label>
         </div>
         <div class="grid2">
-          <label for="bq-cidade"><span>Cidade <span class="req">*</span></span>
+          <label for="bq-cidade" data-so-normal><span>Cidade <span class="req">*</span></span>
             <select id="bq-cidade"><option value="">Escolha a cidade</option></select>
           </label>
-          <label for="bq-infracao"><span>Infração <span class="req">*</span></span>
+          <label for="bq-infracao"><span id="bq-rotulo-inf">Infração <span class="req">*</span></span>
             <select id="bq-infracao"><option value="">Escolha a infração</option></select>
           </label>
         </div>
@@ -221,6 +226,7 @@
         <option value="tratativa_feita">Tratativa realizada</option>
       </select>
       <select id="bq-meus-inf" aria-label="Filtrar por infração"><option value="">Todas as infrações</option></select>
+      <select id="bq-meus-tipo" aria-label="Filtrar por tipo"><option value="">Bloqueios e infrações leves</option><option value="normal">Só bloqueios</option><option value="leve">Só infrações leves</option></select>
     </div>
     <div id="bq-meus-lista" class="protege-foco"></div>
   </section>
@@ -251,12 +257,13 @@
       </div>
       <select id="bq-f-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
       <select id="bq-f-infracao" aria-label="Filtrar por infração"><option value="">Todas as infrações</option></select>
+      <select id="bq-f-tipo" aria-label="Filtrar por tipo"><option value="">Bloqueios e infrações leves</option><option value="normal">Só bloqueios</option><option value="leve">Só infrações leves</option></select>
     </div>
     <div class="pessoas" id="bq-pessoas" hidden></div>
     <div class="tiles" id="bq-tiles"></div>
     <div class="panel">
       <h3>Bloqueios por dia</h3>
-      <div class="legend"><span><i style="background:var(--accent)"></i>1ª ocorrência</span><span><i style="background:var(--warn)"></i>Reincidência</span><span><i style="background:var(--bad)"></i>Encerramento de parceria</span></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>1ª ocorrência</span><span><i style="background:var(--warn)"></i>Reincidência</span><span><i style="background:var(--bad)"></i>Encerramento de parceria</span><span><i style="background:var(--gray)"></i>Infração leve</span></div>
       <div id="bq-chart"></div>
     </div>
     <div class="two">
@@ -281,7 +288,9 @@
         <option value="liberado_antes">Liberado antes do prazo</option>
         <option value="encerramento">Parceria encerrada</option>
         <option value="revisar">Marcados para revisão</option>
+        <option value="dados_pendentes">Dados a completar</option>
       </select>
+      <select id="bq-hist-tipo" aria-label="Filtrar por tipo"><option value="">Bloqueios e infrações leves</option><option value="normal">Só bloqueios</option><option value="leve">Só infrações leves</option></select>
       <select id="bq-hist-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
       <select id="bq-hist-inf" aria-label="Filtrar por infração"><option value="">Todas as infrações</option></select>
       <select id="bq-hist-quem" aria-label="Filtrar por quem registrou"><option value="">Registrado por qualquer pessoa</option></select>
@@ -293,7 +302,17 @@
   <section class="view" id="v-bq-regras" hidden>
     <h2>Regras de bloqueio</h2>
     <p class="sub">Horas vazias = <b>encerramento de parceria</b>. A partir da 3ª ocorrência, a punição é a anterior + o aumento (30% por padrão), a não ser que a 3ª encerre a parceria. “Zera a contagem após” (o atraso usa 60 dias): se passar esse tempo sem a infração, a punição volta a ser a da 1ª, sem apagar o histórico. Mudanças valem para os próximos bloqueios.</p>
-    <div class="panel"><h3>Infrações</h3><div class="tablewrap"><table id="bq-t-regras" class="regras protege-foco"></table></div></div>
+    <div class="panel"><h3>Infrações (bloqueios)</h3><div class="tablewrap"><table id="bq-t-regras" class="regras protege-foco"></table></div></div>
+    <div class="panel">
+      <h3>Infrações leves (avisos)</h3>
+      <p class="sub">Registradas só com o ID e o motivo. Contam separado dos bloqueios. Ao acumular o limite dentro do período (os motivos contam juntos), a última gera um bloqueio normal da infração escolhida e uma tarefa de contato para o responsável da cidade; depois disso a contagem zera.</p>
+      <form class="toolbar protege-foco" id="bq-f-leves" novalidate>
+        <label class="check" style="display:inline-flex;gap:6px;align-items:center;font-weight:400">A cada <input id="bq-leves-limite" type="number" min="2" max="20" style="width:72px" aria-label="Quantidade de infrações leves"> infrações leves em</label>
+        <label class="check" style="display:inline-flex;gap:6px;align-items:center;font-weight:400"><input id="bq-leves-janela" type="number" min="1" max="365" style="width:80px" aria-label="Período em dias"> dias → bloqueio normal + contato</label>
+        <button class="btn primary small" type="submit" style="flex:0 0 auto">Salvar</button>
+      </form>
+      <div class="tablewrap"><table id="bq-t-leves" class="regras protege-foco"></table></div>
+    </div>
     <div class="panel">
       <h3>Cidades e responsáveis pela tratativa</h3>
       <p class="sub">Bloqueios de 10 h ou mais e encerramentos geram uma tratativa para o responsável da cidade. Sem responsável, o aviso vai para todos os moderadores.</p>

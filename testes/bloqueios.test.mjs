@@ -50,12 +50,13 @@ async function falha(p, trecho) {
   throw new Error("deveria ter falhado");
 }
 const INF = Object.fromEntries((await db.query("select nome, id from infracoes")).rows.map((r) => [r.nome, r.id]));
+const INF_LEVE = (n) => INF[n];
 const REABRIR = INF["Reabrir Pedido Após Aceite Sem Justificativa Plausível"], MAL_USO = INF["Mal Uso Proposital do Aplicativo"],
   ATRASO = INF["Atraso na Coleta ou na Entrega Sem Justificativa"], RETENCAO = INF["Retenção de Valores ou Equipamentos de Pagamento"],
   FURTO = INF["Furto ou Extravio: Desvio de Produtos ou Valores"], AVARIA = INF["Avaria de Produto"];
 const registrar = (quem, id, infracao, cidade = "LAGARTO - SE", nome = "Entregador " + id) =>
   rpc(quem, "registrar_bloqueio", { p_id_app: id, p_nome: nome, p_cidade: cidade, p_infracao: infracao, p_observacao: null });
-const bloqueio = async (id) => (await db.query("select b.*, public.situacao_bloqueio(b) sit, t.tipo t_tipo, t.status t_status, t.responsavel_email t_resp from bloqueios b left join tarefas t on t.bloqueio_id = b.id where b.id = $1", [id])).rows[0];
+const bloqueio = async (id) => (await db.query("select b.*, b.horas::float8 as horas, public.situacao_bloqueio(b) sit, t.tipo t_tipo, t.status t_status, t.responsavel_email t_resp from bloqueios b left join tarefas t on t.bloqueio_id = b.id where b.id = $1", [id])).rows[0];
 
 // ---------- equipe e regras ----------
 await t("migração mantém o admin final e dá a ele moderador nos bloqueios", async () => {
@@ -263,8 +264,89 @@ await t("importação guarda as horas aplicadas na planilha (0 ou Definitivo = e
   await db.query("select public.importar_bloqueio('pla00001', 'Planilha 168', 'LAGARTO - SE', 'Finalização Falsa de Entrega', now() - interval '2 days', 'Joyce', null, '168')");
   await db.query("select public.importar_bloqueio('pla00002', 'Planilha zero', 'LAGARTO - SE', 'Mau Comportamento com Clientes Finais ou Parceiros: Desrespeito ou Atitude Inapropriada', now() - interval '20 days', 'Joyce', null, '0')");
   await db.query("select public.importar_bloqueio('pla00003', 'Planilha def', 'LAGARTO - SE', 'Uso da Conta por Terceiros Não Autorizados', now() - interval '20 days', 'Joyce', null, 'Definitivo')");
-  const r = (await db.query("select b.id_app, b.horas, public.situacao_bloqueio(b) sit, t.status from bloqueios b left join tarefas t on t.bloqueio_id = b.id where id_app like 'pla%' order by id_app")).rows;
+  const r = (await db.query("select b.id_app, b.horas::float8 as horas, public.situacao_bloqueio(b) sit, t.status from bloqueios b left join tarefas t on t.bloqueio_id = b.id where id_app like 'pla%' order by id_app")).rows;
   igual(r.map((x) => [x.horas, x.sit, x.status]), [[168, "bloqueado", "pendente"], [null, "encerramento", "concluida"], [null, "encerramento", "concluida"]]);
+});
+// ---------- infrações leves ----------
+const LEVE_REAB = INF_LEVE("Reabertura de Pedido (aviso)"), LEVE_ATR = INF_LEVE("Atraso na Coleta (aviso)");
+const leve = (quem, id, inf) => rpc(quem, "registrar_infracao_leve", { p_id_app: id, p_infracao: inf, p_observacao: null });
+await t("leve de ID conhecido: 30 min, nome e cidade vêm do histórico, sem tarefa", async () => {
+  const pv = await rpc(sup, "previa_bloqueio", { p_id_app: "mal00001", p_infracao: LEVE_REAB });
+  igual([pv.leve, pv.horas, pv.gera_tratativa, pv.leves.esta_sera, pv.leves.limite, pv.leves.janela_dias, pv.nome_conhecido, pv.cidade_conhecida],
+        [true, 0.5, false, 1, 3, 50, "Entregador mal00001", "LAGARTO - SE"]);
+  const r = await leve(sup, "mal00001", LEVE_REAB);
+  igual([r.horas, r.dados_pendentes, r.leves, r.gerado], [0.5, false, 1, null]);
+  const b = await bloqueio(r.id);
+  igual([b.leve, b.horas, b.nome_entregador, b.cidade, b.sit, b.t_tipo], [true, 0.5, "Entregador mal00001", "LAGARTO - SE", "bloqueado", null]);
+  if (!(new Date(b.fim) - new Date(b.inicio) === 30 * 60000)) throw new Error("fim errado");
+});
+await t("leve não conta como ocorrência da infração normal (e vice-versa)", async () => {
+  const pv = await rpc(sup, "previa_bloqueio", { p_id_app: "mal00001", p_infracao: REABRIR });
+  igual(pv.ocorrencia, 1);
+});
+await t("registro normal recusa motivo leve e o registro leve recusa infração normal", async () => {
+  await falha(registrar(sup, "zzzz1234", LEVE_REAB), "Escolha a infração");
+  await falha(leve(sup, "zzzz1234", REABRIR), "motivo da infração leve");
+});
+await t("ID nunca visto: registra com dados a completar e cria tarefa para o monitoramento", async () => {
+  const r = await leve(sup, "novo9999", LEVE_ATR);
+  igual([r.dados_pendentes, r.nome, r.cidade], [true, null, null]);
+  const b = await bloqueio(r.id);
+  igual([b.nome_entregador, b.dados_pendentes, b.t_tipo, b.t_resp], ["(a completar)", true, "completar_dados", null]);
+  const doMon = (await rpc(mon2, "listar_tarefas", { p_status: "pendente" })).find((x) => x.tipo === "completar_dados");
+  if (!doMon || !doMon.minha) throw new Error("monitorador de qualquer cidade deve ver e poder completar");
+  await falha(rpc(mon2, "concluir_tratativa", { p_tarefa: doMon.id, p_nota: null }), "Completar dados");
+  await falha(rpc(sup, "completar_dados_bloqueio", { p_tarefa: doMon.id, p_nome: "X", p_cidade: "LAGARTO - SE" }), "não permite");
+});
+await t("3ª leve em 50 dias (motivos juntos) gera bloqueio normal + tarefa e zera a contagem", async () => {
+  // a 1ª (atraso) passa a ter sido ontem, para não esbarrar na trava de registro em dobro
+  await db.query("update bloqueios set inicio = inicio - interval '1 day', fim = fim - interval '1 day' where id_app = 'novo9999'");
+  await leve(sup, "novo9999", LEVE_REAB);  // 2ª
+  const pv = await rpc(sup, "previa_bloqueio", { p_id_app: "novo9999", p_infracao: LEVE_ATR });
+  igual([pv.leves.esta_sera, pv.leves.gera_bloqueio, pv.leves.bloqueio_infracao, pv.leves.bloqueio_horas], [3, true, "Atraso na Coleta ou na Entrega Sem Justificativa", 12]); // o teste de regras mudou o atraso para 12 h
+  const r = await leve(mon, "novo9999", LEVE_ATR); // 3ª, registrada por monitorador
+  igual([r.leves, r.gerado?.infracao, r.gerado?.ocorrencia, r.gerado?.horas], [3, "Atraso na Coleta ou na Entrega Sem Justificativa", 1, 12]);
+  const g = await bloqueio(r.gerado.id);
+  igual([g.leve, g.horas, g.t_tipo, g.t_status, g.dados_pendentes], [false, 12, "leves_acumuladas", "pendente", true]);
+  igual((await bloqueio(r.id)).gerou_bloqueio, r.gerado.id);
+  igual((await rpc(sup, "previa_bloqueio", { p_id_app: "novo9999", p_infracao: LEVE_REAB })).leves.esta_sera, 1, "contagem zerada:");
+});
+await t("completar dados atualiza todos os registros do ID e passa a tarefa para o responsável da cidade", async () => {
+  const tar = (await rpc(mon2, "listar_tarefas", { p_status: "pendente" })).filter((x) => x.tipo === "completar_dados");
+  igual(tar.length, 1, "uma tarefa por ID sem dados:");
+  await rpc(mon2, "completar_dados_bloqueio", { p_tarefa: tar[0].id, p_nome: "Novato Silva", p_cidade: "lagarto - se" });
+  const r = (await db.query("select nome_entregador, cidade, dados_pendentes from bloqueios where id_app = 'novo9999'")).rows;
+  if (r.some((x) => x.nome_entregador !== "Novato Silva" || x.cidade !== "LAGARTO - SE" || x.dados_pendentes)) throw new Error(JSON.stringify(r));
+  igual((await rpc(mon2, "listar_tarefas", { p_status: "pendente" })).filter((x) => x.tipo === "completar_dados").length, 0, "todas concluídas:");
+  const acum = (await rpc(mon, "listar_tarefas", { p_status: "pendente" })).find((x) => x.tipo === "leves_acumuladas");
+  igual([acum?.cidade, acum?.responsavel_email], ["LAGARTO - SE", mon.email]);
+  await rpc(mon, "concluir_tratativa", { p_tarefa: acum.id, p_nota: "Conversei sobre as reaberturas" });
+});
+await t("leves fora da janela de 50 dias não contam", async () => {
+  await db.query("select public.importar_bloqueio('vel00001', 'Veterano', 'LAGARTO - SE', 'Atraso na Coleta (aviso)', now() - interval '80 days', 'Planilha')");
+  await db.query("select public.importar_bloqueio('vel00001', 'Veterano', 'LAGARTO - SE', 'Atraso na Coleta (aviso)', now() - interval '60 days', 'Planilha')");
+  await db.query("select public.importar_bloqueio('vel00001', 'Veterano', 'LAGARTO - SE', 'Reabertura de Pedido (aviso)', now() - interval '10 days', 'Planilha')");
+  igual((await rpc(sup, "previa_bloqueio", { p_id_app: "vel00001", p_infracao: LEVE_ATR })).leves.esta_sera, 2);
+});
+await t("moderador edita duração, limite e período das leves", async () => {
+  await falha(rpc(mon, "salvar_parametros_leves", { p_limite: 2, p_janela_dias: 30 }), "não permite");
+  await rpc(admin, "salvar_parametros_leves", { p_limite: 2, p_janela_dias: 100 });
+  await rpc(admin, "salvar_infracao_leve", { p_id: LEVE_ATR, p_nome: "Atraso na Coleta (aviso)", p_minutos: 45, p_escala_para: ATRASO, p_ativa: true });
+  const pv = await rpc(sup, "previa_bloqueio", { p_id_app: "vel00001", p_infracao: LEVE_ATR });
+  igual([pv.horas, pv.leves.esta_sera, pv.leves.limite, pv.leves.gera_bloqueio], [0.75, 4, 2, true]);
+  await falha(rpc(admin, "salvar_infracao_leve", { p_id: LEVE_ATR, p_nome: "x", p_minutos: 0, p_escala_para: ATRASO, p_ativa: true }), "1 a 1440");
+  await falha(rpc(admin, "salvar_infracao", { p_id: LEVE_ATR, p_nome: "x", p_horas_1a: 5, p_horas_2a: 5, p_terceira_encerra: false, p_fator: 1.3, p_janela_dias: null, p_ativa: true }), "não encontrada");
+  const r = await rpc(sup, "regras_bloqueio");
+  igual([r.leves.limite, r.leves.janela_dias, r.infracoes.filter((i) => i.leve).length], [2, 100, 2]);
+  await rpc(admin, "salvar_parametros_leves", { p_limite: 3, p_janela_dias: 50 });
+});
+await t("métricas separam normais e leves", async () => {
+  const m = await rpc(sup, "metricas_bloqueios", { p_dias: null });
+  if (!(m.resumo.leves >= 4 && m.resumo.leves_que_geraram === 1 && m.resumo.normais > 0)) throw new Error(JSON.stringify(m.resumo));
+  const so = await rpc(sup, "metricas_bloqueios", { p_dias: null, p_tipo: "leve" });
+  igual(so.resumo.total, so.resumo.leves);
+  const nor = await rpc(sup, "metricas_bloqueios", { p_dias: null, p_tipo: "normal" });
+  igual(nor.resumo.leves, 0);
 });
 await t("migração pode rodar de novo sem erro", () => db.query(readFileSync(new URL("../supabase/002-bloqueios.sql", import.meta.url), "utf8")));
 

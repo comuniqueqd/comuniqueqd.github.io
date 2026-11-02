@@ -41,7 +41,13 @@
     // Bloqueios
     for (const t of A.tarefas || []) {
       const b = t.bloqueio;
-      const tipo = t.tipo === "encerramento_parceria" ? "Encerramento de parceria" : "Tratativa";
+      const tipo = App.bloqueios.TAREFA[t.tipo] || "Tratativa";
+      if (t.tipo === "completar_dados") {
+        if (staffBloq()) itens.push(item({ modulo: "BLOQUEIOS", titulo: `${tipo}: ID ${b.id_app}`,
+          detalhe: `Registrado só com o ID (${b.infracao}) por ${b.registrado_por_nome} há ${duracao(t.criada_em).txt}. Falta nome e cidade.`,
+          acoes: [el("a", { class: "btn approve small", href: "#bloqueios/tratativas" }, "Completar na tela de tratativas")] }));
+        continue;
+      }
       const punicao = App.bloqueios.horasTxt(b.horas);
       if (staffBloq() && t.minha) {
         const cx = A.caixa[t.id];

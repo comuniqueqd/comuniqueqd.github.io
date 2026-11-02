@@ -107,3 +107,4 @@ Regras de bloqueio (editáveis pela aba Regras):
 - no atraso, se passar 60 dias sem atraso a punição volta a ser a da 1ª (o histórico continua);
 - bloqueios de **10 h ou mais** e encerramentos geram uma **tratativa** para o responsável da cidade; resolver a tratativa avisa quem registrou e **não** libera o bloqueio;
 - o bloqueio termina sozinho no fim do prazo; monitorador ou moderador pode liberar antes, com motivo.
+- **infrações leves** (avisos de 30 min: reabertura de pedido e atraso na coleta) são registradas só com o ID e o motivo e contam separado dos bloqueios. Se o ID nunca apareceu, o monitoramento recebe a tarefa de completar nome e cidade. A cada **3 leves em 50 dias** (os dois motivos juntos), a última gera um **bloqueio normal** da infração correspondente e uma tarefa de contato para o responsável da cidade; depois a contagem zera. Duração, limite e período ficam na aba Regras.
