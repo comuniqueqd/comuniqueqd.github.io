@@ -26,7 +26,7 @@ Isto é feito no Google Cloud, não no Supabase.
    - Em **Público**, clique em **Publicar app** (sai de "Em teste" para "Em produção"). Sem isso, só e-mails cadastrados como testadores conseguem entrar. Para login simples (nome e e-mail), o Google não exige verificação.
 4. **Clientes → Criar cliente** (ou **Credenciais → Criar credenciais → ID do cliente OAuth**):
    - Tipo: **Aplicativo da Web**.
-   - **Origens JavaScript autorizadas**: `https://mateuslopesmb-png.github.io` e `http://localhost:8000`
+   - **Origens JavaScript autorizadas**: `https://comuniqueqd.github.io` e `http://localhost:8000`
    - **URIs de redirecionamento autorizados**: a Callback URL copiada no passo 1.
    - Clique em **Criar** e copie o **ID do cliente** e a **Chave secreta do cliente**.
 5. Volte ao Supabase (aba do passo 1): ative o Google, cole o ID e a chave secreta, e clique em **Save**.
@@ -37,9 +37,9 @@ A chave secreta do Google fica só no Supabase. Não coloque no código nem mand
 
 No Supabase: **Authentication → URL Configuration**.
 
-- **Site URL**: `https://mateuslopesmb-png.github.io/aprovacao-entregs/`
+- **Site URL**: `https://comuniqueqd.github.io/`
 - **Redirect URLs** → **Add URL**, um de cada vez:
-  - `https://mateuslopesmb-png.github.io/aprovacao-entregs/`
+  - `https://comuniqueqd.github.io/`
   - `http://localhost:8000/`
 
 ## 4. Ligar a página ao projeto

@@ -1,4 +1,6 @@
-# aprovacao-entregs
+# Comunique · Cadastro de Entregadores
+
+No ar em https://comuniqueqd.github.io/
 
 **Cadastro de Entregadores**: o suporte envia cadastros de entregadores, e moderadores e monitoradores aprovam, reprovam ou encerram. Tem painel de métricas com filtro por pessoa, histórico de cada cadastro e gestão de equipe com níveis de acesso.
 
