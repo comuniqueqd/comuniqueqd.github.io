@@ -100,6 +100,8 @@ Para quem já instalou o `schema.sql`. **Não apaga** os dados da ativação.
 4. No app, aba **Bloqueios → Regras**: escolha o responsável pela tratativa de cada cidade. Antes disso, as tratativas vão para todos os moderadores.
 5. Na **Equipe**, ajuste o acesso de cada pessoa nos bloqueios (a migração copia o acesso que cada um já tinha na ativação).
 
+**Se depois de rodar o módulo Bloqueios não aparecer** (ou surgir "Erro ao carregar dados" mencionando `resumo_inicio`), a migração não entrou inteira: rode o `002-bloqueios.sql` de novo, do começo ao fim. Ele foi feito para poder rodar mais de uma vez sem apagar nada. Depois recarregue o site com Ctrl+F5.
+
 Regras de bloqueio (editáveis pela aba Regras):
 
 - a ocorrência é contada **por ID e por infração, pela data**;
