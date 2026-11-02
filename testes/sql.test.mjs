@@ -10,6 +10,7 @@ const db = new pg.Client({ connectionString: url });
 await db.connect();
 await db.query(readFileSync(new URL("./supabase-local.sql", import.meta.url), "utf8"));
 await db.query(readFileSync(new URL("../supabase/schema.sql", import.meta.url), "utf8"));
+await db.query(readFileSync(new URL("../supabase/002-bloqueios.sql", import.meta.url), "utf8"));
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -73,24 +74,24 @@ await t("moderador vê o pedido de acesso", async () => {
   igual(eq.pedidos.map((p) => [p.email, p.nome]), [["estranho@x.com", "Pessoa Estranha"]]);
 });
 await t("moderador libera a equipe com papéis", async () => {
-  await rpc(admin, "salvar_membro", { p_email: "Moderadora@X.com ", p_nome: "Moderadora Dois", p_papel: "moderador" });
-  await rpc(admin, "salvar_membro", { p_email: monitor.email, p_nome: "Monitor Um", p_papel: "monitorador" });
-  await rpc(admin, "salvar_membro", { p_email: sup1.email, p_nome: "Suporte Um", p_papel: "suporte" });
-  await rpc(admin, "salvar_membro", { p_email: sup2.email, p_nome: "Suporte Dois", p_papel: "suporte" });
-  await rpc(admin, "salvar_membro", { p_email: estranho.email, p_nome: "Ex Estranho", p_papel: "suporte" });
+  await rpc(admin, "salvar_membro", { p_email: "Moderadora@X.com ", p_nome: "Moderadora Dois", p_papel: "moderador", p_papel_bloqueios: "moderador" });
+  await rpc(admin, "salvar_membro", { p_email: monitor.email, p_nome: "Monitor Um", p_papel: "monitorador", p_papel_bloqueios: "monitorador" });
+  await rpc(admin, "salvar_membro", { p_email: sup1.email, p_nome: "Suporte Um", p_papel: "suporte", p_papel_bloqueios: "suporte" });
+  await rpc(admin, "salvar_membro", { p_email: sup2.email, p_nome: "Suporte Dois", p_papel: "suporte", p_papel_bloqueios: "suporte" });
+  await rpc(admin, "salvar_membro", { p_email: estranho.email, p_nome: "Ex Estranho", p_papel: "suporte", p_papel_bloqueios: "suporte" });
   for (const p of [mod2, monitor, sup1, sup2, estranho]) await rpc(p, "entrar");
   igual((await rpc(mod2, "entrar")).papel, "moderador");
   igual((await rpc(admin, "listar_equipe")).pedidos.length, 0, "pedido some ao liberar:");
 });
 await t("monitorador não gerencia equipe", () => falha(rpc(monitor, "listar_equipe"), "não permite"));
-await t("suporte não libera ninguém", () => falha(rpc(sup1, "salvar_membro", { p_email: "a@b.com", p_nome: "A", p_papel: "moderador" }), "não permite"));
-await t("outro moderador não altera o admin final", () => falha(rpc(mod2, "salvar_membro", { p_email: admin.email, p_nome: "X", p_papel: "suporte" }), "administrador final"));
+await t("suporte não libera ninguém", () => falha(rpc(sup1, "salvar_membro", { p_email: "a@b.com", p_nome: "A", p_papel: "moderador", p_papel_bloqueios: "moderador" }), "não permite"));
+await t("outro moderador não altera o admin final", () => falha(rpc(mod2, "salvar_membro", { p_email: admin.email, p_nome: "X", p_papel: "suporte", p_papel_bloqueios: "suporte" }), "administrador final"));
 await t("outro moderador não remove o admin final", () => falha(rpc(mod2, "remover_membro", { p_email: admin.email }), "administrador final"));
 await t("moderador não remove a si mesmo", () => falha(rpc(mod2, "remover_membro", { p_email: mod2.email }), "próprio acesso"));
 await t("moderador remove e recoloca alguém", async () => {
   await rpc(mod2, "remover_membro", { p_email: estranho.email });
   igual((await rpc(estranho, "entrar")).membro, false);
-  await rpc(mod2, "salvar_membro", { p_email: estranho.email, p_nome: "Ex Estranho", p_papel: "suporte" });
+  await rpc(mod2, "salvar_membro", { p_email: estranho.email, p_nome: "Ex Estranho", p_papel: "suporte", p_papel_bloqueios: "suporte" });
   igual((await rpc(estranho, "entrar")).papel, "suporte");
 });
 await t("leitura direta da tabela membros: suporte só vê a si", async () => {

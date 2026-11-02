@@ -89,3 +89,21 @@ CPF e ID do entregador não se repetem. Cada ação fica registrada na tabela `e
 O arquivo [`supabase/analises.sql`](supabase/analises.sql) tem consultas prontas para o **SQL Editor**: tempo até aprovação por cidade, taxa de reprovação por motivo, envios por pessoa por dia e outras. A view `vw_cadastros` junta tudo com os nomes das pessoas.
 
 Os motivos de reprovação e de encerramento ficam na tabela `motivos`. Dá para acrescentar ou esconder motivos por SQL, sem mexer no app (exemplos no fim de `analises.sql`).
+
+## Atualização: módulo de Bloqueios (migração 002)
+
+Para quem já instalou o `schema.sql`. **Não apaga** os dados da ativação.
+
+1. **SQL Editor → New query**: cole [`supabase/002-bloqueios.sql`](supabase/002-bloqueios.sql) inteiro e clique em **Run**.
+2. (Opcional) **Importar o histórico da planilha**: rode, também no SQL Editor, o arquivo de importação gerado a partir da planilha "Controle de Bloqueios". Esse arquivo tem dados de entregadores e **não fica no repositório**. Ele recusa rodar duas vezes.
+3. Publique a versão nova do site (a `main`).
+4. No app, aba **Bloqueios → Regras**: escolha o responsável pela tratativa de cada cidade. Antes disso, as tratativas vão para todos os moderadores.
+5. Na **Equipe**, ajuste o acesso de cada pessoa nos bloqueios (a migração copia o acesso que cada um já tinha na ativação).
+
+Regras de bloqueio (editáveis pela aba Regras):
+
+- a ocorrência é contada **por ID e por infração, pela data**;
+- 1ª e 2ª ocorrência usam as horas da regra; da 3ª em diante, a anterior + 30%; horas vazias = **encerramento de parceria**;
+- no atraso, se passar 60 dias sem atraso a punição volta a ser a da 1ª (o histórico continua);
+- bloqueios de **10 h ou mais** e encerramentos geram uma **tratativa** para o responsável da cidade; resolver a tratativa avisa quem registrou e **não** libera o bloqueio;
+- o bloqueio termina sozinho no fim do prazo; monitorador ou moderador pode liberar antes, com motivo.

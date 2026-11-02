@@ -1,10 +1,11 @@
-# Comunique · Cadastro de Entregadores
+# Comunique
 
 No ar em https://comuniqueqd.github.io/
 
-**Cadastro de Entregadores**: o suporte envia cadastros de entregadores, e moderadores e monitoradores aprovam, reprovam ou encerram. Tem painel de métricas com filtro por pessoa, histórico de cada cadastro e gestão de equipe com níveis de acesso.
+Sistema da equipe de operação, com três módulos:
 
-- Página: [`index.html`](index.html), publicada no GitHub Pages.
-- Banco de dados: PostgreSQL no Supabase ([`supabase/schema.sql`](supabase/schema.sql)), com login Google.
-- Passo a passo de configuração: [SUPABASE.md](SUPABASE.md).
-- Consultas de análise em SQL: [`supabase/analises.sql`](supabase/analises.sql).
+- **Ativação de entregadores**: o suporte envia cadastros e moderadores/monitoradores aprovam, reprovam ou encerram.
+- **Bloqueios**: registro de bloqueios com cálculo automático da punição (reincidência, progressão, encerramento de parceria), tratativas por cidade, painel e histórico.
+- **Atividades**: as pendências de cada pessoa nos dois módulos e os avisos recebidos.
+
+Banco de dados: PostgreSQL no Supabase ([`supabase/`](supabase/)), com login Google. Passo a passo: [SUPABASE.md](SUPABASE.md). Consultas de análise: [`supabase/analises.sql`](supabase/analises.sql).

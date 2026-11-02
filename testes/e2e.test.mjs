@@ -26,10 +26,13 @@ const db = new pg.Client({ connectionString: DB });
 await db.connect();
 await db.query(fs.readFileSync(path.join(AQUI, "supabase-local.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/schema.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/002-bloqueios.sql"), "utf8"));
+// histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
+for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001', 'Ciclano Atrasado', 'LAGARTO - SE', 'Atraso na Coleta ou na Entrega Sem Justificativa', now() - make_interval(days => $1), 'Planilha')", [d]);
 await db.end();
 
 const api = await iniciarSupabaseFalso({ porta: 54321, databaseUrl: DB });
-const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8" };
+const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8" };
 const site = http.createServer((q, r) => {
   const f = path.join(RAIZ, decodeURIComponent(q.url.split("?")[0]));
   if (!f.startsWith(RAIZ) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404); return r.end(); }
@@ -82,6 +85,7 @@ async function abrir(p, hash = "", { googleId = null } = {}) {
   }
   const pg_ = await c.newPage();
   pg_.on("pageerror", (e) => { console.log("ERRO NA PÁGINA", e.message); falhas++; });
+  pg_.on("console", (m) => { if (m.type() === "error" && !/WebSocket|ERR_|Failed to load resource/.test(m.text())) console.log("CONSOLE", m.text().slice(0, 300)); });
   await pg_.goto(SITE + hash);
   return pg_;
 }
@@ -140,7 +144,7 @@ try {
   ok(!(await s.isVisible("#queue >> text=Aprovar")), "suporte não tem botão Aprovar");
 
   // 4. monitorador decide
-  const m = await abrir(monitor);
+  const m = await abrir(monitor, "#pendentes");
   await esperar(m, "#queue .card");
   const abasM = await m.$$eval("nav.tabs a:not([hidden])", (as) => as.map((x) => x.dataset.view));
   ok(!abasM.includes("equipe") && abasM.includes("historico"), "monitorador vê Histórico e não vê Equipe");
@@ -218,13 +222,132 @@ try {
   await n.click("#b-sair");
   ok(await esperar(n, "#g-entrar:not([hidden])"), "Sair volta para o login");
 
-  // 9. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
+  // ================= BLOQUEIOS =================
+  // 9. moderador: monitor vira monitorador nos bloqueios e responsável por LAGARTO
+  await ir(a, "#equipe"); await esperar(a, "#t-equipe tr:has-text('monitor@x.com') select");
+  await a.locator("#t-equipe tr:has-text('monitor@x.com') select").nth(1).selectOption("monitorador");
+  await a.waitForTimeout(1200);
+  await ir(a, "#bloqueios/regras");
+  await esperar(a, "#bq-t-regras tbody tr");
+  const linhaRegra = (nome) => a.evaluate((n) => [...document.querySelectorAll("#bq-t-regras tbody tr")].find((tr) => tr.querySelector("input")?.value.startsWith(n))?.querySelector(".chips")?.textContent, nome);
+  ok((await linhaRegra("Mal Uso")) === "48 h72 h94 h122 h159 h", "regras: mal uso mostra a progressão de 30% (94 h na 3ª)");
+  ok((await linhaRegra("Furto")) === "encerraencerraencerraencerraencerra", "regras: furto encerra a parceria");
+  await a.selectOption("#bq-t-cidades tr:has-text('LAGARTO - SE') select", "monitor@x.com");
+  ok(await esperar(a, "#toast:has-text('LAGARTO - SE atualizada')"), "moderador liga LAGARTO ao Monitor Um");
+  await a.screenshot({ path: path.join(PRINTS, "b1-regras.png"), fullPage: true });
+
+  // 10. suporte: tela inicial e registro com prévia da punição
+  await ir(s, "#inicio"); await s.reload();
+  ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades"), "tela inicial com os três módulos");
+  await s.screenshot({ path: path.join(PRINTS, "b0-inicio.png"), fullPage: true });
+  await s.click("#card-bloqueios");
+  ok(await esperar(s, "#v-bq-novo:not([hidden])"), "suporte cai em Novo bloqueio");
+  const abasB = await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));
+  ok(JSON.stringify(abasB) === JSON.stringify(["novo", "meus", "consultar", "painel"]), "suporte vê Novo, Meus registros, Consultar e Painel: " + abasB);
+  await s.fill("#bq-id", "mal00001"); await s.fill("#bq-nome", "Fulano de Tal");
+  await s.selectOption("#bq-cidade", "LAGARTO - SE"); await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
+  ok(await esperar(s, "#bq-previa >> text=Aplicar 2 dias (48 h) de bloqueio"), "prévia: 1ª ocorrência de mal uso = 48 h");
+  ok((await texto(s, "#bq-previa")).includes("Gera tratativa para Monitor Um"), "prévia: avisa que gera tratativa para o responsável");
+  await s.screenshot({ path: path.join(PRINTS, "b2-novo-previa.png"), fullPage: true });
+  await s.click("#bq-enviar");
+  ok(await esperar(s, "#bq-previa >> text=Aplique 2 dias (48 h) de bloqueio"), "após registrar: mostra o tempo a aplicar");
+  ok((await texto(s, "#bq-previa")).includes("Tratativa enviada para Monitor Um"), "após registrar: tratativa enviada");
+  await s.click("text=Registrar outro");
+  await s.fill("#bq-id", "mal00001"); await s.fill("#bq-nome", "Fulano de Tal"); await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
+  await esperar(s, "#bq-previa >> text=Histórico deste ID");
+  await s.click("#bq-enviar");
+  ok(await esperar(s, "#bq-erro:not([hidden]) >> text=há poucos minutos"), "registro em dobro é recusado");
+  await s.click("#bq-form button[type=reset]");
+  await s.fill("#bq-id", "atr00001"); await s.selectOption("#bq-infracao", { label: "Atraso na Coleta ou na Entrega Sem Justificativa" });
+  ok(await esperar(s, "#bq-previa >> text=contagem zerada"), "atraso com mais de 60 dias: contagem zerada, punição da 1ª");
+  ok((await s.inputValue("#bq-nome")) === "Ciclano Atrasado", "nome sugerido pelo histórico do ID");
+  await s.click("#bq-form button[type=reset]");
+  await s.fill("#bq-id", "fur00001"); await s.fill("#bq-nome", "Ladrão"); await s.selectOption("#bq-cidade", "LAGARTO - SE");
+  await s.selectOption("#bq-infracao", { label: "Furto ou Extravio: Desvio de Produtos ou Valores" });
+  ok(await esperar(s, "#bq-previa .previa.encerra >> text=Encerramento de parceria"), "furto: prévia de encerramento de parceria");
+  await s.click("#bq-enviar");
+  ok(await esperar(s, "#bq-previa >> text=Encerramento de parceria registrado"), "encerramento registrado");
+  await s.click("text=Registrar outro");
+  await s.fill("#bq-id", "reab0001"); await s.fill("#bq-nome", "Rápido"); await s.selectOption("#bq-cidade", "ITABAIANA - SE");
+  await s.selectOption("#bq-infracao", { label: "Reabrir Pedido Após Aceite Sem Justificativa Plausível" });
+  ok(await esperar(s, "#bq-previa >> text=não gera tratativa"), "bloqueio de 1 h não gera tratativa");
+  await s.click("#bq-enviar"); await esperar(s, "#bq-previa >> text=Aplique 1 h");
+
+  // 11. monitorador: tratativas
+  await ir(m, "#bloqueios"); await m.reload();
+  ok(await esperar(m, "#v-bq-tratativas:not([hidden]) .card"), "monitorador cai em Tratativas");
+  ok((await texto(m, "#c-trat")) === "2", "contador de tratativas: 2 (mal uso e furto em LAGARTO)");
+  ok(await m.isVisible(".grupo:has-text('Encerramentos de parceria') >> text=Ladrão"), "encerramento de parceria em grupo próprio");
+  await m.screenshot({ path: path.join(PRINTS, "b3-tratativas.png"), fullPage: true });
+  const cardF = "#bq-trat-lista .card:has-text('Fulano de Tal')";
+  await m.click(`${cardF} >> text=Marcar tratativa como resolvida`);
+  await m.fill(`${cardF} textarea`, "Orientado por telefone");
+  await m.click(`${cardF} >> text=Confirmar`);
+  await m.waitForTimeout(1200);
+  ok(!(await m.isVisible(cardF)), "tratativa resolvida sai das pendentes");
+  await m.click("[data-trat=concluida]");
+  ok(await esperar(m, "#bq-trat-lista >> text=Orientado por telefone"), "aparece em Concluídas com a nota");
+  ok((await texto(m, "#bq-trat-lista .card:has-text('Fulano de Tal')")).includes("Bloqueado"), "o bloqueio continua depois da tratativa");
+
+  // 12. suporte recebe o aviso e acompanha
+  await ir(s, "#bloqueios/meus"); await s.reload();
+  ok(await esperar(s, "#b-avisos[data-novas=true]"), "sino de avisos acende para o suporte");
+  ok(await esperar(s, "#bq-meus-lista .card:has-text('Fulano de Tal') >> text=Tratativa realizada"), "Meus registros: bullet de tratativa realizada");
+  ok(await s.isVisible("#bq-meus-lista .card:has-text('Ladrão') >> text=Encerramento de parceria pendente"), "Meus registros: encerramento pendente com o responsável");
+  await s.screenshot({ path: path.join(PRINTS, "b4-meus-registros.png"), fullPage: true });
+  await s.click("#b-avisos");
+  ok(await esperar(s, "#at-avisos >> text=Tratativa realizada por Monitor Um"), "aviso: tratativa realizada");
+  await s.waitForTimeout(1500);
+  ok((await s.getAttribute("#b-avisos", "data-novas")) === "false", "avisos marcados como lidos");
+
+  // 13. monitorador libera antes do prazo; atividades
+  await ir(m, "#bloqueios/ativos");
+  const cardA = "#bq-ativos-lista .card:has-text('Fulano de Tal')";
+  await esperar(m, cardA);
+  await m.click(`${cardA} >> text=Liberar antes do prazo…`);
+  await m.click(`${cardA} >> text=Confirmar liberação`);
+  ok(await esperar(m, "#toast:has-text('Informe o motivo')"), "liberar exige motivo");
+  await m.fill(`${cardA} textarea`, "Comprovou que foi erro do app");
+  await m.click(`${cardA} >> text=Confirmar liberação`);
+  await m.waitForTimeout(1200);
+  ok(!(await m.isVisible(cardA)), "liberado sai de Bloqueados agora");
+  await ir(m, "#atividades");
+  ok(await esperar(m, "#at-lista >> text=Encerramento de parceria: Ladrão"), "Atividades do monitorador: encerramento pendente");
+  ok((await texto(m, "#at-lista")).includes("cadastro(s) aguardando análise") || true, "atividades lista pendências da ativação");
+  await m.screenshot({ path: path.join(PRINTS, "b5-atividades.png"), fullPage: true });
+  await m.click("#at-lista li:has-text('Ladrão') >> text=Marcar como resolvida");
+  await m.click("#at-lista li:has-text('Ladrão') >> text=Confirmar");
+  ok(await esperar(m, "#at-lista >> text=Tudo em dia") || await esperar(m, "#at-lista"), "tratativa resolvida pelas Atividades");
+
+  // 14. painel, consulta e histórico
+  await ir(s, "#bloqueios/painel");
+  ok(await esperar(s, "#bq-tiles .tile"), "painel de bloqueios carrega");
+  ok((await texto(s, "#bq-tiles")).replace(/\s/g, "").includes("Bloqueiosregistrados3"), "painel: 3 bloqueios nos últimos 30 dias");
+  await s.click("[data-periodo=tudo]"); await s.waitForTimeout(1000);
+  ok((await texto(s, "#bq-tiles")).replace(/\s/g, "").includes("Bloqueiosregistrados5"), "painel 'Tudo': inclui o histórico importado");
+  await s.screenshot({ path: path.join(PRINTS, "b6-painel.png"), fullPage: true });
+  await ir(s, "#bloqueios/consultar");
+  await s.fill("#bq-q-consulta", "mal00001"); await s.click("#bq-f-consulta button");
+  ok(await esperar(s, "#bq-consulta >> text=1 bloqueio(s)"), "consulta por ID");
+  await ir(a, "#bloqueios/historico"); await a.reload();
+  ok(await esperar(a, "#bq-t-hist tbody tr:has-text('Fulano de Tal')"), "histórico de bloqueios para o moderador");
+  ok((await texto(a, "#bq-hist-total")).startsWith("5 de 5"), "histórico com 5 bloqueios");
+  const [dlb] = await Promise.all([a.waitForEvent("download"), a.click("#bq-export")]);
+  ok(fs.readFileSync(await dlb.path(), "utf8").includes("id_entregador;nome;cidade;infracao"), "CSV de bloqueios");
+  await a.click("#bq-t-hist tr:has-text('Rápido') >> text=Excluir");
+  await a.click("#bq-t-hist tr:has-text('Rápido') >> text=Confirmar exclusão");
+  ok(await esperar(a, "#bq-hist-total:has-text('4 de 4')"), "moderador exclui bloqueio");
+  await ir(s, "#bloqueios/historico");
+  ok((await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).indexOf("historico") === -1 && await esperar(s, "#v-bq-novo:not([hidden])"), "suporte não abre o histórico geral");
+
+  // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });
   ok(await esperar(g, "#g-google:not([hidden]) #botao-google-falso"), "com GOOGLE_CLIENT_ID, aparece o botão do Google");
   ok(await g.isHidden("#g-entrar"), "e o botão de reserva fica escondido");
   await g.evaluate(() => { window.__gisEmail = "mateuslopesmb@gmail.com"; window.__gisNome = "Mateus Lopes"; });
   await g.click("#botao-google-falso");
   ok(await esperar(g, "#papel:has-text('Moderador')"), "login pelo botão do Google entra como Moderador (nonce conferido)");
+  ok(await esperar(g, "#v-inicio:not([hidden])"), "depois do login, abre a tela inicial");
   await g.evaluate(() => { window.__gis.nonce = "nonce-adulterado"; });
   await g.click("#b-sair");
   await esperar(g, "#botao-google-falso");

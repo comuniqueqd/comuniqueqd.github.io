@@ -3,8 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "npm run test:sql && npm run test:e2e",
+    "test": "npm run test:sql && npm run test:bloqueios && npm run test:e2e",
     "test:sql": "node sql.test.mjs",
+    "test:bloqueios": "node bloqueios.test.mjs",
     "test:e2e": "node e2e.test.mjs"
   },
   "devDependencies": {
