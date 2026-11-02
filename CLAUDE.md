@@ -32,7 +32,9 @@ Rodar a página localmente: `npx serve -l 8000` (o Supabase só aceita os redire
 - **CPF guardado só com dígitos**, único; `id_app` único sem diferenciar maiúsculas (`lower(id_app)`). A mensagem amigável de duplicidade vem de `enviar_cadastro`.
 - **`listar_cadastros` e `eventos_do_cadastro` são `security invoker`**: o RLS (`cadastros_leitura`) garante que o suporte só receba os próprios. `metricas` é `security definer` e devolve só agregados (sem CPF) para todos os papéis; `p_pessoas` filtra cadastros enviados OU decididos por aquelas pessoas.
 - **Front (`index.html`)**: objeto `S` guarda listas por escopo (`pendentes`, `meus`, `todos`), métricas e equipe; `carregar()` busca o que a aba atual precisa e `render()` redesenha só ela (adiado enquanto há um campo focado dentro dos cards/tabela de equipe). Atualiza por Realtime (`postgres_changes`) e a cada 30 s. DOM montado por `el()` (via `textContent`, nunca `innerHTML`). Rotas por hash; `VIEWS` define quais abas cada papel vê.
-- `supabase-config.js` tem a URL do projeto e a chave publishable/anon (públicas). `supabase/analises.sql` traz consultas de análise e a manutenção dos motivos.
+- **Login**: botão oficial do Google (Google Identity Services, `GOOGLE_CLIENT_ID`) → `signInWithIdToken` com nonce (o Google recebe o SHA-256, o Supabase o valor original). Assim a janela do Google mostra o domínio do site, não o do Supabase. Se o script do Google não carregar ou faltar o ID, `botaoGoogle()` mostra o botão de reserva (`signInWithOAuth`, redirecionamento). O ID do cliente precisa estar também em Supabase → Google → Client IDs.
+- Site publicado em https://comuniqueqd.github.io/ (repositório `comuniqueqd/comuniqueqd.github.io`, GitHub Pages a partir da `main`). Projeto Supabase `nhgmkbfaqonojhaggwui`. `privacidade.html` é exigida pela tela de permissão do Google.
+- `supabase-config.js` tem a URL do projeto, a chave publishable e o ID do cliente Google (todos públicos). `supabase/analises.sql` traz consultas de análise e a manutenção dos motivos.
 
 ## Mudanças no banco
 
