@@ -27,8 +27,11 @@ await db.connect();
 await db.query(fs.readFileSync(path.join(AQUI, "supabase-local.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/schema.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/002-bloqueios.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/003-entregadores.sql"), "utf8"));
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
 for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001', 'Ciclano Atrasado', 'LAGARTO - SE', 'Atraso na Coleta ou na Entrega Sem Justificativa', now() - make_interval(days => $1), 'Planilha')", [d]);
+// registro importado com alerta de revisão (100 dias atrás: fora do painel de 30 dias)
+await db.query("select importar_bloqueio('rev00001', 'Nome Errado', 'ITABAIANA - SE', 'Avaria de Produto', now() - interval '100 days', 'Planilha', 'ID usado com 2 nomes diferentes na planilha', '24')");
 await db.end();
 
 const api = await iniciarSupabaseFalso({ porta: 54321, databaseUrl: DB });
@@ -48,7 +51,8 @@ const novata = pessoa("novata@x.com", "Novata Silva");
 
 let falhas = 0;
 const ok = (cond, msg) => { console.log((cond ? "ok     " : "FALHOU ") + msg); if (!cond) falhas++; };
-const b = await chromium.launch();
+// CHROMIUM=/caminho/do/chrome usa um Chromium já instalado (outra versão do Playwright)
+const b = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
 
 // Imita o script do Google (Google Identity Services): o botão gera um token do Google com o nonce recebido.
 const GIS_FALSO = `window.google = { accounts: { id: {
@@ -125,7 +129,7 @@ try {
   await esperar(s, "#v-novo:not([hidden])");
   const abas = await s.$$eval("nav.tabs a:not([hidden])", (as) => as.map((x) => x.dataset.view));
   ok(JSON.stringify(abas) === JSON.stringify(["pendentes", "novo", "meus", "painel"]), "suporte vê só Pendentes, Novo, Meus cadastros e Painel: " + abas);
-  await s.fill("#f-idapp", "697a33d1077b"); await s.fill("#f-cpf", "52998224725"); await s.fill("#f-cidade", "LAGARTO - SE"); await s.fill("#f-obs", "Documentos pelo WhatsApp");
+  await s.fill("#f-idapp", "1a2b3c4d5e6f"); await s.fill("#f-cpf", "52998224725"); await s.fill("#f-cidade", "LAGARTO - SE"); await s.fill("#f-obs", "Documentos pelo WhatsApp");
   await s.click("#b-enviar");
   ok(await esperar(s, "#v-pendentes:not([hidden]) .card.destaque"), "após enviar, vai para Pendentes com o cadastro destacado");
   ok((await texto(s, ".card.destaque")).includes("Aguardando análise"), "card mostra a situação Aguardando análise");
@@ -149,14 +153,14 @@ try {
   const abasM = await m.$$eval("nav.tabs a:not([hidden])", (as) => as.map((x) => x.dataset.view));
   ok(!abasM.includes("equipe") && abasM.includes("historico"), "monitorador vê Histórico e não vê Equipe");
   ok((await texto(m, "#c-pend")) === "3", "contador de pendentes: 3");
-  const cardLagarto = "#queue .card:has-text('697a33d1077b')";
+  const cardLagarto = "#queue .card:has-text('1a2b3c4d5e6f')";
   await m.click(`${cardLagarto} >> text=Reprovar`);
   await m.click(`${cardLagarto} >> text=Confirmar reprovação`);
   ok(await esperar(m, "#toast:has-text('Escolha o motivo')"), "reprovar sem motivo pede o motivo");
   await m.selectOption(`${cardLagarto} select`, "Fotos sem camisa");
   await m.fill(`${cardLagarto} .box input`, "Foto do rosto também");
   await m.click(`${cardLagarto} >> text=Confirmar reprovação`);
-  ok(await esperar(m, ".grupo:has-text('Aguardando novo contato') >> text=697a33d1077b"), "reprovado vai para o grupo Aguardando novo contato");
+  ok(await esperar(m, ".grupo:has-text('Aguardando novo contato') >> text=1a2b3c4d5e6f"), "reprovado vai para o grupo Aguardando novo contato");
   ok((await texto(m, cardLagarto)).includes("Fotos sem camisa — Foto do rosto também"), "card mostra motivo e detalhe");
   ok(!(await m.isVisible(`${cardLagarto} >> text=Reprovar`)) && await m.isVisible(`${cardLagarto} >> text=Aprovar`) && await m.isVisible(`${cardLagarto} >> text=Encerrar…`), "aguardando contato: só Aprovar ou Encerrar");
   const cardZ = "#queue .card:has-text('zzz99881')";
@@ -182,7 +186,7 @@ try {
   await esperar(s, "#t-meus tbody tr td .pill");
   ok((await s.$$("#t-meus tbody tr")).length === 3, "Meus cadastros lista os 3");
   ok((await texto(s, "#meus-tiles")).replace(/\s/g, "").includes("Aprovados1"), "Meus cadastros: 1 aprovado");
-  await s.click("#t-meus tr:has-text('697a33d1077b')");
+  await s.click("#t-meus tr:has-text('1a2b3c4d5e6f')");
   ok(await esperar(s, "#t-meus .timeline >> text=Reprovado"), "histórico do cadastro: " + (await texto(s, "#t-meus .timeline")).replace(/\s+/g, " ").slice(0, 120));
   await s.screenshot({ path: path.join(PRINTS, "5-meus-cadastros.png"), fullPage: true });
 
@@ -213,7 +217,7 @@ try {
   ok(!(await a.isVisible("#t-hist >> text=abc12345")), "moderador exclui");
   const [dl] = await Promise.all([a.waitForEvent("download"), a.click("#b-export")]);
   const csv = fs.readFileSync(await dl.path(), "utf8");
-  ok(csv.includes("id_entregador;cpf;cidade") && csv.includes("697a33d1077b;529.982.247-25;LAGARTO - SE"), "CSV baixado");
+  ok(csv.includes("id_entregador;cpf;cidade") && csv.includes("1a2b3c4d5e6f;529.982.247-25;LAGARTO - SE"), "CSV baixado");
   await a.screenshot({ path: path.join(PRINTS, "7-historico.png"), fullPage: true });
 
   // 8. novata já liberada entra; sair volta ao login
@@ -246,6 +250,7 @@ try {
   ok(JSON.stringify(abasB) === JSON.stringify(["novo", "meus", "consultar", "painel"]), "suporte vê Novo, Meus registros, Consultar e Painel: " + abasB);
   await s.fill("#bq-id", "mal00001"); await s.fill("#bq-nome", "Fulano de Tal");
   await s.selectOption("#bq-cidade", "LAGARTO - SE"); await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
+  await s.fill("#bq-comentario", "Educado, mas costuma atrasar a coleta.");
   ok(await esperar(s, "#bq-previa >> text=Aplicar 2 dias (48 h) de bloqueio"), "prévia: 1ª ocorrência de mal uso = 48 h");
   ok((await texto(s, "#bq-previa")).includes("Gera tratativa para Monitor Um"), "prévia: avisa que gera tratativa para o responsável");
   await s.screenshot({ path: path.join(PRINTS, "b2-novo-previa.png"), fullPage: true });
@@ -253,8 +258,11 @@ try {
   ok(await esperar(s, "#bq-previa >> text=Aplique 2 dias (48 h) de bloqueio"), "após registrar: mostra o tempo a aplicar");
   ok((await texto(s, "#bq-previa")).includes("Tratativa enviada para Monitor Um"), "após registrar: tratativa enviada");
   await s.click("text=Registrar outro");
-  await s.fill("#bq-id", "mal00001"); await s.fill("#bq-nome", "Fulano de Tal"); await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
+  ok((await s.inputValue("#bq-comentario")) === "", "comentário limpo depois de registrar");
+  await s.fill("#bq-id", "mal00001"); await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
   await esperar(s, "#bq-previa >> text=Histórico deste ID");
+  ok((await s.inputValue("#bq-nome")) === "Fulano de Tal", "nome sugerido pelo cadastro do entregador");
+  ok(await esperar(s, "#bq-previa >> text=Educado, mas costuma atrasar a coleta."), "prévia mostra os comentários do entregador");
   await s.click("#bq-enviar");
   ok(await esperar(s, "#bq-erro:not([hidden]) >> text=há poucos minutos"), "registro em dobro é recusado");
   await s.click("#bq-form button[type=reset]");
@@ -324,19 +332,51 @@ try {
   ok(await esperar(s, "#bq-tiles .tile"), "painel de bloqueios carrega");
   ok((await texto(s, "#bq-tiles")).replace(/\s/g, "").includes("Bloqueiosregistrados3"), "painel: 3 bloqueios nos últimos 30 dias");
   await s.click("[data-periodo=tudo]"); await s.waitForTimeout(1000);
-  ok((await texto(s, "#bq-tiles")).replace(/\s/g, "").includes("Bloqueiosregistrados5"), "painel 'Tudo': inclui o histórico importado");
+  ok((await texto(s, "#bq-tiles")).replace(/\s/g, "").includes("Bloqueiosregistrados6"), "painel 'Tudo': inclui o histórico importado");
   await s.screenshot({ path: path.join(PRINTS, "b6-painel.png"), fullPage: true });
   await ir(s, "#bloqueios/consultar");
   await s.fill("#bq-q-consulta", "mal00001"); await s.click("#bq-f-consulta button");
   ok(await esperar(s, "#bq-consulta >> text=1 bloqueio(s)"), "consulta por ID");
+  ok(await s.isVisible("#bq-consulta .comentarios >> text=Educado, mas costuma atrasar a coleta."), "consulta mostra o comentário feito no registro");
+  ok(!(await texto(s, "#bq-consulta")).includes("null"), "consulta sem textos vazios (null)");
+  ok(!(await s.isVisible("#bq-consulta >> text=Alterar dados")) && !(await s.isVisible("#bq-consulta >> text=Corrigir")), "suporte não altera dados nem corrige");
+  await s.fill("#bq-consulta textarea", "Ligou pedindo para ser liberado.");
+  await s.click("#bq-consulta >> text=Adicionar comentário");
+  ok(await esperar(s, "#bq-consulta .comentarios >> text=Ligou pedindo para ser liberado."), "suporte adiciona comentário na consulta");
+  await s.screenshot({ path: path.join(PRINTS, "b6b-consulta.png"), fullPage: true });
+  // moderador altera o cadastro e aplica aos bloqueios
+  await ir(a, "#bloqueios/consultar");
+  await a.fill("#bq-q-consulta", "mal00001"); await a.click("#bq-f-consulta button");
+  await esperar(a, "#bq-consulta >> text=Alterar dados");
+  await a.click("#bq-consulta >> text=Alterar dados");
+  await a.fill("dialog.janela input:not([type=checkbox])", "Fulano de Tal Souza");
+  await a.check("dialog.janela input[type=checkbox]");
+  await a.screenshot({ path: path.join(PRINTS, "b6c-alterar-dados.png") });
+  await a.click("dialog.janela >> text=Salvar");
+  ok(await esperar(a, "#toast:has-text('aplicados a 1 bloqueio')"), "alteração aplicada ao bloqueio já registrado");
+  ok(await esperar(a, "#bq-consulta h3:has-text('Fulano de Tal Souza')") && await a.isVisible("#bq-consulta .comentarios .alteracao >> text=Fulano de Tal → Fulano de Tal Souza"), "consulta mostra o novo nome e a alteração no histórico");
   await ir(a, "#bloqueios/historico"); await a.reload();
   ok(await esperar(a, "#bq-t-hist tbody tr:has-text('Fulano de Tal')"), "histórico de bloqueios para o moderador");
-  ok((await texto(a, "#bq-hist-total")).startsWith("5 de 5"), "histórico com 5 bloqueios");
+  ok((await texto(a, "#bq-hist-total")).startsWith("6 de 6"), "histórico com 6 bloqueios");
+  // alerta "revisar" vira botão que abre a correção
+  await a.click("#bq-t-hist tr:has-text('Nome Errado') button.alerta-revisar");
+  ok(await esperar(a, "dialog.janela >> text=ID usado com 2 nomes diferentes na planilha"), "revisar abre a janela com o motivo do alerta");
+  await a.fill("dialog.janela input >> nth=1", "Nome Certo");
+  await a.click("dialog.janela >> text=Salvar correção");
+  ok(await esperar(a, "dialog.janela >> text=Informe o motivo da correção"), "correção exige motivo");
+  await a.fill("dialog.janela textarea", "Nome conferido no aplicativo");
+  await a.screenshot({ path: path.join(PRINTS, "b7-revisar.png") });
+  await a.click("dialog.janela >> text=Salvar correção");
+  ok(await esperar(a, "#bq-t-hist tr:has-text('Nome Certo')") && !(await a.isVisible("#bq-t-hist tr:has-text('Nome Certo') button.alerta-revisar")), "registro corrigido e alerta resolvido");
+  ok(!(await a.isVisible("dialog.janela")), "janela fecha depois de salvar");
+  await a.click("#bq-t-hist tr:has-text('Nome Certo') >> text=Corrigir");
+  ok(await esperar(a, "dialog.janela >> text=Dados corrigidos por Mateus Lopes") && !(await texto(a, "dialog.janela")).includes("null"), "correção aparece no histórico do registro");
+  await a.click("dialog.janela >> text=Cancelar");
   const [dlb] = await Promise.all([a.waitForEvent("download"), a.click("#bq-export")]);
   ok(fs.readFileSync(await dlb.path(), "utf8").includes("id_entregador;nome;cidade;tipo;infracao"), "CSV de bloqueios");
   await a.click("#bq-t-hist tr:has-text('Rápido') >> text=Excluir");
   await a.click("#bq-t-hist tr:has-text('Rápido') >> text=Confirmar exclusão");
-  ok(await esperar(a, "#bq-hist-total:has-text('4 de 4')"), "moderador exclui bloqueio");
+  ok(await esperar(a, "#bq-hist-total:has-text('5 de 5')"), "moderador exclui bloqueio");
   await ir(s, "#bloqueios/historico");
   ok((await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).indexOf("historico") === -1 && await esperar(s, "#v-bq-novo:not([hidden])"), "suporte não abre o histórico geral");
 
@@ -346,7 +386,7 @@ try {
   ok(await s.isHidden("#bq-nome") && await s.isHidden("#bq-cidade"), "infração leve: só ID e motivo");
   await s.fill("#bq-id", "mal00001"); await s.selectOption("#bq-infracao", { label: "Reabertura de Pedido (aviso)" });
   ok(await esperar(s, "#bq-previa >> text=Aplicar aviso de 30 min"), "prévia da leve: aviso de 30 min");
-  ok((await texto(s, "#bq-previa")).includes("Entregador: Fulano de Tal · LAGARTO - SE"), "prévia da leve: nome e cidade vêm do histórico");
+  ok((await texto(s, "#bq-previa")).includes("Entregador: Fulano de Tal Souza · LAGARTO - SE"), "prévia da leve: nome e cidade vêm do cadastro do entregador");
   await s.screenshot({ path: path.join(PRINTS, "b7-leve-previa.png"), fullPage: true });
   await s.click("#bq-enviar");
   ok(await esperar(s, "#bq-previa >> text=Aplique aviso de 30 min"), "leve registrada");

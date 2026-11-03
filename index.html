@@ -66,7 +66,7 @@
       <p class="sub" style="margin:0">Obrigatório: <strong>cidade</strong> e pelo menos um entre <strong>ID do entregador</strong> e <strong>CPF</strong>. CPF e ID não podem se repetir.</p>
       <div class="grid2">
         <label for="f-idapp">ID do entregador <span class="hint">Letras e números</span>
-          <input id="f-idapp" class="mono" autocomplete="off" spellcheck="false" maxlength="40" placeholder="697a33d1077ba0166df76d91">
+          <input id="f-idapp" class="mono" autocomplete="off" spellcheck="false" maxlength="40" placeholder="ID no aplicativo de entregas">
           <span class="err" id="e-idapp"></span>
         </label>
         <label for="f-cpf">CPF <span class="hint">Opcional se tiver o ID</span>
@@ -192,6 +192,9 @@
         <label for="bq-obs">Observação <span class="hint">Opcional: o que aconteceu, número do pedido…</span>
           <textarea id="bq-obs" maxlength="600"></textarea>
         </label>
+        <label for="bq-comentario">Comentários adicionais sobre o entregador <span class="hint">Opcional: fica no cadastro do entregador e aparece para quem consultar ou registrar este ID depois.</span>
+          <textarea id="bq-comentario" maxlength="1500" rows="2"></textarea>
+        </label>
         <p class="warn-msg" id="bq-erro" role="alert" hidden></p>
         <div class="actions"><button class="btn primary" type="submit" id="bq-enviar">Registrar bloqueio</button><button class="btn" type="reset">Limpar</button></div>
       </form>
@@ -233,11 +236,12 @@
 
   <section class="view" id="v-bq-consultar" hidden>
     <h2>Consultar entregador</h2>
+    <p class="sub">O cadastro de cada entregador: nome, cidade, comentários da equipe, bloqueios e cadastro na ativação.</p>
     <form class="toolbar" id="bq-f-consulta">
       <input id="bq-q-consulta" type="search" placeholder="ID do entregador ou parte do nome" aria-label="ID ou nome do entregador">
       <button class="btn primary" type="submit" style="flex:0 0 auto">Consultar</button>
     </form>
-    <div id="bq-consulta"></div>
+    <div id="bq-consulta" class="protege-foco"></div>
   </section>
 
   <section class="view" id="v-bq-painel" hidden>

@@ -100,7 +100,7 @@ Para quem já instalou o `schema.sql`. **Não apaga** os dados da ativação.
 4. No app, aba **Bloqueios → Regras**: escolha o responsável pela tratativa de cada cidade. Antes disso, as tratativas vão para todos os moderadores.
 5. Na **Equipe**, ajuste o acesso de cada pessoa nos bloqueios (a migração copia o acesso que cada um já tinha na ativação).
 
-**Se depois de rodar o módulo Bloqueios não aparecer** (ou surgir "Erro ao carregar dados" mencionando `resumo_inicio`), a migração não entrou inteira: rode o `002-bloqueios.sql` de novo, do começo ao fim. Ele foi feito para poder rodar mais de uma vez sem apagar nada. Depois recarregue o site com Ctrl+F5.
+**Se depois de rodar o módulo Bloqueios não aparecer** (ou surgir "Erro ao carregar dados" mencionando `resumo_inicio`), a migração não entrou inteira: rode o `002-bloqueios.sql` de novo, do começo ao fim (e depois o `003-entregadores.sql`, se já tiver rodado). Ele foi feito para poder rodar mais de uma vez sem apagar nada. Depois recarregue o site com Ctrl+F5.
 
 Regras de bloqueio (editáveis pela aba Regras):
 
@@ -110,3 +110,19 @@ Regras de bloqueio (editáveis pela aba Regras):
 - bloqueios de **10 h ou mais** e encerramentos geram uma **tratativa** para o responsável da cidade; resolver a tratativa avisa quem registrou e **não** libera o bloqueio;
 - o bloqueio termina sozinho no fim do prazo; monitorador ou moderador pode liberar antes, com motivo.
 - **infrações leves** (avisos de 30 min: reabertura de pedido e atraso na coleta) são registradas só com o ID e o motivo e contam separado dos bloqueios. Se o ID nunca apareceu, o monitoramento recebe a tarefa de completar nome e cidade. A cada **3 leves em 50 dias** (os dois motivos juntos), a última gera um **bloqueio normal** da infração correspondente e uma tarefa de contato para o responsável da cidade; depois a contagem zera. Duração, limite e período ficam na aba Regras.
+
+## Atualização: cadastro do entregador, comentários e correções (migração 003)
+
+Para quem já rodou o `002-bloqueios.sql`. **Não apaga** nada e pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/003-entregadores.sql`](supabase/003-entregadores.sql) inteiro e clique em **Run**. Deve aparecer "Success. No rows returned".
+2. Só depois publique a versão nova do site (a `main`): o site novo usa funções que só existem depois do passo 1.
+
+O que muda:
+
+- **Cadastro do entregador**: cada ID ganha nome e cidade "oficiais", criados a partir dos bloqueios. Em **Consultar entregador**, monitorador e moderador podem alterar esses dados (e, se quiserem, aplicar aos bloqueios já registrados). Os próximos registros do ID já vêm preenchidos com eles.
+- **Comentários**: no Novo bloqueio há um campo opcional de comentários adicionais, que vai para o cadastro do entregador. Na consulta, qualquer pessoa do módulo de bloqueios pode comentar; quem escreveu ou um moderador pode apagar.
+- **Revisar / Corrigir**: o alerta "revisar" virou um botão. Ele abre uma janela para corrigir ID, nome e cidade (motivo obrigatório) ou marcar como revisado. Também há o botão **Corrigir** no histórico, nos cartões e na consulta. A punição aplicada não muda.
+- **Segurança**: funções internas deixam de poder ser chamadas por quem está logado mas fora da equipe.
+
+**Se rodar o `002` de novo**, rode o `003` em seguida.

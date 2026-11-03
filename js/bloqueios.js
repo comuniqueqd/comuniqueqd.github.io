@@ -4,14 +4,14 @@
 (() => {
   "use strict";
   const App = window.App;
-  const { $, el, norm, dt, dia, duracao, horas, toast, PAPEL, vazio, carregandoEl, rpc, msgErro,
+  const { $, el, janela, norm, dt, dia, duracao, horas, toast, PAPEL, vazio, carregandoEl, rpc, msgErro,
           tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas, nomesEscolhidos } = App.u;
   const S = App.S;
   const B = {
     regras: null, lista: { ativos: null, meus: null, todos: null }, tarefas: { pendente: null, concluida: null },
     metricas: null, previa: null, resultado: null, consulta: null, destaque: null,
     painel: { periodo: 30, filtro: "todos", escolhidos: new Set(), cidade: "", infracao: "" },
-    tratVer: "pendente", caixa: {}, eventos: {}, confirmar: {}, tipo: "normal",
+    tratVer: "pendente", caixa: {}, eventos: {}, confirmar: {}, tipo: "normal", rascunho: {},
   };
   const papel = () => S.me?.papel_bloqueios;
   const staff = () => ["moderador", "monitorador"].includes(papel());
@@ -83,8 +83,10 @@
         fld("Fim", b.fim ? dt(b.fim) : "—"),
         fld("Cidade", b.cidade),
         fld("Registrado por", b.registrado_por === S.me.id ? "Você" : b.registrado_por_nome)),
-      b.revisar ? el("span", { class: "alerta-revisar", text: "Revisar: " + b.revisar }) : null,
-      b.dados_pendentes ? el("span", { class: "alerta-revisar", text: "ID sem cadastro: o monitoramento vai completar nome e cidade." }) : null,
+      alertaRevisar(b),
+      b.dados_pendentes ? (tarefaMinha && completar
+        ? el("button", { class: "alerta-revisar", type: "button", onclick: () => abrir(b.id, "completar") }, "ID sem cadastro: completar nome e cidade ›")
+        : el("span", { class: "alerta-revisar", text: "ID sem cadastro: o monitoramento vai completar nome e cidade." })) : null,
       b.gerou_bloqueio ? el("div", { class: "motivo", text: "Esta infração leve atingiu o limite e gerou um bloqueio normal." }) : null,
       b.observacao ? el("div", { class: "obs", text: b.observacao }) : null,
       sit === "liberado_antes" ? el("div", { class: "obs" }, el("b", { text: `Liberado antes do prazo por ${b.liberado_por_nome} em ${dt(b.liberado_em)}: ` }), b.motivo_liberacao) : null,
@@ -93,12 +95,78 @@
         tarefaMinha ? el("button", { class: "btn approve", type: "button", onclick: () => abrir(b.id, completar ? "completar" : "tratar") },
           completar ? "Completar dados" : b.tarefa.tipo === "encerramento_parceria" ? "Marcar encerramento como tratado" : "Marcar tratativa como resolvida") : null,
         botaoEventos(b.id),
+        staff() && !b.dados_pendentes ? el("button", { class: "btn link", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir dados") : null,
         el("span", { class: "spacer" }),
         staff() && (sit === "bloqueado" || sit === "encerramento") ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrir(b.id, "liberar") }, "Liberar antes do prazo…") : null) : null,
       cx ? caixa(b, cx) : null,
       B.eventos[b.id + ":aberto"] ? linhaDoTempo(b.id) : null);
   }
   const fld = (k, v) => el("div", {}, el("dt", { text: k }), el("dd", { text: v || "—" }));
+
+  // ---------- alerta "revisar" e correção de um bloqueio (monitorador e moderador) ----------
+  function alertaRevisar(b, curto = false) {
+    if (!b.revisar) return null;
+    const txt = curto ? "revisar" : "Revisar: " + b.revisar;
+    return staff() && !b.dados_pendentes
+      ? el("button", { class: "alerta-revisar", type: "button", title: "Revisar: " + b.revisar, onclick: (e) => { e.stopPropagation(); abrirCorrecao(b); } }, txt + " ›")
+      : el("span", { class: "alerta-revisar", title: b.revisar, text: txt });
+  }
+  const EVB = { registrado: "Registrado", liberado_antes: "Liberado antes do prazo", tratativa_concluida: "Tratativa realizada", corrigido: "Dados corrigidos", revisado: "Marcado como revisado" };
+  function opcoesCidade(atual) {
+    const nomes = (B.regras?.cidades || []).filter((c) => c.ativa || c.nome === atual).map((c) => c.nome);
+    return [el("option", { value: "", text: atual ? "Escolha a cidade" : "Sem cidade (escolha uma, se souber)" }), ...nomes.map((n) => el("option", { value: n, text: n }))];
+  }
+  function abrirCorrecao(b) {
+    const id = el("input", { class: "mono", maxlength: "40", autocomplete: "off", spellcheck: "false", oninput: (e) => (e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, "")) });
+    id.value = b.id_app;
+    const nome = el("input", { maxlength: "120", autocomplete: "off" }); nome.value = b.nome;
+    const cid = el("select", {}, ...opcoesCidade(b.cidade)); cid.value = b.cidade || "";
+    const mot = el("textarea", { maxlength: "300", rows: "2", placeholder: "Ex.: ID conferido no aplicativo; nome completo confirmado com o entregador." });
+    const erro = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    const contexto = el("div", { style: "display:grid;gap:8px" }, el("p", { class: "meta", style: "margin:0", text: "Carregando o histórico deste ID…" }));
+    const mudou = () => id.value.trim() !== b.id_app || nome.value.trim() !== b.nome || (cid.value || null) !== (b.cidade || null);
+    async function enviar(btn, soRevisado) {
+      erro.hidden = true;
+      if (!soRevisado && !mudou()) { erro.textContent = b.revisar ? "Nada foi alterado. Se os dados estão certos, use “Os dados estão certos”." : "Nada foi alterado."; erro.hidden = false; return; }
+      if (!soRevisado && !mot.value.trim()) { erro.textContent = "Informe o motivo da correção."; erro.hidden = false; mot.focus(); return; }
+      btn.disabled = true;
+      try {
+        await rpc("corrigir_bloqueio", soRevisado
+          ? { p_bloqueio: b.id, p_id_app: b.id_app, p_nome: b.nome, p_cidade: b.cidade, p_motivo: mot.value.trim() || null }
+          : { p_bloqueio: b.id, p_id_app: id.value.trim(), p_nome: nome.value.trim(), p_cidade: cid.value || null, p_motivo: mot.value.trim() });
+        d.close();
+        toast(soRevisado ? "Marcado como revisado." : "Bloqueio corrigido. A correção ficou no histórico.");
+        await carregar();
+        if (B.consulta?.q) reconsultar();
+      } catch (e) { btn.disabled = false; erro.textContent = msgErro(e); erro.hidden = false; }
+    }
+    const d = janela(b.revisar ? "Revisar registro" : "Corrigir dados do bloqueio",
+      b.revisar ? el("div", { class: "alerta-revisar bloco" }, el("b", { text: "Por que revisar: " }), b.revisar) : null,
+      el("p", { class: "meta", style: "margin:0", text: `${b.infracao}${b.leve ? " (leve)" : ""} · ${dt(b.inicio)} · ${horasTxt(b.horas)} · registrado por ${b.registrado_por_nome}` }),
+      el("div", { class: "grid2" },
+        el("label", {}, "ID do entregador", id),
+        el("label", {}, "Nome do entregador", nome)),
+      el("label", {}, "Cidade", cid),
+      el("label", {}, "Motivo da correção (obrigatório se alterar algo)", mot),
+      el("p", { class: "meta", style: "margin:0", text: "A punição aplicada e a ocorrência gravada não mudam. A correção fica no histórico do bloqueio e no cadastro do entregador." }),
+      erro,
+      el("div", { class: "actions" },
+        el("button", { class: "btn primary", type: "button", onclick: (e) => enviar(e.currentTarget, false) }, "Salvar correção"),
+        b.revisar ? el("button", { class: "btn", type: "button", onclick: (e) => enviar(e.currentTarget, true) }, "Os dados estão certos") : null,
+        el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")),
+      contexto);
+    // outros registros com este ID e histórico deste bloqueio, para ajudar a decidir
+    Promise.all([rpc("consultar_entregador", { p_busca: b.id_app }), rpc("eventos_do_bloqueio", { p_bloqueio: b.id })]).then(([c, ev]) => {
+      const outros = (c.bloqueios || []).filter((x) => x.id !== b.id && x.id_app.toLowerCase() === b.id_app.toLowerCase());
+      const ficha = (c.entregadores || []).find((e) => e.id_app === b.id_app.toLowerCase());
+      contexto.replaceChildren(...[
+        ficha?.nome ? el("p", { class: "meta", style: "margin:0", text: `Cadastro do entregador com este ID: ${ficha.nome}${ficha.cidade ? " · " + ficha.cidade : ""}.` }) : null,
+        el("h4", { style: "margin:4px 0 0", text: outros.length ? `Outros ${outros.length} registro(s) com este ID` : "Nenhum outro registro com este ID" }),
+        outros.length ? el("ol", { class: "timeline" }, outros.slice(0, 15).map((x) => el("li", {}, el("b", { text: dt(x.inicio) }), ` · ${x.nome} · ${x.cidade || "sem cidade"} · ${x.infracao}${x.leve ? " (leve)" : ""}`))) : null,
+        ev.length ? el("h4", { style: "margin:4px 0 0", text: "Histórico deste registro" }) : null,
+        ev.length ? el("ol", { class: "timeline" }, ev.map((x) => el("li", {}, el("b", { text: dt(x.em) }), ` · ${EVB[x.tipo] || x.tipo}${x.por_nome ? " por " + x.por_nome : ""}${x.detalhe ? " · " + x.detalhe : ""}`))) : null].filter(Boolean));
+    }).catch(() => contexto.replaceChildren());
+  }
   function abrir(id, acao) { B.caixa[id] = B.caixa[id]?.acao === acao ? undefined : { acao, texto: "" }; render(); }
   function caixa(b, cx) {
     if (cx.acao === "completar") {
@@ -240,9 +308,9 @@
         const p = await rpc("previa_bloqueio", { p_id_app: id, p_infracao: inf ? Number(inf) : null });
         if (minha !== seqPrevia) return;
         B.previa = { ...p, id, inf };
-        // sugere o nome já usado para este ID
-        if (!$("#bq-nome").value.trim() && p.historico[0]?.nome) $("#bq-nome").value = p.historico[0].nome;
-        if (!$("#bq-cidade").value && p.historico[0]?.cidade) $("#bq-cidade").value = p.historico[0].cidade;
+        // sugere o nome e a cidade do cadastro do entregador (ou do último registro com dados)
+        if (!$("#bq-nome").value.trim() && p.nome_conhecido) $("#bq-nome").value = p.nome_conhecido;
+        if (!$("#bq-cidade").value && p.cidade_conhecida && cidadesAtivas().some((c) => c.nome === p.cidade_conhecida)) $("#bq-cidade").value = p.cidade_conhecida;
       } catch (e) { B.previa = { erro: msgErro(e) }; }
       renderNovo();
     }, 350);
@@ -284,6 +352,8 @@
         !p.encerramento ? el("div", { text: `Se registrar agora, o bloqueio termina em ${dt(new Date(Date.now() + p.horas * 3600000).toISOString())} e é retirado automaticamente.` }) : el("div", { text: "Bloqueio definitivo: o entregador não volta à operação." }),
         el("div", { class: "meta", text: p.gera_tratativa ? `Gera ${p.encerramento ? "tarefa de encerramento de parceria" : "tratativa"} para ${respDaCidade($("#bq-cidade").value)}.` : "Bloqueio curto: não gera tratativa." })));
     }
+    if (p.comentarios?.length) partes.push(el("div", { class: "panel", style: "margin:0" },
+      el("h3", { text: "Comentários sobre este entregador" }), listaComentarios(p.comentarios.slice(0, 5))));
     const hist = p.historico || [];
     const nomeDigitado = norm($("#bq-nome").value.trim());
     partes.push(el("div", { class: "panel", style: "margin:0" },
@@ -291,7 +361,7 @@
       p.cadastro ? el("p", { class: "meta", text: `Cadastro na ativação: ${p.cadastro.situacao} (enviado em ${dt(p.cadastro.enviado_em)}, ${p.cadastro.cidade}).` }) : el("p", { class: "meta", text: "Sem cadastro no módulo de ativação." }),
       hist.length ? el("ol", { class: "timeline" }, hist.slice(0, 12).map((h) => el("li", {},
         el("b", { text: dt(h.inicio) }), ` · ${h.infracao}${h.leve ? " (leve)" : " · " + ord(h.ocorrencia)} · ${horasTxt(h.horas)} · ${SIT[h.situacao]} · por ${h.registrado_por_nome}`,
-        !leve && nomeDigitado && norm(h.nome) !== nomeDigitado ? el("span", { class: "alerta-revisar", text: ` registrado como “${h.nome}”` }) : null))) : null));
+        !leve && nomeDigitado && !h.dados_pendentes && norm(h.nome) !== nomeDigitado ? el("span", { class: "alerta-revisar", text: ` registrado como “${h.nome}”` }) : null))) : null));
     box.replaceChildren(...partes);
   }
   function resultado(r) {
@@ -334,7 +404,7 @@
   }));
   $("#bq-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    const v = { id: $("#bq-id").value.trim(), nome: $("#bq-nome").value.trim(), cidade: $("#bq-cidade").value, inf: $("#bq-infracao").value, obs: $("#bq-obs").value.trim() };
+    const v = { id: $("#bq-id").value.trim(), nome: $("#bq-nome").value.trim(), cidade: $("#bq-cidade").value, inf: $("#bq-infracao").value, obs: $("#bq-obs").value.trim(), com: $("#bq-comentario").value.trim() };
     const leve = B.tipo === "leve";
     const erro = v.id.length < 4 ? "Preencha o ID do entregador." : leve ? (!v.inf ? "Escolha o motivo." : "")
       : !v.nome ? "Preencha o nome do entregador." : !v.cidade ? "Escolha a cidade." : !v.inf ? "Escolha a infração." : "";
@@ -342,7 +412,7 @@
     const btn = $("#bq-enviar"); btn.disabled = true;
     if (leve) {
       try {
-        const r = await rpc("registrar_infracao_leve", { p_id_app: v.id, p_infracao: Number(v.inf), p_observacao: v.obs || null });
+        const r = await rpc("registrar_infracao_leve", { p_id_app: v.id, p_infracao: Number(v.inf), p_observacao: v.obs || null, p_comentario: v.com || null });
         B.resultado = { ...r, leve: true, id_app: v.id, infracao: todasInfracoes().find((i) => String(i.id) === v.inf)?.nome };
         $("#bq-form").reset(); B.previa = null;
         toast(r.gerado ? "Infração leve registrada e bloqueio normal gerado." : `Infração leve registrada: aplique ${horasTxt(r.horas)}.`);
@@ -352,7 +422,7 @@
       return;
     }
     try {
-      const r = await rpc("registrar_bloqueio", { p_id_app: v.id, p_nome: v.nome, p_cidade: v.cidade, p_infracao: Number(v.inf), p_observacao: v.obs || null });
+      const r = await rpc("registrar_bloqueio", { p_id_app: v.id, p_nome: v.nome, p_cidade: v.cidade, p_infracao: Number(v.inf), p_observacao: v.obs || null, p_comentario: v.com || null });
       B.resultado = { ...r, nome: v.nome, infracao: todasInfracoes().find((i) => String(i.id) === v.inf)?.nome, responsavel: respDaCidade(v.cidade) };
       const cidade = v.cidade;
       $("#bq-form").reset(); $("#bq-cidade").value = cidade;
@@ -364,37 +434,118 @@
     finally { btn.disabled = false; }
   });
 
-  // ---------- consultar entregador ----------
-  $("#bq-f-consulta").addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const q = $("#bq-q-consulta").value.trim();
+  // ---------- consultar entregador: cadastro, comentários e bloqueios de cada ID ----------
+  async function consultar(q) {
     B.consulta = { carregando: true, q };
     renderConsulta();
     try { B.consulta = { q, ...(await rpc("consultar_entregador", { p_busca: q })) }; }
     catch (e) { B.consulta = { q, erro: msgErro(e) }; }
     renderConsulta();
+  }
+  async function reconsultar() {
+    const q = B.consulta?.q;
+    if (!q) return;
+    try { B.consulta = { q, ...(await rpc("consultar_entregador", { p_busca: q })) }; } catch (e) { toast(msgErro(e)); }
+    render();
+  }
+  $("#bq-f-consulta").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    consultar($("#bq-q-consulta").value.trim());
   });
+  function listaComentarios(lista, aoApagar) {
+    return el("ul", { class: "comentarios" }, lista.map((c) => el("li", { class: c.tipo === "alteracao" ? "alteracao" : null },
+      el("div", { class: "quem" },
+        el("span", { text: `${c.por_nome || "—"} · ${dt(c.em)}${c.tipo === "alteracao" ? " · alteração" : ""}` }),
+        aoApagar && c.tipo === "comentario" && (mod() || c.por === S.me.id)
+          ? el("button", { class: "btn link", type: "button", style: "padding:0;font-size:12px", onclick: (e) => aoApagar(c, e.currentTarget) }, "Apagar") : null),
+      el("div", { text: c.texto }))));
+  }
+  async function apagarComentario(c, btn) {
+    btn.disabled = true;
+    try { await rpc("excluir_comentario", { p_id: c.id }); toast("Comentário apagado."); await reconsultar(); }
+    catch (e) { btn.disabled = false; toast(msgErro(e)); }
+  }
+  async function comentar(idApp, btn) {
+    const txt = String(B.rascunho[idApp] || "").trim();
+    if (!txt) return toast("Escreva o comentário.");
+    btn.disabled = true;
+    try { await rpc("comentar_entregador", { p_id_app: idApp, p_texto: txt }); delete B.rascunho[idApp]; document.activeElement?.blur(); toast("Comentário adicionado."); await reconsultar(); }
+    catch (e) { btn.disabled = false; toast(msgErro(e)); }
+  }
+  function abrirEdicao(f, qtdBloqueios) {
+    const nome = el("input", { maxlength: "120", autocomplete: "off" }); nome.value = f.nome || "";
+    const cid = el("select", {}, ...opcoesCidade(f.cidade)); cid.value = f.cidade || "";
+    const aplicar = el("input", { type: "checkbox" });
+    const mot = el("textarea", { maxlength: "300", rows: "2", placeholder: "Opcional. Ex.: nome completo confirmado pelo documento." });
+    const erro = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    const d = janela("Alterar dados do entregador",
+      el("p", { class: "meta", style: "margin:0" }, "ID ", el("span", { class: "mono", text: f.id_app })),
+      el("label", {}, "Nome do entregador", nome),
+      el("label", {}, "Cidade", cid),
+      qtdBloqueios ? el("label", { class: "marcar" }, aplicar,
+        el("span", { text: `Aplicar também aos ${qtdBloqueios} bloqueio(s) já registrados com este ID. Deixe desmarcado se o ID foi usado por pessoas diferentes (corrija esses registros um por um).` })) : null,
+      el("label", {}, "Motivo", mot),
+      el("p", { class: "meta", style: "margin:0", text: "Os próximos registros deste ID já vêm com estes dados. A alteração fica registrada nos comentários do entregador." }),
+      erro,
+      el("div", { class: "actions" },
+        el("button", { class: "btn primary", type: "button", onclick: async (e) => {
+          erro.hidden = true;
+          const btn = e.currentTarget;
+          if (!nome.value.trim()) { erro.textContent = "Preencha o nome do entregador."; erro.hidden = false; return; }
+          btn.disabled = true;
+          try {
+            const r = await rpc("salvar_entregador", { p_id_app: f.id_app, p_nome: nome.value.trim(), p_cidade: cid.value || null, p_aplicar: aplicar.checked, p_motivo: mot.value.trim() || null });
+            d.close();
+            toast(r.bloqueios_alterados ? `Dados salvos e aplicados a ${r.bloqueios_alterados} bloqueio(s).` : "Dados do entregador salvos.");
+            await reconsultar(); carregar();
+          } catch (err) { btn.disabled = false; erro.textContent = msgErro(err); erro.hidden = false; }
+        } }, "Salvar"),
+        el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
+    nome.focus();
+  }
+  function tabelaBloqueios(bl) {
+    return el("div", { class: "tablewrap" }, el("table", {}, ...tabela(
+      [["Data"], ["Nome registrado"], ["Infração"], ["Ocorr."], ["Punição"], ["Situação"], ["Registrado por"], ["Tratativa"], [""]],
+      bl.map((b) => el("tr", {}, el("td", { text: dt(b.inicio) }),
+        el("td", {}, b.nome, b.cidade ? el("div", { class: "meta", text: b.cidade }) : null, alertaRevisar(b, true)),
+        el("td", { text: b.infracao + (b.leve ? " (leve)" : "") }), el("td", { text: b.leve ? "—" : ord(b.ocorrencia) }), el("td", { text: horasTxt(b.horas) }), el("td", {}, pillSit(b.situacao)),
+        el("td", { text: b.registrado_por_nome }), el("td", {}, bulletTratativa(b)),
+        el("td", {}, staff() && !b.dados_pendentes ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir") : null))), "")));
+  }
   function renderConsulta() {
     const box = $("#bq-consulta"), c = B.consulta;
-    if (!c) return box.replaceChildren(el("p", { class: "meta", text: "Busque pelo ID do entregador (completo) ou por parte do nome. Aparecem os bloqueios e o cadastro na ativação." }));
+    if (!c) return box.replaceChildren(el("p", { class: "meta", text: "Busque pelo ID do entregador (completo), por parte do nome ou pelo CPF do cadastro." }));
     if (c.carregando) return box.replaceChildren(carregandoEl());
     if (c.erro) return box.replaceChildren(el("p", { class: "err", text: c.erro }));
-    const bl = c.bloqueios || [];
-    const ids = [...new Set(bl.map((b) => b.id_app.toLowerCase()))];
-    box.replaceChildren(
+    const fichas = c.entregadores || [], bl = c.bloqueios || [];
+    if (!fichas.length && !c.cadastros.length) return box.replaceChildren(vazio("Nenhum entregador encontrado", "Confira o ID ou tente outra parte do nome."));
+    box.replaceChildren(...[
+      fichas.length > 1 ? el("p", { class: "meta", text: `${fichas.length} IDs encontrados.` }) : null,
+      ...fichas.map((f) => {
+        const seus = bl.filter((b) => b.id_app.toLowerCase() === f.id_app);
+        const nomes = f.nomes_usados || [];
+        const txt = el("textarea", { maxlength: "1500", rows: "2", placeholder: "Novo comentário sobre este entregador", "aria-label": "Novo comentário sobre " + (f.nome || f.id_app), oninput: (e) => (B.rascunho[f.id_app] = e.target.value) });
+        txt.value = B.rascunho[f.id_app] || "";
+        return el("div", { class: "panel ficha" },
+          el("div", { class: "ficha-topo" },
+            el("h3", {}, f.nome || "(sem nome no cadastro)", " ", el("span", { class: "mono meta", text: f.id_app })),
+            staff() ? el("button", { class: "btn small", type: "button", onclick: () => abrirEdicao(f, seus.filter((b) => !b.dados_pendentes).length) }, "Alterar dados") : null),
+          el("div", { class: "chips", style: "margin-bottom:10px" },
+            el("span", { class: "chip", text: f.cidade || "Sem cidade" }),
+            el("span", { class: "chip" + (seus.some((b) => b.situacao === "bloqueado") ? " x" : ""), text: seus.some((b) => b.situacao === "bloqueado") ? "Bloqueado agora" : "Não está bloqueado agora" }),
+            seus.some((b) => b.situacao === "encerramento") ? el("span", { class: "chip x", text: "Parceria encerrada" }) : null),
+          nomes.length > 1 ? el("p", { class: "alerta-revisar bloco", text: `Este ID aparece com ${nomes.length} nomes nos bloqueios: ${nomes.join(", ")}. Se forem pessoas diferentes, corrija o ID de cada registro.` }) : null,
+          f.atualizado_em ? el("p", { class: "meta", text: `Dados alterados por ${f.atualizado_por_nome} em ${dt(f.atualizado_em)}.` }) : null,
+          el("h4", { style: "margin:12px 0 6px", text: f.comentarios.length ? `Comentários (${f.comentarios.length})` : "Comentários" }),
+          f.comentarios.length ? listaComentarios(f.comentarios, apagarComentario) : el("p", { class: "meta", text: "Nenhum comentário ainda." }),
+          el("div", { style: "display:grid;gap:6px" }, txt,
+            el("div", { class: "actions" }, el("button", { class: "btn small", type: "button", onclick: (e) => comentar(f.id_app, e.currentTarget) }, "Adicionar comentário"))),
+          el("h4", { style: "margin:14px 0 6px", text: seus.length ? `${seus.length} bloqueio(s)` : "Nenhum bloqueio" }),
+          seus.length ? tabelaBloqueios(seus) : null);
+      }),
       el("div", { class: "panel" },
         el("h3", { text: "Cadastro na ativação" }),
-        c.cadastros.length ? el("ul", {}, c.cadastros.map((x) => el("li", { text: `${x.id_app || "(sem ID)"} · ${x.situacao} · ${x.cidade} · enviado em ${dt(x.enviado_em)}${x.motivo ? " · " + x.motivo : ""}` }))) : el("p", { class: "meta", text: "Nenhum cadastro encontrado." })),
-      el("div", { class: "panel" },
-        el("h3", { text: bl.length ? `${bl.length} bloqueio(s)` + (ids.length > 1 ? ` em ${ids.length} IDs diferentes` : "") : "Nenhum bloqueio encontrado" }),
-        bl.length ? el("div", { class: "chips", style: "margin-bottom:10px" },
-          el("span", { class: "chip" + (bl.some((b) => b.situacao === "bloqueado") ? " x" : ""), text: bl.some((b) => b.situacao === "bloqueado") ? "Bloqueado agora" : "Não está bloqueado agora" }),
-          bl.some((b) => b.situacao === "encerramento") ? el("span", { class: "chip x", text: "Parceria encerrada" }) : null) : null,
-        bl.length ? el("div", { class: "tablewrap" }, el("table", {}, ...tabela(
-          [["Data"], ["Entregador"], ["Infração"], ["Ocorr."], ["Punição"], ["Situação"], ["Registrado por"], ["Tratativa"]],
-          bl.map((b) => el("tr", {}, el("td", { text: dt(b.inicio) }), el("td", {}, b.nome, el("br"), el("span", { class: "mono meta", text: b.id_app })),
-            el("td", { text: b.infracao + (b.leve ? " (leve)" : "") }), el("td", { text: b.leve ? "—" : ord(b.ocorrencia) }), el("td", { text: horasTxt(b.horas) }), el("td", {}, pillSit(b.situacao)),
-            el("td", { text: b.registrado_por_nome }), el("td", {}, bulletTratativa(b)))), ""))) : null));
+        c.cadastros.length ? el("ul", {}, c.cadastros.map((x) => el("li", { text: `${x.id_app || "(sem ID)"} · ${x.situacao} · ${x.cidade} · enviado em ${dt(x.enviado_em)}${x.motivo ? " · " + x.motivo : ""}` }))) : el("p", { class: "meta", text: "Nenhum cadastro encontrado." }))].filter(Boolean));
   }
 
   // ---------- histórico ----------
@@ -409,14 +560,15 @@
     const lista = l.filter((b) => buscaB(b, q) && (!sit || (sit === "revisar" ? !!b.revisar : sit === "dados_pendentes" ? b.dados_pendentes : b.situacao === sit))
       && (!cid || b.cidade === cid) && (!inf || String(b.infracao_id) === inf) && (!quem || b.registrado_por_nome === quem) && filtroTipo(b, tipo));
     B.histFiltrado = lista;
-    $("#bq-hist-total").textContent = `${lista.length} de ${l.length} bloqueio(s)`;
+    $("#bq-hist-total").textContent = `${lista.length} de ${l.length} bloqueio(s)` + (lista.length > 500 ? " · mostrando os 500 mais recentes: use os filtros ou baixe o CSV para ver todos" : "");
     t.replaceChildren(...tabela(cols, lista.slice(0, 500).map((b) => {
       const acoes = el("td", { style: "white-space:nowrap" });
+      if (staff() && !b.dados_pendentes && !B.confirmar[b.id]) acoes.append(el("button", { class: "btn quiet", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir"));
       if (mod()) {
         if (B.confirmar[b.id]) acoes.append(el("button", { class: "btn danger small", type: "button", onclick: (e) => excluir(b, e.currentTarget) }, "Confirmar exclusão"), el("button", { class: "btn link", type: "button", onclick: () => { delete B.confirmar[b.id]; render(); } }, "Cancelar"));
         else acoes.append(el("button", { class: "btn quiet", type: "button", onclick: () => { B.confirmar[b.id] = true; render(); } }, "Excluir"));
       }
-      return el("tr", {}, el("td", {}, pillSit(b.situacao), b.revisar ? el("div", { class: "alerta-revisar", text: "revisar", title: b.revisar }) : null),
+      return el("tr", {}, el("td", {}, pillSit(b.situacao), b.revisar ? el("div", {}, alertaRevisar(b, true)) : null),
         el("td", {}, b.nome, el("br"), el("span", { class: "mono meta", text: b.id_app })),
         el("td", {}, b.infracao, b.leve ? el("span", { class: "tag", style: "margin-left:6px", text: "LEVE" }) : null),
         el("td", { text: b.leve ? "—" : ord(b.ocorrencia) + (b.ocorrencia < b.ocorrencia_total ? ` (${ord(b.ocorrencia_total)})` : "") }),

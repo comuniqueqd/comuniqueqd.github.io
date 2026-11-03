@@ -22,8 +22,8 @@
 --   Row Level Security: o suporte só enxerga os próprios cadastros.
 -- =====================================================================
 
-drop table if exists public.notificacoes, public.tarefas, public.eventos_bloqueio, public.bloqueios,
-  public.infracoes, public.cidades, public.parametros_bloqueio,  -- módulo de bloqueios (002-bloqueios.sql)
+drop table if exists public.comentarios_entregador, public.entregadores, public.notificacoes, public.tarefas, public.eventos_bloqueio, public.bloqueios,
+  public.infracoes, public.cidades, public.parametros_bloqueio,  -- módulo de bloqueios (002 e 003)
   public.eventos, public.cadastros, public.pedidos_acesso, public.membros, public.motivos cascade;
 drop type if exists public.papel, public.status_cadastro cascade;
 

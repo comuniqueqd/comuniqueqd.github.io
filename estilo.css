@@ -210,3 +210,24 @@ a.modulo-card p { margin: 0; color: var(--muted); font-size: 14px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { font-size: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; font-variant-numeric: tabular-nums; }
 .chip.x { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+
+/* alerta "revisar" clicável, janela de correção e cadastro do entregador (migração 003) */
+button.alerta-revisar { border: 1px solid transparent; cursor: pointer; font: inherit; font-size: 12px; text-align: left; }
+button.alerta-revisar:hover, button.alerta-revisar:focus-visible { border-color: var(--warn); }
+.alerta-revisar.bloco { display: block; font-size: 13px; padding: 8px 10px; }
+dialog.janela { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface); color: var(--ink); padding: 16px; display: grid; gap: 12px; }
+dialog.janela:not([open]) { display: none; }
+dialog.janela::backdrop { background: rgba(10, 14, 20, .55); }
+.janela-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.janela-topo h3 { margin: 0; font-size: 17px; }
+.janela label { display: grid; gap: 4px; font-size: 14px; }
+.janela input, .janela select, .janela textarea { width: 100%; box-sizing: border-box; }
+.janela input[type=checkbox] { width: auto; margin-top: 3px; flex: 0 0 auto; }
+.janela label.marcar { display: flex; gap: 8px; align-items: flex-start; }
+.ficha .ficha-topo { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.ficha .ficha-topo h3 { margin: 0; }
+.comentarios { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
+.comentarios li { background: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 14px; overflow-wrap: anywhere; }
+.comentarios li.alteracao { background: none; border-left: 2px solid var(--line); border-radius: 0; font-size: 13px; color: var(--muted); }
+.comentarios .quem { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 2px; }

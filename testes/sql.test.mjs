@@ -101,7 +101,7 @@ await t("leitura direta da tabela membros: suporte só vê a si", async () => {
 // ---------- envio ----------
 let c1, c2, c3, c4;
 await t("suporte envia cadastros (normaliza CPF, ID e cidade)", async () => {
-  c1 = await rpc(sup1, "enviar_cadastro", { p_id_app: "697a33d1077b", p_cpf: "529.982.247-25", p_cidade: "  lagarto  -  se ", p_observacao: "  ok " });
+  c1 = await rpc(sup1, "enviar_cadastro", { p_id_app: "1a2b3c4d5e6f", p_cpf: "529.982.247-25", p_cidade: "  lagarto  -  se ", p_observacao: "  ok " });
   c2 = await rpc(sup1, "enviar_cadastro", { p_id_app: "abc12345", p_cpf: null, p_cidade: "RECIFE - PE" });
   c3 = await rpc(sup2, "enviar_cadastro", { p_id_app: null, p_cpf: "11144477735", p_cidade: "ITABAIANA - SE" });
   c4 = await rpc(sup2, "enviar_cadastro", { p_id_app: "zzz99881", p_cpf: null, p_cidade: "RECIFE - PE" });

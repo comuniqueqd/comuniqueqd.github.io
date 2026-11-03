@@ -29,6 +29,10 @@ drop function if exists public.horas_previstas(public.infracoes, integer);
 drop function if exists public.texto_punicao(integer);
 drop function if exists public.metricas_bloqueios(uuid[], integer, text, smallint);
 drop function if exists public.importar_bloqueio(text, text, text, text, timestamptz, text, text);
+-- versões da migração 003 (com comentário): se o 002 for rodado de novo depois do 003,
+-- elas saem daqui e o 003 precisa ser rodado de novo em seguida
+drop function if exists public.registrar_bloqueio(text, text, text, smallint, text, text);
+drop function if exists public.registrar_infracao_leve(text, smallint, text, text);
 
 -- ---------------------------------------------------------------------
 -- Acesso por módulo: membros.papel = ativação; membros.papel_bloqueios = bloqueios

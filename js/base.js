@@ -138,7 +138,19 @@
   }
   const nomesEscolhidos = (estado) => S.pessoas.filter((p) => estado.escolhidos.has(p.id)).map((p) => (p.id === S.me.id ? "você" : p.nome)).join(", ");
 
-  App.u = { $, el, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
+  // janela por cima da tela (correções, edição). Fecha com Esc, com o ✕ ou com d.close().
+  function janela(titulo, ...conteudo) {
+    const d = el("dialog", { class: "janela", "aria-label": titulo },
+      el("div", { class: "janela-topo" }, el("h3", { text: titulo }),
+        el("button", { class: "btn link", type: "button", "aria-label": "Fechar", onclick: () => d.close() }, "✕")),
+      ...conteudo);
+    d.addEventListener("close", () => d.remove());
+    document.body.append(d);
+    d.showModal();
+    return d;
+  }
+
+  App.u = { $, el, janela, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
             vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas, nomesEscolhidos, papelAtiv, papelBloq };
 
   // ---------- módulos e rotas ----------
