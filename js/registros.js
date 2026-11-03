@@ -60,7 +60,7 @@
     if (x.cidade) partes.push(x.cidade);
     const txt = partes.join(" · ");
     if (x.id_app && S.me.papel_bloqueios && App.abrirFicha)
-      return el("button", { class: "link-ficha", type: "button", title: "Abrir a ficha do entregador", onclick: () => App.abrirFicha(x.id_app) }, txt);
+      return el("button", { class: "link-ficha", type: "button", title: "Consultar entregador", onclick: () => App.abrirFicha(x.id_app) }, txt);
     return txt;
   }
 

@@ -98,7 +98,7 @@
         tarefaMinha ? el("button", { class: "btn approve", type: "button", onclick: () => abrir(b.id, completar ? "completar" : "tratar") },
           completar ? "Completar dados" : b.tarefa.tipo === "encerramento_parceria" ? "Marcar encerramento como tratado" : "Marcar tratativa como resolvida") : null,
         mod() && b.tarefa?.status === "pendente" && b.tarefa.tipo !== "completar_dados" ? el("button", { class: "btn link", type: "button", onclick: () => realocar(b.tarefa, b) }, "Realocar…") : null,
-        el("button", { class: "btn link", type: "button", onclick: () => abrirFicha(b.id_app) }, "Ficha do entregador"),
+        el("button", { class: "btn link", type: "button", onclick: () => abrirFicha(b.id_app) }, "Consultar entregador"),
         staff() && !b.dados_pendentes ? el("button", { class: "btn link", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir dados") : null,
         el("span", { class: "spacer" }),
         staff() && (sit === "bloqueado" || sit === "encerramento") ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrir(b.id, "liberar") }, sit === "encerramento" ? "Reverter encerramento…" : "Liberar antes do prazo…") : null) : null,
@@ -221,7 +221,7 @@
     catch (e) { btn.disabled = false; toast(msgErro(e)); }
   }
   // nome do entregador que abre a ficha
-  const linkFicha = (b, texto = b.nome) => el("button", { class: "link-ficha", type: "button", title: "Abrir a ficha do entregador", onclick: (e) => { e.stopPropagation(); abrirFicha(b.id_app); } }, texto);
+  const linkFicha = (b, texto = b.nome) => el("button", { class: "link-ficha", type: "button", title: "Consultar entregador", onclick: (e) => { e.stopPropagation(); abrirFicha(b.id_app); } }, texto);
   function abrirFicha(id) {
     $("#bq-q-consulta").value = id;
     if (location.hash !== "#bloqueios/consultar") location.hash = "#bloqueios/consultar";
@@ -531,7 +531,7 @@
   const MOD_TXT = { ativacao: "ATIVAÇÃO", bloqueios: "BLOQUEIOS" };
   function renderConsulta() {
     const box = $("#bq-consulta"), c = B.consulta;
-    if (!c) return box.replaceChildren(el("p", { class: "meta", text: "Busque pelo ID do entregador (completo), por parte do nome ou pelo CPF do cadastro. Em qualquer tela, clicar no nome de um entregador abre esta ficha." }));
+    if (!c) return box.replaceChildren(el("p", { class: "meta", text: "Busque pelo ID do entregador (completo), por parte do nome ou pelo CPF do cadastro. Em qualquer tela, clicar no nome de um entregador abre esta consulta." }));
     if (c.carregando) return box.replaceChildren(carregandoEl());
     if (c.erro) return box.replaceChildren(el("p", { class: "err", text: c.erro }));
     const fichas = c.entregadores || [], bl = c.bloqueios || [];
@@ -773,7 +773,7 @@
       { id: "novo", nome: "Novo bloqueio", secao: "v-bq-novo" },
       { id: "ativos", nome: "Bloqueados agora", secao: "v-bq-ativos", pode: staff },
       { id: "meus", nome: "Meus registros", secao: "v-bq-meus" },
-      { id: "consultar", nome: "Ficha do entregador", secao: "v-bq-consultar" },
+      { id: "consultar", nome: "Consultar entregador", secao: "v-bq-consultar" },
       { id: "painel", nome: "Painel", secao: "v-bq-painel" },
       { id: "historico", nome: "Histórico", secao: "v-bq-historico", pode: staff },
       { id: "regras", nome: "Regras", secao: "v-bq-regras", pode: mod },

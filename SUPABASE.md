@@ -139,7 +139,7 @@ O que muda:
 - **Tratativa atrasada**: pendente há mais de 32 h fica vermelha. Os moderadores recebem um aviso no sino (uma vez por tarefa) e podem **realocar** a tarefa para outro monitorador ou moderador. O aviso é gerado quando alguém da equipe abre o app (não há serviço agendado). O prazo fica em `parametros_bloqueio.tratativa_prazo_horas`.
 - **Atividades sugeridas** (Atividades → Atividades sugeridas): qualquer pessoa cria, com prazo opcional, e pode indicar pessoas. Se ninguém indicado aceitar em 10 minutos, fica aberta para todos. Quem aceitou conclui (ou um moderador); quem criou ou um moderador exclui.
 - **Registros**: feed único das ações dos dois módulos, para todos os papéis.
-- **Ficha do entregador** (antiga Consultar entregador): linha do tempo dos dois módulos, leves separadas e o cadastro da ativação. Clicar no nome de um entregador em qualquer tela abre a ficha.
+- **Consultar entregador**: linha do tempo dos dois módulos, leves separadas e o cadastro da ativação. Clicar no nome de um entregador em qualquer tela abre a ficha.
 - **Tela inicial**: os seus números e os da equipe.
 - **Reverter encerramento**: no lugar de "liberar antes do prazo" num encerramento de parceria.
 - A lista de cidades do formulário da ativação passa a vir da aba Regras.
