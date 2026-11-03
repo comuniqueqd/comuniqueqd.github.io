@@ -231,3 +231,26 @@ dialog.janela::backdrop { background: rgba(10, 14, 20, .55); }
 .comentarios li { background: var(--bg); border-radius: 8px; padding: 8px 10px; font-size: 14px; overflow-wrap: anywhere; }
 .comentarios li.alteracao { background: none; border-left: 2px solid var(--line); border-radius: 0; font-size: 13px; color: var(--muted); }
 .comentarios .quem { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); margin-bottom: 2px; }
+
+/* etapa 1 (migração 004): atrasos, reverter encerramento, ficha, atividades sugeridas, registros */
+.card.atrasada { border-left-color: var(--bad); box-shadow: 0 0 0 1px var(--bad); }
+.bullet.atrasada::before { background: var(--bad); }
+.bullet.atrasada b { color: var(--bad); }
+.pill.revertido { background: var(--gray-soft); color: var(--gray); }
+.card.revertido { border-left-color: var(--gray); }
+button.link-ficha { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer;
+  text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+button.link-ficha:hover, button.link-ficha:focus-visible { color: var(--accent); text-decoration-color: currentColor; }
+.numeros .equipe { font-size: 12px; color: var(--muted); }
+.numeros .alerta b { color: var(--bad); }
+#at-nova-box summary { cursor: pointer; }
+#at-para { margin-bottom: 0; }
+.esperando { font-size: 13px; font-weight: 600; color: var(--warn); }
+.esperando.velho { color: var(--bad); }
+.feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.feed li { display: grid; grid-template-columns: 112px 1fr; gap: 4px 12px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 14px; }
+.feed li:first-child { border-top: 0; }
+.feed .quando { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.feed .det { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.feed .dia { grid-column: 1 / -1; font-weight: 600; font-size: 13px; color: var(--muted); background: var(--bg); padding: 6px 14px; margin: -10px -14px 0; }
+@media (max-width: 560px) { .feed li { grid-template-columns: 1fr; } }

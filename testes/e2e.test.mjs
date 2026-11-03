@@ -28,6 +28,7 @@ await db.query(fs.readFileSync(path.join(AQUI, "supabase-local.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/schema.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/002-bloqueios.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/003-entregadores.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/004-atividades-registros.sql"), "utf8"));
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
 for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001', 'Ciclano Atrasado', 'LAGARTO - SE', 'Atraso na Coleta ou na Entrega Sem Justificativa', now() - make_interval(days => $1), 'Planilha')", [d]);
 // registro importado com alerta de revisão (100 dias atrás: fora do painel de 30 dias)
@@ -242,7 +243,8 @@ try {
 
   // 10. suporte: tela inicial e registro com prévia da punição
   await ir(s, "#inicio"); await s.reload();
-  ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades"), "tela inicial com os três módulos");
+  ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
+  ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   await s.screenshot({ path: path.join(PRINTS, "b0-inicio.png"), fullPage: true });
   await s.click("#card-bloqueios");
   ok(await esperar(s, "#v-bq-novo:not([hidden])"), "suporte cai em Novo bloqueio");
@@ -319,6 +321,14 @@ try {
   await m.click(`${cardA} >> text=Confirmar liberação`);
   await m.waitForTimeout(1200);
   ok(!(await m.isVisible(cardA)), "liberado sai de Bloqueados agora");
+  const cardL = "#bq-ativos-lista .card:has-text('Ladrão')";
+  await esperar(m, cardL);
+  ok(await m.isVisible(`${cardL} >> text=Reverter encerramento…`) && !(await m.isVisible(`${cardL} >> text=Liberar antes do prazo…`)), "encerramento: botão vira Reverter encerramento");
+  await m.click(`${cardL} >> text=Reverter encerramento…`);
+  await m.fill(`${cardL} textarea`, "Provou que a entrega foi feita");
+  await m.click(`${cardL} >> text=Confirmar reversão`);
+  ok(await esperar(m, "#toast:has-text('Encerramento de Ladrão revertido')"), "encerramento revertido com motivo");
+  ok(await esperar(m, `${cardL} >> text=Encerramento revertido`), "cartão mostra 'Encerramento revertido'");
   await ir(m, "#atividades");
   ok(await esperar(m, "#at-lista >> text=Encerramento de parceria: Ladrão"), "Atividades do monitorador: encerramento pendente");
   ok((await texto(m, "#at-lista")).includes("cadastro(s) aguardando análise") || true, "atividades lista pendências da ativação");
@@ -430,6 +440,66 @@ try {
   await ir(a, "#bloqueios/historico"); await a.reload(); await esperar(a, "#bq-t-hist tbody tr");
   await a.selectOption("#bq-hist-tipo", "leve");
   ok((await texto(a, "#bq-hist-total")).startsWith("4 de"), "histórico filtra só as infrações leves: " + (await texto(a, "#bq-hist-total")));
+
+  // 16. etapa 1: tratativa atrasada + realocar, atividades sugeridas, registros, ficha
+  await ir(s, "#bloqueios/novo"); await s.reload(); await esperar(s, "#bq-form");
+  await s.click("[data-tipo-bq=normal]");
+  await s.fill("#bq-id", "atr00009"); await s.fill("#bq-nome", "Atrasildo"); await s.selectOption("#bq-cidade", "LAGARTO - SE");
+  await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
+  await esperar(s, "#bq-previa >> text=Gera tratativa"); await s.click("#bq-enviar");
+  await esperar(s, "#bq-previa >> text=Tratativa enviada");
+  const db2 = new pg.Client({ connectionString: DB }); await db2.connect();
+  await db2.query("update tarefas set criada_em = now() - interval '33 hours' where bloqueio_id = (select id from bloqueios where id_app = 'atr00009')");
+  await db2.end();
+  const a2 = await abrir(admin, "#bloqueios/tratativas");
+  const cardAt = "#bq-trat-lista .card.atrasada:has-text('Atrasildo')";
+  ok(await esperar(a2, cardAt) && (await texto(a2, cardAt)).includes("Tratativa atrasada há"), "tratativa com mais de 32 h fica vermelha");
+  await a2.screenshot({ path: path.join(PRINTS, "c1-atrasada.png"), fullPage: true });
+  await a2.click(`${cardAt} >> text=Realocar…`);
+  await a2.selectOption("dialog.janela select", "mateuslopesmb@gmail.com");
+  await a2.click("dialog.janela .actions button.primary");
+  ok(await esperar(a2, "#toast:has-text('Tarefa realocada')"), "moderador realoca a tratativa atrasada");
+  ok(await esperar(a2, `${cardAt} >> text=realocada por Mateus Lopes`), "cartão mostra a realocação");
+  await a2.reload();
+  ok(await esperar(a2, "#b-avisos[data-novas=true]"), "sino do moderador acende com a tratativa atrasada");
+  await a2.click("#b-avisos");
+  ok(await esperar(a2, "#at-avisos >> text=Tratativa atrasada há"), "aviso de tratativa atrasada para o moderador");
+  ok(await esperar(a2, "#papel:has-text('Moderador')") && !(await texto(a2, "#papel")).includes("·"), "papel único no topo quando é igual nos dois módulos");
+  // atividade sugerida: suporte cria para o monitorador; monitorador aceita e conclui
+  await ir(s, "#atividades/sugeridas");
+  await s.click("#at-nova-box summary");
+  await s.fill("#at-titulo", "Ligar para o restaurante Sabor");
+  await s.fill("#at-descricao", "Confirmar se o pedido 123 foi entregue");
+  await s.check("#at-para label:has-text('Monitor Um') input");
+  await s.click("#at-enviar");
+  ok(await esperar(s, "#at-sug-lista >> text=Ligar para o restaurante Sabor") && await s.isVisible("#at-sug-lista >> text=abre para todos em"), "atividade sugerida aparece esperando aceite");
+  ok(await s.isVisible("#at-sug-lista .card:has-text('Sabor') >> text=esperando há"), "cartão mostra há quanto tempo espera");
+  await s.screenshot({ path: path.join(PRINTS, "c2-sugeridas.png"), fullPage: true });
+  await ir(m, "#atividades/pendencias"); await m.reload();
+  ok(await esperar(m, "#at-lista >> text=Ligar para o restaurante Sabor"), "pessoa sugerida vê a atividade nas pendências");
+  await ir(m, "#atividades/sugeridas");
+  await m.click("#at-sug-lista .card:has-text('Sabor') >> text=Aceitar");
+  ok(await esperar(m, "#at-sug-lista .card:has-text('Sabor') >> text=Em andamento"), "monitorador aceita");
+  await m.click("#at-sug-lista .card:has-text('Sabor') >> text=Concluir");
+  await m.fill("#at-sug-lista .card:has-text('Sabor') textarea", "Entregue, confirmado");
+  await m.click("#at-sug-lista .card:has-text('Sabor') >> text=Confirmar conclusão");
+  ok(await esperar(m, "#at-sug-lista .card:has-text('Sabor') >> text=Entregue, confirmado"), "monitorador conclui com nota");
+  // registros: feed geral também para o suporte; nome abre a ficha
+  await ir(s, "#registros");
+  ok(await esperar(s, "#rg-lista .feed >> text=registrou bloqueio") && await s.isVisible("#rg-lista .feed >> text=Monitor Um"), "suporte vê os registros de todos");
+  ok(await s.isVisible("#rg-lista >> text=reverteu o encerramento"), "registros mostram a reversão do encerramento");
+  await s.screenshot({ path: path.join(PRINTS, "c3-registros.png"), fullPage: true });
+  await s.fill("#rg-q", "Atrasildo"); await s.waitForTimeout(1200);
+  ok((await s.$$("#rg-lista .feed li")).length >= 1 && !(await texto(s, "#rg-lista")).includes("Ladrão"), "busca nos registros");
+  await s.click("#rg-lista .link-ficha >> nth=0");
+  ok(await esperar(s, "#v-bq-consultar:not([hidden]) #bq-consulta h3:has-text('Atrasildo')"), "clicar no entregador abre a ficha");
+  await s.click("#bq-consulta summary:has-text('Linha do tempo')");
+  ok(await esperar(s, "#bq-consulta .timeline >> text=Bloqueio: Mal Uso Proposital do Aplicativo"), "ficha mostra a linha do tempo");
+  await s.screenshot({ path: path.join(PRINTS, "c4-ficha.png"), fullPage: true });
+  // ativação: cidades vêm da tabela
+  await ir(s, "#ativacao/novo");
+  await s.waitForTimeout(800);
+  ok((await s.$$("#cidades option")).length >= 30, "formulário da ativação sugere as cidades do sistema");
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

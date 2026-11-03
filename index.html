@@ -25,6 +25,7 @@
       <a href="#ativacao" data-mod="ativacao">Ativação de entregadores</a>
       <a href="#bloqueios" data-mod="bloqueios">Bloqueios</a>
       <a href="#atividades" data-mod="atividades">Atividades</a>
+      <a href="#registros" data-mod="registros">Registros</a>
       <a href="#equipe" data-mod="equipe">Equipe <span class="count alert" id="c-pedidos" hidden>0</span></a>
     </nav>
     <nav class="tabs" aria-label="Telas"></nav>
@@ -235,8 +236,8 @@
   </section>
 
   <section class="view" id="v-bq-consultar" hidden>
-    <h2>Consultar entregador</h2>
-    <p class="sub">O cadastro de cada entregador: nome, cidade, comentários da equipe, bloqueios e cadastro na ativação.</p>
+    <h2>Ficha do entregador</h2>
+    <p class="sub">Tudo sobre um entregador nos dois módulos: dados, comentários da equipe, linha do tempo, bloqueios e cadastro na ativação.</p>
     <form class="toolbar" id="bq-f-consulta">
       <input id="bq-q-consulta" type="search" placeholder="ID do entregador ou parte do nome" aria-label="ID ou nome do entregador">
       <button class="btn primary" type="submit" style="flex:0 0 auto">Consultar</button>
@@ -334,10 +335,48 @@
     <p class="sub">O que está esperando por você nos dois módulos.</p>
     <div id="at-lista" class="protege-foco"></div>
   </section>
+  <section class="view" id="v-at-sugeridas" hidden>
+    <h2>Atividades sugeridas</h2>
+    <p class="sub">Qualquer pessoa pode sugerir uma atividade e indicar quem deve fazer. Se ninguém indicado aceitar em 10 minutos, ela fica aberta para todos.</p>
+    <details class="panel" id="at-nova-box">
+      <summary><b>Sugerir atividade</b></summary>
+      <form class="cad" id="at-form" novalidate style="margin-top:12px">
+        <label for="at-titulo"><span>O que precisa ser feito <span class="req">*</span></span>
+          <input id="at-titulo" maxlength="150" autocomplete="off">
+        </label>
+        <label for="at-descricao">Detalhes <span class="hint">Opcional</span>
+          <textarea id="at-descricao" maxlength="1500" rows="2"></textarea>
+        </label>
+        <div class="grid2">
+          <label for="at-prazo">Prazo <span class="hint">Opcional</span>
+            <input id="at-prazo" type="datetime-local">
+          </label>
+          <div><span style="font-size:14px">Para quem <span class="hint">Opcional: sem ninguém marcado, vai para todos</span></span>
+            <div class="pessoas" id="at-para"></div>
+          </div>
+        </div>
+        <p class="warn-msg" id="at-erro" role="alert" hidden></p>
+        <div class="actions"><button class="btn primary" type="submit" id="at-enviar">Sugerir</button></div>
+      </form>
+    </details>
+    <div id="at-sug-lista" class="protege-foco"></div>
+  </section>
   <section class="view" id="v-at-avisos" hidden>
     <h2>Avisos</h2>
     <p class="sub">Tratativas feitas e liberações dos bloqueios que você registrou.</p>
     <div id="at-avisos"></div>
+  </section>
+
+  <!-- ===================== REGISTROS ===================== -->
+  <section class="view" id="v-registros" hidden>
+    <h2>Registros</h2>
+    <p class="sub">Tudo o que a equipe fez nos módulos, do mais recente para o mais antigo.</p>
+    <div class="toolbar">
+      <input id="rg-q" type="search" placeholder="Buscar por nome, ID, CPF, cidade ou ação" aria-label="Buscar nos registros">
+      <select id="rg-modulo" aria-label="Módulo"><option value="">Todos os módulos</option><option value="ativacao">Ativação</option><option value="bloqueios">Bloqueios</option></select>
+      <select id="rg-pessoa" aria-label="Pessoa"><option value="">Qualquer pessoa</option></select>
+    </div>
+    <div id="rg-lista"></div>
   </section>
 
   <!-- ===================== EQUIPE ===================== -->
@@ -389,6 +428,7 @@
 <script src="js/ativacao.js"></script>
 <script src="js/bloqueios.js"></script>
 <script src="js/atividades.js"></script>
+<script src="js/registros.js"></script>
 <script src="js/equipe.js"></script>
 </body>
 </html>

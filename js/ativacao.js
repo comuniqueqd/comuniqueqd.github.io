@@ -313,7 +313,15 @@
   $("#f-cpf").addEventListener("input", (e) => (e.target.value = fmtCPF(e.target.value)));
   $("#f-idapp").addEventListener("input", (e) => (e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, "")));
   $("#f-cidade").addEventListener("blur", (e) => (e.target.value = e.target.value.trim().replace(/\s+/g, " ").toUpperCase()));
-  $("#cidades").append(...CIDADES.map((c) => el("option", { value: c })));
+  // sugestões de cidade: a lista de cidades do sistema (aba Regras dos bloqueios); a fixa fica de reserva
+  const sugerirCidades = (lista) => $("#cidades").replaceChildren(...lista.map((c) => el("option", { value: c })));
+  sugerirCidades(CIDADES);
+  let cidadesEm = 0;
+  function atualizarCidades() {
+    if (Date.now() - cidadesEm < 300000) return;
+    cidadesEm = Date.now();
+    rpc("listar_cidades").then((l) => { if (l?.length) sugerirCidades(l); }).catch(() => { cidadesEm = 0; });
+  }
   form.addEventListener("input", () => ($("#form-erro").hidden = true));
   form.addEventListener("reset", () => setTimeout(() => { ["idapp", "cpf", "cidade"].forEach((k) => ($("#e-" + k).textContent = "")); $("#form-erro").hidden = true; }));
   form.addEventListener("submit", async (ev) => {
@@ -356,6 +364,7 @@
     ],
     padrao: () => "pendentes",
     async carregar(aba) {
+      if (aba === "novo") atualizarCidades();
       const t = [rpc("listar_cadastros", { p_escopo: "pendentes" }).then((d) => (S.lista.pendentes = d))];
       if (aba === "meus") t.push(rpc("listar_cadastros", { p_escopo: "meus" }).then((d) => (S.lista.meus = d)));
       if (aba === "historico") t.push(rpc("listar_cadastros", { p_escopo: "todos" }).then((d) => (S.lista.todos = d)));

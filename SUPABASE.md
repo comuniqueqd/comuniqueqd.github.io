@@ -100,7 +100,7 @@ Para quem já instalou o `schema.sql`. **Não apaga** os dados da ativação.
 4. No app, aba **Bloqueios → Regras**: escolha o responsável pela tratativa de cada cidade. Antes disso, as tratativas vão para todos os moderadores.
 5. Na **Equipe**, ajuste o acesso de cada pessoa nos bloqueios (a migração copia o acesso que cada um já tinha na ativação).
 
-**Se depois de rodar o módulo Bloqueios não aparecer** (ou surgir "Erro ao carregar dados" mencionando `resumo_inicio`), a migração não entrou inteira: rode o `002-bloqueios.sql` de novo, do começo ao fim (e depois o `003-entregadores.sql`, se já tiver rodado). Ele foi feito para poder rodar mais de uma vez sem apagar nada. Depois recarregue o site com Ctrl+F5.
+**Se depois de rodar o módulo Bloqueios não aparecer** (ou surgir "Erro ao carregar dados" mencionando `resumo_inicio`), a migração não entrou inteira: rode o `002-bloqueios.sql` de novo, do começo ao fim (e depois o `003-entregadores.sql` e o `004-atividades-registros.sql`, se já tiverem rodado). Ele foi feito para poder rodar mais de uma vez sem apagar nada. Depois recarregue o site com Ctrl+F5.
 
 Regras de bloqueio (editáveis pela aba Regras):
 
@@ -125,4 +125,21 @@ O que muda:
 - **Revisar / Corrigir**: o alerta "revisar" virou um botão. Ele abre uma janela para corrigir ID, nome e cidade (motivo obrigatório) ou marcar como revisado. Também há o botão **Corrigir** no histórico, nos cartões e na consulta. A punição aplicada não muda.
 - **Segurança**: funções internas deixam de poder ser chamadas por quem está logado mas fora da equipe.
 
-**Se rodar o `002` de novo**, rode o `003` em seguida.
+**Se rodar o `002` de novo**, rode o `003` e o `004` em seguida, nessa ordem.
+
+## Atualização: atividades sugeridas, registros, tratativas atrasadas (migração 004)
+
+Para quem já rodou o `003-entregadores.sql`. **Não apaga** nada e pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/004-atividades-registros.sql`](supabase/004-atividades-registros.sql) inteiro e clique em **Run**.
+2. Só depois publique a versão nova do site (a `main`).
+
+O que muda:
+
+- **Tratativa atrasada**: pendente há mais de 32 h fica vermelha. Os moderadores recebem um aviso no sino (uma vez por tarefa) e podem **realocar** a tarefa para outro monitorador ou moderador. O aviso é gerado quando alguém da equipe abre o app (não há serviço agendado). O prazo fica em `parametros_bloqueio.tratativa_prazo_horas`.
+- **Atividades sugeridas** (Atividades → Atividades sugeridas): qualquer pessoa cria, com prazo opcional, e pode indicar pessoas. Se ninguém indicado aceitar em 10 minutos, fica aberta para todos. Quem aceitou conclui (ou um moderador); quem criou ou um moderador exclui.
+- **Registros**: feed único das ações dos dois módulos, para todos os papéis.
+- **Ficha do entregador** (antiga Consultar entregador): linha do tempo dos dois módulos, leves separadas e o cadastro da ativação. Clicar no nome de um entregador em qualquer tela abre a ficha.
+- **Tela inicial**: os seus números e os da equipe.
+- **Reverter encerramento**: no lugar de "liberar antes do prazo" num encerramento de parceria.
+- A lista de cidades do formulário da ativação passa a vir da aba Regras.

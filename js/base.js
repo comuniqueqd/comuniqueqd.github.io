@@ -197,6 +197,12 @@
     if (!S.me) return;
     if (carregando) { deNovo = true; return carregando; }
     carregando = (async () => {
+      // tarefas periódicas (sem serviço agendado: quem abre o app dispara)
+      if (Date.now() - ultimaRotina > 300000) {
+        ultimaRotina = Date.now();
+        if (papelBloq()) rpc("verificar_atrasos").catch((e) => console.error("verificar_atrasos", e));
+        rpc("pessoas").then((d) => (S.pessoas = d)).catch(() => {});
+      }
       const mod = App.modulos[App.atual.mod];
       // cada consulta independente: uma falha não apaga as outras, e o aviso diz qual falhou
       const r = await Promise.allSettled([
@@ -212,12 +218,18 @@
       else if (falhas.some(([, e]) => e?.code === "42501")) notice("Seu acesso mudou. Recarregue a página.");
       else if (falhas.every(([, e]) => /fetch|network/i.test(e?.message || ""))) notice("Não foi possível atualizar os dados. Verifique a internet; a página tenta de novo sozinha.");
       else notice("Erro ao carregar dados (" + falhas.map(([n, e]) => `${n}: ${e?.message || e}`).join(" · ") + "). Mande um print desta mensagem para o suporte do sistema.");
+      // o acesso da pessoa mudou (Equipe): atualiza papéis, abas e telas sem precisar recarregar
+      const R = S.resumo;
+      if (R && "papel" in R && (R.papel !== S.me.papel || R.papel_bloqueios !== S.me.papel_bloqueios)) {
+        try { const me = await rpc("entrar"); if (me.membro) { S.me = me; mostrarPapel(); toast("Seu acesso foi atualizado."); route(); } } catch (_) {}
+      }
       App.render();
     })();
     await carregando;
     carregando = null;
     if (deNovo) { deNovo = false; App.carregar(); }
   };
+  let ultimaRotina = 0;
   let agendado = null;
   const agendar = () => { clearTimeout(agendado); agendado = setTimeout(App.carregar, 400); };
 
@@ -316,6 +328,13 @@
     posLogin();
   }
 
+  // papel no topo: um só quando é igual nos dois módulos; senão, os dois
+  function mostrarPapel() {
+    const a = S.me.papel, b = S.me.papel_bloqueios;
+    $("#papel").textContent = !b || a === b ? PAPEL[a] + (b ? "" : " (ativação)") : `Ativação: ${PAPEL[a]} · Bloqueios: ${PAPEL[b]}`;
+    $("#papel").hidden = false;
+  }
+
   async function posLogin() {
     let r;
     try { r = await rpc("entrar"); }
@@ -325,7 +344,7 @@
 
     S.me = r;
     $("#who").textContent = r.nome;
-    $("#papel").textContent = PAPEL[r.papel]; $("#papel").hidden = false;
+    mostrarPapel();
     $("#b-sair").hidden = false; $("#b-avisos").hidden = false;
     gate(null);
     try { [S.motivos, S.pessoas] = await Promise.all([rpc("listar_motivos"), rpc("pessoas")]); } catch (_) {}
@@ -335,7 +354,7 @@
     // tempo real: qualquer mudança no banco recarrega; e a cada 30 s por garantia
     try {
       const ch = S.sb.channel("mudancas");
-      for (const t of ["cadastros", "eventos", "membros", "pedidos_acesso", "bloqueios", "tarefas", "notificacoes"]) ch.on("postgres_changes", { event: "*", schema: "public", table: t }, agendar);
+      for (const t of ["cadastros", "eventos", "membros", "pedidos_acesso", "bloqueios", "tarefas", "notificacoes", "atividades"]) ch.on("postgres_changes", { event: "*", schema: "public", table: t }, agendar);
       ch.subscribe();
     } catch (_) {}
     setInterval(() => { if (!document.hidden) carregar(); }, 30000);
