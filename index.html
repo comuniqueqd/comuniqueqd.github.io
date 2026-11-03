@@ -25,6 +25,7 @@
       <a href="#ativacao" data-mod="ativacao">Ativação de entregadores</a>
       <a href="#bloqueios" data-mod="bloqueios">Bloqueios</a>
       <a href="#atividades" data-mod="atividades">Atividades</a>
+      <a href="#analises" data-mod="analises">Análises</a>
       <a href="#registros" data-mod="registros">Registros</a>
       <a href="#equipe" data-mod="equipe">Equipe <span class="count alert" id="c-pedidos" hidden>0</span></a>
     </nav>
@@ -147,6 +148,14 @@
       <button class="btn" id="b-export" type="button">Baixar CSV</button>
     </div>
     <div class="tablewrap"><table id="t-hist"></table></div>
+    <div class="panel" style="margin-top:18px">
+      <h3>Aprovados: foram bloqueados depois?</h3>
+      <p class="meta" id="ap-resumo">Carregando…</p>
+      <div class="toolbar">
+        <label class="check"><input type="checkbox" id="ap-so-bloq"> Só os que foram bloqueados depois da aprovação</label>
+      </div>
+      <div class="tablewrap"><table id="t-aprovados"></table></div>
+    </div>
   </section>
 
   <!-- ===================== BLOQUEIOS ===================== -->
@@ -367,6 +376,34 @@
     <div id="at-avisos"></div>
   </section>
 
+  <!-- ===================== ANÁLISES ===================== -->
+  <section class="view" id="v-an-analises" hidden>
+    <h2>Análises</h2>
+    <p class="sub" id="an-sub">Números da operação para entender o que funciona. Só totais: nenhum dado pessoal.</p>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Período">
+        <button type="button" data-an-periodo="30">30 dias</button>
+        <button type="button" data-an-periodo="90" aria-pressed="true">90 dias</button>
+        <button type="button" data-an-periodo="180">6 meses</button>
+        <button type="button" data-an-periodo="365">1 ano</button>
+        <button type="button" data-an-periodo="tudo">Tudo</button>
+      </div>
+      <select id="an-cidade" aria-label="Cidade"><option value="">Todas as cidades</option></select>
+    </div>
+    <div id="an-cards" class="an-grid"></div>
+  </section>
+  <section class="view" id="v-an-resumo" hidden>
+    <h2 id="rs-titulo">Resumo semanal</h2>
+    <p class="sub">Semana de terça a segunda, para a reunião de terça. A semana atual vai se completando ao longo dos dias.</p>
+    <div class="toolbar nao-imprimir">
+      <label class="rotulo">Semana <select id="rs-semana" aria-label="Semana"></select></label>
+      <label class="rotulo">Comparar com <select id="rs-comparar" aria-label="Comparar com"></select></label>
+      <button class="btn" type="button" id="rs-csv">Baixar CSV</button>
+      <button class="btn" type="button" id="rs-pdf">Baixar PDF</button>
+    </div>
+    <div id="rs-corpo"></div>
+  </section>
+
   <!-- ===================== REGISTROS ===================== -->
   <section class="view" id="v-registros" hidden>
     <h2>Registros</h2>
@@ -428,6 +465,7 @@
 <script src="js/ativacao.js"></script>
 <script src="js/bloqueios.js"></script>
 <script src="js/atividades.js"></script>
+<script src="js/analises.js"></script>
 <script src="js/registros.js"></script>
 <script src="js/equipe.js"></script>
 </body>

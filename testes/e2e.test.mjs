@@ -29,6 +29,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/schema.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/002-bloqueios.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/003-entregadores.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/004-atividades-registros.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/005-analises-anexos.sql"), "utf8"));
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
 for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001', 'Ciclano Atrasado', 'LAGARTO - SE', 'Atraso na Coleta ou na Entrega Sem Justificativa', now() - make_interval(days => $1), 'Planilha')", [d]);
 // registro importado com alerta de revisão (100 dias atrás: fora do painel de 30 dias)
@@ -500,6 +501,44 @@ try {
   await ir(s, "#ativacao/novo");
   await s.waitForTimeout(800);
   ok((await s.$$("#cidades option")).length >= 30, "formulário da ativação sugere as cidades do sistema");
+
+  // 17. migração 005: análises, resumo semanal, aprovados no histórico e anexos
+  await ir(s, "#analises");
+  ok(await esperar(s, "#an-cards >> text=Eficácia da punição") && await s.isVisible("#an-cards >> text=Da ativação ao bloqueio"), "Análises abre para o suporte, com os cartões");
+  ok(await s.isVisible("#an-cards >> text=Quando a equipe registra") && (await s.$$("#an-cards .calor .c")).length === 168, "mapa dia × hora com 7 × 24 casas");
+  await s.click("[data-an-periodo=tudo]"); await s.waitForTimeout(800);
+  ok((await texto(s, "#an-sub")).includes("desde o início"), "período 'Tudo' nas análises");
+  await s.screenshot({ path: path.join(PRINTS, "d1-analises.png"), fullPage: true });
+  await ir(s, "#analises/resumo");
+  ok(await esperar(s, "#rs-corpo >> text=Bloqueios registrados") && (await texto(s, "#rs-titulo")).includes("terça"), "resumo semanal de terça a segunda");
+  ok(await s.isVisible("#rs-corpo th:has-text('Diferença')"), "resumo compara com a semana anterior");
+  await s.screenshot({ path: path.join(PRINTS, "d2-resumo.png"), fullPage: true });
+  const [dlr] = await Promise.all([s.waitForEvent("download"), s.click("#rs-csv")]);
+  ok(fs.readFileSync(await dlr.path(), "utf8").includes("Bloqueios registrados"), "resumo baixado em CSV");
+  await s.evaluate(() => { window.print = () => { window.__imprimiu = document.querySelector("#v-an-resumo").classList.contains("imprimir"); }; });
+  await s.click("#rs-pdf");
+  ok(await s.evaluate(() => window.__imprimiu === true), "PDF: abre a impressão só com o resumo");
+  await s.selectOption("#rs-comparar", "");
+  ok(await esperar(s, "#rs-corpo table") && !(await s.isVisible("#rs-corpo th:has-text('Diferença')")), "resumo sem comparação");
+  // histórico da ativação: aprovados e bloqueios depois (moderador)
+  await ir(a2, "#ativacao/historico");
+  ok(await esperar(a2, "#ap-resumo:not(:has-text('Carregando'))") && await a2.isVisible("#t-aprovados"), "histórico da ativação mostra os aprovados e se foram bloqueados");
+  // anexos: suporte anexa uma imagem no próprio bloqueio
+  await ir(s, "#bloqueios/meus"); await s.reload();
+  const cardAx = "#bq-meus-lista .card:has-text('Atrasildo')";
+  await esperar(s, cardAx);
+  await s.click(`${cardAx} >> text=Anexar…`);
+  ok(await esperar(s, "dialog.janela .aviso-anexo >> text=Cuidado antes de anexar"), "ao anexar, aparece o aviso de cuidado");
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+  await s.setInputFiles("dialog.janela input[type=file]", { name: "conversa.png", mimeType: "image/png", buffer: png });
+  ok(await esperar(s, "#toast:has-text('Anexo enviado')") && await esperar(s, "dialog.janela .anexos >> text=conversa.jpg"), "imagem comprimida e anexada");
+  await s.click("dialog.janela .anexos button:text-is('Ver')");
+  await s.waitForSelector("dialog.janela img.previa-anexo", { state: "attached", timeout: 10000 }).catch(() => {});
+  await s.waitForTimeout(500);
+  ok(await s.evaluate(() => document.querySelector("dialog.janela img.previa-anexo")?.naturalWidth > 0), "anexo abre na própria janela (a imagem carrega)");
+  await s.screenshot({ path: path.join(PRINTS, "d3-anexos.png") });
+  await s.click("dialog.janela >> text=Fechar");
+  ok(await esperar(s, `${cardAx} >> text=Anexos (1)`), "cartão mostra quantos anexos tem");
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

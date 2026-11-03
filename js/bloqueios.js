@@ -99,6 +99,7 @@
           completar ? "Completar dados" : b.tarefa.tipo === "encerramento_parceria" ? "Marcar encerramento como tratado" : "Marcar tratativa como resolvida") : null,
         mod() && b.tarefa?.status === "pendente" && b.tarefa.tipo !== "completar_dados" ? el("button", { class: "btn link", type: "button", onclick: () => realocar(b.tarefa, b) }, "Realocar…") : null,
         el("button", { class: "btn link", type: "button", onclick: () => abrirFicha(b.id_app) }, "Consultar entregador"),
+        botaoAnexos(b),
         staff() && !b.dados_pendentes ? el("button", { class: "btn link", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir dados") : null,
         el("span", { class: "spacer" }),
         staff() && (sit === "bloqueado" || sit === "encerramento") ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrir(b.id, "liberar") }, sit === "encerramento" ? "Reverter encerramento…" : "Liberar antes do prazo…") : null) : null,
@@ -220,6 +221,99 @@
     try { await rpc("liberar_bloqueio", { p_bloqueio: b.id, p_motivo: motivo }); delete B.caixa[b.id]; toast(reverter ? `Encerramento de ${b.nome} revertido.` : `${b.nome} foi liberado.`); await carregar(); }
     catch (e) { btn.disabled = false; toast(msgErro(e)); }
   }
+  // ---------- anexos (até 3 por bloqueio; imagens comprimidas aqui no navegador) ----------
+  const podeAnexos = (b) => staff() || b.registrado_por === S.me.id;
+  const botaoAnexos = (b) => podeAnexos(b)
+    ? el("button", { class: "btn link", type: "button", onclick: () => abrirAnexos(b) }, b.anexos ? `Anexos (${b.anexos})` : "Anexar…") : null;
+  const LIMITE = 300 * 1024, ALVO = 200 * 1024;
+  const kb = (n) => `${Math.max(1, Math.round(n / 1024))} KB`;
+  const paraBase64 = (blob) => new Promise((ok, erro) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = erro; r.readAsDataURL(blob); });
+  async function comprimir(arquivo) {
+    const url = URL.createObjectURL(arquivo);
+    try {
+      const img = await new Promise((ok, erro) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => erro(new Error("Não foi possível abrir a imagem.")); i.src = url; });
+      let lado = 1600, qualidade = 0.8, blob = null;
+      for (let i = 0; i < 8; i++) {
+        const esc = Math.min(1, lado / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(img.naturalWidth * esc)); c.height = Math.max(1, Math.round(img.naturalHeight * esc));
+        const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+        blob = await new Promise((ok) => c.toBlob(ok, "image/jpeg", qualidade));
+        if (blob.size <= ALVO) break;
+        if (qualidade > 0.5) qualidade -= 0.15; else lado = Math.round(lado * 0.75);
+      }
+      return blob;
+    } finally { URL.revokeObjectURL(url); }
+  }
+  function abrirAnexos(b) {
+    const lista = el("ul", { class: "anexos" }, el("li", { class: "meta", text: "Carregando…" }));
+    const previa = el("div");
+    const erro = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    const arquivo = el("input", { type: "file", accept: "image/jpeg,image/png,image/webp,application/pdf", hidden: true });
+    const btnEscolher = el("button", { class: "btn", type: "button", onclick: () => arquivo.click() }, "Escolher imagem ou PDF");
+    let itens = [];
+    async function atualizar() {
+      try { itens = await rpc("listar_anexos", { p_bloqueio: b.id }); }
+      catch (e) { itens = []; erro.textContent = msgErro(e); erro.hidden = false; }
+      btnEscolher.disabled = itens.length >= 3;
+      lista.replaceChildren(...(itens.length ? itens.map((a) => el("li", {},
+        el("span", {}, el("b", { text: a.nome }), ` · ${kb(a.tamanho)} · ${a.por_nome || "—"} · ${dt(a.em)}`),
+        el("span", {},
+          el("button", { class: "btn link", type: "button", onclick: (e) => ver(a, e.currentTarget) }, a.tipo === "application/pdf" ? "Baixar" : "Ver"),
+          a.pode_excluir ? el("button", { class: "btn link", type: "button", onclick: (e) => excluirAnexo(a, e.currentTarget) }, "Excluir") : null)))
+        : [el("li", { class: "meta", text: "Nenhum anexo neste bloqueio." })]));
+    }
+    async function ver(a, btn) {
+      btn.disabled = true;
+      try {
+        const d = await rpc("baixar_anexo", { p_id: a.id });
+        const bytes = Uint8Array.from(atob(d.base64), (c) => c.charCodeAt(0));
+        const url = URL.createObjectURL(new Blob([bytes], { type: d.tipo }));
+        if (d.tipo === "application/pdf") {
+          const link = el("a", { href: url, download: d.nome }); document.body.append(link); link.click(); link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
+        } else previa.replaceChildren(el("img", { class: "previa-anexo", src: url, alt: d.nome }));
+      } catch (e) { toast(msgErro(e)); }
+      btn.disabled = false;
+    }
+    async function excluirAnexo(a, btn) {
+      btn.disabled = true;
+      try { await rpc("excluir_anexo", { p_id: a.id }); previa.replaceChildren(); toast("Anexo excluído."); await atualizar(); carregar(); }
+      catch (e) { btn.disabled = false; toast(msgErro(e)); }
+    }
+    arquivo.addEventListener("change", async () => {
+      const f = arquivo.files[0]; arquivo.value = "";
+      if (!f) return;
+      erro.hidden = true;
+      btnEscolher.disabled = true; btnEscolher.textContent = "Enviando…";
+      try {
+        let blob = f, nome = f.name, tipo = f.type;
+        if (tipo === "application/pdf") {
+          if (f.size > LIMITE) throw new Error(`Este PDF tem ${kb(f.size)}. O limite é 300 KB: envie só a página necessária ou um print.`);
+        } else if (/^image\//.test(tipo)) {
+          blob = await comprimir(f); tipo = "image/jpeg"; nome = nome.replace(/\.[^.]+$/, "") + ".jpg";
+          if (blob.size > LIMITE) throw new Error("Mesmo comprimida, a imagem passou de 300 KB. Recorte só a parte necessária.");
+        } else throw new Error("Anexe uma imagem (JPG, PNG) ou um PDF.");
+        await rpc("anexar", { p_bloqueio: b.id, p_nome: nome, p_tipo: tipo, p_base64: await paraBase64(blob) });
+        toast(`Anexo enviado (${kb(blob.size)}).`);
+        await atualizar(); carregar();
+      } catch (e) { erro.textContent = e.message && !e.code ? e.message : msgErro(e); erro.hidden = false; }
+      btnEscolher.textContent = "Escolher imagem ou PDF";
+      btnEscolher.disabled = itens.length >= 3;
+    });
+    const d = janela(`Anexos: ${b.nome}`,
+      el("p", { class: "meta", style: "margin:0", text: `${b.infracao} · ${dt(b.inicio)} · até 3 anexos por bloqueio.` }),
+      podeAnexos(b) ? el("div", { class: "aviso-anexo" },
+        el("b", { text: "Cuidado antes de anexar. " }),
+        "Anexe só quando for realmente necessário para entender o caso (ex.: print de conversa, foto de avaria). ",
+        "Não anexe documentos pessoais (RG, CPF, comprovantes, dados bancários), nem imagens com o rosto ou os dados de clientes. ",
+        "Imagens são comprimidas automaticamente (cerca de 200 KB); PDFs até 300 KB.") : null,
+      lista, erro,
+      el("div", { class: "actions" }, btnEscolher, arquivo, el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Fechar")),
+      previa);
+    atualizar();
+  }
+
   // nome do entregador que abre a ficha
   const linkFicha = (b, texto = b.nome) => el("button", { class: "link-ficha", type: "button", title: "Consultar entregador", onclick: (e) => { e.stopPropagation(); abrirFicha(b.id_app); } }, texto);
   function abrirFicha(id) {
@@ -526,7 +620,7 @@
         el("td", {}, b.nome, b.cidade ? el("div", { class: "meta", text: b.cidade }) : null, alertaRevisar(b, true)),
         el("td", { text: b.infracao + (b.leve ? " (leve)" : "") }), el("td", { text: b.leve ? "—" : ord(b.ocorrencia) }), el("td", { text: horasTxt(b.horas) }), el("td", {}, pillSit(b.situacao)),
         el("td", { text: b.registrado_por_nome }), el("td", {}, bulletTratativa(b)),
-        el("td", {}, staff() && !b.dados_pendentes ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir") : null))), "")));
+        el("td", { style: "white-space:nowrap" }, staff() && !b.dados_pendentes ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir") : null, botaoAnexos(b)))), "")));
   }
   const MOD_TXT = { ativacao: "ATIVAÇÃO", bloqueios: "BLOQUEIOS" };
   function renderConsulta() {

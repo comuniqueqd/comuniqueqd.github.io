@@ -308,6 +308,33 @@
     document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
 
+  // ---------- aprovados: foram bloqueados depois? (fim do Histórico) ----------
+  function renderAprovados() {
+    const l = S.aprovados, t = $("#t-aprovados");
+    const cols = [["Aprovado em"], ["Entregador"], ["Cidade"], ["Enviado por"], ["Bloqueios depois", 1], ["1º bloqueio"], ["Dias até o 1º", 1], ["Agora"]];
+    if (!l) { $("#ap-resumo").textContent = "Carregando…"; return t.replaceChildren(...App.u.tabela(cols, [], "Carregando…")); }
+    const bloq = l.filter((x) => x.bloqueios > 0);
+    const media = bloq.length ? Math.round((10 * bloq.reduce((s, x) => s + Number(x.dias_ate_bloqueio), 0)) / bloq.length) / 10 : null;
+    $("#ap-resumo").textContent = l.length
+      ? `${l.length} aprovado(s) pelo sistema · ${bloq.length} bloqueado(s) depois da aprovação (${Math.round((100 * bloq.length) / l.length)}%)` + (media != null ? ` · em média ${String(media).replace(".", ",")} dias até o 1º bloqueio.` : ".")
+      : "Nenhum cadastro aprovado ainda.";
+    const lista = $("#ap-so-bloq").checked ? bloq : l;
+    const nome = (x) => {
+      const txt = x.nome || "ID " + x.id_app;
+      return S.me.papel_bloqueios && App.abrirFicha ? el("button", { class: "link-ficha", type: "button", title: "Consultar entregador", onclick: () => App.abrirFicha(x.id_app) }, txt) : txt;
+    };
+    t.replaceChildren(...App.u.tabela(cols, lista.map((x) => el("tr", {},
+      el("td", { text: dt(x.aprovado_em) }),
+      el("td", {}, nome(x), el("br"), el("span", { class: "mono meta", text: x.id_app })),
+      el("td", { text: x.cidade }), el("td", { text: x.enviado_por_nome }),
+      el("td", { class: "num", text: x.bloqueios }),
+      el("td", { text: x.primeiro_bloqueio ? dt(x.primeiro_bloqueio) : "—" }),
+      el("td", { class: "num", text: x.dias_ate_bloqueio == null ? "—" : String(x.dias_ate_bloqueio).replace(".", ",") }),
+      el("td", { text: x.encerrado ? "Parceria encerrada" : x.bloqueado_agora ? "Bloqueado" : x.bloqueios ? "Liberado" : "—" }))),
+      $("#ap-so-bloq").checked ? "Nenhum aprovado foi bloqueado depois." : "Nenhum cadastro aprovado ainda."));
+  }
+  $("#ap-so-bloq").addEventListener("change", () => renderAprovados());
+
   // ---------- novo cadastro ----------
   const form = $("#form");
   $("#f-cpf").addEventListener("input", (e) => (e.target.value = fmtCPF(e.target.value)));
@@ -367,12 +394,13 @@
       if (aba === "novo") atualizarCidades();
       const t = [rpc("listar_cadastros", { p_escopo: "pendentes" }).then((d) => (S.lista.pendentes = d))];
       if (aba === "meus") t.push(rpc("listar_cadastros", { p_escopo: "meus" }).then((d) => (S.lista.meus = d)));
-      if (aba === "historico") t.push(rpc("listar_cadastros", { p_escopo: "todos" }).then((d) => (S.lista.todos = d)));
+      if (aba === "historico") t.push(rpc("listar_cadastros", { p_escopo: "todos" }).then((d) => (S.lista.todos = d)),
+                                      rpc("aprovados_e_bloqueios").then((d) => (S.aprovados = d)));
       if (aba === "painel") t.push(rpc("metricas", { p_pessoas: pessoasFiltro() }).then((d) => (S.metricas = d)));
       await Promise.all(t);
     },
     render(aba) {
-      ({ pendentes: renderPendentes, meus: renderMeus, painel: renderPainel, historico: renderHist })[aba]?.();
+      ({ pendentes: renderPendentes, meus: renderMeus, painel: renderPainel, historico: () => { renderHist(); renderAprovados(); } })[aba]?.();
     },
     contadores() {
       const r = S.resumo?.ativacao;

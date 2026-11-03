@@ -3,11 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "npm run test:sql && npm run test:bloqueios && npm run test:entregadores && npm run test:atividades && npm run test:e2e",
+    "test": "npm run test:sql && npm run test:bloqueios && npm run test:entregadores && npm run test:atividades && npm run test:analises && npm run test:e2e",
     "test:sql": "node sql.test.mjs",
     "test:bloqueios": "node bloqueios.test.mjs",
     "test:entregadores": "node entregadores.test.mjs",
     "test:atividades": "node atividades.test.mjs",
+    "test:analises": "node analises.test.mjs",
     "test:e2e": "node e2e.test.mjs"
   },
   "devDependencies": {

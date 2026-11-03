@@ -125,7 +125,7 @@ O que muda:
 - **Revisar / Corrigir**: o alerta "revisar" virou um botão. Ele abre uma janela para corrigir ID, nome e cidade (motivo obrigatório) ou marcar como revisado. Também há o botão **Corrigir** no histórico, nos cartões e na consulta. A punição aplicada não muda.
 - **Segurança**: funções internas deixam de poder ser chamadas por quem está logado mas fora da equipe.
 
-**Se rodar o `002` de novo**, rode o `003` e o `004` em seguida, nessa ordem.
+**Se rodar uma migração de novo**, rode também as seguintes, em ordem (002 → 003 → 004 → 005).
 
 ## Atualização: atividades sugeridas, registros, tratativas atrasadas (migração 004)
 
@@ -143,3 +143,17 @@ O que muda:
 - **Tela inicial**: os seus números e os da equipe.
 - **Reverter encerramento**: no lugar de "liberar antes do prazo" num encerramento de parceria.
 - A lista de cidades do formulário da ativação passa a vir da aba Regras.
+
+## Atualização: Análises, Resumo semanal e anexos (migração 005)
+
+Para quem já rodou o `004-atividades-registros.sql`. **Não apaga** nada e pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/005-analises-anexos.sql`](supabase/005-analises-anexos.sql) inteiro e clique em **Run**.
+2. Só depois publique a versão nova do site (a `main`).
+
+O que muda:
+
+- **Análises** (módulo novo, para todos, só números): eficácia da punição, tempo até reincidir, quando a equipe registra (dia × hora), bloqueados agora por cidade (vindos da ativação ou só dos bloqueios), conversão das infrações leves, tratativas por responsável e **da ativação ao bloqueio**.
+- **Resumo semanal** (aba das Análises): semana de **terça a segunda**, qualquer semana anterior, comparação com outra semana e download em **CSV** ou **PDF** (pela janela de impressão do navegador: "Salvar como PDF").
+- **Histórico da ativação**: no fim, a lista dos aprovados e se/quando foram bloqueados depois.
+- **Anexos** nos bloqueios: até 3 por bloqueio; imagens comprimidas no navegador (~200 KB), PDF até 300 KB. Ficam no banco, com as mesmas regras de acesso (o suporte só nos bloqueios que registrou), teto total de 200 MB. Ao anexar aparece o aviso para não anexar documentos pessoais.

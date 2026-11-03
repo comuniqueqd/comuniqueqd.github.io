@@ -50,7 +50,7 @@ export function iniciarSupabaseFalso({ porta = 54321, databaseUrl }) {
     const m = url.pathname.match(/^\/rest\/v1\/rpc\/([a-z_]+)$/);
     if (!m || req.method !== "POST") return responder(res, 404, { message: "não implementado no servidor de teste" });
     const args = corpo ? JSON.parse(corpo) : {};
-    const nomes = Object.keys(args).filter((k) => /^p_[a-z_]+$/.test(k));
+    const nomes = Object.keys(args).filter((k) => /^p_[a-z0-9_]+$/.test(k));
     const cli = await pool.connect();
     try {
       await cli.query("begin");
