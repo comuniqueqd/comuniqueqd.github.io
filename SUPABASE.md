@@ -125,7 +125,7 @@ O que muda:
 - **Revisar / Corrigir**: o alerta "revisar" virou um botão. Ele abre uma janela para corrigir ID, nome e cidade (motivo obrigatório) ou marcar como revisado. Também há o botão **Corrigir** no histórico, nos cartões e na consulta. A punição aplicada não muda.
 - **Segurança**: funções internas deixam de poder ser chamadas por quem está logado mas fora da equipe.
 
-**Se rodar uma migração de novo**, rode também as seguintes, em ordem (002 → 003 → 004 → 005 → 006).
+**Se rodar uma migração de novo**, rode também as seguintes, em ordem (002 → 003 → 004 → 005 → 006 → 007).
 
 ## Atualização: atividades sugeridas, registros, tratativas atrasadas (migração 004)
 
@@ -173,3 +173,22 @@ O que muda:
 - **Bloqueios → Atenção**: entregadores perto de uma punição maior.
 - **Prazo da tratativa** editável na aba Bloqueios → Regras.
 - **Histórico de bloqueios** com páginas de 100.
+
+## Atualização: "Pão quentinho" · tudo conectado (migração 007)
+
+Para quem já rodou o `006-equipe-previsao-atencao.sql`. **Não apaga** nada e pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/007-pao-quentinho.sql`](supabase/007-pao-quentinho.sql) inteiro e clique em **Run**.
+2. Só depois publique a versão nova do site (a `main`).
+
+O que muda:
+
+- **Aviso para quem enviou o cadastro** quando ele é aprovado, reprovado, encerrado ou desfeito (no sino; quem decidiu não recebe o próprio aviso).
+- **Nome do entregador no Novo cadastro.** Aprovado com ID e nome, a ficha do entregador nasce na hora (nunca sobrescreve uma ficha que já existe).
+- **Marca "revisar" nos cadastros incompletos** (sem nome, sem ID, ou ID com ficha de outro nome), no Histórico (filtro "Para revisar") e discreta no cartão de Pendentes. **Qualquer pessoa da equipe** completa ou corrige os dados (ID, CPF, nome, cidade, observação), com o antes e o depois no histórico do cadastro. Monitorador e moderador podem marcar "Os dados estão certos". Aprovar com dados faltando continua permitido. Os cadastros que já existiam só ganham a marca, sem tarefa.
+- **Tarefa opcional** (formato novo): cadastro novo incompleto gera uma tarefa normal para o administrador final e opcional, em cartão menor, para o resto da equipe; quem pega tira dos outros; conclui sozinha quando os dados ficam completos. Na janela de revisão, **Sugerir tarefa** (sem pessoa = administrador + opcional para todos; com pessoa = só para ela).
+- **Um cartão opcional "Revisar registros da planilha: faltam N"** para monitoradores e moderadores dos bloqueios, que abre o Histórico filtrado e some quando chega a zero.
+- **Histórico do ID**: no Novo cadastro, ao digitar o ID ou o CPF, aparece o que o Comunique já sabe (ficha, bloqueios, leves, comentários, parceria encerrada). Só informa, não impede o envio. O mesmo resumo aparece no cartão de Pendentes.
+- **Busca rápida no topo** (ID, CPF ou nome): fichas de entregador (só para quem tem o módulo de bloqueios) e cadastros da ativação.
+- **"O que há de novo"**: janela com as novidades, uma vez por pessoa a cada versão.
+- **Menos tráfego**: o app pergunta um número barato (`ultima_mudanca()`) e só recarrega as listas quando algo mudou (e tudo a cada 5 min); sem mexer no mouse/teclado por 5 min, atualiza a cada 2 min; resumo e avisos numa chamada só; a lista da equipe só na tela Equipe; Histórico de bloqueios paginado e filtrado no banco (o CSV baixa até 5000 linhas com os filtros da tela).

@@ -17,8 +17,9 @@
   const render = () => App.render();
   const carregar = () => App.carregar();
 
-  ["#f-meus-status", "#f-hist-status"].forEach((s) => $(s).append(el("option", { value: "", text: "Todas as situações" }), ...Object.entries(ST).map(([v, t]) => el("option", { value: v, text: t }))));
-  const busca = (c, q) => !q || norm([c.id_app, c.cpf, fmtCPF(c.cpf), c.cidade, c.enviado_por_nome, c.observacao].join(" ")).includes(norm(q));
+  ["#f-meus-status", "#f-hist-status"].forEach((s) => $(s).append(el("option", { value: "", text: "Todas as situações" }), ...Object.entries(ST).map(([v, t]) => el("option", { value: v, text: t })),
+    el("option", { value: "revisar", text: "Para revisar (dados faltando)" })));
+  const busca = (c, q) => !q || norm([c.id_app, c.cpf, fmtCPF(c.cpf), c.nome, c.cidade, c.enviado_por_nome, c.observacao].join(" ")).includes(norm(q));
   function opcoesCidade(sel, lista) {
     const cs = [...new Set(lista.map((c) => c.cidade))].sort();
     const cur = sel.value, have = [...sel.options].slice(1).map((o) => o.value).join("|");
@@ -58,19 +59,22 @@
     const prevPassou = c.previsao && new Date(c.previsao) < Date.now();
     return el("article", { class: "card" + (contato ? " contato" : "") + (prevPassou ? " previsao-passou" : "") + (destacado ? " destaque" : ""), "data-id": c.id },
       el("div", { class: "head" },
-        el("span", { class: "name" }, el("span", { class: "mono", text: titulo(c) }), pill(c.status, true), destacado ? el("span", { class: "tag", text: "RECÉM-ENVIADO" }) : null),
+        el("span", { class: "name" }, c.nome ? el("span", { text: c.nome }) : null, el("span", { class: "mono" + (c.nome ? " meta" : ""), text: titulo(c) }), pill(c.status, true),
+          destacado ? el("span", { class: "tag", text: "RECÉM-ENVIADO" }) : null, c.revisar ? botaoRevisar(c, true) : null),
         el("span", { class: "espera" + (esp.velho ? " velho" : ""), title: "Desde " + dt(c.status_desde), text: (contato ? "aguardando contato há " : "esperando há ") + esp.txt })),
       el("dl", { class: "fields" },
-        fld("ID do entregador", c.id_app, true), fld("CPF", c.cpf && fmtCPF(c.cpf), true), fld("Cidade", c.cidade),
+        fld("Nome", c.nome), fld("ID do entregador", c.id_app, true), fld("CPF", c.cpf && fmtCPF(c.cpf), true), fld("Cidade", c.cidade),
         fld("Enviado", `${dt(c.enviado_em)} (há ${env.txt})`),
         staff() ? fld("Enviado por", c.enviado_por === S.me.id ? "Você" : c.enviado_por_nome) : null),
       App.u.previsao(c, "cadastro", c.id, staff()),
+      c.historico ? resumoHistorico(c.historico, c.id_app) : null,
       contato ? el("div", { class: "motivo" }, el("b", { text: `Reprovado por ${c.decidido_por_nome} em ${dt(c.decidido_em)}: ` }), c.motivo, c.detalhe ? " — " + c.detalhe : "") : null,
       c.observacao ? el("div", { class: "obs", text: c.observacao }) : null,
       el("div", { class: "actions" },
         staff() ? el("button", { class: "btn approve", type: "button", onclick: (e) => decidir(c, "aprovar", e.currentTarget) }, "Aprovar") : null,
         staff() && !contato ? el("button", { class: "btn reject", type: "button", onclick: () => abrir(c.id, "reprovar") }, "Reprovar") : null,
         el("button", { class: "btn small", type: "button", onclick: () => copiar(c) }, "Copiar dados"),
+        el("button", { class: "btn link", type: "button", onclick: () => App.abrirCadastro(c.id) }, "Editar dados"),
         botaoHistorico(c.id),
         !staff() ? el("span", { class: "meta", text: contato ? "O responsável vai retomar o contato com o entregador." : "Aguardando análise do responsável." }) : null,
         el("span", { class: "spacer" }),
@@ -109,7 +113,7 @@
   }
 
   async function copiar(c) {
-    const t = [c.id_app ? `ID: ${c.id_app}` : "", c.cpf ? `CPF: ${fmtCPF(c.cpf)}` : "", `Cidade: ${c.cidade}`, c.observacao ? `Obs.: ${c.observacao}` : ""].filter(Boolean).join("\n");
+    const t = [c.nome ? `Nome: ${c.nome}` : "", c.id_app ? `ID: ${c.id_app}` : "", c.cpf ? `CPF: ${fmtCPF(c.cpf)}` : "", `Cidade: ${c.cidade}`, c.observacao ? `Obs.: ${c.observacao}` : ""].filter(Boolean).join("\n");
     try { await navigator.clipboard.writeText(t); toast("Dados copiados."); } catch (_) { toast("Não foi possível copiar neste navegador."); }
   }
 
@@ -130,10 +134,88 @@
     if (!ev) return el("p", { class: "meta", text: "Carregando histórico…" });
     if (ev.erro) return el("p", { class: "err", text: ev.erro });
     return el("ol", { class: "timeline" }, ev.map((e) => el("li", {},
-      el("b", { text: EVENTO[e.tipo] }), ` por ${e.por_nome} em ${dt(e.em)}`,
-      e.tipo !== "enviado" && e.tipo !== "desfeito" ? ` → ${ST[e.status_novo]}` : "",
+      el("b", { text: EVENTO[e.tipo] || e.tipo }), ` por ${e.por_nome} em ${dt(e.em)}`,
+      ["enviado", "desfeito", "editado", "revisado"].includes(e.tipo) ? "" : ` → ${ST[e.status_novo]}`,
+      (e.tipo === "editado" || e.tipo === "revisado") && e.detalhe ? ` · ${e.detalhe}` : "",
       e.motivo && e.tipo !== "desfeito" ? ` · ${e.motivo}${e.detalhe ? ": " + e.detalhe : ""}` : "")));
   }
+
+  // célula "Entregador" das tabelas: nome, ID, CPF e o botão revisar
+  const celEntregador = (c) => el("td", {}, c.nome ? el("div", { text: c.nome }) : null,
+    el("span", { class: "mono" + (c.nome ? " meta" : ""), text: c.id_app || "—" }), c.cpf ? el("span", { class: "meta mono", text: " · " + fmtCPF(c.cpf) }) : null,
+    c.revisar ? el("div", { onclick: (e) => e.stopPropagation() }, botaoRevisar(c)) : null);
+  // botão "revisar": abre a janela para completar os dados (qualquer pessoa da equipe)
+  const botaoRevisar = (c, discreto) => el("button", { class: "revisar-cad" + (discreto ? " discreto" : ""), type: "button", title: "Revisar: " + c.revisar,
+    onclick: (e) => { e.stopPropagation(); App.abrirCadastro(c.id); } }, discreto ? "revisar" : "⚠ revisar: " + c.revisar);
+
+  // resumo do que o sistema já sabe do ID (ficha, bloqueios, leves, comentários)
+  function resumoHistorico(h, idApp) {
+    const partes = [];
+    if (h.nome) partes.push(`ficha: ${h.nome}${h.cidade ? " · " + h.cidade : ""}`);
+    if (h.bloqueios) partes.push(`${h.bloqueios} bloqueio(s)${h.ultimo_infracao ? ` (último: ${h.ultimo_infracao}, ${dt(h.ultimo_em)})` : ""}`);
+    if (h.leves) partes.push(`${h.leves} leve(s)`);
+    if (h.comentarios) partes.push(`${h.comentarios} comentário(s)`);
+    return el("div", { class: "quadrinho" + (h.encerrado ? " grave" : "") },
+      h.encerrado ? el("p", { style: "margin:0" }, el("b", { text: "⚠ Este ID está com a parceria encerrada" }), h.encerrado_infracao ? ` (${h.encerrado_infracao}, ${dt(h.encerrado_em)})` : "") : null,
+      el("p", { style: "margin:0" }, el("b", { text: "Este ID já existe no Comunique: " }), partes.join(" · ") || "sem registros", h.bloqueado_agora ? " · bloqueado agora" : ""),
+      App.abrirFicha ? el("button", { class: "btn link", type: "button", onclick: () => App.abrirFicha(idApp) }, "Consultar entregador") : null);
+  }
+
+  // janela para completar ou corrigir um cadastro (aberta pelo botão revisar, pela tarefa ou pela busca)
+  App.abrirCadastro = async function abrirCadastro(id) {
+    let c;
+    try { c = await rpc("ver_cadastro", { p_cadastro: id }); } catch (e) { return toast(msgErro(e)); }
+    const campo = (rot, valor, at = {}) => { const i = el("input", { "aria-label": rot, ...at }); i.value = valor || ""; return [el("label", {}, rot, i), i]; };
+    const [lNome, iNome] = campo("Nome do entregador", c.nome, { maxlength: "120" });
+    const [lId, iId] = campo("ID do entregador", c.id_app, { class: "mono", maxlength: "40", spellcheck: "false" });
+    const [lCpf, iCpf] = campo("CPF", c.cpf && fmtCPF(c.cpf), { class: "mono", inputmode: "numeric", maxlength: "14" });
+    const [lCid, iCid] = campo("Cidade", c.cidade, { list: "cidades" });
+    const iObs = el("textarea", { "aria-label": "Observação", maxlength: "600" }); iObs.value = c.observacao || "";
+    const [lMot, iMot] = campo("Motivo da alteração (opcional)", "", { maxlength: "200" });
+    iId.addEventListener("input", () => (iId.value = iId.value.replace(/[^A-Za-z0-9]/g, "")));
+    iCpf.addEventListener("input", () => (iCpf.value = fmtCPF(iCpf.value)));
+    const erro = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    const falhou = (e, btn) => { if (btn) btn.disabled = false; erro.textContent = typeof e === "string" ? e : msgErro(e); erro.hidden = false; };
+    const feito = (msg) => { d.close(); toast(msg); delete S.eventos[id]; carregar(); };
+    async function salvar(btn) {
+      erro.hidden = true;
+      const cpf = onlyDigits(iCpf.value), idApp = iId.value.trim(), cidade = iCid.value.trim().replace(/\s+/g, " ").toUpperCase();
+      if (!idApp && !cpf) return falhou("O cadastro precisa de um ID ou de um CPF.");
+      if (cpf && !cpfValido(cpf)) return falhou("CPF inválido. Confira os 11 números.");
+      if (!/^.+ - [A-Z]{2}$/.test(cidade)) return falhou("Use o formato CIDADE - UF, ex.: LAGARTO - SE.");
+      btn.disabled = true;
+      try {
+        const r = await rpc("completar_cadastro", { p_cadastro: id, p_id_app: idApp || null, p_cpf: cpf || null, p_nome: iNome.value.trim() || null,
+          p_cidade: cidade, p_observacao: iObs.value.trim() || null, p_motivo: iMot.value.trim() || null });
+        feito(r?.revisar ? "Dados salvos. Ainda falta: " + r.revisar + "." : "Dados salvos. O cadastro está completo.");
+      } catch (e) { falhou(e, btn); }
+    }
+    // sugerir tarefa: sem pessoa = administrador + opcional para todos; com pessoa = só para ela
+    const selPessoa = el("select", { "aria-label": "Para quem" }, el("option", { value: "", text: "Ninguém em especial (opcional para todos)" }),
+      ...S.pessoas.filter((p) => p.id !== S.me.id).map((p) => el("option", { value: p.id, text: p.nome })));
+    async function sugerir(btn) {
+      btn.disabled = true;
+      try { await rpc("sugerir_tarefa_cadastro", { p_cadastro: id, p_para: selPessoa.value || null }); feito("Tarefa sugerida."); }
+      catch (e) { falhou(e, btn); }
+    }
+    const d = App.u.janela(c.revisar ? "Revisar cadastro" : "Editar dados do cadastro",
+      el("p", { class: "meta", style: "margin:0", text: `${c.situacao} · enviado por ${c.enviado_por_nome} em ${dt(c.enviado_em)}. Qualquer pessoa da equipe pode completar ou corrigir; o histórico guarda o antes e o depois.` }),
+      c.revisar ? el("p", { class: "quadrinho", style: "margin:0" }, el("b", { text: "Revisar: " }), c.revisar) : null,
+      lNome, el("div", { class: "grid2" }, lId, lCpf), lCid, el("label", {}, "Observação", iObs), lMot,
+      erro,
+      el("div", { class: "actions" },
+        el("button", { class: "btn primary", type: "button", onclick: (e) => salvar(e.currentTarget) }, "Salvar"),
+        c.revisar && c.nome && c.id_app && staff() ? el("button", { class: "btn", type: "button", onclick: async (e) => {
+          const b = e.currentTarget; b.disabled = true;
+          try { await rpc("marcar_cadastro_revisado", { p_cadastro: id }); feito("Marcado como revisado."); } catch (err) { falhou(err, b); } } }, "Os dados estão certos") : null,
+        el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")),
+      c.revisar && !c.tarefa_aberta ? el("div", { class: "box" },
+        el("p", { class: "meta", style: "margin:0", text: "Não dá para completar agora? Sugira uma tarefa. Sem escolher ninguém, ela vai para o administrador e fica como opcional para toda a equipe." }),
+        el("div", { class: "actions" }, selPessoa, el("button", { class: "btn small", type: "button", onclick: (e) => sugerir(e.currentTarget) }, "Sugerir tarefa"))) : null,
+      c.revisar && c.tarefa_aberta ? el("p", { class: "meta", style: "margin:0", text: "Já existe uma tarefa aberta para completar este cadastro (ela conclui sozinha quando os dados ficarem completos)." }) : null,
+      c.edicoes?.length ? el("details", {}, el("summary", { text: `Alterações anteriores (${c.edicoes.length})` }),
+        el("ol", { class: "timeline" }, c.edicoes.map((x) => el("li", {}, el("b", { text: EVENTO[x.tipo] }), ` por ${x.por_nome} em ${dt(x.em)}`, x.detalhe ? ` · ${x.detalhe}` : "")))) : null);
+  };
 
   // ---------- meus cadastros ----------
   function renderMeus() {
@@ -146,13 +228,13 @@
     const head = el("thead", {}, el("tr", {}, ...["Situação", "Entregador", "Cidade", "Enviado em", "Situação atual desde", "Motivo", ""].map((h) => el("th", { text: h }))));
     if (!l) return t.replaceChildren(head, el("tbody", {}, el("tr", {}, el("td", { colspan: "7", class: "meta", text: "Carregando…" }))));
     const q = $("#q-meus").value, st = $("#f-meus-status").value;
-    const lista = l.filter((c) => busca(c, q) && (!st || c.status === st)).sort((a, b) => String(b.enviado_em).localeCompare(String(a.enviado_em)));
+    const lista = l.filter((c) => busca(c, q) && (!st || (st === "revisar" ? !!c.revisar : c.status === st))).sort((a, b) => String(b.enviado_em).localeCompare(String(a.enviado_em)));
     const body = el("tbody");
     if (!lista.length) body.append(el("tr", {}, el("td", { colspan: "7", class: "meta", text: l.length ? "Nenhum cadastro com esse filtro." : "Você ainda não enviou cadastros." })));
     for (const c of lista) {
       body.append(el("tr", { class: "clicavel", onclick: () => alternar(c.id) },
         el("td", {}, pill(c.status, true)),
-        el("td", { class: "mono" }, c.id_app || "—", el("br"), el("span", { class: "meta", text: c.cpf ? fmtCPF(c.cpf) : "" })),
+        celEntregador(c),
         el("td", { text: c.cidade }), el("td", { text: dt(c.enviado_em) }),
         el("td", { text: `${dt(c.status_desde)} (há ${duracao(c.status_desde).txt})` }),
         el("td", { class: "meta", text: c.motivo ? c.motivo + (c.detalhe ? ": " + c.detalhe : "") : "—" }),
@@ -223,7 +305,7 @@
     if (!l) return t.replaceChildren(head, el("tbody", {}, el("tr", {}, el("td", { colspan: cols.length, class: "meta", text: "Carregando…" }))));
     opcoesCidade($("#f-hist-cidade"), l);
     const q = $("#q-hist").value, st = $("#f-hist-status").value, cid = $("#f-hist-cidade").value;
-    const lista = l.filter((c) => busca(c, q) && (!st || c.status === st) && (!cid || c.cidade === cid)).sort((a, b) => String(b.enviado_em).localeCompare(String(a.enviado_em)));
+    const lista = l.filter((c) => busca(c, q) && (!st || (st === "revisar" ? !!c.revisar : c.status === st)) && (!cid || c.cidade === cid)).sort((a, b) => String(b.enviado_em).localeCompare(String(a.enviado_em)));
     const body = el("tbody");
     if (!lista.length) body.append(el("tr", {}, el("td", { colspan: cols.length, class: "meta", text: "Nenhum cadastro encontrado." })));
     for (const c of lista) {
@@ -235,7 +317,7 @@
       }
       body.append(el("tr", { class: "clicavel", onclick: () => alternar(c.id) },
         el("td", {}, pill(c.status, true), c.reprovacoes ? el("div", { class: "meta", text: `${c.reprovacoes} reprovação(ões)` }) : null),
-        el("td", { class: "mono" }, c.id_app || "—", el("br"), el("span", { class: "meta", text: c.cpf ? fmtCPF(c.cpf) : "" })),
+        celEntregador(c),
         el("td", { text: c.cidade }), el("td", { text: c.enviado_por === S.me.id ? "Você" : c.enviado_por_nome }), el("td", { text: dt(c.enviado_em) }),
         el("td", { class: "meta", text: c.decidido_em ? `${dt(c.decidido_em)} por ${c.decidido_por_nome}${c.motivo ? ` · ${c.motivo}${c.detalhe ? ": " + c.detalhe : ""}` : ""}` : "—" }),
         acoes));
@@ -254,9 +336,9 @@
     catch (e) { btn.disabled = false; toast(msgErro(e)); }
   }
   $("#b-export").addEventListener("click", () => {
-    const cols = ["id_entregador", "cpf", "cidade", "observacao", "situacao", "enviado_por", "enviado_em", "situacao_desde", "decidido_por", "decidido_em", "motivo", "detalhe", "reprovacoes"];
+    const cols = ["id_entregador", "cpf", "nome", "cidade", "observacao", "situacao", "enviado_por", "enviado_em", "situacao_desde", "decidido_por", "decidido_em", "motivo", "detalhe", "reprovacoes"];
     baixarCSV("cadastros-entregadores", cols, (S.lista.todos || []).slice().sort((a, b) => String(a.enviado_em).localeCompare(String(b.enviado_em))).map((c) =>
-      [c.id_app, c.cpf && fmtCPF(c.cpf), c.cidade, c.observacao, ST[c.status], c.enviado_por_nome, c.enviado_em, c.status_desde, c.decidido_por_nome, c.decidido_em, c.motivo, c.detalhe, c.reprovacoes]));
+      [c.id_app, c.cpf && fmtCPF(c.cpf), c.nome, c.cidade, c.observacao, ST[c.status], c.enviado_por_nome, c.enviado_em, c.status_desde, c.decidido_por_nome, c.decidido_em, c.motivo, c.detalhe, c.reprovacoes]));
   });
 
   // ---------- aprovados: foram bloqueados depois? (fim do Histórico) ----------
@@ -301,10 +383,28 @@
     rpc("listar_cidades").then((l) => { if (l?.length) sugerirCidades(l); }).catch(() => { cidadesEm = 0; });
   }
   form.addEventListener("input", () => ($("#form-erro").hidden = true));
-  form.addEventListener("reset", () => setTimeout(() => { ["idapp", "cpf", "cidade"].forEach((k) => ($("#e-" + k).textContent = "")); $("#form-erro").hidden = true; }));
+  form.addEventListener("reset", () => setTimeout(() => { ["idapp", "cpf", "cidade"].forEach((k) => ($("#e-" + k).textContent = "")); $("#form-erro").hidden = true; $("#f-historico").replaceChildren(); histChave = ""; }));
+  // ao digitar o ID ou o CPF: o que o sistema já sabe (só informa, não impede o envio)
+  let histT = null, histChave = "";
+  async function verHistorico() {
+    const id = $("#f-idapp").value.trim(), cpf = onlyDigits($("#f-cpf").value);
+    const chave = (id.length >= 4 ? id.toLowerCase() : "") + "|" + (cpf.length === 11 ? cpf : "");
+    if (chave === histChave) return;
+    histChave = chave;
+    const box = $("#f-historico");
+    if (chave === "|") return box.replaceChildren();
+    let r;
+    try { r = await rpc("historico_id", { p_id_app: id.length >= 4 ? id : null, p_cpf: cpf.length === 11 ? cpf : null }); } catch (_) { return; }
+    if (chave !== histChave) return;
+    box.replaceChildren(...[
+      r.cadastro ? el("div", { class: "quadrinho" }, el("b", { text: `Este ${r.cadastro.por_id ? "ID" : "CPF"} já tem cadastro na ativação: ` }),
+        `${r.cadastro.situacao}${r.cadastro.nome ? " · " + r.cadastro.nome : ""}, enviado em ${dt(r.cadastro.enviado_em)}.`) : null,
+      r.historico ? resumoHistorico(r.historico, id) : null].filter(Boolean));
+  }
+  ["#f-idapp", "#f-cpf"].forEach((s) => $(s).addEventListener("input", () => { clearTimeout(histT); histT = setTimeout(verHistorico, 500); }));
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    const v = { idApp: $("#f-idapp").value.trim(), cpf: $("#f-cpf").value, cidade: $("#f-cidade").value.trim().replace(/\s+/g, " ").toUpperCase(), obs: $("#f-obs").value.trim() };
+    const v = { idApp: $("#f-idapp").value.trim(), nome: $("#f-nome").value.trim(), cpf: $("#f-cpf").value, cidade: $("#f-cidade").value.trim().replace(/\s+/g, " ").toUpperCase(), obs: $("#f-obs").value.trim() };
     const temId = !!v.idApp, temCpf = !!onlyDigits(v.cpf);
     const errs = {
       idapp: !temId && !temCpf ? "Preencha o ID do entregador ou o CPF." : temId && v.idApp.length < 4 ? "ID muito curto. Confira." : "",
@@ -316,7 +416,7 @@
     if (first) return $("#f-" + first).focus();
     const btn = $("#b-enviar"); btn.disabled = true;
     try {
-      const id = await rpc("enviar_cadastro", { p_id_app: v.idApp || null, p_cpf: temCpf ? v.cpf : null, p_cidade: v.cidade, p_observacao: v.obs || null });
+      const id = await rpc("enviar_cadastro", { p_id_app: v.idApp || null, p_cpf: temCpf ? v.cpf : null, p_cidade: v.cidade, p_observacao: v.obs || null, p_nome: v.nome || null });
       const cidade = v.cidade;
       form.reset(); setTimeout(() => ($("#f-cidade").value = cidade));
       S.destaque = id;

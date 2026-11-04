@@ -296,3 +296,27 @@ button.chip { cursor: pointer; font: inherit; font-size: 13px; }
 .gestao.operador { background: var(--accent-soft); color: var(--accent); }
 .gestao.quero { background: var(--ok-soft); color: var(--ok); }
 .contato { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+/* migração 007: revisar do cadastro, histórico do ID, tarefa opcional, busca rápida, novidades */
+button.revisar-cad { border: 1px solid transparent; cursor: pointer; font: inherit; font-size: 12px; color: var(--warn); background: var(--warn-soft); border-radius: 6px; padding: 2px 8px; text-align: left; }
+button.revisar-cad:hover, button.revisar-cad:focus-visible { border-color: var(--warn); }
+button.revisar-cad.discreto { font-size: 11px; padding: 0 6px; border-radius: 999px; }
+.quadrinho { display: grid; gap: 4px; font-size: 13px; background: var(--accent-soft); color: var(--ink); border-left: 3px solid var(--accent); border-radius: 8px; padding: 8px 12px; }
+.quadrinho.grave { background: var(--bad-soft); border-left-color: var(--bad); }
+.quadrinho .btn.link { justify-self: start; padding: 0; }
+#f-historico { display: grid; gap: 8px; }
+#f-historico:empty { display: none; }
+.card.opcional { padding: 10px 14px; border-left: 3px dashed var(--line); background: var(--bg); }
+.card.opcional .head { font-size: 14px; }
+.tag.opcional { background: var(--bg); color: var(--muted); border: 1px dashed var(--muted); }
+.busca-topo { position: relative; }
+.busca-topo input { width: 220px; padding: 4px 10px; font-size: 13px; border-radius: 999px; }
+.busca-res { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: min(380px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18); padding: 6px; display: grid; gap: 2px; max-height: 70vh; overflow: auto; }
+.busca-res h4 { margin: 6px 8px 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.busca-res button { display: grid; gap: 2px; text-align: left; border: 0; background: none; font: inherit; color: var(--ink); padding: 6px 8px; border-radius: 6px; cursor: pointer; }
+.busca-res button:hover, .busca-res button:focus-visible { background: var(--accent-soft); }
+.busca-res .meta { font-size: 12px; }
+.novidades { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+@media (max-width: 640px) { .busca-topo { order: 10; width: 100%; } .busca-topo input { width: 100%; } }
+#at-lista > .grupo { margin-top: 18px; }

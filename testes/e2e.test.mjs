@@ -31,6 +31,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/003-entregadores.sql"),
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/004-atividades-registros.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/005-analises-anexos.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/006-equipe-previsao-atencao.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/007-pao-quentinho.sql"), "utf8"));
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
 for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001', 'Ciclano Atrasado', 'LAGARTO - SE', 'Atraso na Coleta ou na Entrega Sem Justificativa', now() - make_interval(days => $1), 'Planilha')", [d]);
 // registro importado com alerta de revisão (100 dias atrás: fora do painel de 30 dias)
@@ -73,12 +74,14 @@ const GIS_FALSO = `window.google = { accounts: { id: {
     el.append(b);
   } } } };`;
 
-async function abrir(p, hash = "", { googleId = null } = {}) {
+async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) {
   const c = await b.newContext({ viewport: { width: 1200, height: 900 }, acceptDownloads: true });
   await c.route("**/supabase-config.js", (r) => r.fulfill({ contentType: "text/javascript", body: `window.SUPABASE_URL=${JSON.stringify(API)};window.SUPABASE_ANON_KEY="chave-anon-de-teste";window.GOOGLE_CLIENT_ID=${JSON.stringify(googleId || "COLE_AQUI")};` }));
   await c.route("https://accounts.google.com/**", (r) => r.fulfill({ contentType: "text/javascript", body: googleId ? GIS_FALSO : "" }));
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
+  // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "007"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -220,7 +223,7 @@ try {
   ok(!(await a.isVisible("#t-hist >> text=abc12345")), "moderador exclui");
   const [dl] = await Promise.all([a.waitForEvent("download"), a.click("#b-export")]);
   const csv = fs.readFileSync(await dl.path(), "utf8");
-  ok(csv.includes("id_entregador;cpf;cidade") && csv.includes("1a2b3c4d5e6f;529.982.247-25;LAGARTO - SE"), "CSV baixado");
+  ok(csv.includes("id_entregador;cpf;nome;cidade") && csv.includes("1a2b3c4d5e6f;529.982.247-25;;LAGARTO - SE"), "CSV baixado");
   await a.screenshot({ path: path.join(PRINTS, "7-historico.png"), fullPage: true });
 
   // 8. novata já liberada entra; sair volta ao login
@@ -446,6 +449,8 @@ try {
   ok(await esperar(a, "#toast:has-text('Regra das infrações leves atualizada')"), "moderador altera a regra das leves");
   await ir(a, "#bloqueios/historico"); await a.reload(); await esperar(a, "#bq-t-hist tbody tr");
   await a.selectOption("#bq-hist-tipo", "leve");
+  // o filtro roda no banco (007): espera a página nova chegar
+  await a.waitForFunction(() => document.querySelector("#bq-hist-total")?.textContent.startsWith("4 de"), null, { timeout: 5000 }).catch(() => {});
   ok((await texto(a, "#bq-hist-total")).startsWith("4 de"), "histórico filtra só as infrações leves: " + (await texto(a, "#bq-hist-total")));
 
   // 16. etapa 1: tratativa atrasada + realocar, atividades sugeridas, registros, ficha
@@ -595,6 +600,87 @@ try {
   await ir(s, "#bloqueios/atencao");
   ok(await esperar(s, "#bq-atencao-lista .card") || await esperar(s, "#bq-atencao-lista >> text=Ninguém em atenção agora"), "aba Atenção abre para o suporte");
   await s.screenshot({ path: path.join(PRINTS, "e3-atencao.png"), fullPage: true });
+
+  // 16. migração 007 · "pão quentinho": novidades, nome, revisar, tarefa opcional, aviso da decisão, histórico do ID, busca
+  { const d7 = new pg.Client({ connectionString: DB }); await d7.connect();
+    await d7.query("select importar_bloqueio('rev00002', 'Nome Velho', 'ITABAIANA - SE', 'Avaria de Produto', now() - interval '120 days', 'Planilha', 'Nome diferente na planilha', '24')");
+    await d7.end(); }
+  const n7 = await abrir(sup, "#inicio", { novidades: true });
+  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Busca rápida"), "janela O que há de novo aparece na primeira vez");
+  await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
+  await n7.click("dialog.janela >> text=Entendi");
+  await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
+  ok(!(await n7.isVisible("dialog.janela")), "e não aparece de novo");
+  // suporte envia sem nome: marca revisar e tarefa para o admin (opcional para os outros)
+  await ir(n7, "#ativacao/novo"); await esperar(n7, "#form");
+  await n7.fill("#f-idapp", "semnome77"); await n7.fill("#f-cidade", "LAGARTO - SE"); await n7.click("#b-enviar");
+  ok(await esperar(n7, "#queue .card:has-text('semnome77') button.revisar-cad"), "cadastro sem nome ganha o botão revisar no cartão de Pendentes");
+  const m7 = await abrir(monitor, "#atividades/pendencias");
+  ok(await esperar(m7, "#at-lista .card.opcional:has-text('Completar cadastro: ID semnome77')"), "monitorador vê a tarefa opcional, em cartão menor");
+  ok(await m7.isVisible("#at-lista .card.opcional:has-text('Revisar registros da planilha: faltam 1')"), "cartão único dos 'revisar' da planilha, opcional");
+  await m7.screenshot({ path: path.join(PRINTS, "f2-opcionais.png"), fullPage: true });
+  const a7 = await abrir(admin, "#atividades/pendencias");
+  ok(await esperar(a7, "#at-lista .card:not(.opcional):has-text('Completar cadastro: ID semnome77')"), "para o administrador final a tarefa é normal");
+  // o cartão da planilha leva ao Histórico filtrado
+  await m7.click("#at-lista .card.opcional:has-text('Revisar registros da planilha') button");
+  ok(await esperar(m7, "#bq-t-hist tbody tr:has-text('rev00002')") && (await m7.inputValue("#bq-hist-sit")) === "revisar", "abre o Histórico de bloqueios filtrado por revisar");
+  ok((await texto(m7, "#bq-hist-total")).startsWith("1 de"), "só o registro para revisar: " + (await texto(m7, "#bq-hist-total")));
+  // qualquer pessoa completa (aqui, o monitorador pela tarefa), a tarefa conclui sozinha
+  await ir(m7, "#atividades/pendencias"); await esperar(m7, "#at-lista .card.opcional:has-text('semnome77')");
+  await m7.click("#at-lista .card.opcional:has-text('semnome77') >> text=Completar agora");
+  ok(await esperar(m7, "dialog.janela >> text=falta o nome do entregador"), "janela de revisão mostra o que falta");
+  await m7.fill("dialog.janela input[aria-label='Nome do entregador']", "Maria Sem Nome");
+  await m7.fill("dialog.janela input[aria-label='Motivo da alteração (opcional)']", "confirmado por telefone");
+  await m7.click("dialog.janela .actions button.primary");
+  ok(await esperar(m7, "#toast:has-text('O cadastro está completo')"), "monitorador completa o nome");
+  await m7.waitForTimeout(800);
+  ok(!(await m7.isVisible("#at-lista >> text=Completar cadastro: ID semnome77")), "a tarefa some (concluída sozinha)");
+  await ir(n7, "#ativacao/meus"); await n7.reload(); await esperar(n7, "#t-meus tbody tr:has-text('semnome77')");
+  ok(await n7.isVisible("#t-meus tr:has-text('semnome77') >> text=Maria Sem Nome") && !(await n7.isVisible("#t-meus tr:has-text('semnome77') button.revisar-cad")), "Meus cadastros mostra o nome e sem revisar");
+  await n7.click("#t-meus tr:has-text('semnome77')");
+  ok(await esperar(n7, "#t-meus >> text=Dados alterados"), "histórico do cadastro guarda a alteração: " + (await texto(n7, "#t-meus .timeline")).slice(0, 160));
+  // aprovar: quem enviou recebe aviso; a ficha nasce
+  await ir(m7, "#ativacao/pendentes"); await esperar(m7, "#queue .card:has-text('semnome77')");
+  await m7.click("#queue .card:has-text('semnome77') >> text=Aprovar");
+  await esperar(m7, "#toast:has-text('Cadastro aprovado')");
+  await n7.reload();
+  ok(await esperar(n7, "#b-avisos[data-novas=true]"), "quem enviou recebe aviso no sino");
+  await ir(n7, "#atividades/avisos");
+  ok(await esperar(n7, "#at-avisos >> text=Seu cadastro Maria Sem Nome (ID semnome77) foi aprovado por Monitor Um."), "aviso: cadastro aprovado por quem");
+  // histórico do ID ao digitar no Novo cadastro (monitorador tem os bloqueios)
+  await ir(m7, "#ativacao/novo"); await esperar(m7, "#form");
+  await m7.fill("#f-idapp", "rev00002");
+  ok(await esperar(m7, "#f-historico .quadrinho >> text=Este ID já existe no Comunique"), "ao digitar um ID com bloqueios, aparece o quadrinho");
+  ok((await texto(m7, "#f-historico")).includes("Nome Velho"), "o quadrinho mostra a ficha");
+  await m7.screenshot({ path: path.join(PRINTS, "f3-historico-id.png"), fullPage: true });
+  await m7.fill("#f-idapp", "semnome77");
+  ok(await esperar(m7, "#f-historico >> text=Este ID já tem cadastro na ativação: Aprovado"), "e avisa quando o ID já tem cadastro");
+  // busca rápida no topo
+  await m7.fill("#q-topo", "Maria Sem");
+  ok(await esperar(m7, "#busca-res:not([hidden]) >> text=Cadastros da ativação") && await m7.isVisible("#busca-res >> text=Entregadores"), "busca rápida acha a ficha e o cadastro");
+  await m7.screenshot({ path: path.join(PRINTS, "f4-busca.png") });
+  await m7.click("#busca-res button:has-text('Maria Sem Nome') >> nth=0");
+  ok(await esperar(m7, "#v-bq-consultar:not([hidden]) >> text=Maria Sem Nome"), "clicar na ficha abre Consultar entregador");
+  // ID com ficha de outro nome: revisar; monitorador confirma que está certo
+  await ir(n7, "#ativacao/novo"); await esperar(n7, "#form");
+  await n7.fill("#f-idapp", "rev00002"); await n7.fill("#f-nome", "Nome Certo"); await n7.fill("#f-cidade", "ITABAIANA - SE"); await n7.click("#b-enviar");
+  await ir(m7, "#ativacao/historico"); await m7.reload();
+  await esperar(m7, "#t-hist tr:has-text('rev00002') button.revisar-cad");
+  ok((await texto(m7, "#t-hist tr:has-text('rev00002') button.revisar-cad")).includes("o ID já tem ficha com outro nome: Nome Velho"), "Histórico: ID com ficha de outro nome fica para revisar");
+  await m7.selectOption("#f-hist-status", "revisar");
+  { const linhas = await m7.$$("#t-hist tbody tr.clicavel"), comMarca = await m7.$$("#t-hist tbody tr.clicavel button.revisar-cad");
+    ok(linhas.length > 0 && linhas.length === comMarca.length && !(await m7.isVisible("#t-hist tr:has-text('semnome77')")), "filtro 'Para revisar' no Histórico (" + linhas.length + ")"); }
+  await m7.click("#t-hist tr:has-text('rev00002') button.revisar-cad");
+  await m7.click("dialog.janela >> text=Os dados estão certos");
+  ok(await esperar(m7, "#toast:has-text('Marcado como revisado')"), "monitorador marca 'Os dados estão certos'");
+  // cadastro novo só com CPF: já nasce com tarefa (a janela não oferece outra)
+  await ir(n7, "#ativacao/novo"); await esperar(n7, "#form");
+  await n7.fill("#f-cpf", "11144477735"); await n7.fill("#f-cidade", "LAGARTO - SE"); await n7.click("#b-enviar");
+  await esperar(n7, "#queue .card:has-text('111.444.777-35')");
+  await n7.click("#queue .card:has-text('111.444.777-35') button.revisar-cad");
+  ok(await esperar(n7, "dialog.janela >> text=Já existe uma tarefa aberta"), "cadastro novo incompleto já tem tarefa (não oferece outra)");
+  await n7.click("dialog.janela >> text=Cancelar");
+  ok(!(await texto(n7, "main")).includes("null"), "telas da 007 sem textos vazios (null)");
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

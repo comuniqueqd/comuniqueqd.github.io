@@ -3,7 +3,7 @@
 // se registra com App.modulo({...}); este arquivo decide qual tela mostrar e quando recarregar.
 (() => {
   "use strict";
-  const App = (window.App = { modulos: {}, ordem: [] });
+  const App = (window.App = { modulos: {}, ordem: [], aoEntrar: [] });
 
   // ---------- utilidades ----------
   const $ = (s) => document.querySelector(s);
@@ -55,7 +55,7 @@
     encerrado: "Encerrado",
   };
   const PAPEL = { moderador: "Moderador", monitorador: "Monitorador", suporte: "Suporte" };
-  const EVENTO = { enviado: "Enviado", aprovado: "Aprovado", reprovado: "Reprovado", encerrado: "Encerrado", desfeito: "Decisão desfeita" };
+  const EVENTO = { enviado: "Enviado", aprovado: "Aprovado", reprovado: "Reprovado", encerrado: "Encerrado", desfeito: "Decisão desfeita", editado: "Dados alterados", revisado: "Dados conferidos" };
   const pill = (s, curto) => el("span", { class: "pill " + s, text: curto && s === "aguardando_contato" ? "Aguardando novo contato" : ST[s] });
   const titulo = (c) => c.id_app ? "ID " + c.id_app : "CPF " + fmtCPF(c.cpf);
   const vazio = (t, d) => el("div", { class: "empty" }, el("strong", { text: t }), d);
@@ -242,13 +242,14 @@
       }
       const mod = App.modulos[App.atual.mod];
       // cada consulta independente: uma falha não apaga as outras, e o aviso diz qual falhou
+      // resumo + avisos numa chamada só; a lista da equipe só na tela Equipe (menos tráfego)
       const r = await Promise.allSettled([
         mod?.carregar?.(App.atual.aba),
-        rpc("resumo_inicio").then((d) => (S.resumo = d)),
-        rpc("minhas_notificacoes").then((d) => (S.notif = d)),
-        papelAtiv() === "moderador" ? rpc("listar_equipe").then((d) => (S.equipe = d)) : null,
+        rpc("resumo_e_avisos").then((d) => { S.resumo = d.resumo; S.notif = d.notif; if (d.resumo?.versao != null) versao = Number(d.resumo.versao); }),
+        papelAtiv() === "moderador" && App.atual.mod === "equipe" ? rpc("listar_equipe").then((d) => (S.equipe = d)) : null,
       ]);
-      const nomes = ["tela atual", "resumo_inicio", "minhas_notificacoes", "listar_equipe"];
+      ultimaCompleta = Date.now();
+      const nomes = ["tela atual", "resumo_e_avisos", "listar_equipe"];
       const falhas = r.map((x, i) => (x.status === "rejected" ? [nomes[i], x.reason] : null)).filter(Boolean);
       falhas.forEach(([n, e]) => console.error("Falha em", n, e));
       if (!falhas.length) notice("");
@@ -267,6 +268,22 @@
     if (deNovo) { deNovo = false; App.carregar(); }
   };
   let ultimaRotina = 0;
+  // Menos tráfego: a cada ciclo o app só pergunta o número da última mudança (barato) e recarrega as
+  // listas quando ele mudou. Coisas que mudam só com o tempo (prazo que venceu, tratativa que atrasou)
+  // não mudam o número: por isso recarrega tudo a cada 5 min. Sem mexer no mouse/teclado por 5 min,
+  // o ciclo passa de 30 s para 2 min; com a aba escondida, não atualiza.
+  let versao = null, ultimaCompleta = 0, ultimoTique = 0, mexeuEm = Date.now();
+  for (const ev of ["pointermove", "keydown", "touchstart", "scroll", "focusin"]) addEventListener(ev, () => (mexeuEm = Date.now()), { passive: true, capture: true });
+  async function tique() {
+    if (document.hidden || !S.me) return;
+    if (Date.now() - mexeuEm > 300000 && Date.now() - ultimoTique < 120000) return;
+    ultimoTique = Date.now();
+    if (versao != null && Date.now() - ultimaCompleta < 300000) {
+      try { const v = await rpc("ultima_mudanca"); if (v != null && Number(v) === versao) { App.render(); return; } } catch (_) {}
+    }
+    App.carregar();
+  }
+  App.tique = tique;
   let agendado = null;
   const agendar = () => { clearTimeout(agendado); agendado = setTimeout(App.carregar, 400); };
 
@@ -281,7 +298,7 @@
     adiado = false;
     // contadores de todos os módulos
     for (const id of App.ordem) App.modulos[id].contadores?.();
-    const nPed = S.equipe?.pedidos?.length || 0;
+    const nPed = S.resumo?.pedidos_acesso ?? S.equipe?.pedidos?.length ?? 0;
     $("#c-pedidos").textContent = nPed; $("#c-pedidos").hidden = !nPed;
     const nAv = S.notif?.nao_lidas || 0;
     $("#c-avisos").textContent = nAv ? `🔔 ${nAv}` : "🔔";
@@ -387,6 +404,7 @@
     try { [S.motivos, S.pessoas] = await Promise.all([rpc("listar_motivos"), rpc("pessoas")]); } catch (_) {}
     for (const m of App.ordem) { try { App.modulos[m].iniciar?.(); } catch (e) { console.error(e); } }
     route();
+    for (const f of App.aoEntrar) { try { f(); } catch (e) { console.error(e); } }
 
     // tempo real: qualquer mudança no banco recarrega; e a cada 30 s por garantia
     try {
@@ -394,8 +412,8 @@
       for (const t of ["cadastros", "eventos", "membros", "pedidos_acesso", "bloqueios", "tarefas", "notificacoes", "atividades"]) ch.on("postgres_changes", { event: "*", schema: "public", table: t }, agendar);
       ch.subscribe();
     } catch (_) {}
-    setInterval(() => { if (!document.hidden) carregar(); }, 30000);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) carregar(); });
+    setInterval(tique, 30000);
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) { ultimoTique = 0; tique(); } });
   }
   gate("carregando");
   addEventListener("DOMContentLoaded", iniciar);

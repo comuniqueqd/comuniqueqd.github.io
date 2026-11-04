@@ -678,29 +678,46 @@
   }
 
   // ---------- histórico ----------
-  function renderHist() {
-    const l = B.lista.todos, t = $("#bq-t-hist");
-    const cols = [["Situação"], ["Entregador"], ["Infração"], ["Ocorr."], ["Punição"], ["Início"], ["Cidade"], ["Registrado por"], ["Tratativa"], [""]];
-    if (!l) return t.replaceChildren(...tabela(cols, [], "Carregando…"));
-    preencher($("#bq-hist-cidade"), opcCidades(l), "Todas as cidades");
-    preencher($("#bq-hist-inf"), opcInfracoes(), "Todas as infrações");
-    preencher($("#bq-hist-quem"), [...new Set(l.map((b) => b.registrado_por_nome))].sort().map((n) => [n, n]), "Registrado por qualquer pessoa");
-    const q = $("#bq-q-hist").value, sit = $("#bq-hist-sit").value, cid = $("#bq-hist-cidade").value, inf = $("#bq-hist-inf").value, quem = $("#bq-hist-quem").value, tipo = $("#bq-hist-tipo").value;
-    const lista = l.filter((b) => buscaB(b, q) && (!sit || (sit === "revisar" ? !!b.revisar : sit === "dados_pendentes" ? b.dados_pendentes : b.situacao === sit))
-      && (!cid || b.cidade === cid) && (!inf || String(b.infracao_id) === inf) && (!quem || b.registrado_por_nome === quem) && filtroTipo(b, tipo));
-    B.histFiltrado = lista;
-    const POR = 100, paginas = Math.max(1, Math.ceil(lista.length / POR));
-    const chave = [q, sit, cid, inf, quem, tipo].join("|");
+  // filtros do Histórico: a busca e os filtros rodam no banco, que devolve só a página da tela (100 por vez)
+  const POR_PAGINA = 100;
+  function argsHist(por = POR_PAGINA, pagina = B.pagina || 1) {
+    const inf = $("#bq-hist-inf").value;
+    return { p_pagina: pagina, p_por: por, p_busca: $("#bq-q-hist").value.trim() || null, p_situacao: $("#bq-hist-sit").value || null,
+      p_cidade: $("#bq-hist-cidade").value || null, p_infracao: inf ? Number(inf) : null, p_quem: $("#bq-hist-quem").value || null, p_tipo: $("#bq-hist-tipo").value || null };
+  }
+  const chaveHist = () => { const a = argsHist(); delete a.p_pagina; return JSON.stringify(a); };
+  async function carregarHist() {
+    const chave = chaveHist();
     if (B.histChave !== chave) { B.histChave = chave; B.pagina = 1; }
-    B.pagina = Math.min(Math.max(1, B.pagina), paginas);
-    const ini = (B.pagina - 1) * POR;
-    $("#bq-hist-total").textContent = `${lista.length} de ${l.length} bloqueio(s)` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + POR, lista.length)}` : "");
-    const ir = (n) => { B.pagina = n; render(); $("#bq-t-hist").scrollIntoView({ block: "start" }); };
+    const d = await rpc("listar_bloqueios_pagina", argsHist());
+    if (chave === chaveHist()) B.hist = d;
+  }
+  let histT = null;
+  const filtrarHist = () => { clearTimeout(histT); histT = setTimeout(() => App.carregar(), 300); };
+  // atalho do cartão "Revisar registros da planilha"
+  function abrirRevisar() {
+    ["#bq-q-hist", "#bq-hist-cidade", "#bq-hist-inf", "#bq-hist-quem", "#bq-hist-tipo"].forEach((x) => ($(x).value = ""));
+    $("#bq-hist-sit").value = "revisar";
+    B.hist = null;
+    if (location.hash === "#bloqueios/historico") App.carregar(); else location.hash = "#bloqueios/historico";
+  }
+
+  function renderHist() {
+    const h = B.hist, t = $("#bq-t-hist");
+    const cols = [["Situação"], ["Entregador"], ["Infração"], ["Ocorr."], ["Punição"], ["Início"], ["Cidade"], ["Registrado por"], ["Tratativa"], [""]];
+    if (!h) { $("#bq-hist-total").textContent = ""; return t.replaceChildren(...tabela(cols, [], "Carregando…")); }
+    preencher($("#bq-hist-cidade"), h.cidades.slice().sort().map((c) => [c, c]), "Todas as cidades");
+    preencher($("#bq-hist-inf"), opcInfracoes(), "Todas as infrações");
+    preencher($("#bq-hist-quem"), h.quem.slice().sort().map((n) => [n, n]), "Registrado por qualquer pessoa");
+    const paginas = Math.max(1, Math.ceil(h.total / h.por));
+    const ini = (h.pagina - 1) * h.por;
+    $("#bq-hist-total").textContent = `${h.total} de ${h.total_geral} bloqueio(s)` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + h.por, h.total)}` : "");
+    const ir = (n) => { B.pagina = n; App.carregar(); $("#bq-t-hist").scrollIntoView({ block: "start" }); };
     $("#bq-hist-paginas").replaceChildren(...(paginas > 1 ? [
-      el("button", { class: "btn small", type: "button", disabled: B.pagina === 1, onclick: () => ir(B.pagina - 1) }, "‹ Anterior"),
-      el("span", { text: `Página ${B.pagina} de ${paginas}` }),
-      el("button", { class: "btn small", type: "button", disabled: B.pagina === paginas, onclick: () => ir(B.pagina + 1) }, "Próxima ›")] : []));
-    t.replaceChildren(...tabela(cols, lista.slice(ini, ini + POR).map((b) => {
+      el("button", { class: "btn small", type: "button", disabled: h.pagina === 1, onclick: () => ir(h.pagina - 1) }, "‹ Anterior"),
+      el("span", { text: `Página ${h.pagina} de ${paginas}` }),
+      el("button", { class: "btn small", type: "button", disabled: h.pagina === paginas, onclick: () => ir(h.pagina + 1) }, "Próxima ›")] : []));
+    t.replaceChildren(...tabela(cols, h.itens.map((b) => {
       const acoes = el("td", { style: "white-space:nowrap" });
       if (staff() && !b.dados_pendentes && !B.confirmar[b.id]) acoes.append(el("button", { class: "btn quiet", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir"));
       if (mod()) {
@@ -720,10 +737,16 @@
     try { await rpc("excluir_bloqueio", { p_bloqueio: b.id }); delete B.confirmar[b.id]; toast("Bloqueio excluído."); await carregar(); }
     catch (e) { btn.disabled = false; toast(msgErro(e)); }
   }
-  $("#bq-export").addEventListener("click", () => baixarCSV("bloqueios",
+  $("#bq-export").addEventListener("click", async (ev) => {
+    const btn = ev.currentTarget; btn.disabled = true;
+    let itens;
+    try { itens = (await rpc("listar_bloqueios_pagina", argsHist(5000, 1))).itens; } catch (e) { btn.disabled = false; return toast(msgErro(e)); }
+    btn.disabled = false;
+    baixarCSV("bloqueios",
     ["id_entregador", "nome", "cidade", "tipo", "infracao", "ocorrencia", "ocorrencia_historico", "horas", "situacao", "inicio", "fim", "registrado_por", "tratativa", "tratativa_responsavel", "tratativa_concluida_em", "tratativa_nota", "liberado_antes_em", "motivo_liberacao", "revisar"],
-    (B.histFiltrado || []).map((b) => [b.id_app, b.nome, b.cidade, b.leve ? "leve" : "bloqueio", b.infracao, b.ocorrencia, b.ocorrencia_total, b.horas ?? "encerramento", SIT[b.situacao], b.inicio, b.fim, b.registrado_por_nome,
-      b.tarefa ? (b.tarefa.status === "pendente" ? "pendente" : "realizada") : "sem tratativa", b.tarefa?.responsavel_nome, b.tarefa?.concluida_em, b.tarefa?.nota, b.liberado_em, b.motivo_liberacao, b.revisar])));
+    itens.map((b) => [b.id_app, b.nome, b.cidade, b.leve ? "leve" : "bloqueio", b.infracao, b.ocorrencia, b.ocorrencia_total, b.horas ?? "encerramento", SIT[b.situacao], b.inicio, b.fim, b.registrado_por_nome,
+      b.tarefa ? (b.tarefa.status === "pendente" ? "pendente" : "realizada") : "sem tratativa", b.tarefa?.responsavel_nome, b.tarefa?.concluida_em, b.tarefa?.nota, b.liberado_em, b.motivo_liberacao, b.revisar]));
+  });
 
   // ---------- painel ----------
   function renderPainel() {
@@ -878,9 +901,10 @@
 
   // ---------- filtros que só redesenham ----------
   ["#bq-q-trat", "#bq-trat-cidade", "#bq-q-ativos", "#bq-ativos-cidade", "#bq-ativos-inf", "#bq-q-meus", "#bq-meus-sit", "#bq-meus-inf", "#bq-meus-tipo",
-   "#bq-q-hist", "#bq-hist-sit", "#bq-hist-cidade", "#bq-hist-inf", "#bq-hist-quem", "#bq-hist-tipo"].forEach((s) => $(s).addEventListener("input", render));
+  ].forEach((s) => $(s).addEventListener("input", render));
+  ["#bq-q-hist", "#bq-hist-sit", "#bq-hist-cidade", "#bq-hist-inf", "#bq-hist-quem", "#bq-hist-tipo"].forEach((s) => $(s).addEventListener("input", filtrarHist));
 
-  App.bloqueios = { cardBloqueio, concluir, horasTxt, ord, B, TAREFA, realocar, abrirFicha };
+  App.bloqueios = { cardBloqueio, concluir, horasTxt, ord, B, TAREFA, realocar, abrirFicha, abrirRevisar };
   App.modulo({
     id: "bloqueios", nome: "Bloqueios",
     acesso: () => !!papel(),
@@ -905,7 +929,7 @@
       if (aba === "ativos") t.push(rpc("listar_bloqueios", { p_escopo: "ativos" }).then((d) => (B.lista.ativos = d)));
       if (aba === "atencao") t.push(rpc("entregadores_atencao").then((d) => (B.atencao = d)));
       if (aba === "meus") t.push(rpc("listar_bloqueios", { p_escopo: "meus" }).then((d) => (B.lista.meus = d)));
-      if (aba === "historico") t.push(rpc("listar_bloqueios", { p_escopo: "todos" }).then((d) => (B.lista.todos = d)));
+      if (aba === "historico") t.push(carregarHist());
       if (aba === "painel") {
         const P = B.painel;
         t.push(rpc("metricas_bloqueios", { p_pessoas: filtroPessoas(P), p_dias: P.periodo === "tudo" ? null : P.periodo,

@@ -15,6 +15,10 @@
     <div class="titlebar">
       <h1><a href="#inicio" style="color:inherit;text-decoration:none">Comunique</a></h1>
       <div class="who">
+        <form class="busca-topo" id="busca-topo" role="search" hidden>
+          <input id="q-topo" type="search" placeholder="Buscar ID, CPF ou nome" aria-label="Busca rápida: ID, CPF ou nome" autocomplete="off">
+          <div class="busca-res" id="busca-res" hidden></div>
+        </form>
         <span id="who"></span><span class="role" id="papel" hidden></span>
         <button class="sino" id="b-avisos" type="button" aria-label="Avisos" hidden><span id="c-avisos">🔔</span></button>
         <button class="btn link" id="b-sair" type="button" hidden>Sair</button>
@@ -49,7 +53,7 @@
     <h2 id="pend-titulo">Cadastros em andamento</h2>
     <p class="sub" id="pend-sub">Do que espera há mais tempo para o mais recente.</p>
     <div class="toolbar">
-      <input id="q-pend" type="search" placeholder="Buscar por ID, CPF ou cidade" aria-label="Buscar pendentes">
+      <input id="q-pend" type="search" placeholder="Buscar por nome, ID, CPF ou cidade" aria-label="Buscar pendentes">
       <select id="f-pend-status" aria-label="Filtrar por situação">
         <option value="">Todas as situações</option>
         <option value="aguardando_analise">Aguardando análise</option>
@@ -65,7 +69,7 @@
     <h2>Novo cadastro</h2>
     <p class="sub">Depois de enviar, você vai para Pendentes e acompanha a análise.</p>
     <form class="cad" id="form" novalidate>
-      <p class="sub" style="margin:0">Obrigatório: <strong>cidade</strong> e pelo menos um entre <strong>ID do entregador</strong> e <strong>CPF</strong>. CPF e ID não podem se repetir.</p>
+      <p class="sub" style="margin:0">Obrigatório: <strong>cidade</strong> e pelo menos um entre <strong>ID do entregador</strong> e <strong>CPF</strong>. CPF e ID não podem se repetir. Com <strong>ID e nome</strong>, a ficha do entregador nasce na aprovação.</p>
       <div class="grid2">
         <label for="f-idapp">ID do entregador <span class="hint">Letras e números</span>
           <input id="f-idapp" class="mono" autocomplete="off" spellcheck="false" maxlength="40" placeholder="ID no aplicativo de entregas">
@@ -76,6 +80,10 @@
           <span class="err" id="e-cpf"></span>
         </label>
       </div>
+      <div id="f-historico" aria-live="polite"></div>
+      <label for="f-nome">Nome do entregador <span class="hint">Sem o nome, o cadastro fica marcado para revisar</span>
+        <input id="f-nome" autocomplete="off" maxlength="120" placeholder="Nome completo">
+      </label>
       <label for="f-cidade"><span>Cidade <span class="req">*</span></span> <span class="hint">Escolha da lista ou digite no formato CIDADE - UF</span>
         <input id="f-cidade" list="cidades" autocomplete="off" placeholder="ITABAIANA - SE">
         <span class="err" id="e-cidade"></span>
@@ -98,7 +106,7 @@
     <p class="sub">Tudo o que você enviou, com a situação atual. Clique numa linha para ver o histórico.</p>
     <div class="tiles" id="meus-tiles"></div>
     <div class="toolbar">
-      <input id="q-meus" type="search" placeholder="Buscar por ID, CPF ou cidade" aria-label="Buscar nos meus cadastros">
+      <input id="q-meus" type="search" placeholder="Buscar por nome, ID, CPF ou cidade" aria-label="Buscar nos meus cadastros">
       <select id="f-meus-status" aria-label="Filtrar por situação"></select>
     </div>
     <div class="tablewrap"><table id="t-meus"></table></div>
@@ -142,7 +150,7 @@
     <h2>Histórico de cadastros</h2>
     <p class="sub">Todos os cadastros recebidos. Clique numa linha para ver o histórico de cada um.</p>
     <div class="toolbar">
-      <input id="q-hist" type="search" placeholder="Buscar por ID, CPF, cidade ou pessoa" aria-label="Buscar no histórico">
+      <input id="q-hist" type="search" placeholder="Buscar por nome, ID, CPF, cidade ou pessoa" aria-label="Buscar no histórico">
       <select id="f-hist-status" aria-label="Filtrar por situação"></select>
       <select id="f-hist-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
       <button class="btn" id="b-export" type="button">Baixar CSV</button>
@@ -509,5 +517,6 @@
 <script src="js/analises.js"></script>
 <script src="js/registros.js"></script>
 <script src="js/equipe.js"></script>
+<script src="js/busca.js"></script>
 </body>
 </html>

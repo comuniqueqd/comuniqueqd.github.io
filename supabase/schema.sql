@@ -22,10 +22,11 @@
 --   Row Level Security: o suporte só enxerga os próprios cadastros.
 -- =====================================================================
 
-drop table if exists public.anexos, public.operadores_logisticos, public.parametros_equipe, public.atividades, public.comentarios_entregador, public.entregadores, public.notificacoes, public.tarefas, public.eventos_bloqueio, public.bloqueios,
-  public.infracoes, public.cidades, public.parametros_bloqueio,  -- módulos (002 a 006)
+drop table if exists public.versao_dados, public.anexos, public.operadores_logisticos, public.parametros_equipe, public.atividades, public.comentarios_entregador, public.entregadores, public.notificacoes, public.tarefas, public.eventos_bloqueio, public.bloqueios,
+  public.infracoes, public.cidades, public.parametros_bloqueio,  -- módulos (002 a 007)
   public.eventos, public.cadastros, public.pedidos_acesso, public.membros, public.motivos cascade;
 drop type if exists public.papel, public.status_cadastro cascade;
+drop function if exists public.enviar_cadastro(text, text, text, text, text);  -- versão da 007 (com nome)
 
 -- ---------------------------------------------------------------------
 -- Tipos
