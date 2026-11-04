@@ -19,6 +19,7 @@
 -- =====================================================================
 
 drop function if exists public.enviar_cadastro(text, text, text, text);
+drop function if exists public.enviar_cadastro(text, text, text, text, text);  -- a 008 muda o retorno (rodar a 008 de novo depois)
 
 -- ---------------------------------------------------------------------
 -- Colunas e tipos novos
