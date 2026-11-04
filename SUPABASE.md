@@ -125,7 +125,7 @@ O que muda:
 - **Revisar / Corrigir**: o alerta "revisar" virou um botão. Ele abre uma janela para corrigir ID, nome e cidade (motivo obrigatório) ou marcar como revisado. Também há o botão **Corrigir** no histórico, nos cartões e na consulta. A punição aplicada não muda.
 - **Segurança**: funções internas deixam de poder ser chamadas por quem está logado mas fora da equipe.
 
-**Se rodar uma migração de novo**, rode também as seguintes, em ordem (002 → 003 → 004 → 005).
+**Se rodar uma migração de novo**, rode também as seguintes, em ordem (002 → 003 → 004 → 005 → 006).
 
 ## Atualização: atividades sugeridas, registros, tratativas atrasadas (migração 004)
 
@@ -157,3 +157,19 @@ O que muda:
 - **Resumo semanal** (aba das Análises): semana de **terça a segunda**, qualquer semana anterior, comparação com outra semana e download em **CSV** ou **PDF** (pela janela de impressão do navegador: "Salvar como PDF").
 - **Histórico da ativação**: no fim, a lista dos aprovados e se/quando foram bloqueados depois.
 - **Anexos** nos bloqueios: até 3 por bloqueio; imagens comprimidas no navegador (~200 KB), PDF até 300 KB. Ficam no banco, com as mesmas regras de acesso (o suporte só nos bloqueios que registrou), teto total de 200 MB. Ao anexar aparece o aviso para não anexar documentos pessoais.
+
+## Atualização: Regras de equipe, previsão e entregadores de atenção (migração 006)
+
+Para quem já rodou o `005-analises-anexos.sql`. **Não apaga** nada e pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/006-equipe-previsao-atencao.sql`](supabase/006-equipe-previsao-atencao.sql) inteiro e clique em **Run**.
+2. (Opcional) **Importar a planilha de cidades**: rode o arquivo de importação gerado a partir da planilha "Cidades do Quero Log e taxas" (aba JULHO 2026). Ele tem telefones e **não fica no repositório**. Pode rodar de novo (atualiza). No fim, ele lista as cidades e quem recebe os avisos; quem aparecer como "escolher na tela" se ajusta em Equipe → Regras de equipe.
+3. Só depois publique a versão nova do site (a `main`).
+
+O que muda:
+
+- **Equipe → Regras de equipe** (todos veem; moderadores editam): cidades com gestão (Quero Delivery ou Operador Logístico), operador logístico e contato, tarifas e responsável. Cidades de operador logístico usam o **responsável pelos operadores** (um só para todas). O responsável recebe as tratativas, um aviso a cada cadastro novo da cidade e o aviso de tratativa atrasada. A lista de responsáveis da aba Bloqueios → Regras passou para cá.
+- **Previsão de término** nos cadastros da ativação, nas tratativas e nas atividades sugeridas (só informativa).
+- **Bloqueios → Atenção**: entregadores perto de uma punição maior.
+- **Prazo da tratativa** editável na aba Bloqueios → Regras.
+- **Histórico de bloqueios** com páginas de 100.

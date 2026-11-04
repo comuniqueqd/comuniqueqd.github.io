@@ -3,7 +3,7 @@
   "use strict";
   const App = window.App;
   const { $, el, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
-          vazio, carregandoEl, rpc, msgErro } = App.u;
+          vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas } = App.u;
   const S = App.S;
   Object.assign(S, {
     lista: { pendentes: null, meus: null, todos: null }, metricas: null,
@@ -55,7 +55,8 @@
     const contato = c.status === "aguardando_contato";
     const destacado = S.destaque === c.id || S.destaque === "_mostrado_" + c.id;
     const cx = S.caixa[c.id];
-    return el("article", { class: "card" + (contato ? " contato" : "") + (destacado ? " destaque" : ""), "data-id": c.id },
+    const prevPassou = c.previsao && new Date(c.previsao) < Date.now();
+    return el("article", { class: "card" + (contato ? " contato" : "") + (prevPassou ? " previsao-passou" : "") + (destacado ? " destaque" : ""), "data-id": c.id },
       el("div", { class: "head" },
         el("span", { class: "name" }, el("span", { class: "mono", text: titulo(c) }), pill(c.status, true), destacado ? el("span", { class: "tag", text: "RECÉM-ENVIADO" }) : null),
         el("span", { class: "espera" + (esp.velho ? " velho" : ""), title: "Desde " + dt(c.status_desde), text: (contato ? "aguardando contato há " : "esperando há ") + esp.txt })),
@@ -63,6 +64,7 @@
         fld("ID do entregador", c.id_app, true), fld("CPF", c.cpf && fmtCPF(c.cpf), true), fld("Cidade", c.cidade),
         fld("Enviado", `${dt(c.enviado_em)} (há ${env.txt})`),
         staff() ? fld("Enviado por", c.enviado_por === S.me.id ? "Você" : c.enviado_por_nome) : null),
+      App.u.previsao(c, "cadastro", c.id, staff()),
       contato ? el("div", { class: "motivo" }, el("b", { text: `Reprovado por ${c.decidido_por_nome} em ${dt(c.decidido_em)}: ` }), c.motivo, c.detalhe ? " — " + c.detalhe : "") : null,
       c.observacao ? el("div", { class: "obs", text: c.observacao }) : null,
       el("div", { class: "actions" },
@@ -161,29 +163,13 @@
   }
 
   // ---------- painel ----------
-  function pessoasFiltro() {
-    if (S.filtro === "eu") return [S.me.id];
-    if (S.filtro === "escolher") return S.escolhidos.size ? [...S.escolhidos] : [S.me.id];
-    return null;
-  }
+  const pessoasFiltro = () => filtroPessoas(S);
   document.querySelectorAll("[data-filtro]").forEach((b) => b.addEventListener("click", () => {
     S.filtro = b.dataset.filtro;
     if (S.filtro === "escolher" && !S.escolhidos.size) S.escolhidos.add(S.me.id);
     S.metricas = null; render(); carregar();
   }));
-  function renderPessoas() {
-    const box = $("#pessoas");
-    box.hidden = S.filtro !== "escolher";
-    if (box.hidden) return;
-    box.replaceChildren(...S.pessoas.map((p) => {
-      const cb = el("input", { type: "checkbox", value: p.id, onchange: (e) => {
-        if (e.target.checked) S.escolhidos.add(p.id); else S.escolhidos.delete(p.id);
-        S.metricas = null; render(); carregar();
-      } });
-      cb.checked = S.escolhidos.has(p.id);
-      return el("label", {}, cb, p.id === S.me.id ? `${p.nome} (você)` : p.nome);
-    }));
-  }
+  const renderPessoas = () => caixaPessoas($("#pessoas"), S, () => { S.metricas = null; render(); carregar(); });
   function renderPainel() {
     document.querySelectorAll("[data-filtro]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.filtro === S.filtro)));
     renderPessoas();
@@ -208,48 +194,18 @@
       tile("Cadastros", r.total, S.filtro === "todos" ? "no total" : "relacionados"));
 
     // gráfico 14 dias: barras empilhadas de decisões + pontos de enviados
-    const data = m.por_dia;
-    const max = Math.max(1, ...data.map((x) => Math.max(x.aprovados + x.reprovados + x.encerrados, x.enviados)));
-    const step = max <= 4 ? 1 : max <= 10 ? 2 : Math.ceil(max / 5);
-    const top = Math.ceil(max / step) * step;
-    const W = 700, H = 230, L = 30, B = 26, T = 22, cw = (W - L - 6) / data.length, bw = Math.min(26, cw * 0.58);
-    const y = (v) => T + (H - T - B) * (1 - v / top);
-    const ns = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(ns, "svg");
-    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("class", "chart"); svg.setAttribute("role", "img");
-    svg.setAttribute("aria-label", "Enviados, aprovados, reprovados e encerrados por dia nos últimos 14 dias");
-    const add = (tag, at, txt) => { const n = document.createElementNS(ns, tag); for (const k in at) n.setAttribute(k, at[k]); if (txt != null) n.textContent = txt; svg.append(n); return n; };
-    const tip = (n, t) => n.append(Object.assign(document.createElementNS(ns, "title"), { textContent: t }));
-    for (let v = 0; v <= top; v += step) { add("line", { x1: L, x2: W - 4, y1: y(v), y2: y(v), class: "grid" }); add("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, v); }
-    data.forEach((x, i) => {
-      const cx = L + cw * i + cw / 2; let base = 0;
-      for (const [k, cor, nome] of [["aprovados", "var(--ok)", "aprovado(s)"], ["reprovados", "var(--bad)", "reprovado(s)"], ["encerrados", "var(--gray)", "encerrado(s)"]]) {
-        if (!x[k]) continue;
-        tip(add("rect", { x: cx - bw / 2, y: y(base + x[k]), width: bw, height: y(base) - y(base + x[k]), fill: cor }), `${dia(x.dia)}: ${x[k]} ${nome}`);
-        base += x[k];
-      }
-      if (x.enviados) tip(add("circle", { cx, cy: y(x.enviados), r: 4, fill: "var(--accent)", stroke: "var(--surface)", "stroke-width": 1.5 }), `${dia(x.dia)}: ${x.enviados} enviado(s)`);
-      if (i % 2 === 1 || i === data.length - 1) add("text", { x: cx, y: H - 8, "text-anchor": "middle" }, dia(x.dia));
-    });
+    const svg = grafico(m.por_dia, [["aprovados", "var(--ok)", "aprovado(s)"], ["reprovados", "var(--bad)", "reprovado(s)"], ["encerrados", "var(--gray)", "encerrado(s)"]],
+      ["enviados", "var(--accent)", "enviado(s)"], "Enviados, aprovados, reprovados e encerrados por dia nos últimos 14 dias");
     $("#chart").replaceChildren(svg);
 
-    const tabela = (cols, linhas, vazioTxt) => [
-      el("thead", {}, el("tr", {}, cols.map(([t, n]) => el("th", { class: n ? "num" : null, text: t })))),
-      el("tbody", {}, linhas.length ? linhas : el("tr", {}, el("td", { colspan: cols.length, class: "meta", text: vazioTxt })))];
     $("#t-cidade").replaceChildren(...tabela(
       [["Cidade"], ["Recebidos", 1], ["Em andamento", 1], ["Aprovados", 1], ["Reprovações", 1], ["Encerrados", 1], ["Tempo até aprovação", 1]],
       m.por_cidade.map((c) => el("tr", {}, el("td", { text: c.cidade }), ...[c.recebidos, c.em_andamento, c.aprovados, c.reprovacoes, c.encerrados].map((v) => el("td", { class: "num", text: v })), el("td", { class: "num", text: horas(c.horas_ate_aprovacao) }))),
       "Nenhum cadastro ainda."));
 
-    const barras = (lista, cor, vazioTxt) => {
-      const mx = Math.max(1, ...lista.map((x) => x.qtd));
-      return lista.length ? lista.map((x) => el("div", { style: "display:grid;gap:4px;margin-bottom:10px" },
-        el("div", { style: "display:flex;justify-content:space-between;gap:8px;font-size:14px" }, el("span", { text: x.motivo }), el("strong", { style: "font-variant-numeric:tabular-nums", text: x.pct != null ? `${x.qtd} (${x.pct}%)` : x.qtd })),
-        el("div", { class: "bar" }, el("span", { style: `width:${(x.qtd / mx) * 100}%;background:${cor}` }))))
-        : [el("p", { class: "meta", text: vazioTxt })];
-    };
-    $("#motivos-rep").replaceChildren(...barras(m.motivos_reprovacao, "var(--bad)", "Nenhuma reprovação."));
-    $("#motivos-enc").replaceChildren(...barras(m.motivos_encerramento, "var(--gray)", "Nenhum encerramento."));
+    const motivos = (lista) => lista.map((x) => ({ rotulo: x.motivo, qtd: x.qtd, extra: x.pct != null ? `${x.qtd} (${x.pct}%)` : x.qtd }));
+    $("#motivos-rep").replaceChildren(...barras(motivos(m.motivos_reprovacao), "var(--bad)", "Nenhuma reprovação."));
+    $("#motivos-enc").replaceChildren(...barras(motivos(m.motivos_encerramento), "var(--gray)", "Nenhum encerramento."));
 
     $("#t-pessoa").replaceChildren(...tabela(
       [["Pessoa"], ["Acesso"], ["Enviados", 1], ["Envios por dia (14 dias)", 1], ["Aprovou", 1], ["Reprovou", 1], ["Encerrou", 1]],
@@ -299,20 +255,15 @@
   }
   $("#b-export").addEventListener("click", () => {
     const cols = ["id_entregador", "cpf", "cidade", "observacao", "situacao", "enviado_por", "enviado_em", "situacao_desde", "decidido_por", "decidido_em", "motivo", "detalhe", "reprovacoes"];
-    const esc = (x) => { x = x == null ? "" : String(x); return /[";\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x; };
-    const linhas = (S.lista.todos || []).slice().sort((a, b) => String(a.enviado_em).localeCompare(String(b.enviado_em))).map((c) =>
-      [c.id_app, c.cpf && fmtCPF(c.cpf), c.cidade, c.observacao, ST[c.status], c.enviado_por_nome, c.enviado_em, c.status_desde, c.decidido_por_nome, c.decidido_em, c.motivo, c.detalhe, c.reprovacoes].map(esc).join(";"));
-    const hoje = new Date().toISOString().slice(0, 10);
-    const url = URL.createObjectURL(new Blob(["﻿" + [cols.join(";"), ...linhas].join("\r\n")], { type: "text/csv;charset=utf-8" }));
-    const a = el("a", { href: url, download: `cadastros-entregadores-${hoje}.csv` });
-    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+    baixarCSV("cadastros-entregadores", cols, (S.lista.todos || []).slice().sort((a, b) => String(a.enviado_em).localeCompare(String(b.enviado_em))).map((c) =>
+      [c.id_app, c.cpf && fmtCPF(c.cpf), c.cidade, c.observacao, ST[c.status], c.enviado_por_nome, c.enviado_em, c.status_desde, c.decidido_por_nome, c.decidido_em, c.motivo, c.detalhe, c.reprovacoes]));
   });
 
   // ---------- aprovados: foram bloqueados depois? (fim do Histórico) ----------
   function renderAprovados() {
     const l = S.aprovados, t = $("#t-aprovados");
     const cols = [["Aprovado em"], ["Entregador"], ["Cidade"], ["Enviado por"], ["Bloqueios depois", 1], ["1º bloqueio"], ["Dias até o 1º", 1], ["Agora"]];
-    if (!l) { $("#ap-resumo").textContent = "Carregando…"; return t.replaceChildren(...App.u.tabela(cols, [], "Carregando…")); }
+    if (!l) { $("#ap-resumo").textContent = "Carregando…"; return t.replaceChildren(...tabela(cols, [], "Carregando…")); }
     const bloq = l.filter((x) => x.bloqueios > 0);
     const media = bloq.length ? Math.round((10 * bloq.reduce((s, x) => s + Number(x.dias_ate_bloqueio), 0)) / bloq.length) / 10 : null;
     $("#ap-resumo").textContent = l.length
@@ -323,7 +274,7 @@
       const txt = x.nome || "ID " + x.id_app;
       return S.me.papel_bloqueios && App.abrirFicha ? el("button", { class: "link-ficha", type: "button", title: "Consultar entregador", onclick: () => App.abrirFicha(x.id_app) }, txt) : txt;
     };
-    t.replaceChildren(...App.u.tabela(cols, lista.map((x) => el("tr", {},
+    t.replaceChildren(...tabela(cols, lista.map((x) => el("tr", {},
       el("td", { text: dt(x.aprovado_em) }),
       el("td", {}, nome(x), el("br"), el("span", { class: "mono meta", text: x.id_app })),
       el("td", { text: x.cidade }), el("td", { text: x.enviado_por_nome }),

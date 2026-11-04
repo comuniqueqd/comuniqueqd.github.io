@@ -150,7 +150,44 @@
     return d;
   }
 
-  App.u = { $, el, janela, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
+  // previsão de término de uma tarefa (cadastro, tratativa, atividade): linha + botão que abre a janela.
+  // item: { previsao, previsao_por_nome }; tipo: 'cadastro' | 'tarefa' | 'atividade'; pode: quem está com a tarefa
+  const paraCampo = (d) => { const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 16); };
+  function previsao(item, tipo, id, pode) {
+    const p = item?.previsao ? new Date(item.previsao) : null;
+    const passou = p && p < Date.now();
+    if (!p && !pode) return null;
+    const hoje = p && p.toDateString() === new Date().toDateString();
+    const quando = p ? (hoje ? "hoje às " + p.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : dt(p.toISOString())) : null;
+    return el("div", { class: "previsao" + (passou ? " passou" : "") },
+      p ? el("span", {}, el("b", { text: passou ? `Previsão passou (${quando})` : `Previsão: até ${quando}` }), item.previsao_por_nome ? ` · por ${item.previsao_por_nome}` : "") : null,
+      pode ? el("button", { class: "btn link", type: "button", onclick: (e) => { e.stopPropagation(); abrirPrevisao(item, tipo, id); } }, p ? "Alterar previsão" : "Informar previsão de término") : null);
+  }
+  function abrirPrevisao(item, tipo, id) {
+    const campo = el("input", { type: "datetime-local" });
+    const base = item?.previsao ? new Date(item.previsao) : new Date(Date.now() + 2 * 3600000);
+    campo.value = paraCampo(base);
+    const erro = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    const atalho = (rot, f) => el("button", { class: "chip", type: "button", onclick: () => { campo.value = paraCampo(f()); } }, rot);
+    const em = (h) => () => new Date(Date.now() + h * 3600000);
+    const as = (dias, hora) => () => { const d = new Date(); d.setDate(d.getDate() + dias); d.setHours(hora, 0, 0, 0); return d; };
+    async function salvar(btn, valor) {
+      erro.hidden = true; btn.disabled = true;
+      try { await rpc("definir_previsao", { p_tipo: tipo, p_id: id, p_previsao: valor }); d.close(); toast(valor ? "Previsão informada." : "Previsão removida."); App.carregar(); }
+      catch (e) { btn.disabled = false; erro.textContent = msgErro(e); erro.hidden = false; }
+    }
+    const d = janela("Previsão de término",
+      el("p", { class: "meta", style: "margin:0", text: "Até quando você termina esta tarefa? Quem acompanha vê a previsão. É só informativa: não muda prazos nem avisos." }),
+      el("div", { class: "chips" }, atalho("+1 h", em(1)), atalho("+2 h", em(2)), atalho("+4 h", em(4)), atalho("Hoje 18:00", as(0, 18)), atalho("Amanhã 12:00", as(1, 12))),
+      el("label", {}, "Termina até", campo),
+      erro,
+      el("div", { class: "actions" },
+        el("button", { class: "btn primary", type: "button", onclick: (e) => { if (!campo.value) { erro.textContent = "Escolha o dia e a hora."; erro.hidden = false; return; } salvar(e.currentTarget, new Date(campo.value).toISOString()); } }, "Salvar"),
+        item?.previsao ? el("button", { class: "btn", type: "button", onclick: (e) => salvar(e.currentTarget, null) }, "Remover previsão") : null,
+        el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
+  }
+
+  App.u = { $, el, janela, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
             vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas, nomesEscolhidos, papelAtiv, papelBloq };
 
   // ---------- módulos e rotas ----------

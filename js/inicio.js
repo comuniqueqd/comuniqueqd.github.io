@@ -34,9 +34,11 @@
         el("div", { class: "numeros" }, staffBloq()
           ? [numero(b?.equipe_bloqueados_agora, "bloqueados agora", b ? `${b.meus_bloqueados_agora} registrados por você` : null),
              numero(b?.tratativas_pendentes, S.me.papel_bloqueios === "moderador" ? "tratativas pendentes" : "tratativas para você", naEquipe(b?.equipe_tratativas_pendentes)),
-             b?.tratativas_atrasadas ? numero(b.tratativas_atrasadas, "atrasadas (mais de 32 h)", null, true) : null]
+             b?.tratativas_atrasadas ? numero(b.tratativas_atrasadas, `atrasadas (mais de ${r.prazo_tratativa_horas ?? 32} h)`, null, true) : null,
+             b?.atencao ? numero(b.atencao, "entregadores de atenção") : null]
           : [numero(b?.meus_bloqueados_agora, "seus bloqueados agora", naEquipe(b?.equipe_bloqueados_agora)),
-             numero(b?.tratativas_pendentes, "suas tratativas em andamento", naEquipe(b?.equipe_tratativas_pendentes))])));
+             numero(b?.tratativas_pendentes, "suas tratativas em andamento", naEquipe(b?.equipe_tratativas_pendentes)),
+             b?.atencao ? numero(b.atencao, "entregadores de atenção") : null])));
     }
     const at = r?.atividades;
     cards.push(el("a", { class: "modulo-card ativ", href: "#atividades/pendencias", id: "card-atividades" },

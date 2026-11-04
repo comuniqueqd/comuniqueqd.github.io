@@ -37,7 +37,8 @@
       itens.push(item({ modulo: "ATIVIDADE", titulo: a.titulo, estado: a.status === "aceita" ? "concluida" : "pendente",
         detalhe: a.status === "aceita" ? `Você aceitou há ${duracao(a.aceita_em).txt}${a.prazo ? " · prazo " + dt(a.prazo) : ""}.`
           : `Sugerida por ${a.criada_por_nome} há ${duracao(a.criada_em).txt}${a.para_mim ? " para você" : ""}, esperando alguém aceitar.`,
-        acoes: [el("a", { class: "btn small", href: "#atividades/sugeridas" }, a.status === "aceita" ? "Concluir" : "Ver e aceitar")] }));
+        acoes: [el("a", { class: "btn small", href: "#atividades/sugeridas" }, a.status === "aceita" ? "Concluir" : "Ver e aceitar")],
+        extra: a.status === "aceita" ? App.u.previsao(a, "atividade", a.id, a.pode_prever) : null }));
     // Ativação
     if (staffAtiv() && r.ativacao.aguardando_analise)
       itens.push(item({ modulo: "ATIVAÇÃO", titulo: `${r.ativacao.aguardando_analise} cadastro(s) aguardando análise`,
@@ -70,10 +71,12 @@
             cx ? el("button", { class: "btn link", type: "button", onclick: () => { delete A.caixa[t.id]; render(); } }, "Cancelar") : null,
             S.me.papel_bloqueios === "moderador" ? el("button", { class: "btn link", type: "button", onclick: () => App.bloqueios.realocar(t, b) }, "Realocar…") : null,
             el("a", { class: "btn link", href: "#bloqueios/tratativas" }, "Ver na tela de tratativas")].filter(Boolean),
-          extra: cx ? el("div", { class: "box" }, el("p", { class: "meta", style: "margin:0", text: "Resolver a tratativa não libera o bloqueio. Quem registrou recebe um aviso." }), nota) : null }));
+          extra: el("div", {}, App.u.previsao(t, "tarefa", t.id, true),
+            cx ? el("div", { class: "box" }, el("p", { class: "meta", style: "margin:0", text: "Resolver a tratativa não libera o bloqueio. Quem registrou recebe um aviso." }), nota) : null) }));
       } else if (!staffBloq()) {
         itens.push(item({ modulo: "BLOQUEIOS", titulo: `Acompanhando: ${tipo.toLowerCase()} de ${b.nome}`, estado: "pendente",
           detalhe: `Pendente com ${t.responsavel_nome} há ${duracao(t.criada_em).txt} · ${b.infracao} · ${punicao}`,
+          extra: App.u.previsao(t, "tarefa", t.id, false),
           acoes: [el("a", { class: "btn small", href: "#bloqueios/meus" }, "Meus registros")] }));
       }
     }
@@ -142,7 +145,8 @@
     const cx = A.caixa["a" + a.id];
     const nota = cx ? el("textarea", { rows: "2", maxlength: "600", placeholder: "Como ficou? (opcional)", "aria-label": "Nota da conclusão", oninput: (e) => (cx.texto = e.target.value) }) : null;
     if (nota) nota.value = cx.texto;
-    return el("article", { class: "card" + (a.status === "concluida" ? " tratada" : "") + (atrasada ? " atrasada" : ""), "data-id": a.id },
+    const prevPassou = a.status === "aceita" && a.previsao && new Date(a.previsao) < Date.now();
+    return el("article", { class: "card" + (a.status === "concluida" ? " tratada" : "") + (atrasada ? " atrasada" : "") + (prevPassou ? " previsao-passou" : ""), "data-id": a.id },
       el("div", { class: "head" },
         el("span", { class: "name", text: a.titulo }),
         a.status === "aberta" ? el("span", { class: "esperando" + (espera.velho ? " velho" : ""), text: `esperando há ${espera.txt}` }) : null),
@@ -150,6 +154,7 @@
       el("div", { class: "meta", text: `Criada por ${a.criada_por === S.me.id ? "você" : a.criada_por_nome} em ${dt(a.criada_em)} · ${para}` }),
       a.prazo ? el("div", { class: "meta" + (atrasada ? " err" : ""), text: `Prazo: ${dt(a.prazo)}${atrasada ? " (passou)" : ""}` }) : null,
       a.status === "aceita" ? el("div", { class: "bullet pendente" }, el("span", {}, el("b", { text: "Em andamento" }), ` com ${a.aceita_por === S.me.id ? "você" : a.aceita_por_nome} desde ${dt(a.aceita_em)}`)) : null,
+      a.status === "aceita" ? App.u.previsao(a, "atividade", a.id, a.pode_prever) : null,
       a.status === "concluida" ? el("div", { class: "bullet concluida" }, el("span", {}, el("b", { text: "Concluída" }), ` por ${a.concluida_por_nome} em ${dt(a.concluida_em)}${a.nota ? " — " + a.nota : ""}`)) : null,
       el("div", { class: "actions" },
         a.pode_aceitar ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Atividade aceita. Ela está com você.") }, "Aceitar") : null,

@@ -30,6 +30,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/002-bloqueios.sql"), "u
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/003-entregadores.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/004-atividades-registros.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/005-analises-anexos.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/006-equipe-previsao-atencao.sql"), "utf8"));
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
 for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001', 'Ciclano Atrasado', 'LAGARTO - SE', 'Atraso na Coleta ou na Entrega Sem Justificativa', now() - make_interval(days => $1), 'Planilha')", [d]);
 // registro importado com alerta de revisão (100 dias atrás: fora do painel de 30 dias)
@@ -238,8 +239,13 @@ try {
   const linhaRegra = (nome) => a.evaluate((n) => [...document.querySelectorAll("#bq-t-regras tbody tr")].find((tr) => tr.querySelector("input")?.value.startsWith(n))?.querySelector(".chips")?.textContent, nome);
   ok((await linhaRegra("Mal Uso")) === "48 h72 h94 h122 h159 h", "regras: mal uso mostra a progressão de 30% (94 h na 3ª)");
   ok((await linhaRegra("Furto")) === "encerraencerraencerraencerraencerra", "regras: furto encerra a parceria");
-  await a.selectOption("#bq-t-cidades tr:has-text('LAGARTO - SE') select", "monitor@x.com");
-  ok(await esperar(a, "#toast:has-text('LAGARTO - SE atualizada')"), "moderador liga LAGARTO ao Monitor Um");
+  // o responsável da cidade é escolhido em Equipe → Regras de equipe
+  await ir(a, "#equipe/regras");
+  await a.click("#eq-t-cidades tr:has-text('LAGARTO - SE') >> text=Editar");
+  await a.selectOption("dialog.janela select >> nth=2", "monitor@x.com");
+  await a.click("dialog.janela .actions button.primary");
+  ok(await esperar(a, "#toast:has-text('LAGARTO - SE atualizada')"), "moderador liga LAGARTO ao Monitor Um (Regras de equipe)");
+  await ir(a, "#bloqueios/regras");
   await a.screenshot({ path: path.join(PRINTS, "b1-regras.png"), fullPage: true });
 
   // 10. suporte: tela inicial e registro com prévia da punição
@@ -250,7 +256,7 @@ try {
   await s.click("#card-bloqueios");
   ok(await esperar(s, "#v-bq-novo:not([hidden])"), "suporte cai em Novo bloqueio");
   const abasB = await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));
-  ok(JSON.stringify(abasB) === JSON.stringify(["novo", "meus", "consultar", "painel"]), "suporte vê Novo, Meus registros, Consultar e Painel: " + abasB);
+  ok(JSON.stringify(abasB) === JSON.stringify(["novo", "atencao", "meus", "consultar", "painel"]), "suporte vê Novo, Atenção, Meus registros, Consultar e Painel: " + abasB);
   await s.fill("#bq-id", "mal00001"); await s.fill("#bq-nome", "Fulano de Tal");
   await s.selectOption("#bq-cidade", "LAGARTO - SE"); await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
   await s.fill("#bq-comentario", "Educado, mas costuma atrasar a coleta.");
@@ -539,6 +545,56 @@ try {
   await s.screenshot({ path: path.join(PRINTS, "d3-anexos.png") });
   await s.click("dialog.janela >> text=Fechar");
   ok(await esperar(s, `${cardAx} >> text=Anexos (1)`), "cartão mostra quantos anexos tem");
+
+  // 18. migração 006: regras de equipe, prazo editável, previsão, atenção
+  await ir(s, "#equipe/regras"); await s.reload();
+  ok(await esperar(s, "#eq-t-cidades >> text=LAGARTO - SE") && !(await s.isVisible("#eq-t-cidades >> text=Editar")) && !(await s.isVisible("#eq-nova-cidade")), "suporte vê a Regras de equipe sem editar");
+  ok((await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).join() === "regras", "suporte só vê a aba Regras de equipe (não a Equipe)");
+  await ir(a2, "#equipe/regras"); await a2.reload();
+  await esperar(a2, "#eq-novo-operador:not([hidden])");
+  await a2.click("#eq-novo-operador");
+  await a2.fill("dialog.janela input >> nth=0", "Kleber"); await a2.fill("dialog.janela input >> nth=1", "75 0000-0001");
+  await a2.click("dialog.janela .actions button.primary");
+  ok(await esperar(a2, "#eq-t-operadores >> text=Kleber"), "moderador cadastra operador logístico");
+  await a2.selectOption("#eq-resp-op select", "monitor@x.com");
+  ok(await esperar(a2, "#toast:has-text('Responsável pelos operadores atualizado')"), "moderador escolhe o responsável pelos operadores");
+  await a2.click("#eq-t-cidades tr:has-text('SERRINHA - BA') >> text=Editar");
+  await a2.selectOption("dialog.janela select >> nth=0", "operador");
+  await a2.selectOption("dialog.janela select >> nth=1", { label: "Kleber" });
+  ok(await a2.isVisible("dialog.janela >> text=os avisos vão para o responsável pelos operadores (Monitor Um)"), "cidade de operador mostra quem recebe os avisos");
+  await a2.fill("dialog.janela input[type=number] >> nth=0", "8");
+  await a2.selectOption("dialog.janela select >> nth=3", "bairro");
+  await a2.click("dialog.janela .actions button.primary");
+  ok(await esperar(a2, "#eq-t-cidades tr:has-text('SERRINHA - BA') >> text=Operador Logístico") && await a2.isVisible("#eq-t-cidades tr:has-text('SERRINHA - BA') >> text=Kleber")
+    && (await texto(a2, "#eq-t-cidades tr:has-text('SERRINHA - BA')")).includes("Monitor Um"), "cidade passa a ser de operador, com o operador e o responsável dos operadores");
+  await a2.screenshot({ path: path.join(PRINTS, "e1-regras-equipe.png"), fullPage: true });
+  ok(!(await texto(a2, "#v-eq-regras")).includes("null"), "Regras de equipe sem textos vazios (null)");
+  // prazo da tratativa editável
+  await ir(a2, "#bloqueios/regras"); await a2.reload();
+  await a2.waitForFunction(() => document.querySelector("#bq-prazo-horas")?.value !== "", null, { timeout: 10000 }).catch(() => {});
+  ok((await a2.inputValue("#bq-prazo-horas")) === "32", "prazo da tratativa começa em 32 h");
+  await a2.fill("#bq-prazo-horas", "24"); await a2.click("#bq-f-prazo button[type=submit]");
+  ok(await esperar(a2, "#toast:has-text('Prazo da tratativa atualizado')"), "moderador muda o prazo da tratativa");
+  ok(await a2.isVisible("#bq-t-cidades >> text=SERRINHA - BA") && !(await a2.isVisible("#bq-t-cidades select")), "aba Regras mostra quem recebe as tratativas, sem editar ali");
+  // previsão num cadastro (monitorador) e o suporte vê
+  await ir(s, "#ativacao/novo"); await s.reload(); await esperar(s, "#form");
+  await s.fill("#f-idapp", "prev0001"); await s.fill("#f-cidade", "SERRINHA - BA"); await s.click("#b-enviar");
+  await esperar(s, "#toast");
+  await ir(m, "#ativacao/pendentes"); await m.reload();
+  const cardP = "#queue .card:has-text('prev0001')";
+  await esperar(m, cardP);
+  await m.click(`${cardP} >> text=Informar previsão de término`);
+  await m.click("dialog.janela >> text=+2 h");
+  await m.click("dialog.janela .actions button.primary");
+  ok(await esperar(m, `${cardP} >> text=Previsão: até`), "monitorador informa a previsão no cadastro");
+  ok(await esperar(m, "#b-avisos[data-novas=true]"), "responsável pelos operadores recebe aviso do cadastro novo da cidade");
+  await ir(s, "#ativacao/pendentes"); await s.reload();
+  ok(await esperar(s, "#queue .card:has-text('prev0001') >> text=Previsão: até") && !(await s.isVisible("#queue .card:has-text('prev0001') >> text=Alterar previsão")), "suporte vê a previsão, sem poder mudar");
+  await m.screenshot({ path: path.join(PRINTS, "e2-previsao.png"), fullPage: true });
+  // entregadores de atenção
+  await ir(s, "#bloqueios/atencao");
+  ok(await esperar(s, "#bq-atencao-lista .card") || await esperar(s, "#bq-atencao-lista >> text=Ninguém em atenção agora"), "aba Atenção abre para o suporte");
+  await s.screenshot({ path: path.join(PRINTS, "e3-atencao.png"), fullPage: true });
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

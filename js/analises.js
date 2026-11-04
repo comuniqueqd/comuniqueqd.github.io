@@ -77,7 +77,7 @@
           destaque(lv.atingiram_limite, "chegaram ao limite"), destaque(lv.entregadores ? n(pct(lv.atingiram_limite, lv.entregadores)) + "%" : null, "conversão")),
         lv.por_motivo.length ? el("div", { class: "tablewrap" }, el("table", {}, ...tabela([["Motivo"], ["Leves", 1], ["Geraram bloqueio", 1]],
           lv.por_motivo.map((x) => el("tr", {}, el("td", { text: x.infracao }), el("td", { class: "num", text: x.qtd }), el("td", { class: "num", text: x.geraram }))), ""))) : null),
-      card("Tratativas por responsável", "Tratativas criadas no período (sem as importadas da planilha). O prazo é de 32 h.",
+      card("Tratativas por responsável", `Tratativas criadas no período (sem as importadas da planilha). O prazo é de ${S.resumo?.prazo_tratativa_horas ?? 32} h.`,
         d.tratativas_por_responsavel.length ? el("div", { class: "tablewrap" }, el("table", {}, ...tabela(
           [["Responsável"], ["Total", 1], ["Concluídas", 1], ["Tempo médio (h)", 1], ["Fora do prazo", 1], ["Pendentes", 1], ["Atrasadas agora", 1]],
           d.tratativas_por_responsavel.map((x) => el("tr", {}, el("td", { text: x.responsavel }), el("td", { class: "num", text: x.total }), el("td", { class: "num", text: x.concluidas }),
@@ -123,7 +123,7 @@
     ["Bloqueios", "Encerramentos revertidos", (r) => r.bloqueios.revertidos],
     ["Tratativas", "Criadas", (r) => r.tratativas.criadas],
     ["Tratativas", "Concluídas", (r) => r.tratativas.concluidas, "bom"],
-    ["Tratativas", "Concluídas fora do prazo de 32 h", (r) => r.tratativas.fora_do_prazo, "ruim"],
+    ["Tratativas", "Concluídas fora do prazo", (r) => r.tratativas.fora_do_prazo, "ruim"],
     ["Tratativas", "Tempo médio até concluir (h)", (r) => r.tratativas.horas_media, "ruim"],
     ["Tratativas", "Pendentes no fim da semana", (r) => r.tratativas.pendentes_no_fim, "ruim"],
     ["Atividades", "Atividades sugeridas", (r) => r.atividades.criadas],

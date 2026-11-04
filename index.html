@@ -212,6 +212,16 @@
     </div>
   </section>
 
+  <section class="view" id="v-bq-atencao" hidden>
+    <h2>Entregadores de atenção</h2>
+    <p class="sub" id="bq-atencao-sub">Quem está perto de uma punição maior: a uma infração leve do limite, reincidentes, com mais de um tipo de infração, ou aprovados há pouco que já levaram bloqueio. Quem está com a parceria encerrada não aparece.</p>
+    <div class="toolbar">
+      <input id="bq-q-atencao" type="search" placeholder="Buscar por nome, ID ou cidade" aria-label="Buscar entregadores de atenção">
+      <select id="bq-atencao-motivo" aria-label="Motivo"><option value="">Todos os motivos</option><option value="leve">A uma leve do limite</option><option value="reincidente">Reincidentes</option><option value="tipos">Mais de um tipo de infração</option><option value="aprovado">Aprovados há pouco</option></select>
+    </div>
+    <div id="bq-atencao-lista"></div>
+  </section>
+
   <section class="view" id="v-bq-ativos" hidden>
     <h2>Bloqueados agora</h2>
     <p class="sub">Quem está bloqueado neste momento (do que libera primeiro para o último) e encerramentos com tratativa pendente. O bloqueio é retirado automaticamente no fim do prazo.</p>
@@ -311,6 +321,7 @@
       <button class="btn" id="bq-export" type="button">Baixar CSV</button>
     </div>
     <div class="tablewrap"><table id="bq-t-hist" class="protege-foco"></table></div>
+    <div class="paginas" id="bq-hist-paginas"></div>
   </section>
 
   <section class="view" id="v-bq-regras" hidden>
@@ -328,13 +339,17 @@
       <div class="tablewrap"><table id="bq-t-leves" class="regras protege-foco"></table></div>
     </div>
     <div class="panel">
-      <h3>Cidades e responsáveis pela tratativa</h3>
-      <p class="sub">Bloqueios de 10 h ou mais e encerramentos geram uma tratativa para o responsável da cidade. Sem responsável, o aviso vai para todos os moderadores.</p>
-      <div class="tablewrap"><table id="bq-t-cidades" class="regras protege-foco"></table></div>
-      <form class="toolbar" id="bq-f-nova-cidade" style="margin-top:12px">
-        <input id="bq-nova-cidade" placeholder="Nova cidade: CIDADE - UF" aria-label="Nova cidade">
-        <button class="btn" type="submit" style="flex:0 0 auto">Adicionar cidade</button>
+      <h3>Prazo da tratativa</h3>
+      <p class="sub">Depois desse tempo sem resolver, a tratativa fica vermelha e os moderadores e o responsável da cidade recebem um aviso.</p>
+      <form class="toolbar protege-foco" id="bq-f-prazo" novalidate>
+        <label class="check" style="display:inline-flex;gap:6px;align-items:center;font-weight:400"><input id="bq-prazo-horas" type="number" min="1" max="720" style="width:80px" aria-label="Prazo da tratativa em horas"> horas</label>
+        <button class="btn primary small" type="submit" style="flex:0 0 auto">Salvar</button>
       </form>
+    </div>
+    <div class="panel">
+      <h3>Cidades e responsáveis pela tratativa</h3>
+      <p class="sub">Bloqueios de 10 h ou mais e encerramentos geram uma tratativa para o responsável da cidade (sem responsável, vai para todos os moderadores). Cidades, responsáveis, operadores e tarifas ficam em <a href="#equipe/regras">Equipe → Regras de equipe</a>.</p>
+      <div class="tablewrap"><table id="bq-t-cidades" class="regras"></table></div>
     </div>
   </section>
 
@@ -437,6 +452,32 @@
     <div class="panel">
       <h3>Quem tem acesso</h3>
       <div class="tablewrap"><table id="t-equipe" class="protege-foco"></table></div>
+    </div>
+  </section>
+  <section class="view" id="v-eq-regras" hidden>
+    <h2>Regras de equipe</h2>
+    <p class="sub">Quem cuida de cada cidade. O responsável recebe as tratativas da cidade, um aviso a cada cadastro novo e o aviso de tratativa atrasada. Cidades de operador logístico usam o responsável pelos operadores.</p>
+    <div class="panel" id="eq-resp-op"></div>
+    <div class="panel">
+      <h3>Cidades</h3>
+      <div class="toolbar">
+        <input id="eq-q" type="search" placeholder="Buscar cidade, operador ou responsável" aria-label="Buscar nas cidades">
+        <select id="eq-gestao" aria-label="Gestão"><option value="">Todas as gestões</option><option value="quero">Quero Delivery</option><option value="operador">Operador Logístico</option></select>
+        <label class="check"><input type="checkbox" id="eq-inativas"> Mostrar desativadas</label>
+        <button class="btn" type="button" id="eq-nova-cidade" hidden>+ Nova cidade</button>
+      </div>
+      <div class="tablewrap"><table id="eq-t-cidades"></table></div>
+    </div>
+    <div class="panel">
+      <h3>Operadores logísticos</h3>
+      <p class="sub">Parceiros de fora do Comunique. Um operador pode cuidar de várias cidades.</p>
+      <div class="tablewrap"><table id="eq-t-operadores"></table></div>
+      <div class="actions" style="margin-top:10px"><button class="btn" type="button" id="eq-novo-operador" hidden>+ Novo operador</button></div>
+    </div>
+    <div class="panel" id="eq-contatos-box" hidden>
+      <h3>Telefones da equipe</h3>
+      <p class="sub">Aparecem ao lado do nome do responsável em cada cidade.</p>
+      <div class="tablewrap"><table id="eq-t-contatos" class="protege-foco"></table></div>
     </div>
   </section>
 </main>

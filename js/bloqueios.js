@@ -11,7 +11,7 @@
     regras: null, lista: { ativos: null, meus: null, todos: null }, tarefas: { pendente: null, concluida: null },
     metricas: null, previa: null, resultado: null, consulta: null, destaque: null,
     painel: { periodo: 30, filtro: "todos", escolhidos: new Set(), cidade: "", infracao: "" },
-    tratVer: "pendente", caixa: {}, confirmar: {}, tipo: "normal", rascunho: {},
+    tratVer: "pendente", caixa: {}, confirmar: {}, tipo: "normal", rascunho: {}, pagina: 1, atencao: null,
   };
   const papel = () => S.me?.papel_bloqueios;
   const staff = () => ["moderador", "monitorador"].includes(papel());
@@ -73,7 +73,7 @@
     const completar = b.tarefa?.tipo === "completar_dados";
     const destacado = B.destaque === b.id;
     const classe = "card " + (sit === "encerramento" ? "encerramento" : sit === "revertido" ? "revertido" : b.tarefa?.status === "concluida" ? "tratada" : "bq")
-      + (b.tarefa?.atrasada ? " atrasada" : "") + (destacado ? " destaque" : "");
+      + (b.tarefa?.atrasada ? " atrasada" : "") + (b.tarefa?.status === "pendente" && b.tarefa.previsao && new Date(b.tarefa.previsao) < Date.now() ? " previsao-passou" : "") + (destacado ? " destaque" : "");
     return el("article", { class: classe, "data-id": b.id },
       el("div", { class: "head" },
         el("span", { class: "name" }, linkFicha(b), el("span", { class: "mono meta", text: b.id_app }), pillSit(sit), b.leve ? el("span", { class: "tag", text: "LEVE" }) : null, destacado ? el("span", { class: "tag", text: "RECÉM-REGISTRADO" }) : null),
@@ -94,6 +94,7 @@
       b.observacao ? el("div", { class: "obs", text: b.observacao }) : null,
       sit === "liberado_antes" || sit === "revertido" ? el("div", { class: "obs" }, el("b", { text: `${sit === "revertido" ? "Encerramento revertido" : "Liberado antes do prazo"} por ${b.liberado_por_nome} em ${dt(b.liberado_em)}: ` }), b.motivo_liberacao) : null,
       bulletTratativa(b),
+      b.tarefa?.status === "pendente" ? App.u.previsao(b.tarefa, "tarefa", b.tarefa.id, tarefaMinha) : null,
       acoes ? el("div", { class: "actions" },
         tarefaMinha ? el("button", { class: "btn approve", type: "button", onclick: () => abrir(b.id, completar ? "completar" : "tratar") },
           completar ? "Completar dados" : b.tarefa.tipo === "encerramento_parceria" ? "Marcar encerramento como tratado" : "Marcar tratativa como resolvida") : null,
@@ -688,8 +689,18 @@
     const lista = l.filter((b) => buscaB(b, q) && (!sit || (sit === "revisar" ? !!b.revisar : sit === "dados_pendentes" ? b.dados_pendentes : b.situacao === sit))
       && (!cid || b.cidade === cid) && (!inf || String(b.infracao_id) === inf) && (!quem || b.registrado_por_nome === quem) && filtroTipo(b, tipo));
     B.histFiltrado = lista;
-    $("#bq-hist-total").textContent = `${lista.length} de ${l.length} bloqueio(s)` + (lista.length > 500 ? " · mostrando os 500 mais recentes: use os filtros ou baixe o CSV para ver todos" : "");
-    t.replaceChildren(...tabela(cols, lista.slice(0, 500).map((b) => {
+    const POR = 100, paginas = Math.max(1, Math.ceil(lista.length / POR));
+    const chave = [q, sit, cid, inf, quem, tipo].join("|");
+    if (B.histChave !== chave) { B.histChave = chave; B.pagina = 1; }
+    B.pagina = Math.min(Math.max(1, B.pagina), paginas);
+    const ini = (B.pagina - 1) * POR;
+    $("#bq-hist-total").textContent = `${lista.length} de ${l.length} bloqueio(s)` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + POR, lista.length)}` : "");
+    const ir = (n) => { B.pagina = n; render(); $("#bq-t-hist").scrollIntoView({ block: "start" }); };
+    $("#bq-hist-paginas").replaceChildren(...(paginas > 1 ? [
+      el("button", { class: "btn small", type: "button", disabled: B.pagina === 1, onclick: () => ir(B.pagina - 1) }, "‹ Anterior"),
+      el("span", { text: `Página ${B.pagina} de ${paginas}` }),
+      el("button", { class: "btn small", type: "button", disabled: B.pagina === paginas, onclick: () => ir(B.pagina + 1) }, "Próxima ›")] : []));
+    t.replaceChildren(...tabela(cols, lista.slice(ini, ini + POR).map((b) => {
       const acoes = el("td", { style: "white-space:nowrap" });
       if (staff() && !b.dados_pendentes && !B.confirmar[b.id]) acoes.append(el("button", { class: "btn quiet", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir"));
       if (mod()) {
@@ -786,16 +797,13 @@
         return el("tr", {}, el("td", {}, nome), el("td", {}, min, " min"), el("td", {}, esc), el("td", {}, at),
           el("td", {}, el("button", { class: nova ? "btn small" : "btn primary small", type: "button", onclick: (e) => salvarLeve(i.id, nome.value, min.value, esc.value, at.checked, e.currentTarget) }, nova ? "Adicionar" : "Salvar")));
       })));
+    if (document.activeElement?.closest("#bq-f-prazo") == null) $("#bq-prazo-horas").value = R.prazo_tratativa_horas ?? 32;
     $("#bq-t-cidades").replaceChildren(
-      el("thead", {}, el("tr", {}, ["Cidade", "Responsável pela tratativa", "Ativa"].map((h) => el("th", { text: h })))),
-      el("tbody", {}, R.cidades.map((c) => {
-        const sel = el("select", { "aria-label": "Responsável por " + c.nome, onchange: (e) => salvarCidade(c.nome, e.target.value, c.ativa, e.target) },
-          el("option", { value: "", text: "Ninguém (avisa todos os moderadores)" }), ...R.responsaveis.map((p) => el("option", { value: p.email, text: `${p.nome} (${PAPEL[p.papel]})` })));
-        sel.value = c.responsavel_valido ? c.responsavel_email : "";
-        const at = el("input", { type: "checkbox", "aria-label": "Cidade ativa", onchange: (e) => salvarCidade(c.nome, sel.value, e.target.checked, e.target) });
-        at.checked = c.ativa;
-        return el("tr", {}, el("td", { text: c.nome }), el("td", {}, sel, c.responsavel_email && !c.responsavel_valido ? el("div", { class: "alerta-revisar", text: `${c.responsavel_nome || c.responsavel_email} não é mais monitorador` }) : null), el("td", {}, at));
-      })));
+      el("thead", {}, el("tr", {}, ["Cidade", "Gestão", "Recebe as tratativas"].map((h) => el("th", { text: h })))),
+      el("tbody", {}, R.cidades.filter((c) => c.ativa).map((c) => el("tr", {}, el("td", { text: c.nome }),
+        el("td", {}, el("span", { class: "gestao " + (c.gestao || "quero"), text: c.gestao === "operador" ? "Operador Logístico" : "Quero Delivery" })),
+        el("td", {}, c.responsavel_valido ? c.responsavel_nome : "Moderadores",
+          c.responsavel_email && !c.responsavel_valido ? el("div", { class: "alerta-revisar", text: `${c.responsavel_nome || c.responsavel_email} não é monitorador nos bloqueios: vai para os moderadores` }) : null)))));
   }
   function linhaInfracao(i) {
     const nova = i.id == null;
@@ -840,19 +848,33 @@
       B.regras = await rpc("regras_bloqueio"); render();
     } catch (e) { toast(msgErro(e)); }
   });
-  async function salvarCidade(nome, resp, ativa, ctrl) {
-    ctrl.disabled = true;
-    try { await rpc("salvar_cidade", { p_nome: nome, p_responsavel_email: resp || null, p_ativa: ativa }); toast(`${nome} atualizada.`); B.regras = await rpc("regras_bloqueio"); render(); }
-    catch (e) { toast(msgErro(e)); }
-    finally { ctrl.disabled = false; }
-  }
-  $("#bq-f-nova-cidade").addEventListener("submit", async (ev) => {
+  $("#bq-f-prazo").addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    const n = $("#bq-nova-cidade").value.trim();
-    if (!n) return;
-    try { await rpc("salvar_cidade", { p_nome: n, p_responsavel_email: null, p_ativa: true }); toast("Cidade adicionada."); ev.target.reset(); B.regras = await rpc("regras_bloqueio"); render(); }
-    catch (e) { toast(msgErro(e)); }
+    try {
+      await rpc("salvar_prazo_tratativa", { p_horas: Number($("#bq-prazo-horas").value) });
+      toast("Prazo da tratativa atualizado."); document.activeElement?.blur();
+      B.regras = await rpc("regras_bloqueio"); await carregar();
+    } catch (e) { toast(msgErro(e)); }
   });
+
+  // ---------- entregadores de atenção ----------
+  const MOTIVO_FILTRO = { leve: "leve do limite", reincidente: "reincidente", tipos: "tipos de infração", aprovado: "aprovado há pouco" };
+  function renderAtencao() {
+    const l = B.atencao, box = $("#bq-atencao-lista");
+    if (!l) return box.replaceChildren(carregandoEl());
+    const q = $("#bq-q-atencao").value, mt = $("#bq-atencao-motivo").value;
+    const lista = l.filter((x) => (!q || norm([x.nome, x.id_app, x.cidade].join(" ")).includes(norm(q))) && (!mt || x.motivos.some((m) => m.includes(MOTIVO_FILTRO[mt]))));
+    if (!l.length) return box.replaceChildren(vazio("Ninguém em atenção agora", "Quando um entregador chegar perto de uma punição maior, ele aparece aqui."));
+    if (!lista.length) return box.replaceChildren(vazio("Nada com esse filtro", ""));
+    box.replaceChildren(el("div", { class: "queue" }, lista.map((x) => el("article", { class: "card" },
+      el("div", { class: "head" },
+        el("span", { class: "name" }, linkFicha({ id_app: x.id_app, nome: x.nome || "ID " + x.id_app }), el("span", { class: "mono meta", text: x.id_app }),
+          x.bloqueado_agora ? pillSit("bloqueado") : null),
+        el("span", { class: "espera velho", text: `último registro ${dt(x.ultimo)}` })),
+      el("div", { class: "motivos" }, x.motivos.map((m) => el("span", { text: m }))),
+      el("div", { class: "meta", text: `${x.cidade || "Sem cidade"} · ${x.bloqueios} bloqueio(s) e ${x.leves} infração(ões) leve(s) contando agora` })))));
+  }
+  ["#bq-q-atencao", "#bq-atencao-motivo"].forEach((s) => $(s).addEventListener("input", () => renderAtencao()));
 
   // ---------- filtros que só redesenham ----------
   ["#bq-q-trat", "#bq-trat-cidade", "#bq-q-ativos", "#bq-ativos-cidade", "#bq-ativos-inf", "#bq-q-meus", "#bq-meus-sit", "#bq-meus-inf", "#bq-meus-tipo",
@@ -866,6 +888,7 @@
       { id: "tratativas", nome: "Tratativas", secao: "v-bq-tratativas", pode: staff, contador: "c-trat", alerta: true },
       { id: "novo", nome: "Novo bloqueio", secao: "v-bq-novo" },
       { id: "ativos", nome: "Bloqueados agora", secao: "v-bq-ativos", pode: staff },
+      { id: "atencao", nome: "Atenção", secao: "v-bq-atencao", contador: "c-atencao" },
       { id: "meus", nome: "Meus registros", secao: "v-bq-meus" },
       { id: "consultar", nome: "Consultar entregador", secao: "v-bq-consultar" },
       { id: "painel", nome: "Painel", secao: "v-bq-painel" },
@@ -880,6 +903,7 @@
         t.push(rpc("regras_bloqueio").then((d) => { B.regras = d; B.regrasEm = Date.now(); }));
       if (aba === "tratativas") t.push(rpc("listar_tarefas", { p_status: B.tratVer }).then((d) => (B.tarefas[B.tratVer] = d)));
       if (aba === "ativos") t.push(rpc("listar_bloqueios", { p_escopo: "ativos" }).then((d) => (B.lista.ativos = d)));
+      if (aba === "atencao") t.push(rpc("entregadores_atencao").then((d) => (B.atencao = d)));
       if (aba === "meus") t.push(rpc("listar_bloqueios", { p_escopo: "meus" }).then((d) => (B.lista.meus = d)));
       if (aba === "historico") t.push(rpc("listar_bloqueios", { p_escopo: "todos" }).then((d) => (B.lista.todos = d)));
       if (aba === "painel") {
@@ -890,11 +914,12 @@
       await Promise.all(t);
     },
     render(aba) {
-      ({ tratativas: renderTratativas, novo: renderNovo, ativos: renderAtivos, meus: renderMeus, consultar: renderConsulta,
+      ({ tratativas: renderTratativas, novo: renderNovo, ativos: renderAtivos, atencao: renderAtencao, meus: renderMeus, consultar: renderConsulta,
          painel: renderPainel, historico: renderHist, regras: renderRegras })[aba]?.();
     },
     contadores() {
       if (staff()) App.contador("c-trat", S.resumo?.bloqueios?.tratativas_pendentes || 0);
+      App.contador("c-atencao", S.resumo?.bloqueios?.atencao || 0);
     },
   });
 })();
