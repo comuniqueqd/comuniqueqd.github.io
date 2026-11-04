@@ -171,7 +171,7 @@ declare r text := nullif(lower(btrim(coalesce(p_email, ''))), '');
 begin
   perform public.exigir_papel('moderador');
   if r is not null and not exists (select 1 from public.membros where email = r) then raise exception 'Escolha um membro da equipe.'; end if;
-  update public.parametros_equipe set responsavel_operadores_email = r, atualizado_em = now(), atualizado_por = public.meu_email();
+  update public.parametros_equipe set responsavel_operadores_email = r, atualizado_em = now(), atualizado_por = public.meu_email() where unico;
   perform public.reatribuir_tarefas(array(select nome from public.cidades where gestao = 'operador'));
 end $$;
 
@@ -230,7 +230,7 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   perform public.exigir_bloq('moderador');
   if p_horas is null or p_horas not between 1 and 720 then raise exception 'O prazo deve ser de 1 a 720 horas.'; end if;
-  update public.parametros_bloqueio set tratativa_prazo_horas = p_horas, atualizado_em = now(), atualizado_por = public.meu_email();
+  update public.parametros_bloqueio set tratativa_prazo_horas = p_horas, atualizado_em = now(), atualizado_por = public.meu_email() where id;
 end $$;
 
 create or replace function public.regras_bloqueio()

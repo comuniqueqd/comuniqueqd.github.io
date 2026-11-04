@@ -701,7 +701,7 @@ begin
   if p_limite is null or p_limite not between 2 and 20 then raise exception 'O limite deve ser de 2 a 20 infrações leves.'; end if;
   if p_janela_dias is null or p_janela_dias not between 1 and 365 then raise exception 'O período deve ser de 1 a 365 dias.'; end if;
   update public.parametros_bloqueio set leves_limite = p_limite, leves_janela_dias = p_janela_dias,
-         atualizado_em = now(), atualizado_por = public.meu_email();
+         atualizado_em = now(), atualizado_por = public.meu_email() where id;
 end $$;
 
 create or replace function public.liberar_bloqueio(p_bloqueio uuid, p_motivo text)

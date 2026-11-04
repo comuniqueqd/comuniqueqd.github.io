@@ -206,6 +206,18 @@ await t("histórico de bloqueios paginado no banco, com filtros", async () => {
   await falha(rpc(soAtiv, "listar_bloqueios_pagina", {}));
 });
 
+// O Supabase (pg_safeupdate na API) recusa update/delete sem where; o Postgres local aceita. Confere nos arquivos.
+await t("nenhum update/delete sem where nas migrações", async () => {
+  const { readdirSync } = await import("node:fs");
+  const ruins = [];
+  for (const f of readdirSync(new URL("../supabase/", import.meta.url)).filter((x) => /^(schema|\d{3}-.*)\.sql$/.test(x))) {
+    const s = arquivo("../supabase/" + f).replace(/--[^\n]*/g, "");
+    for (const m of s.matchAll(/\b(update\s+public\.\w+\s+set|delete\s+from\s+public\.\w+)\b([\s\S]*?);/gi))
+      if (!/\bwhere\b/i.test(m[2])) ruins.push(`${f}: ${m[0].slice(0, 70).replace(/\s+/g, " ")}`);
+  }
+  igual(ruins, []);
+});
+
 await t("internas não ficam expostas", async () => {
   for (const f of ["criar_tarefa_cadastro(uuid,uuid)", "concluir_tarefas_cadastro(uuid)", "marcar_mudanca()", "avisar_decisao()", "cadastro_cria_ficha()"]) {
     const r = await um(`select has_function_privilege('authenticated', 'public.${f}', 'execute') ok`);

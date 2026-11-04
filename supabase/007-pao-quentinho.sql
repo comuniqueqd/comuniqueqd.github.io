@@ -430,7 +430,7 @@ insert into public.versao_dados (unico) values (true) on conflict do nothing;
 create or replace function public.marcar_mudanca()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
-  update public.versao_dados set n = n + 1, em = now();
+  update public.versao_dados set n = n + 1, em = now() where unico;  -- o Supabase recusa update sem where
   return null;
 end $$;
 
@@ -536,6 +536,37 @@ begin
                            from (select * from f order by inicio desc offset (pg - 1) * por limit por) x), '[]'),
       'quem', coalesce((select jsonb_agg(distinct registrado_por_nome) from public.bloqueios), '[]'),
       'cidades', coalesce((select jsonb_agg(distinct cidade) from public.bloqueios where cidade is not null), '[]')));
+end $$;
+
+-- ---------------------------------------------------------------------
+-- Correção: a API do Supabase recusa update sem where (as três abaixo, da 002 e da 006, falhavam)
+-- ---------------------------------------------------------------------
+create or replace function public.salvar_parametros_leves(p_limite integer, p_janela_dias integer)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform public.exigir_bloq('moderador');
+  if p_limite is null or p_limite not between 2 and 20 then raise exception 'O limite deve ser de 2 a 20 infrações leves.'; end if;
+  if p_janela_dias is null or p_janela_dias not between 1 and 365 then raise exception 'O período deve ser de 1 a 365 dias.'; end if;
+  update public.parametros_bloqueio set leves_limite = p_limite, leves_janela_dias = p_janela_dias,
+         atualizado_em = now(), atualizado_por = public.meu_email() where id;
+end $$;
+
+create or replace function public.salvar_responsavel_operadores(p_email text)
+returns void language plpgsql security definer set search_path = public as $$
+declare r text := nullif(lower(btrim(coalesce(p_email, ''))), '');
+begin
+  perform public.exigir_papel('moderador');
+  if r is not null and not exists (select 1 from public.membros where email = r) then raise exception 'Escolha um membro da equipe.'; end if;
+  update public.parametros_equipe set responsavel_operadores_email = r, atualizado_em = now(), atualizado_por = public.meu_email() where unico;
+  perform public.reatribuir_tarefas(array(select nome from public.cidades where gestao = 'operador'));
+end $$;
+
+create or replace function public.salvar_prazo_tratativa(p_horas integer)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform public.exigir_bloq('moderador');
+  if p_horas is null or p_horas not between 1 and 720 then raise exception 'O prazo deve ser de 1 a 720 horas.'; end if;
+  update public.parametros_bloqueio set tratativa_prazo_horas = p_horas, atualizado_em = now(), atualizado_por = public.meu_email() where id;
 end $$;
 
 -- ---------------------------------------------------------------------
