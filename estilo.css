@@ -320,3 +320,15 @@ button.revisar-cad.discreto { font-size: 11px; padding: 0 6px; border-radius: 99
 .novidades { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
 @media (max-width: 640px) { .busca-topo { order: 10; width: 100%; } .busca-topo input { width: 100%; } }
 #at-lista > .grupo { margin-top: 18px; }
+
+/* migração 008: casos suspeitos */
+.selo-caso { display: inline-block; font-size: 11px; font-weight: 600; color: var(--bad); background: var(--bad-soft); border-radius: 999px; padding: 1px 8px; text-decoration: none; white-space: nowrap; }
+.selo-caso:hover, .selo-caso:focus-visible { outline: 1px solid var(--bad); }
+.nivel { font-size: 12px; font-weight: 700; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+.nivel.forte { background: var(--bad-soft); color: var(--bad); }
+.nivel.atencao { background: var(--warn-soft); color: var(--warn); }
+.card.caso.forte { border-left-color: var(--bad); }
+.card.caso.atencao { border-left-color: var(--warn); }
+.checklist { display: grid; gap: 4px; font-size: 14px; }
+.checklist label.marcar { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; }
+.checklist label.marcar input { width: auto; margin-top: 3px; }

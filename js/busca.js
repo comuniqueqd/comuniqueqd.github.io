@@ -3,7 +3,7 @@
 (() => {
   "use strict";
   const App = window.App;
-  const { $, el, fmtCPF, rpc, msgErro, janela } = App.u;
+  const { $, el, dt, fmtCPF, rpc, msgErro, janela } = App.u;
   const S = App.S;
 
   // ---------- busca rápida ----------
@@ -29,6 +29,19 @@
       el("button", { type: "button", onclick: () => ir(() => App.abrirCadastro(x.id)) },
         el("span", { text: x.nome || (x.id_app ? "ID " + x.id_app : "CPF " + fmtCPF(x.cpf)) }),
         el("span", { class: "meta mono", text: [x.id_app, x.cpf && fmtCPF(x.cpf), x.cidade, x.situacao].filter(Boolean).join(" · ") }))));
+    // lupa do detetive (008): casos, comentários sobre entregadores e os seus avisos
+    const corta = (t, n = 90) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
+    if (r.casos?.length) linhas.push(el("h4", { text: "Casos 🕵️" }), ...r.casos.map((x) =>
+      el("button", { type: "button", onclick: () => ir(() => (location.hash = "#casos")) },
+        el("span", { text: corta(x.detalhe) }),
+        el("span", { class: "meta", text: `${x.nivel === "forte" ? "🔴 forte" : "🟡 atenção"} · ${x.status === "aberto" ? "aberto" : x.status} · ${dt(x.criado_em)}` }))));
+    if (r.comentarios?.length) linhas.push(el("h4", { text: "Comentários" }), ...r.comentarios.map((x) =>
+      el("button", { type: "button", onclick: () => ir(() => App.abrirFicha(x.id_app)) },
+        el("span", { text: corta(x.texto) }),
+        el("span", { class: "meta", text: `${x.nome || x.id_app} · ${x.por_nome || "—"} · ${dt(x.em)}` }))));
+    if (r.avisos?.length) linhas.push(el("h4", { text: "Seus avisos" }), ...r.avisos.map((x) =>
+      el("button", { type: "button", onclick: () => ir(() => (location.hash = x.link || "#atividades/avisos")) },
+        el("span", { text: corta(x.texto) }), el("span", { class: "meta", text: dt(x.criada_em) }))));
     if (!linhas.length) linhas.push(el("p", { class: "meta", style: "margin:6px 8px", text: "Nada encontrado." }));
     if (bloq) linhas.push(el("button", { type: "button", onclick: () => ir(() => App.abrirFicha(q)) }, el("span", { class: "meta", text: `Consultar “${q}” na tela Consultar entregador →` })));
     res.replaceChildren(...linhas);
@@ -41,15 +54,16 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "007";
+  const VERSAO = "008";
   const NOVIDADES = {
-    tema: "Pão quentinho · tudo conectado",
+    tema: "🕵️ Espionagem profissional",
     itens: [
-      ["Aviso na hora", "Quem enviou um cadastro recebe um aviso no sino quando ele é aprovado, reprovado, encerrado ou desfeito."],
-      ["Nome no cadastro e ficha pronta", "O Novo cadastro tem o nome do entregador. Aprovado com ID e nome, a ficha já nasce. Faltou algo? Ganha a marca “revisar”, e qualquer pessoa da equipe pode completar."],
-      ["Busca rápida e histórico do ID", "Use a busca no topo (ID, CPF ou nome). Ao digitar um ID no Novo cadastro, aparece o que o Comunique já sabe dele."],
+      ["Casos suspeitos", "CPF que já existe tentando entrar com outro nome ou ID, entregador encerrado tentando voltar, troca de dados num cadastro aprovado: tudo vira um caso, e a equipe toda fica sabendo. Antes, a tentativa só era recusada e se perdia."],
+      ["Investigação com método", "Na tela Casos 🕵️: “Eu verifico” ou “Pedir verificação”, checklist, comentários e o veredito (confirmado ou descartado) do monitorador ou moderador."],
+      ["Lupa do detetive e placar", "A busca do topo agora acha também casos, comentários e os seus avisos. E nas Análises tem o Placar do detetive."],
     ],
   };
+
   function mostrarNovidades() {
     let visto = null;
     try { visto = localStorage.getItem("comunique-novidades"); } catch (_) {}

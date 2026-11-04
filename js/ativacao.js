@@ -60,7 +60,7 @@
     return el("article", { class: "card" + (contato ? " contato" : "") + (prevPassou ? " previsao-passou" : "") + (destacado ? " destaque" : ""), "data-id": c.id },
       el("div", { class: "head" },
         el("span", { class: "name" }, c.nome ? el("span", { text: c.nome }) : null, el("span", { class: "mono" + (c.nome ? " meta" : ""), text: titulo(c) }), pill(c.status, true),
-          destacado ? el("span", { class: "tag", text: "RECÉM-ENVIADO" }) : null, c.revisar ? botaoRevisar(c, true) : null),
+          destacado ? el("span", { class: "tag", text: "RECÉM-ENVIADO" }) : null, c.revisar ? botaoRevisar(c, true) : null, c.caso_aberto ? App.casos.selo() : null),
         el("span", { class: "espera" + (esp.velho ? " velho" : ""), title: "Desde " + dt(c.status_desde), text: (contato ? "aguardando contato há " : "esperando há ") + esp.txt })),
       el("dl", { class: "fields" },
         fld("Nome", c.nome), fld("ID do entregador", c.id_app, true), fld("CPF", c.cpf && fmtCPF(c.cpf), true), fld("Cidade", c.cidade),
@@ -71,7 +71,7 @@
       contato ? el("div", { class: "motivo" }, el("b", { text: `Reprovado por ${c.decidido_por_nome} em ${dt(c.decidido_em)}: ` }), c.motivo, c.detalhe ? " — " + c.detalhe : "") : null,
       c.observacao ? el("div", { class: "obs", text: c.observacao }) : null,
       el("div", { class: "actions" },
-        staff() ? el("button", { class: "btn approve", type: "button", onclick: (e) => decidir(c, "aprovar", e.currentTarget) }, "Aprovar") : null,
+        staff() ? el("button", { class: "btn approve", type: "button", onclick: (e) => (c.caso_aberto ? aprovarComCaso(c, e.currentTarget) : decidir(c, "aprovar", e.currentTarget)) }, "Aprovar") : null,
         staff() && !contato ? el("button", { class: "btn reject", type: "button", onclick: () => abrir(c.id, "reprovar") }, "Reprovar") : null,
         el("button", { class: "btn small", type: "button", onclick: () => copiar(c) }, "Copiar dados"),
         el("button", { class: "btn link", type: "button", onclick: () => App.abrirCadastro(c.id) }, "Editar dados"),
@@ -112,6 +112,16 @@
     } catch (e) { btn.disabled = false; toast(msgErro(e)); }
   }
 
+  // 008: aprovar com caso suspeito aberto é permitido, com um clique a mais
+  function aprovarComCaso(c, btn) {
+    const d = App.u.janela("Aprovar com caso aberto?",
+      el("p", { class: "quadrinho grave", style: "margin:0" }, "🕵️ Este cadastro tem um caso suspeito aberto (possível uso por terceiros)."),
+      el("div", { class: "actions" },
+        el("button", { class: "btn approve", type: "button", onclick: () => { d.close(); decidir(c, "aprovar", btn); } }, "Sei que há um caso aberto e verifiquei"),
+        el("a", { class: "btn link", href: "#casos", onclick: () => d.close() }, "Ver o caso"),
+        el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
+  }
+
   async function copiar(c) {
     const t = [c.nome ? `Nome: ${c.nome}` : "", c.id_app ? `ID: ${c.id_app}` : "", c.cpf ? `CPF: ${fmtCPF(c.cpf)}` : "", `Cidade: ${c.cidade}`, c.observacao ? `Obs.: ${c.observacao}` : ""].filter(Boolean).join("\n");
     try { await navigator.clipboard.writeText(t); toast("Dados copiados."); } catch (_) { toast("Não foi possível copiar neste navegador."); }
@@ -143,7 +153,7 @@
   // célula "Entregador" das tabelas: nome, ID, CPF e o botão revisar
   const celEntregador = (c) => el("td", {}, c.nome ? el("div", { text: c.nome }) : null,
     el("span", { class: "mono" + (c.nome ? " meta" : ""), text: c.id_app || "—" }), c.cpf ? el("span", { class: "meta mono", text: " · " + fmtCPF(c.cpf) }) : null,
-    c.revisar ? el("div", { onclick: (e) => e.stopPropagation() }, botaoRevisar(c)) : null);
+    c.revisar ? el("div", { onclick: (e) => e.stopPropagation() }, botaoRevisar(c)) : null, c.caso_aberto ? el("div", {}, App.casos.selo()) : null);
   // botão "revisar": abre a janela para completar os dados (qualquer pessoa da equipe)
   const botaoRevisar = (c, discreto) => el("button", { class: "revisar-cad" + (discreto ? " discreto" : ""), type: "button", title: "Revisar: " + c.revisar,
     onclick: (e) => { e.stopPropagation(); App.abrirCadastro(c.id); } }, discreto ? "revisar" : "⚠ revisar: " + c.revisar);
@@ -201,6 +211,8 @@
     const d = App.u.janela(c.revisar ? "Revisar cadastro" : "Editar dados do cadastro",
       el("p", { class: "meta", style: "margin:0", text: `${c.situacao} · enviado por ${c.enviado_por_nome} em ${dt(c.enviado_em)}. Qualquer pessoa da equipe pode completar ou corrigir; o histórico guarda o antes e o depois.` }),
       c.revisar ? el("p", { class: "quadrinho", style: "margin:0" }, el("b", { text: "Revisar: " }), c.revisar) : null,
+      ...(c.casos || []).map((k) => el("p", { class: "quadrinho grave", style: "margin:0" }, el("b", { text: "🕵️ Caso aberto: " }), k.detalhe, " ",
+        el("a", { href: "#casos", onclick: () => d.close() }, "Ver o caso"))),
       lNome, el("div", { class: "grid2" }, lId, lCpf), lCid, el("label", {}, "Observação", iObs), lMot,
       erro,
       el("div", { class: "actions" },
@@ -416,7 +428,15 @@
     if (first) return $("#f-" + first).focus();
     const btn = $("#b-enviar"); btn.disabled = true;
     try {
-      const id = await rpc("enviar_cadastro", { p_id_app: v.idApp || null, p_cpf: temCpf ? v.cpf : null, p_cidade: v.cidade, p_observacao: v.obs || null, p_nome: v.nome || null });
+      const r = await rpc("enviar_cadastro", { p_id_app: v.idApp || null, p_cpf: temCpf ? v.cpf : null, p_cidade: v.cidade, p_observacao: v.obs || null, p_nome: v.nome || null });
+      // 008: CPF repetido com outro nome/ID não cria o cadastro, mas abre um caso suspeito
+      if (!r.id) {
+        const erro = $("#form-erro"); erro.textContent = r.erro; erro.hidden = false;
+        if (r.caso) App.casos.avisar(r);
+        return;
+      }
+      const id = r.id;
+      if (r.caso) App.casos.avisar(r);
       const cidade = v.cidade;
       form.reset(); setTimeout(() => ($("#f-cidade").value = cidade));
       S.destaque = id;

@@ -53,6 +53,11 @@
         acoes: [el("a", { class: "btn small", href: "#atividades/sugeridas" }, a.status === "aceita" ? "Concluir" : "Ver e aceitar"),
           a.cadastro_id ? el("button", { class: "btn link", type: "button", onclick: () => App.abrirCadastro(a.cadastro_id) }, "Completar o cadastro") : null].filter(Boolean),
         extra: a.status === "aceita" ? App.u.previsao(a, "atividade", a.id, a.pode_prever) : null }));
+    // Casos suspeitos para você verificar (008)
+    if (r.casos_para_mim)
+      itens.push(item({ modulo: "CASOS 🕵️", titulo: `${r.casos_para_mim} caso(s) suspeito(s) para você verificar`, estado: "atrasada",
+        detalhe: "Possível uso do cadastro por terceiros. Use o checklist, comente e, se for monitorador ou moderador, dê o veredito.",
+        acoes: [el("a", { class: "btn primary small", href: "#casos" }, "Abrir os casos")] }));
     // Ativação
     if (staffAtiv() && r.ativacao.aguardando_analise)
       itens.push(item({ modulo: "ATIVAÇÃO", titulo: `${r.ativacao.aguardando_analise} cadastro(s) aguardando análise`,

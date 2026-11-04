@@ -29,6 +29,7 @@
       <a href="#ativacao" data-mod="ativacao">Ativação de entregadores</a>
       <a href="#bloqueios" data-mod="bloqueios">Bloqueios</a>
       <a href="#atividades" data-mod="atividades">Atividades</a>
+      <a href="#casos" data-mod="casos">Casos 🕵️ <span class="count alert" id="c-casos" hidden>0</span></a>
       <a href="#analises" data-mod="analises">Análises</a>
       <a href="#registros" data-mod="registros">Registros</a>
       <a href="#equipe" data-mod="equipe">Equipe <span class="count alert" id="c-pedidos" hidden>0</span></a>
@@ -400,6 +401,42 @@
   </section>
 
   <!-- ===================== ANÁLISES ===================== -->
+  <!-- ===================== CASOS SUSPEITOS (008) ===================== -->
+  <section class="view" id="v-casos" hidden>
+    <h2>Casos suspeitos 🕵️</h2>
+    <p class="sub">Tentativas de cadastro que parecem uso por terceiros: CPF repetido com outro nome ou ID, entregador encerrado tentando voltar, troca de dados num cadastro aprovado. Qualquer pessoa investiga e comenta; monitorador e moderador dão o veredito.</p>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Quais casos">
+        <button type="button" data-casos="aberto" aria-pressed="true">Abertos</button>
+        <button type="button" data-casos="encerrados" aria-pressed="false">Encerrados (90 dias)</button>
+      </div>
+      <input id="q-casos" type="search" placeholder="Buscar por nome, ID, CPF ou cidade" aria-label="Buscar casos">
+    </div>
+    <div id="casos-lista" class="protege-foco"></div>
+    <details class="panel" id="casos-checklist-box" hidden>
+      <summary style="cursor:pointer;font-weight:600">Checklist de verificação (moderadores)</summary>
+      <p class="meta">Um item por linha, na ordem em que aparecem nos casos.</p>
+      <textarea id="casos-checklist" rows="5" aria-label="Itens do checklist"></textarea>
+      <div class="actions"><button class="btn small" type="button" id="b-checklist">Salvar checklist</button></div>
+    </details>
+  </section>
+
+  <!-- PLACAR DO DETETIVE (Análises, 008) -->
+  <section class="view" id="v-an-placar" hidden>
+    <h2>Placar do detetive 🕵️</h2>
+    <p class="sub">Quem está de olho: casos verificados, confirmados e comentários de cada pessoa.</p>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Período do placar">
+        <button type="button" data-placar="7">7 dias</button>
+        <button type="button" data-placar="30" aria-pressed="true">30 dias</button>
+        <button type="button" data-placar="90">90 dias</button>
+        <button type="button" data-placar="3650">Tudo</button>
+      </div>
+    </div>
+    <div class="tiles" id="placar-tiles"></div>
+    <div class="tablewrap"><table id="t-placar"></table></div>
+  </section>
+
   <section class="view" id="v-an-analises" hidden>
     <h2>Análises</h2>
     <p class="sub" id="an-sub">Números da operação para entender o que funciona. Só totais: nenhum dado pessoal.</p>
@@ -517,6 +554,7 @@
 <script src="js/analises.js"></script>
 <script src="js/registros.js"></script>
 <script src="js/equipe.js"></script>
+<script src="js/casos.js"></script>
 <script src="js/busca.js"></script>
 </body>
 </html>

@@ -125,7 +125,7 @@ O que muda:
 - **Revisar / Corrigir**: o alerta "revisar" virou um botão. Ele abre uma janela para corrigir ID, nome e cidade (motivo obrigatório) ou marcar como revisado. Também há o botão **Corrigir** no histórico, nos cartões e na consulta. A punição aplicada não muda.
 - **Segurança**: funções internas deixam de poder ser chamadas por quem está logado mas fora da equipe.
 
-**Se rodar uma migração de novo**, rode também as seguintes, em ordem (002 → 003 → 004 → 005 → 006 → 007).
+**Se rodar uma migração de novo**, rode também as seguintes, em ordem (002 → 003 → 004 → 005 → 006 → 007 → 008).
 
 ## Atualização: atividades sugeridas, registros, tratativas atrasadas (migração 004)
 
@@ -192,3 +192,18 @@ O que muda:
 - **Busca rápida no topo** (ID, CPF ou nome): fichas de entregador (só para quem tem o módulo de bloqueios) e cadastros da ativação.
 - **"O que há de novo"**: janela com as novidades, uma vez por pessoa a cada versão.
 - **Menos tráfego**: o app pergunta um número barato (`ultima_mudanca()`) e só recarrega as listas quando algo mudou (e tudo a cada 5 min); sem mexer no mouse/teclado por 5 min, atualiza a cada 2 min; resumo e avisos numa chamada só; a lista da equipe só na tela Equipe; Histórico de bloqueios paginado e filtrado no banco (o CSV baixa até 5000 linhas com os filtros da tela).
+
+## Atualização: "Espionagem profissional" · casos suspeitos (migração 008)
+
+Para quem já rodou o `007-pao-quentinho.sql`. **Não apaga** nada e pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/008-espionagem.sql`](supabase/008-espionagem.sql) inteiro e clique em **Run**.
+2. Só depois publique a versão nova do site (a `main`). Nesta versão a ordem importa: o site novo não funciona com o banco antigo.
+
+O que muda:
+
+- **Casos suspeitos de uso por terceiros** (menu **Casos 🕵️**). Viram caso: CPF que já existe tentando entrar com outro nome ou outro ID (a tentativa fica registrada; antes era só recusada); entregador encerrado tentando voltar (mesmo CPF, ou mesmo nome com outro ID, inclusive quem tem a parceria encerrada nos bloqueios), com sinal 🔴 forte; e troca de nome ou ID num cadastro já aprovado.
+- **Toda a equipe recebe o aviso** de cada caso novo. Quem cadastrou escolhe **Eu verifico** ou **Pedir verificação** (vai para o responsável da cidade; sem responsável, para os moderadores). Os casos para você aparecem nas Pendências.
+- **Checklist de verificação** (modelo editável pelos moderadores na tela Casos), comentários e **veredito** (confirmado ou descartado, com nota) por monitorador ou moderador. Confirmado grava um comentário na ficha do entregador e o app sugere encerrar o cadastro; nada é encerrado sozinho.
+- **Aprovar com caso aberto** continua permitido, com um clique a mais.
+- **Selo 🕵️ "caso aberto"** nos cadastros e na ficha; **lupa do detetive**: a busca do topo acha também casos, comentários e os seus avisos; **Placar do detetive** nas Análises.

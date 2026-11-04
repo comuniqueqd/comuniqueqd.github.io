@@ -32,6 +32,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/004-atividades-registro
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/005-analises-anexos.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/006-equipe-previsao-atencao.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/007-pao-quentinho.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008-espionagem.sql"), "utf8"));
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
 for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001', 'Ciclano Atrasado', 'LAGARTO - SE', 'Atraso na Coleta ou na Entrega Sem Justificativa', now() - make_interval(days => $1), 'Planilha')", [d]);
 // registro importado com alerta de revisão (100 dias atrás: fora do painel de 30 dias)
@@ -81,7 +82,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "007"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "008"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -145,6 +146,10 @@ try {
   await s.fill("#f-idapp", "outro1234"); await s.fill("#f-cpf", "529.982.247-25"); await s.fill("#f-cidade", "RECIFE - PE");
   await s.click("#b-enviar");
   ok(await esperar(s, "#form-erro:not([hidden])"), "CPF repetido é bloqueado: " + (await texto(s, "#form-erro")));
+  // 008: CPF repetido com outro ID abre um caso suspeito
+  ok(await esperar(s, "dialog.janela >> text=Cadastro suspeito de uso por terceiros"), "CPF repetido com outro ID: aviso de cadastro suspeito");
+  await s.screenshot({ path: path.join(PRINTS, "g1-caso-na-hora.png") });
+  await s.click("dialog.janela >> text=Decidir depois");
   await s.fill("#f-idapp", "abc12345"); await s.fill("#f-cpf", ""); await s.click("#b-enviar");
   await esperar(s, "#v-pendentes:not([hidden]) .card.destaque");
   await s.fill("#f-idapp", "x").catch(() => {});
@@ -606,7 +611,7 @@ try {
     await d7.query("select importar_bloqueio('rev00002', 'Nome Velho', 'ITABAIANA - SE', 'Avaria de Produto', now() - interval '120 days', 'Planilha', 'Nome diferente na planilha', '24')");
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
-  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Busca rápida"), "janela O que há de novo aparece na primeira vez");
+  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Lupa do detetive"), "janela O que há de novo aparece na primeira vez");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -681,6 +686,43 @@ try {
   ok(await esperar(n7, "dialog.janela >> text=Já existe uma tarefa aberta"), "cadastro novo incompleto já tem tarefa (não oferece outra)");
   await n7.click("dialog.janela >> text=Cancelar");
   ok(!(await texto(n7, "main")).includes("null"), "telas da 007 sem textos vazios (null)");
+
+  // 17. migração 008 · "espionagem profissional": casos suspeitos
+  await ir(m7, "#casos"); await m7.reload();
+  const cartaoCaso = "#casos-lista .card.caso:has-text('outro1234')";
+  ok(await esperar(m7, cartaoCaso), "tela Casos mostra o caso da tentativa com CPF repetido");
+  ok((await texto(m7, cartaoCaso)).includes("CPF repetido com outro nome ou ID") && (await texto(m7, cartaoCaso)).includes("Cadastro que já existia"), "o caso traz o tipo e o cadastro que já existia");
+  ok(await m7.isVisible("#c-casos:not([hidden])"), "contador de casos no menu");
+  await m7.click(`${cartaoCaso} >> text=Eu verifico`);
+  ok(await esperar(m7, "#casos-lista .grupo:has-text('Para você verificar') .card:has-text('outro1234')"), "Eu verifico: o caso vai para 'Para você verificar'");
+  await ir(m7, "#atividades/pendencias");
+  ok(await esperar(m7, "#at-lista >> text=1 caso(s) suspeito(s) para você verificar"), "nas Pendências aparece o caso para verificar");
+  await ir(m7, "#casos"); await esperar(m7, cartaoCaso);
+  await m7.check(`${cartaoCaso} label.marcar:has-text('Liguei para o entregador') input`);
+  ok(await esperar(m7, `${cartaoCaso} label.marcar:has-text('Liguei para o entregador') >> text=Monitor Um`), "checklist marcado, com quem e quando");
+  await m7.fill(`${cartaoCaso} textarea[aria-label='Comentário no caso']`, "Falei com o entregador: é a mesma pessoa, trocou de conta");
+  await m7.click(`${cartaoCaso} >> text=Comentar`);
+  ok(await esperar(m7, `${cartaoCaso} >> text=trocou de conta`), "comentário no caso");
+  await m7.screenshot({ path: path.join(PRINTS, "g2-casos.png"), fullPage: true });
+  await m7.click(`${cartaoCaso} >> text=Descartar: estava tudo certo`);
+  ok(await esperar(m7, "#toast:has-text('Escreva o que foi verificado')"), "veredito pede a nota");
+  await m7.fill(`${cartaoCaso} textarea[aria-label='Nota do veredito']`, "Mesma pessoa, conta nova");
+  await m7.click(`${cartaoCaso} >> text=Descartar: estava tudo certo`);
+  ok(await esperar(m7, "#toast:has-text('Caso descartado')"), "monitorador descarta o caso");
+  await m7.click("[data-casos=encerrados]");
+  ok(await esperar(m7, `${cartaoCaso} >> text=Veredito de Monitor Um`), "o caso vai para Encerrados com o veredito");
+  // o suporte vê o caso e não tem botão de veredito
+  await ir(n7, "#casos"); await n7.reload();
+  await n7.click("[data-casos=encerrados]");
+  ok(await esperar(n7, cartaoCaso) && !(await n7.isVisible(`${cartaoCaso} >> text=Confirmar: era terceiro`)), "suporte vê os casos, sem veredito");
+  // lupa do detetive e placar
+  await m7.fill("#q-topo", "outro1234");
+  ok(await esperar(m7, "#busca-res:not([hidden]) >> text=Casos 🕵️"), "lupa do detetive acha o caso pelo ID digitado na tentativa");
+  await m7.keyboard.press("Escape");
+  await ir(m7, "#analises/placar");
+  ok(await esperar(m7, "#t-placar >> text=Monitor Um"), "placar do detetive mostra quem verificou");
+  await m7.screenshot({ path: path.join(PRINTS, "g3-placar.png"), fullPage: true });
+  ok(!(await texto(m7, "main")).includes("null") && !(await texto(n7, "main")).includes("undefined"), "telas da 008 sem textos vazios");
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

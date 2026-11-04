@@ -549,14 +549,20 @@
   async function consultar(q) {
     B.consulta = { carregando: true, q };
     renderConsulta();
-    try { B.consulta = { q, ...(await rpc("consultar_entregador", { p_busca: q })) }; }
+    try { B.consulta = { q, ...(await rpc("consultar_entregador", { p_busca: q })) }; await casosDaConsulta(); }
     catch (e) { B.consulta = { q, erro: msgErro(e) }; }
     renderConsulta();
+  }
+  // 008: casos suspeitos abertos de cada ficha da consulta (selo 🕵️)
+  async function casosDaConsulta() {
+    const ids = (B.consulta?.entregadores || []).map((f) => f.id_app).slice(0, 5);
+    const r = await Promise.all(ids.map((id) => rpc("casos_abertos_de", { p_id_app: id }).catch(() => [])));
+    B.consulta.casos = Object.fromEntries(ids.map((id, i) => [id, r[i]]));
   }
   async function reconsultar() {
     const q = B.consulta?.q;
     if (!q) return;
-    try { B.consulta = { q, ...(await rpc("consultar_entregador", { p_busca: q })) }; } catch (e) { toast(msgErro(e)); }
+    try { B.consulta = { q, ...(await rpc("consultar_entregador", { p_busca: q })) }; await casosDaConsulta(); } catch (e) { toast(msgErro(e)); }
     render();
   }
   $("#bq-f-consulta").addEventListener("submit", (ev) => {
@@ -655,6 +661,7 @@
             el("span", { class: "chip", text: `${normais.length} bloqueio(s)` }),
             el("span", { class: "chip", text: `${leves.length} infração(ões) leve(s)` }),
             el("span", { class: "chip", text: cad.length ? "Ativação: " + cad.map((x) => x.situacao).join(", ") : "Sem cadastro na ativação" })),
+          ...(B.consulta.casos?.[f.id_app] || []).map((k) => el("p", { class: "quadrinho grave" }, el("b", { text: "🕵️ Caso suspeito aberto: " }), k.detalhe, " ", el("a", { href: "#casos" }, "Ver o caso"))),
           nomes.length > 1 ? el("p", { class: "alerta-revisar bloco", text: `Este ID aparece com ${nomes.length} nomes nos bloqueios: ${nomes.join(", ")}. Se forem pessoas diferentes, corrija o ID de cada registro.` }) : null,
           f.atualizado_em ? el("p", { class: "meta", text: `Dados alterados por ${f.atualizado_por_nome} em ${dt(f.atualizado_em)}.` }) : null,
           cad.length ? el("div", {}, el("h4", { style: "margin:12px 0 6px", text: "Cadastro na ativação" }), el("ul", { style: "margin:0;padding-left:18px" }, cad.map(linhaCadastro))) : null,

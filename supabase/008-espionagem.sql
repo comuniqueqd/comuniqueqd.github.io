@@ -138,14 +138,14 @@ begin
   values (p_tipo, p_nivel, p_cadastro, p_novo, p_cpf, p_id_app, p_nome, p_cidade, p_detalhe, auth.uid(), quem)
   returning id into novo;
   insert into public.notificacoes (para, texto, link)
-  select m.user_id, format('🕵️ Caso suspeito%s aberto por %s: %s', case when p_nivel = 'forte' then ' (sinal forte)' else '' end, quem, p_detalhe), '#ativacao/casos'
+  select m.user_id, format('🕵️ Caso suspeito%s aberto por %s: %s', case when p_nivel = 'forte' then ' (sinal forte)' else '' end, quem, p_detalhe), '#casos'
     from public.membros m where m.user_id is not null and m.user_id is distinct from auth.uid();
   return novo;
 end $$;
 
 -- ---------------------------------------------------------------------
 -- Envio do cadastro: com CPF repetido e outro nome/ID, registra o caso em vez de só recusar
--- Devolve { id, caso, nivel, erro }: id nulo + erro quando o cadastro não pôde ser criado.
+-- Devolve { id, caso, nivel, detalhe, erro }: id nulo + erro quando o cadastro não pôde ser criado.
 -- ---------------------------------------------------------------------
 create or replace function public.enviar_cadastro(
   p_id_app text, p_cpf text, p_cidade text, p_observacao text default null, p_nome text default null)
@@ -161,6 +161,7 @@ declare
   novo     uuid;
   v_caso   uuid;
   v_nivel  text;
+  v_det    text;
   msg      text;
 begin
   perform public.exigir_papel('moderador', 'monitorador', 'suporte');
@@ -179,11 +180,11 @@ begin
     -- CPF repetido com outro nome ou ID: a tentativa vira caso (e a resposta não é erro, para o caso ficar gravado)
     for s in select * from public.sinais_cadastro(v_cpf, v_id_app, v_nome) x where x.cadastro_id is not distinct from ja.id loop
       v_caso := public.abrir_caso(s.tipo, s.nivel, s.cadastro_id, null, v_cpf, v_id_app, v_nome, v_cidade, s.detalhe);
-      v_nivel := s.nivel;
+      v_nivel := s.nivel; v_det := s.detalhe;
       exit;
     end loop;
     if v_caso is null then raise exception '%', msg; end if;
-    return jsonb_build_object('id', null, 'caso', v_caso, 'nivel', v_nivel, 'erro', msg);
+    return jsonb_build_object('id', null, 'caso', v_caso, 'nivel', v_nivel, 'detalhe', v_det, 'erro', msg);
   end if;
 
   insert into public.cadastros (id_app, cpf, cidade, observacao, enviado_por, nome)
@@ -197,10 +198,10 @@ begin
   -- entregador encerrado tentando voltar com outro ID
   for s in select * from public.sinais_cadastro(v_cpf, v_id_app, v_nome, novo) loop
     v_caso := public.abrir_caso(s.tipo, s.nivel, s.cadastro_id, novo, v_cpf, v_id_app, v_nome, v_cidade, s.detalhe);
-    v_nivel := s.nivel;
+    v_nivel := s.nivel; v_det := s.detalhe;
     exit;
   end loop;
-  return jsonb_build_object('id', novo, 'caso', v_caso, 'nivel', v_nivel);
+  return jsonb_build_object('id', novo, 'caso', v_caso, 'nivel', v_nivel, 'detalhe', v_det);
 exception when unique_violation then
   raise exception 'Este CPF ou ID já está cadastrado.' using errcode = '23505';
 end $$;
@@ -229,7 +230,7 @@ begin
     insert into public.casos_comentarios (caso_id, por, por_nome, texto)
     values (k.id, auth.uid(), quem, 'Pediu verificação para ' || coalesce(public.nome_por_email(resp), 'os moderadores') || '.');
     insert into public.notificacoes (para, texto, link)
-    select m.user_id, format('🕵️ %s pediu que você verifique um caso suspeito: %s', quem, k.detalhe), '#ativacao/casos'
+    select m.user_id, format('🕵️ %s pediu que você verifique um caso suspeito: %s', quem, k.detalhe), '#casos'
       from public.membros m
      where m.user_id is not null and m.user_id is distinct from auth.uid()
        and ((resp is not null and m.email = resp) or (resp is null and m.papel = 'moderador'));
@@ -291,7 +292,7 @@ begin
     end if;
   end if;
   insert into public.notificacoes (para, texto, link)
-  select distinct x, format('🕵️ Caso %s por %s: %s', case when p_veredito = 'confirmado' then 'CONFIRMADO' else 'descartado' end, quem, k.detalhe), '#ativacao/casos'
+  select distinct x, format('🕵️ Caso %s por %s: %s', case when p_veredito = 'confirmado' then 'CONFIRMADO' else 'descartado' end, quem, k.detalhe), '#casos'
     from unnest(array[k.criado_por, k.investigador]) x where x is not null and x is distinct from auth.uid();
 end $$;
 
