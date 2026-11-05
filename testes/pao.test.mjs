@@ -210,7 +210,7 @@ await t("histórico de bloqueios paginado no banco, com filtros", async () => {
 await t("nenhum update/delete sem where nas migrações", async () => {
   const { readdirSync } = await import("node:fs");
   const ruins = [];
-  for (const f of readdirSync(new URL("../supabase/", import.meta.url)).filter((x) => /^(schema|\d{3}-.*)\.sql$/.test(x))) {
+  for (const f of readdirSync(new URL("../supabase/", import.meta.url)).filter((x) => /^(schema|\d{3}[a-z]?-.*)\.sql$/.test(x))) {
     const s = arquivo("../supabase/" + f).replace(/--[^\n]*/g, "");
     for (const m of s.matchAll(/\b(update\s+public\.\w+\s+set|delete\s+from\s+public\.\w+)\b([\s\S]*?);/gi))
       if (!/\bwhere\b/i.test(m[2])) ruins.push(`${f}: ${m[0].slice(0, 70).replace(/\s+/g, " ")}`);
