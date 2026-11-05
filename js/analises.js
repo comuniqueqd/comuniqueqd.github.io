@@ -224,9 +224,8 @@
     abas: [
       { id: "analises", nome: "Análises", secao: "v-an-analises" },
       { id: "resumo", nome: "Resumo semanal", secao: "v-an-resumo" },
-      { id: "placar", nome: "Placar do detetive 🕵️", secao: "v-an-placar" },
     ],
-    carregar: (aba) => (aba === "placar" ? App.casos.carregarPlacar() : aba === "resumo" ? carregarResumo() : carregarAnalises()),
-    render: (aba) => (aba === "placar" ? App.casos.renderPlacar() : aba === "resumo" ? renderResumo() : renderAnalises()),
+    carregar: (aba) => (aba === "resumo" ? carregarResumo() : carregarAnalises()),
+    render: (aba) => (aba === "resumo" ? renderResumo() : renderAnalises()),
   });
 })();

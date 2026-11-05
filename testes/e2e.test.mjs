@@ -150,10 +150,8 @@ try {
   await s.fill("#f-idapp", "outro1234"); await s.fill("#f-cpf", "529.982.247-25"); await s.fill("#f-cidade", "RECIFE - PE");
   await s.click("#b-enviar");
   ok(await esperar(s, "#form-erro:not([hidden])"), "CPF repetido é bloqueado: " + (await texto(s, "#form-erro")));
-  // 008: CPF repetido com outro ID abre um caso suspeito
-  ok(await esperar(s, "dialog.janela >> text=Cadastro suspeito de uso por terceiros"), "CPF repetido com outro ID: aviso de cadastro suspeito");
-  await s.screenshot({ path: path.join(PRINTS, "g1-caso-na-hora.png") });
-  await s.click("dialog.janela >> text=Decidir depois");
+  // casos (008) guardados: CPF repetido com outro ID volta a ser só a recusa, sem janela de caso
+  ok((await texto(s, "#form-erro")).includes("já está cadastrado") && !(await s.isVisible("dialog.janela")), "casos guardados: CPF repetido com outro ID só é recusado");
   await s.fill("#f-idapp", "abc12345"); await s.fill("#f-cpf", ""); await s.click("#b-enviar");
   await esperar(s, "#v-pendentes:not([hidden]) .card.destaque");
   await s.fill("#f-idapp", "x").catch(() => {});
@@ -265,7 +263,7 @@ try {
   await ir(s, "#inicio"); await s.reload();
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
-  ok(await s.isVisible("#card-casos") && await s.isVisible("#card-entregadores"), "tela inicial mostra os cartões de Casos e Entregadores");
+  ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
   ok(await s.isVisible(".faixa-novidades >> text=Menu mais enxuto"), "tela inicial mostra a faixa das novidades");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
@@ -386,9 +384,9 @@ try {
   // 008b: módulo Entregadores, cadastro avulso (sem ativação e sem bloqueio)
   ok(await s.isVisible("nav.grupo a[data-grupo-mod=entregadores]"), "suporte com bloqueios vê Cadastrar entregador na barra de Entregadores");
   { const topo = await s.$$eval("nav.modulos a:not([hidden])", (as) => as.map((x) => x.textContent.trim()));
-    ok(topo.some((t) => t.startsWith("Entregadores")) && !topo.some((t) => /Ativação|Bloqueios|Casos/.test(t)), "menu de cima: Ativação, Bloqueios e Casos ficam dentro de Entregadores: " + topo.join(", "));
+    ok(topo.some((t) => t.startsWith("Entregadores")) && !topo.some((t) => /Ativação|Bloqueios|Casos/.test(t)), "menu de cima: Ativação e Bloqueios ficam dentro de Entregadores, e Casos não aparece: " + topo.join(", "));
     const grupo = await s.$$eval("nav.grupo a", (as) => as.map((x) => x.dataset.grupoMod));
-    ok(JSON.stringify(grupo) === JSON.stringify(["ativacao", "bloqueios", "casos", "entregadores"]), "barra de Entregadores: Ativação, Bloqueios, Casos e Cadastrar entregador: " + grupo);
+    ok(JSON.stringify(grupo) === JSON.stringify(["ativacao", "bloqueios", "entregadores"]), "barra de Entregadores: Ativação, Bloqueios e Cadastrar entregador (Casos guardados): " + grupo);
     ok(await s.getAttribute("nav.modulos a[data-grupo=entregadores]", "aria-current") === "page", "Entregadores fica marcado no menu dentro dos Bloqueios"); }
   await s.screenshot({ path: path.join(PRINTS, "a1-menu-entregadores.png") });
   await s.fill("#bq-q-consulta", "avulso01"); await s.click("#bq-f-consulta button[type=submit]");
@@ -735,44 +733,11 @@ try {
   await n7.click("dialog.janela >> text=Cancelar");
   { const t7 = await texto(n7, "main"); ok(!t7.includes("null"), "telas da 007 sem textos vazios (null)" + perto(t7, "null")); }
 
-  // 17. migração 008 · "espionagem profissional": casos suspeitos
-  await ir(m7, "#casos"); await m7.reload();
-  const cartaoCaso = "#casos-lista .card.caso:has-text('outro1234')";
-  ok(await esperar(m7, cartaoCaso), "tela Casos mostra o caso da tentativa com CPF repetido");
-  ok((await texto(m7, cartaoCaso)).includes("CPF repetido com outro nome ou ID") && (await texto(m7, cartaoCaso)).includes("Cadastro que já existia"), "o caso traz o tipo e o cadastro que já existia");
-  ok(await m7.isVisible("nav.grupo [data-espelho=c-casos]:not([hidden])"), "contador de casos na barra de Entregadores");
-  ok(await m7.isVisible("#c-grupo-entregadores:not([hidden])"), "o item Entregadores do menu mostra o que espera pela pessoa");
-  await m7.click(`${cartaoCaso} >> text=Eu verifico`);
-  ok(await esperar(m7, "#casos-lista .grupo:has-text('Para você verificar') .card:has-text('outro1234')"), "Eu verifico: o caso vai para 'Para você verificar'");
-  await ir(m7, "#atividades/pendencias");
-  ok(await esperar(m7, "#at-lista >> text=1 caso(s) suspeito(s) para você verificar"), "nas Pendências aparece o caso para verificar");
-  await ir(m7, "#casos"); await esperar(m7, cartaoCaso);
-  await m7.check(`${cartaoCaso} label.marcar:has-text('Liguei para o entregador') input`);
-  ok(await esperar(m7, `${cartaoCaso} label.marcar:has-text('Liguei para o entregador') >> text=Monitor Um`), "checklist marcado, com quem e quando");
-  await m7.fill(`${cartaoCaso} textarea[aria-label='Comentário no caso']`, "Falei com o entregador: é a mesma pessoa, trocou de conta");
-  await m7.click(`${cartaoCaso} >> text=Comentar`);
-  ok(await esperar(m7, `${cartaoCaso} >> text=trocou de conta`), "comentário no caso");
-  await m7.screenshot({ path: path.join(PRINTS, "g2-casos.png"), fullPage: true });
-  await m7.click(`${cartaoCaso} >> text=Descartar: estava tudo certo`);
-  ok(await esperar(m7, "#toast:has-text('Escreva o que foi verificado')"), "veredito pede a nota");
-  await m7.fill(`${cartaoCaso} textarea[aria-label='Nota do veredito']`, "Mesma pessoa, conta nova");
-  await m7.click(`${cartaoCaso} >> text=Descartar: estava tudo certo`);
-  ok(await esperar(m7, "#toast:has-text('Caso descartado')"), "monitorador descarta o caso");
-  await m7.click("[data-casos=encerrados]");
-  ok(await esperar(m7, `${cartaoCaso} >> text=Veredito de Monitor Um`), "o caso vai para Encerrados com o veredito");
-  // o suporte vê o caso e não tem botão de veredito
-  await ir(n7, "#casos"); await n7.reload();
-  await n7.click("[data-casos=encerrados]");
-  ok(await esperar(n7, cartaoCaso) && !(await n7.isVisible(`${cartaoCaso} >> text=Confirmar: era terceiro`)), "suporte vê os casos, sem veredito");
-  // lupa do detetive e placar
-  await m7.fill("#q-topo", "outro1234");
-  ok(await esperar(m7, "#busca-res:not([hidden]) >> text=Casos 🕵️"), "lupa do detetive acha o caso pelo ID digitado na tentativa");
-  await m7.keyboard.press("Escape");
-  await ir(m7, "#analises/placar");
-  ok(await esperar(m7, "#t-placar >> text=Monitor Um"), "placar do detetive mostra quem verificou");
-  await m7.screenshot({ path: path.join(PRINTS, "g3-placar.png"), fullPage: true });
-  ok(!(await texto(m7, "main")).includes("null") && !(await texto(n7, "main")).includes("undefined"), "telas da 008 sem textos vazios");
-
+  // casos guardados: rotas e telas antigas não abrem
+  { const c8 = await abrir(monitor, "#casos");
+    ok(await esperar(c8, "#v-inicio:not([hidden])") && !(await c8.isVisible("nav.grupo a[data-grupo-mod=casos]")), "#casos volta para o início (Casos guardados)");
+    await ir(c8, "#analises"); await esperar(c8, "nav.tabs a");
+    ok(!(await c8.$$eval("nav.tabs a", (l) => l.map((x) => x.dataset.view))).includes("placar"), "Análises sem o Placar do detetive"); }
   // 18. 008b · avisos: tira, tela com busca e filtros, cidades sem responsável, suporte revisa
   { const d8 = new pg.Client({ connectionString: DB }); await d8.connect();
     var livre = (await d8.query("select nome from cidades where ativa and public.responsavel_cidade_email(nome) is null order by nome limit 1")).rows[0].nome;

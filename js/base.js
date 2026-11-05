@@ -202,10 +202,9 @@
     entregadores: { nome: "Entregadores", membros: [
       { mod: "ativacao", nome: "Ativação", contador: "c-pend" },
       { mod: "bloqueios", nome: "Bloqueios", contador: "c-trat", alerta: true },
-      { mod: "casos", nome: "Casos 🕵️", contador: "c-casos", alerta: true },
       { mod: "entregadores", nome: "Cadastrar entregador" }],
       // número no item do menu de cima: o que está esperando pela pessoa dentro do grupo
-      aviso: () => (App.valores["c-trat"] || 0) + (S.resumo?.casos_para_mim || 0) },
+      aviso: () => App.valores["c-trat"] || 0 },
   };
   const grupoDe = (id) => Object.keys(App.grupos).find((g) => App.grupos[g].membros.some((m) => m.mod === id));
   const podeMod = (id) => { const d = App.modulos[id]; return !!d && (!d.acesso || d.acesso()); };

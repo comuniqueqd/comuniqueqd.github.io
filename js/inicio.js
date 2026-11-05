@@ -40,12 +40,6 @@
              numero(b?.tratativas_pendentes, "suas tratativas em andamento", naEquipe(b?.equipe_tratativas_pendentes)),
              b?.atencao ? numero(b.atencao, "entregadores de atenção") : null])));
     }
-    cards.push(el("a", { class: "modulo-card casos", href: "#casos", id: "card-casos" },
-      el("h3", { text: "Casos 🕵️" }),
-      el("p", { text: "Cadastros suspeitos de uso por terceiros: investigue, comente e dê o veredito." }),
-      el("div", { class: "numeros" },
-        r?.casos_para_mim ? numero(r.casos_para_mim, "para você verificar", null, true) : null,
-        numero(r?.casos_abertos ?? (r ? 0 : null), "casos abertos na equipe"))));
     if (S.me.papel_bloqueios) cards.push(el("a", { class: "modulo-card", href: "#entregadores/cadastrar", id: "card-entregadores", style: "border-top-color:var(--accent)" },
       el("h3", { text: "Entregadores" }),
       el("p", { text: "Cadastre um entregador sem precisar ativar nem bloquear." })));

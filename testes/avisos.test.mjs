@@ -212,6 +212,22 @@ await t("o suporte também revisa: corrige um registro 'revisar' e confere um ca
   await falha(rpc(semBq, "corrigir_bloqueio", { p_bloqueio: b, p_id_app: "rev00009", p_nome: "X", p_cidade: "LAGARTO - SE", p_motivo: "x" }));
 });
 
+await t("casos guardados: CPF repetido com outro nome volta a ser só a recusa, sem caso nem aviso", async () => {
+  const CPF = "52998224725";
+  await rpc(semBq, "enviar_cadastro", { p_id_app: "cpfx0001", p_cpf: CPF, p_cidade: "LAGARTO - SE", p_nome: "Primeiro Nome" });
+  const antes = (await um("select count(*)::int n from casos")).n;
+  await marca();
+  await falha(rpc(semBq, "enviar_cadastro", { p_id_app: "cpfx0002", p_cpf: CPF, p_cidade: "LAGARTO - SE", p_nome: "Outro Nome" }), "já está cadastrado");
+  igual([(await um("select count(*)::int n from casos")).n, (await novos(admin)).length], [antes, 0]);
+});
+
+await t("casos: religando o interruptor, a 008 volta a abrir o caso", async () => {
+  await db.query("update parametros_casos set ligado = true where unico");
+  const r = await rpc(semBq, "enviar_cadastro", { p_id_app: "cpfx0003", p_cpf: "52998224725", p_cidade: "LAGARTO - SE", p_nome: "Mais Um Nome" });
+  await db.query("update parametros_casos set ligado = false where unico");
+  igual([r.id, typeof r.caso], [null, "string"]);
+});
+
 await t("internas não ficam expostas; anon não chama nada novo", async () => {
   const r = await um(`select has_function_privilege('authenticated', 'public.avisar_registro(text,text,text,text,text,boolean)', 'execute') a,
     has_function_privilege('authenticated', 'public.notificar(uuid,text,text)', 'execute') b,

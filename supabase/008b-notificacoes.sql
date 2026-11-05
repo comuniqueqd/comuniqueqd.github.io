@@ -332,6 +332,37 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
+-- Casos suspeitos (008) guardados para depois: desligados por um interruptor.
+-- Tabelas, funções e casos já registrados continuam no banco; com o
+-- interruptor desligado, nenhum caso novo é aberto, ninguém é avisado, e
+-- CPF repetido volta a ser só a recusa de sempre ("Este CPF já está cadastrado").
+-- Para religar (junto com o front guardado em guardado/casos/):
+--   update public.parametros_casos set ligado = true where unico;
+-- ---------------------------------------------------------------------
+create table if not exists public.parametros_casos (
+  unico  boolean primary key default true check (unico),
+  ligado boolean not null default false
+);
+insert into public.parametros_casos (unico, ligado) values (true, false) on conflict do nothing;
+alter table public.parametros_casos enable row level security;
+drop policy if exists parametros_casos_leitura on public.parametros_casos;
+create policy parametros_casos_leitura on public.parametros_casos for select to authenticated using ((select public.meu_papel()) is not null);
+
+do $$
+declare def text := pg_get_functiondef('public.abrir_caso(text, text, uuid, uuid, text, text, text, text, text)'::regprocedure);
+begin
+  if def not like '%parametros_casos%' then
+    def := replace(def, $x$begin
+  select k.id into novo from public.casos k$x$, $x$begin
+  -- casos guardados para depois: com o interruptor desligado, não abre caso nem avisa ninguém
+  if not coalesce((select ligado from public.parametros_casos where unico), false) then return null; end if;
+  select k.id into novo from public.casos k$x$);
+    if def not like '%parametros_casos%' then raise exception 'Não consegui desligar os casos.'; end if;
+    execute def;
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------
 -- Permissões
 -- ---------------------------------------------------------------------
 revoke all on all functions in schema public from public, anon;

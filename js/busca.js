@@ -29,12 +29,8 @@
       el("button", { type: "button", onclick: () => ir(() => App.abrirCadastro(x.id)) },
         el("span", { text: x.nome || (x.id_app ? "ID " + x.id_app : "CPF " + fmtCPF(x.cpf)) }),
         el("span", { class: "meta mono", text: [x.id_app, x.cpf && fmtCPF(x.cpf), x.cidade, x.situacao].filter(Boolean).join(" · ") }))));
-    // lupa do detetive (008): casos, comentários sobre entregadores e os seus avisos
+    // lupa: comentários sobre entregadores e os seus avisos
     const corta = (t, n = 90) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
-    if (r.casos?.length) linhas.push(el("h4", { text: "Casos 🕵️" }), ...r.casos.map((x) =>
-      el("button", { type: "button", onclick: () => ir(() => (location.hash = "#casos")) },
-        el("span", { text: corta(x.detalhe) }),
-        el("span", { class: "meta", text: `${x.nivel === "forte" ? "🔴 forte" : "🟡 atenção"} · ${x.status === "aberto" ? "aberto" : x.status} · ${dt(x.criado_em)}` }))));
     if (r.comentarios?.length) linhas.push(el("h4", { text: "Comentários" }), ...r.comentarios.map((x) =>
       el("button", { type: "button", onclick: () => ir(() => App.abrirFicha(x.id_app)) },
         el("span", { text: corta(x.texto) }),
@@ -62,7 +58,7 @@
       ["Avisos com busca e filtros", "Na tela de Avisos: busque por nome, ID, cidade ou qualquer palavra, e filtre por tipo, cidade ou só os não lidos."],
       ["Sua cidade, seus avisos", "O responsável da cidade recebe tudo o que acontece nela (cadastros, bloqueios, comentários); os moderadores recebem tudo. Cidade sem responsável? Peça para ser a responsável na tela de Avisos."],
       ["O suporte também revisa", "Registros marcados “revisar” e os que você registrou podem ser corrigidos pelo suporte (com motivo); e “Os dados estão certos” nos cadastros."],
-      ["Menu mais enxuto", "Ativação, Bloqueios, Casos e Cadastrar entregador ficam dentro de Entregadores, numa segunda barra."],
+      ["Menu mais enxuto", "Ativação, Bloqueios e Cadastrar entregador ficam dentro de Entregadores, numa segunda barra."],
     ],
   };
 

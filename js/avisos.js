@@ -7,7 +7,7 @@
   const { $, el, dt, toast, vazio, carregandoEl, rpc, msgErro, janela } = App.u;
   const S = App.S;
   const V = { lista: null, mais: false, cidades: [], carregandoMais: false, semResp: null, marcando: false };
-  const FILTROS = [["", "Todos os avisos"], ["pessoal", "Para você (tarefas, decisões, casos)"], ["ativacao", "Ativação"],
+  const FILTROS = [["", "Todos os avisos"], ["pessoal", "Para você (tarefas e decisões)"], ["ativacao", "Ativação"],
     ["bloqueios", "Bloqueios"], ["comentarios", "Comentários e fichas"], ["cidades", "Pedidos de cidade"]];
   const ROTULO = { ativacao: "ATIVAÇÃO", bloqueios: "BLOQUEIOS", comentarios: "FICHA", cidades: "CIDADE" };
   const porque = (x) => x.motivo === "cidade" ? `você é responsável por ${x.cidade}` : x.motivo === "moderador" ? "você é moderador" : null;
