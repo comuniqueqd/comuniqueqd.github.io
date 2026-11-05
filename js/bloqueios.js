@@ -565,6 +565,47 @@
     try { B.consulta = { q, ...(await rpc("consultar_entregador", { p_busca: q })) }; await casosDaConsulta(); } catch (e) { toast(msgErro(e)); }
     render();
   }
+  // cadastro avulso do entregador (sem ativação e sem bloqueio): cria a ficha com ID, nome e cidade
+  function abrirNovoEntregador(idInicial = "") {
+    const id = el("input", { class: "mono", maxlength: "40", autocomplete: "off", spellcheck: "false", placeholder: "ID no aplicativo de entregas",
+      oninput: (e) => (e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, "")) });
+    id.value = idInicial;
+    const nome = el("input", { maxlength: "120", autocomplete: "off", placeholder: "Nome completo" });
+    const cid = el("select", {}, ...opcoesCidade(null));
+    const com = el("textarea", { maxlength: "1500", rows: "2", placeholder: "Opcional. Ex.: indicado pelo operador, trabalha só à noite." });
+    const erro = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    [id, nome].forEach((x) => x.addEventListener("input", () => (erro.hidden = true)));
+    const d = janela("Cadastrar entregador",
+      el("p", { class: "meta", style: "margin:0", text: "Cria a ficha do entregador sem precisar de ativação nem de bloqueio. Os próximos registros deste ID já vêm com estes dados." }),
+      el("label", {}, el("span", {}, "ID do entregador ", el("span", { class: "req", text: "*" })), id),
+      el("label", {}, el("span", {}, "Nome do entregador ", el("span", { class: "req", text: "*" })), nome),
+      el("label", {}, "Cidade", cid),
+      el("label", {}, "Comentário sobre o entregador", com),
+      erro,
+      el("div", { class: "actions" },
+        el("button", { class: "btn primary", type: "button", onclick: async (e) => {
+          erro.hidden = true;
+          const btn = e.currentTarget;
+          const falta = id.value.trim().length < 4 ? "Digite o ID do entregador (pelo menos 4 letras ou números)." : !nome.value.trim() ? "Preencha o nome do entregador." : null;
+          if (falta) { erro.textContent = falta; erro.hidden = false; return; }
+          btn.disabled = true;
+          try {
+            const r = await rpc("cadastrar_entregador", { p_id_app: id.value.trim(), p_nome: nome.value.trim(), p_cidade: cid.value || null, p_comentario: com.value.trim() || null });
+            d.close();
+            toast(r.bloqueios_completados ? `Entregador cadastrado. Nome e cidade completados em ${r.bloqueios_completados} bloqueio(s).`
+              : r.bloqueios_pendentes ? `Entregador cadastrado. Este ID tem ${r.bloqueios_pendentes} bloqueio(s) aguardando o monitoramento completar os dados.`
+              : "Entregador cadastrado.");
+            abrirFicha(r.id_app); carregar();
+          } catch (err) {
+            btn.disabled = false; erro.textContent = msgErro(err); erro.hidden = false;
+            if (/já tem cadastro/.test(erro.textContent)) erro.append(" ", el("button", { class: "btn link", type: "button", onclick: () => { d.close(); abrirFicha(id.value.trim()); } }, "Abrir a ficha"));
+          }
+        } }, "Cadastrar"),
+        el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
+    (idInicial ? nome : id).focus();
+  }
+  App.cadastrarEntregador = abrirNovoEntregador;
+  $("#bq-cadastrar-entregador").addEventListener("click", () => abrirNovoEntregador());
   $("#bq-f-consulta").addEventListener("submit", (ev) => {
     ev.preventDefault();
     consultar($("#bq-q-consulta").value.trim());
@@ -636,7 +677,8 @@
     if (c.carregando) return box.replaceChildren(carregandoEl());
     if (c.erro) return box.replaceChildren(el("p", { class: "err", text: c.erro }));
     const fichas = c.entregadores || [], bl = c.bloqueios || [];
-    if (!fichas.length && !c.cadastros.length) return box.replaceChildren(vazio("Nenhum entregador encontrado", "Confira o ID ou tente outra parte do nome."));
+    if (!fichas.length && !c.cadastros.length) return box.replaceChildren(vazio("Nenhum entregador encontrado", "Confira o ID ou tente outra parte do nome."),
+      el("div", { class: "actions" }, el("button", { class: "btn primary", type: "button", onclick: () => abrirNovoEntregador(/^[A-Za-z0-9]{4,40}$/.test(c.q || "") ? c.q : "") }, "Cadastrar este entregador")));
     const cadDe = (id) => c.cadastros.filter((x) => (x.id_app || "").toLowerCase() === id);
     const soltos = c.cadastros.filter((x) => !fichas.some((f) => f.id_app === (x.id_app || "").toLowerCase()));
     const linhaCadastro = (x) => el("li", { text: `${x.situacao} · ${x.cidade}${x.cpf ? " · CPF " + fmtCPF(x.cpf) : ""} · enviado por ${x.enviado_por_nome} em ${dt(x.enviado_em)}${x.decidido_em ? " · decidido em " + dt(x.decidido_em) : ""}${x.motivo ? " · " + x.motivo : ""}` });

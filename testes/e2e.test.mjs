@@ -33,6 +33,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/005-analises-anexos.sql
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/006-equipe-previsao-atencao.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/007-pao-quentinho.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008-espionagem.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008b-cadastrar-entregador.sql"), "utf8"));
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
 for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001', 'Ciclano Atrasado', 'LAGARTO - SE', 'Atraso na Coleta ou na Entrega Sem Justificativa', now() - make_interval(days => $1), 'Planilha')", [d]);
 // registro importado com alerta de revisão (100 dias atrás: fora do painel de 30 dias)
@@ -360,7 +361,7 @@ try {
   ok((await texto(s, "#bq-tiles")).replace(/\s/g, "").includes("Bloqueiosregistrados6"), "painel 'Tudo': inclui o histórico importado");
   await s.screenshot({ path: path.join(PRINTS, "b6-painel.png"), fullPage: true });
   await ir(s, "#bloqueios/consultar");
-  await s.fill("#bq-q-consulta", "mal00001"); await s.click("#bq-f-consulta button");
+  await s.fill("#bq-q-consulta", "mal00001"); await s.click("#bq-f-consulta button[type=submit]");
   ok(await esperar(s, "#bq-consulta >> text=1 bloqueio(s)"), "consulta por ID");
   ok(await s.isVisible("#bq-consulta .comentarios >> text=Educado, mas costuma atrasar a coleta."), "consulta mostra o comentário feito no registro");
   ok(!(await texto(s, "#bq-consulta")).includes("null"), "consulta sem textos vazios (null)");
@@ -369,9 +370,29 @@ try {
   await s.click("#bq-consulta >> text=Adicionar comentário");
   ok(await esperar(s, "#bq-consulta .comentarios >> text=Ligou pedindo para ser liberado."), "suporte adiciona comentário na consulta");
   await s.screenshot({ path: path.join(PRINTS, "b6b-consulta.png"), fullPage: true });
+  // 008b: cadastro avulso do entregador (sem ativação e sem bloqueio)
+  await s.fill("#bq-q-consulta", "avulso01"); await s.click("#bq-f-consulta button[type=submit]");
+  ok(await esperar(s, "#bq-consulta >> text=Cadastrar este entregador"), "consulta sem resultado oferece cadastrar o entregador");
+  await s.click("#bq-consulta >> text=Cadastrar este entregador");
+  ok(await s.inputValue("dialog.janela input.mono") === "avulso01", "a janela já vem com o ID buscado");
+  await s.click("dialog.janela button:text-is('Cadastrar')");
+  ok(await esperar(s, "dialog.janela .warn-msg:has-text('Preencha o nome')"), "sem nome: avisa antes de enviar");
+  await s.fill("dialog.janela input:not(.mono)", "Avulso da Silva");
+  await s.selectOption("dialog.janela select", "LAGARTO - SE");
+  await s.fill("dialog.janela textarea", "Cadastrado pela tela nova.");
+  await s.screenshot({ path: path.join(PRINTS, "b6d-cadastrar-entregador.png") });
+  await s.click("dialog.janela button:text-is('Cadastrar')");
+  ok(await esperar(s, "#toast:has-text('Entregador cadastrado')"), "entregador cadastrado sem ativação nem bloqueio");
+  ok(await esperar(s, "#bq-consulta h3:has-text('Avulso da Silva')") && await s.isVisible("#bq-consulta .comentarios >> text=Cadastrado pela tela nova."), "a ficha nova abre com o comentário");
+  await s.click("#bq-cadastrar-entregador");
+  await s.fill("dialog.janela input.mono", "avulso01"); await s.fill("dialog.janela input:not(.mono)", "Outro Nome");
+  await s.click("dialog.janela button:text-is('Cadastrar')");
+  ok(await esperar(s, "dialog.janela .warn-msg:has-text('já tem cadastro')"), "ID que já tem ficha: avisa e oferece abrir a ficha");
+  await s.click("dialog.janela >> text=Abrir a ficha");
+  ok(await esperar(s, "#bq-consulta h3:has-text('Avulso da Silva')"), "botão 'Abrir a ficha' leva à ficha existente");
   // moderador altera o cadastro e aplica aos bloqueios
   await ir(a, "#bloqueios/consultar");
-  await a.fill("#bq-q-consulta", "mal00001"); await a.click("#bq-f-consulta button");
+  await a.fill("#bq-q-consulta", "mal00001"); await a.click("#bq-f-consulta button[type=submit]");
   await esperar(a, "#bq-consulta >> text=Alterar dados");
   await a.click("#bq-consulta >> text=Alterar dados");
   await a.fill("dialog.janela input:not([type=checkbox])", "Fulano de Tal Souza");

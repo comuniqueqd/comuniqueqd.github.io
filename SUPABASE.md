@@ -207,3 +207,17 @@ O que muda:
 - **Checklist de verificação** (modelo editável pelos moderadores na tela Casos), comentários e **veredito** (confirmado ou descartado, com nota) por monitorador ou moderador. Confirmado grava um comentário na ficha do entregador e o app sugere encerrar o cadastro; nada é encerrado sozinho.
 - **Aprovar com caso aberto** continua permitido, com um clique a mais.
 - **Selo 🕵️ "caso aberto"** nos cadastros e na ficha; **lupa do detetive**: a busca do topo acha também casos, comentários e os seus avisos; **Placar do detetive** nas Análises.
+
+## Ajuste urgente: cadastrar entregador avulso (migração 008b)
+
+Para quem já rodou o `007-pao-quentinho.sql`. **Não depende da 008** (pode rodar antes ou depois dela), **não apaga** nada e pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/008b-cadastrar-entregador.sql`](supabase/008b-cadastrar-entregador.sql) inteiro e clique em **Run**.
+2. Depois publique o site.
+
+O que muda:
+
+- **Bloqueios → Consultar entregador → “+ Cadastrar entregador”**: cria a ficha do entregador (ID, nome, cidade e um comentário opcional) sem precisar de ativação nem de bloqueio. Quando a busca não acha ninguém, aparece também o botão **Cadastrar este entregador**, já com o ID buscado.
+- Pode cadastrar quem tem o módulo de bloqueios (moderador, monitorador e suporte). ID que já tem ficha é recusado (para mudar os dados, use **Alterar dados** na ficha).
+- Os próximos registros deste ID (bloqueios e infrações leves) já vêm com nome e cidade. Se o ID tinha infrações leves esperando os dados, o monitorador ou moderador que cadastra completa esses registros e fecha a tarefa “completar dados”; quando é o suporte, a tarefa continua para o monitoramento.
+
