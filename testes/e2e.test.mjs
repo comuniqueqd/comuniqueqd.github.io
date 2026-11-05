@@ -140,7 +140,7 @@ try {
   const s = await abrir(sup, "#novo");
   await esperar(s, "#v-novo:not([hidden])");
   const abas = await s.$$eval("nav.tabs a:not([hidden])", (as) => as.map((x) => x.dataset.view));
-  ok(JSON.stringify(abas) === JSON.stringify(["novo", "pendentes", "meus", "painel"]), "suporte vê só Novo cadastro, Pendentes, Meus cadastros e Painel: " + abas);
+  ok(JSON.stringify(abas) === JSON.stringify(["novo", "pendentes", "historico"]), "suporte vê só Novo cadastro, Pendentes e Histórico (008c): " + abas);
   await s.fill("#f-idapp", "1a2b3c4d5e6f"); await s.fill("#f-cpf", "52998224725"); await s.fill("#f-cidade", "LAGARTO - SE"); await s.fill("#f-obs", "Documentos pelo WhatsApp");
   await s.click("#b-enviar");
   ok(await esperar(s, "#v-pendentes:not([hidden]) .card.destaque"), "após enviar, vai para Pendentes com o cadastro destacado");
@@ -198,28 +198,20 @@ try {
   await s.reload(); await esperar(s, "#queue .card");
   ok((await texto(s, "#queue")).includes("Reprovado por Monitor Um"), "suporte vê quem reprovou e o motivo");
   await ir(s, "#meus");
-  await esperar(s, "#t-meus tbody tr td .pill");
-  ok((await s.$$("#t-meus tbody tr")).length === 3, "Meus cadastros lista os 3");
-  ok((await texto(s, "#meus-tiles")).replace(/\s/g, "").includes("Aprovados1"), "Meus cadastros: 1 aprovado");
-  await s.click("#t-meus tr:has-text('1a2b3c4d5e6f')");
-  ok(await esperar(s, "#t-meus .timeline >> text=Reprovado"), "histórico do cadastro: " + (await texto(s, "#t-meus .timeline")).replace(/\s+/g, " ").slice(0, 120));
+  ok(await esperar(s, "#v-historico:not([hidden]) #t-hist tbody tr td .pill"), "o antigo #meus abre o Histórico (008c)");
+  ok((await s.$$("#t-hist tbody tr")).length === 3 && (await texto(s, "#hist-sub")).includes("Tudo o que você enviou"), "Histórico do suporte lista só os 3 dele");
+  ok((await texto(s, "#hist-tiles")).replace(/\s/g, "").includes("Aprovados1") && await s.isHidden("#f-hist-meus-box") && await s.isHidden("#ap-box"), "Histórico do suporte: 1 aprovado, sem 'Só os meus' e sem a lista de aprovados");
+  await s.click("#t-hist tr:has-text('1a2b3c4d5e6f')");
+  ok(await esperar(s, "#t-hist .timeline >> text=Reprovado"), "histórico do cadastro: " + (await texto(s, "#t-hist .timeline")).replace(/\s+/g, " ").slice(0, 120));
   await s.screenshot({ path: path.join(PRINTS, "5-meus-cadastros.png"), fullPage: true });
 
-  // 6. painel e filtros
-  await ir(s, "#painel");
-  await esperar(s, "#tiles .tile");
-  const tiles = async (pg_) => (await texto(pg_, "#tiles")).replace(/\s+/g, " ");
-  ok((await tiles(s)).includes("Cadastros3"), "painel (todos): 3 cadastros");
-  await ir(m, "#painel"); await esperar(m, "#tiles .tile");
-  await m.click("[data-filtro=eu]"); await m.waitForTimeout(1200);
-  ok((await tiles(m)).includes("Cadastros3"), "monitorador 'Só eu': os 3 que ele decidiu");
-  ok((await texto(m, "#t-pessoa")).includes("Monitor Um (você)") && !(await texto(m, "#t-pessoa")).includes("Suporte Um"), "tabela por pessoa só com ele");
-  await m.click("[data-filtro=escolher]"); await m.waitForTimeout(800);
-  await m.check("#pessoas label:has-text('Suporte Um') input"); await m.uncheck("#pessoas label:has-text('Monitor Um') input");
-  await m.waitForTimeout(1200);
-  ok((await texto(m, "#painel-sub")).includes("Suporte Um"), "escolher pessoas: " + (await texto(m, "#painel-sub")));
-  ok((await texto(m, "#motivos-rep")).includes("Fotos sem camisa") && (await texto(m, "#motivos-enc")).includes("CPF com restrição"), "motivos de reprovação e encerramento no painel");
-  await m.click("[data-filtro=todos]"); await m.waitForTimeout(1200);
+  // 6. o antigo Painel da ativação agora está nas Análises (008c)
+  await ir(m, "#painel");
+  ok(await esperar(m, "#v-an-simples:not([hidden]) #as-cards >> text=Ativação nos últimos 14 dias"), "o antigo #painel abre as Análises simples, com o gráfico de 14 dias");
+  ok(await esperar(m, "#as-cards >> text=Fotos sem camisa") && await m.isVisible("#as-cards >> text=CPF com restrição"), "motivos de reprovação e de encerramento nas Análises simples");
+  ok(await m.isVisible("#as-cards >> text=aprovados na 1ª análise"), "aprovados na 1ª análise nas Análises simples");
+  await ir(m, "#analises/complexas");
+  ok(await esperar(m, "#an-cards h3:text-is('Por pessoa')") && (await texto(m, "#an-cards")).includes("Monitor Um (você)") && await m.isVisible("#an-cards h3:text-is('Ativação por cidade')"), "por pessoa e ativação por cidade nas Análises complexas");
   await m.screenshot({ path: path.join(PRINTS, "6-painel.png"), fullPage: true });
 
   // 7. moderador desfaz, exclui e exporta
@@ -286,7 +278,7 @@ try {
     const abasA = await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));
     ok(abasA[0] === "novo" && abasA[1] === "pendentes" && await s.isVisible("nav.tabs a[data-view=pendentes] .count"), "Ativação abre no Novo cadastro, e Pendentes vem em seguida com o número: " + abasA);
     await ir(s, "#bloqueios"); await esperar(s, "#v-bq-novo:not([hidden])"); }
-  ok(JSON.stringify(abasB) === JSON.stringify(["novo", "atencao", "meus", "consultar", "painel"]), "suporte vê Novo, Atenção, Meus registros, Consultar e Painel: " + abasB);
+  ok(JSON.stringify(abasB) === JSON.stringify(["novo", "atencao", "consultar", "historico"]), "suporte vê Novo, Atenção, Consultar e Histórico (008c): " + abasB);
   await s.fill("#bq-id", "mal00001"); await s.fill("#bq-nome", "Fulano de Tal");
   await s.selectOption("#bq-cidade", "LAGARTO - SE"); await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
   await s.fill("#bq-comentario", "Educado, mas costuma atrasar a coleta.");
@@ -343,8 +335,8 @@ try {
   // 12. suporte recebe o aviso e acompanha
   await ir(s, "#bloqueios/meus"); await s.reload();
   ok(await esperar(s, "#b-avisos[data-novas=true]"), "sino de avisos acende para o suporte");
-  ok(await esperar(s, "#bq-meus-lista .card:has-text('Fulano de Tal') >> text=Tratativa realizada"), "Meus registros: bullet de tratativa realizada");
-  ok(await s.isVisible("#bq-meus-lista .card:has-text('Ladrão') >> text=Encerramento de parceria pendente"), "Meus registros: encerramento pendente com o responsável");
+  ok(await esperar(s, "#v-bq-historico:not([hidden]) #bq-t-hist tr:has-text('Fulano de Tal') >> text=Tratativa realizada"), "o antigo Meus registros abre o Histórico: tratativa realizada");
+  ok(await s.isVisible("#bq-t-hist tr:has-text('Ladrão') >> text=Encerramento de parceria pendente"), "Histórico do suporte: encerramento pendente com o responsável");
   await s.screenshot({ path: path.join(PRINTS, "b4-meus-registros.png"), fullPage: true });
   await s.click("#b-avisos");
   ok(await esperar(s, "#tira-avisos:not([hidden]) >> text=Tratativa realizada por Monitor Um"), "sino abre a tira com o aviso: tratativa realizada");
@@ -381,12 +373,9 @@ try {
   await m.click("#at-lista li:has-text('Ladrão') >> text=Confirmar");
   ok(await esperar(m, "#at-lista >> text=Tudo em dia") || await esperar(m, "#at-lista"), "tratativa resolvida pelas Atividades");
 
-  // 14. painel, consulta e histórico
+  // 14. o antigo Painel de bloqueios agora está nas Análises (008c); consulta e histórico
   await ir(s, "#bloqueios/painel");
-  ok(await esperar(s, "#bq-tiles .tile"), "painel de bloqueios carrega");
-  ok((await texto(s, "#bq-tiles")).replace(/\s/g, "").includes("Bloqueiosregistrados3"), "painel: 3 bloqueios nos últimos 30 dias");
-  await s.click("[data-periodo=tudo]"); await s.waitForTimeout(1000);
-  ok((await texto(s, "#bq-tiles")).replace(/\s/g, "").includes("Bloqueiosregistrados6"), "painel 'Tudo': inclui o histórico importado");
+  ok(await esperar(s, "#v-an-simples:not([hidden]) #as-cards h3:text-is('Bloqueios por dia')"), "o antigo Painel de bloqueios abre as Análises simples, com o gráfico por dia");
   await s.screenshot({ path: path.join(PRINTS, "b6-painel.png"), fullPage: true });
   await ir(s, "#bloqueios/consultar");
   await s.fill("#bq-q-consulta", "mal00001"); await s.click("#bq-f-consulta button[type=submit]");
@@ -461,8 +450,8 @@ try {
   await a.click("#bq-t-hist tr:has-text('Rápido') >> text=Excluir");
   await a.click("#bq-t-hist tr:has-text('Rápido') >> text=Confirmar exclusão");
   ok(await esperar(a, "#bq-hist-total:has-text('5 de 5')"), "moderador exclui bloqueio");
-  await ir(s, "#bloqueios/historico");
-  ok((await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).indexOf("historico") === -1 && await esperar(s, "#v-bq-novo:not([hidden])"), "suporte não abre o histórico geral");
+  await ir(s, "#bloqueios/historico"); await esperar(s, "#bq-t-hist tbody tr");
+  ok(await s.$$eval("#bq-t-hist tbody tr", (l) => l.every((x) => x.textContent.includes("Suporte Um"))), "o Histórico do suporte mostra só os registros dele");
 
   // 15. infrações leves
   await ir(s, "#bloqueios/novo"); await s.reload(); await esperar(s, "#bq-form");
@@ -610,8 +599,8 @@ try {
   await ir(a2, "#ativacao/historico");
   ok(await esperar(a2, "#ap-resumo:not(:has-text('Carregando'))") && await a2.isVisible("#t-aprovados"), "histórico da ativação mostra os aprovados e se foram bloqueados");
   // anexos: suporte anexa uma imagem no próprio bloqueio
-  await ir(s, "#bloqueios/meus"); await s.reload();
-  const cardAx = "#bq-meus-lista .card:has-text('Atrasildo')";
+  await ir(s, "#bloqueios/historico"); await s.reload();
+  const cardAx = "#bq-t-hist tr:has-text('Atrasildo')";
   await esperar(s, cardAx);
   await s.click(`${cardAx} >> text=Anexar…`);
   ok(await esperar(s, "dialog.janela .aviso-anexo >> text=Cuidado antes de anexar"), "ao anexar, aparece o aviso de cuidado");
@@ -711,10 +700,10 @@ try {
   ok(await esperar(m7, "#toast:has-text('O cadastro está completo')"), "monitorador completa o nome");
   await m7.waitForTimeout(800);
   ok(!(await m7.isVisible("#at-lista >> text=Completar cadastro: ID semnome77")), "a tarefa some (concluída sozinha)");
-  await ir(n7, "#ativacao/meus"); await n7.reload(); await esperar(n7, "#t-meus tbody tr:has-text('semnome77')");
-  ok(await n7.isVisible("#t-meus tr:has-text('semnome77') >> text=Maria Sem Nome") && !(await n7.isVisible("#t-meus tr:has-text('semnome77') button.revisar-cad")), "Meus cadastros mostra o nome e sem revisar");
-  await n7.click("#t-meus tr:has-text('semnome77')");
-  ok(await esperar(n7, "#t-meus >> text=Dados alterados"), "histórico do cadastro guarda a alteração: " + (await texto(n7, "#t-meus .timeline")).slice(0, 160));
+  await ir(n7, "#ativacao/historico"); await n7.reload(); await esperar(n7, "#t-hist tbody tr:has-text('semnome77')");
+  ok(await n7.isVisible("#t-hist tr:has-text('semnome77') >> text=Maria Sem Nome") && !(await n7.isVisible("#t-hist tr:has-text('semnome77') button.revisar-cad")), "Histórico mostra o nome e sem revisar");
+  await n7.click("#t-hist tr:has-text('semnome77')");
+  ok(await esperar(n7, "#t-hist >> text=Dados alterados"), "histórico do cadastro guarda a alteração: " + (await texto(n7, "#t-hist .timeline")).slice(0, 160));
   // aprovar: quem enviou recebe aviso; a ficha nasce
   await ir(m7, "#ativacao/pendentes"); await esperar(m7, "#queue .card:has-text('semnome77')");
   await m7.click("#queue .card:has-text('semnome77') >> text=Aprovar");

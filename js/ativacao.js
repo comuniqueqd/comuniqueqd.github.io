@@ -17,7 +17,7 @@
   const render = () => App.render();
   const carregar = () => App.carregar();
 
-  ["#f-meus-status", "#f-hist-status"].forEach((s) => $(s).append(el("option", { value: "", text: "Todas as situações" }), ...Object.entries(ST).map(([v, t]) => el("option", { value: v, text: t })),
+  ["#f-hist-status"].forEach((s) => $(s).append(el("option", { value: "", text: "Todas as situações" }), ...Object.entries(ST).map(([v, t]) => el("option", { value: v, text: t })),
     el("option", { value: "revisar", text: "Para revisar (dados faltando)" })));
   const busca = (c, q) => !q || norm([c.id_app, c.cpf, fmtCPF(c.cpf), c.nome, c.cidade, c.enviado_por_nome, c.observacao].join(" ")).includes(norm(q));
   function opcoesCidade(sel, lista) {
@@ -217,86 +217,6 @@
         el("ol", { class: "timeline" }, c.edicoes.map((x) => el("li", {}, el("b", { text: EVENTO[x.tipo] }), ` por ${x.por_nome} em ${dt(x.em)}`, x.detalhe ? ` · ${x.detalhe}` : "")))) : null);
   };
 
-  // ---------- meus cadastros ----------
-  function renderMeus() {
-    const t = $("#t-meus");
-    const l = S.lista.meus;
-    const cont = (s) => (l || []).filter((c) => !s || c.status === s).length;
-    const tile = (k, v, cls = "") => el("div", { class: "tile " + cls }, el("div", { class: "k", text: k }), el("div", { class: "v", text: l ? v : "…" }));
-    $("#meus-tiles").replaceChildren(tile("Enviados", cont()), tile("Aguardando análise", cont("aguardando_analise"), "hl"),
-      tile("Aguardando novo contato", cont("aguardando_contato"), "hl2"), tile("Aprovados", cont("aprovado"), "good"), tile("Encerrados", cont("encerrado")));
-    const head = el("thead", {}, el("tr", {}, ...["Situação", "Entregador", "Cidade", "Enviado em", "Situação atual desde", "Motivo", ""].map((h) => el("th", { text: h }))));
-    if (!l) return t.replaceChildren(head, el("tbody", {}, el("tr", {}, el("td", { colspan: "7", class: "meta", text: "Carregando…" }))));
-    const q = $("#q-meus").value, st = $("#f-meus-status").value;
-    const lista = l.filter((c) => busca(c, q) && (!st || (st === "revisar" ? !!c.revisar : c.status === st))).sort((a, b) => String(b.enviado_em).localeCompare(String(a.enviado_em)));
-    const body = el("tbody");
-    if (!lista.length) body.append(el("tr", {}, el("td", { colspan: "7", class: "meta", text: l.length ? "Nenhum cadastro com esse filtro." : "Você ainda não enviou cadastros." })));
-    for (const c of lista) {
-      body.append(el("tr", { class: "clicavel", onclick: () => alternar(c.id) },
-        el("td", {}, pill(c.status, true)),
-        celEntregador(c),
-        el("td", { text: c.cidade }), el("td", { text: dt(c.enviado_em) }),
-        el("td", { text: `${dt(c.status_desde)} (há ${duracao(c.status_desde).txt})` }),
-        el("td", { class: "meta", text: c.motivo ? c.motivo + (c.detalhe ? ": " + c.detalhe : "") : "—" }),
-        el("td", {}, botaoHistorico(c.id))));
-      if (S.abertos.has(c.id)) body.append(el("tr", {}, el("td", { colspan: "7" }, timeline(c.id))));
-    }
-    t.replaceChildren(head, body);
-  }
-
-  // ---------- painel ----------
-  const pessoasFiltro = () => filtroPessoas(S);
-  document.querySelectorAll("[data-filtro]").forEach((b) => b.addEventListener("click", () => {
-    S.filtro = b.dataset.filtro;
-    if (S.filtro === "escolher" && !S.escolhidos.size) S.escolhidos.add(S.me.id);
-    S.metricas = null; render(); carregar();
-  }));
-  const renderPessoas = () => caixaPessoas($("#pessoas"), S, () => { S.metricas = null; render(); carregar(); });
-  function renderPainel() {
-    document.querySelectorAll("[data-filtro]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.filtro === S.filtro)));
-    renderPessoas();
-    const m = S.metricas;
-    const quem = S.filtro === "todos" ? "toda a equipe" : S.filtro === "eu" ? "você" :
-      S.pessoas.filter((p) => S.escolhidos.has(p.id)).map((p) => p.id === S.me.id ? "você" : p.nome).join(", ");
-    $("#painel-sub").textContent = S.filtro === "todos"
-      ? "Números da operação inteira, atualizados em tempo real."
-      : `Cadastros enviados ou decididos por ${quem}.`;
-    if (!m) { $("#tiles").replaceChildren(vazio("Carregando…")); return; }
-    const r = m.resumo;
-    const mes = new Date().toLocaleDateString("pt-BR", { month: "long" });
-    const tile = (k, v, d, cls = "") => el("div", { class: "tile " + cls }, el("div", { class: "k", text: k }), el("div", { class: "v", text: v }), el("div", { class: "d", text: d }));
-    $("#tiles").replaceChildren(
-      tile("Aguardando análise", r.aguardando_analise, "agora", "hl"),
-      tile("Aguardando novo contato", r.aguardando_contato, "agora", "hl2"),
-      tile("Aprovados hoje", r.aprovados_hoje, new Date().toLocaleDateString("pt-BR"), "good"),
-      tile("Aprovados em 7 dias", r.aprovados_7d, "últimos 7 dias", "good"),
-      tile(`Aprovados em ${mes}`, r.aprovados_mes, `${r.encerrados_mes} encerrado(s) no mês`, "good"),
-      tile("Aprovados na 1ª análise", r.aprovacao_1a_analise == null ? "—" : r.aprovacao_1a_analise + "%", "sem reprovação antes"),
-      tile("Tempo até aprovação", horas(r.horas_ate_aprovacao), "média, do envio à aprovação"),
-      tile("Cadastros", r.total, S.filtro === "todos" ? "no total" : "relacionados"));
-
-    // gráfico 14 dias: barras empilhadas de decisões + pontos de enviados
-    const svg = grafico(m.por_dia, [["aprovados", "var(--ok)", "aprovado(s)"], ["reprovados", "var(--bad)", "reprovado(s)"], ["encerrados", "var(--gray)", "encerrado(s)"]],
-      ["enviados", "var(--accent)", "enviado(s)"], "Enviados, aprovados, reprovados e encerrados por dia nos últimos 14 dias");
-    $("#chart").replaceChildren(svg);
-
-    $("#t-cidade").replaceChildren(...tabela(
-      [["Cidade"], ["Recebidos", 1], ["Em andamento", 1], ["Aprovados", 1], ["Reprovações", 1], ["Encerrados", 1], ["Tempo até aprovação", 1]],
-      m.por_cidade.map((c) => el("tr", {}, el("td", { text: c.cidade }), ...[c.recebidos, c.em_andamento, c.aprovados, c.reprovacoes, c.encerrados].map((v) => el("td", { class: "num", text: v })), el("td", { class: "num", text: horas(c.horas_ate_aprovacao) }))),
-      "Nenhum cadastro ainda."));
-
-    const motivos = (lista) => lista.map((x) => ({ rotulo: x.motivo, qtd: x.qtd, extra: x.pct != null ? `${x.qtd} (${x.pct}%)` : x.qtd }));
-    $("#motivos-rep").replaceChildren(...barras(motivos(m.motivos_reprovacao), "var(--bad)", "Nenhuma reprovação."));
-    $("#motivos-enc").replaceChildren(...barras(motivos(m.motivos_encerramento), "var(--gray)", "Nenhum encerramento."));
-
-    $("#t-pessoa").replaceChildren(...tabela(
-      [["Pessoa"], ["Acesso"], ["Enviados", 1], ["Envios por dia (14 dias)", 1], ["Aprovou", 1], ["Reprovou", 1], ["Encerrou", 1]],
-      m.por_pessoa.map((p) => el("tr", {}, el("td", { text: p.id === S.me.id ? `${p.nome} (você)` : p.nome }), el("td", { text: PAPEL[p.papel] }),
-        el("td", { class: "num", text: p.enviados }), el("td", { class: "num", text: (p.enviados_14d / 14).toFixed(1).replace(".", ",") }),
-        el("td", { class: "num", text: p.aprovou }), el("td", { class: "num", text: p.reprovou }), el("td", { class: "num", text: p.encerrou }))),
-      "Sem atividade."));
-  }
-
   // ---------- histórico ----------
   function renderHist() {
     const t = $("#t-hist"), l = S.lista.todos;
@@ -304,10 +224,18 @@
     const head = el("thead", {}, el("tr", {}, cols.map((h) => el("th", { text: h }))));
     if (!l) return t.replaceChildren(head, el("tbody", {}, el("tr", {}, el("td", { colspan: cols.length, class: "meta", text: "Carregando…" }))));
     opcoesCidade($("#f-hist-cidade"), l);
-    const q = $("#q-hist").value, st = $("#f-hist-status").value, cid = $("#f-hist-cidade").value;
-    const lista = l.filter((c) => busca(c, q) && (!st || (st === "revisar" ? !!c.revisar : c.status === st)) && (!cid || c.cidade === cid)).sort((a, b) => String(b.enviado_em).localeCompare(String(a.enviado_em)));
+    // 008c: o Histórico junta o antigo "Meus cadastros" (o suporte já recebe só os dele)
+    $("#hist-sub").textContent = staff() ? "Todos os cadastros recebidos. Clique numa linha para ver o histórico de cada um." : "Tudo o que você enviou, com a situação atual. Clique numa linha para ver o histórico.";
+    $("#f-hist-meus-box").hidden = !staff();
+    const q = $("#q-hist").value, st = $("#f-hist-status").value, cid = $("#f-hist-cidade").value, meus = staff() && $("#f-hist-meus").checked;
+    const base = l.filter((c) => !meus || c.enviado_por === S.me.id);
+    const cont = (f) => base.filter(f).length;
+    const tile = (k, v, cls = "") => el("div", { class: "tile " + cls }, el("div", { class: "k", text: k }), el("div", { class: "v", text: v }));
+    $("#hist-tiles").replaceChildren(tile(staff() && !meus ? "Cadastros" : "Enviados por você", base.length), tile("Aguardando análise", cont((c) => c.status === "aguardando_analise"), "hl"),
+      tile("Aguardando novo contato", cont((c) => c.status === "aguardando_contato"), "hl2"), tile("Aprovados", cont((c) => c.status === "aprovado"), "good"), tile("Encerrados", cont((c) => c.status === "encerrado")));
+    const lista = base.filter((c) => busca(c, q) && (!st || (st === "revisar" ? !!c.revisar : c.status === st)) && (!cid || c.cidade === cid)).sort((a, b) => String(b.enviado_em).localeCompare(String(a.enviado_em)));
     const body = el("tbody");
-    if (!lista.length) body.append(el("tr", {}, el("td", { colspan: cols.length, class: "meta", text: "Nenhum cadastro encontrado." })));
+    if (!lista.length) body.append(el("tr", {}, el("td", { colspan: cols.length, class: "meta", text: l.length ? "Nenhum cadastro encontrado." : "Você ainda não enviou cadastros." })));
     for (const c of lista) {
       const acoes = el("td", { style: "white-space:nowrap", onclick: (e) => e.stopPropagation() }, botaoHistorico(c.id));
       if (mod()) {
@@ -343,6 +271,8 @@
 
   // ---------- aprovados: foram bloqueados depois? (fim do Histórico) ----------
   function renderAprovados() {
+    $("#ap-box").hidden = !staff();
+    if (!staff()) return;
     const l = S.aprovados, t = $("#t-aprovados");
     const cols = [["Aprovado em"], ["Entregador"], ["Cidade"], ["Enviado por"], ["Bloqueios depois", 1], ["1º bloqueio"], ["Dias até o 1º", 1], ["Agora"]];
     if (!l) { $("#ap-resumo").textContent = "Carregando…"; return t.replaceChildren(...tabela(cols, [], "Carregando…")); }
@@ -434,7 +364,7 @@
   });
 
   // ---------- filtros ----------
-  ["#q-pend", "#f-pend-status", "#f-pend-cidade", "#q-meus", "#f-meus-status", "#q-hist", "#f-hist-status", "#f-hist-cidade"].forEach((s) => $(s).addEventListener("input", render));
+  ["#q-pend", "#f-pend-status", "#f-pend-cidade", "#q-hist", "#f-hist-status", "#f-hist-cidade", "#f-hist-meus"].forEach((s) => $(s).addEventListener("input", render));
 
   App.modulo({
     id: "ativacao", nome: "Ativação de entregadores",
@@ -442,22 +372,18 @@
     abas: [
       { id: "novo", nome: "Novo cadastro", secao: "v-novo" },
       { id: "pendentes", nome: "Pendentes", secao: "v-pendentes", contador: "c-pend", alerta: true },
-      { id: "meus", nome: "Meus cadastros", secao: "v-meus" },
-      { id: "painel", nome: "Painel", secao: "v-painel" },
-      { id: "historico", nome: "Histórico", secao: "v-historico", pode: staff },
+      { id: "historico", nome: "Histórico", secao: "v-historico" },
     ],
     padrao: () => "novo",  // 008c: a primeira tela é o cadastro
     async carregar(aba) {
       if (aba === "novo") atualizarCidades();
       const t = [rpc("listar_cadastros", { p_escopo: "pendentes" }).then((d) => (S.lista.pendentes = d))];
-      if (aba === "meus") t.push(rpc("listar_cadastros", { p_escopo: "meus" }).then((d) => (S.lista.meus = d)));
       if (aba === "historico") t.push(rpc("listar_cadastros", { p_escopo: "todos" }).then((d) => (S.lista.todos = d)),
-                                      rpc("aprovados_e_bloqueios").then((d) => (S.aprovados = d)));
-      if (aba === "painel") t.push(rpc("metricas", { p_pessoas: pessoasFiltro() }).then((d) => (S.metricas = d)));
+                                      staff() ? rpc("aprovados_e_bloqueios").then((d) => (S.aprovados = d)) : null);
       await Promise.all(t);
     },
     render(aba) {
-      ({ pendentes: renderPendentes, meus: renderMeus, painel: renderPainel, historico: () => { renderHist(); renderAprovados(); } })[aba]?.();
+      ({ pendentes: renderPendentes, historico: () => { renderHist(); renderAprovados(); } })[aba]?.();
     },
     contadores() {
       const r = S.resumo?.ativacao;

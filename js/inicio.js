@@ -57,7 +57,7 @@
 
     // ---------- números (mais discretos) ----------
     const cards = [];
-    cards.push(el("a", { class: "modulo-card", href: "#ativacao/" + (staffAtiv() ? "pendentes" : "meus"), id: "card-ativacao" },
+    cards.push(el("a", { class: "modulo-card", href: "#ativacao/" + (staffAtiv() ? "pendentes" : "historico"), id: "card-ativacao" },
       el("h3", { text: "Ativação de entregadores" }),
       el("div", { class: "numeros" }, staffAtiv()
         ? [numero(a?.equipe_aguardando_analise, "aguardando análise", a ? `${a.meus_aguardando_analise} enviados por você` : null),
@@ -65,7 +65,7 @@
         : [numero(a?.meus_aguardando_analise, "seus aguardando análise", naEquipe(a?.equipe_aguardando_analise)),
            numero(a?.meus_aguardando_contato, "seus aguardando novo contato", naEquipe(a?.equipe_aguardando_contato))])));
     if (S.me.papel_bloqueios) {
-      cards.push(el("a", { class: "modulo-card bloq", href: "#bloqueios/" + (staffBloq() ? "tratativas" : "meus"), id: "card-bloqueios" },
+      cards.push(el("a", { class: "modulo-card bloq", href: "#bloqueios/" + (staffBloq() ? "tratativas" : "historico"), id: "card-bloqueios" },
         el("h3", { text: "Bloqueios" }),
         el("div", { class: "numeros" }, staffBloq()
           ? [numero(b?.equipe_bloqueados_agora, "bloqueados agora", b ? `${b.meus_bloqueados_agora} registrados por você` : null),

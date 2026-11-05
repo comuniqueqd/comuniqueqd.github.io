@@ -5,7 +5,7 @@
 (() => {
   "use strict";
   const App = window.App;
-  const { $, el, vazio, carregandoEl, rpc, msgErro, tabela, barras, baixarCSV } = App.u;
+  const { $, el, vazio, carregandoEl, rpc, msgErro, tabela, barras, baixarCSV, grafico, horas, PAPEL } = App.u;
   const S = App.S;
   const A = { periodo: 30, cidade: "", dados: null, chave: "", cidades: null, erro: null,
               resumo: {}, semana: "", comparar: "anterior", semanas: null };
@@ -17,14 +17,19 @@
 
   // ---------- análises (008c: simples e complexas) ----------
   // as duas abas dividem o período e a cidade; cada uma guarda os próprios dados
-  const D = { simples: null, complexas: null, chave: {}, erro: {} };
+  // 008c: os antigos Painéis da ativação e dos bloqueios viraram cartões daqui (metricas e metricas_bloqueios)
+  const D = { simples: null, complexas: null, chave: {}, erro: {}, mAtiv: null, mBloq: null };
   const chaveAnalises = () => `${A.periodo}|${A.cidade}`;
   async function carregarAnalises(tipo) {
     if (!A.cidades) A.cidades = await rpc("listar_cidades").catch(() => []);
     const chave = chaveAnalises();
     try {
-      const d = await rpc(tipo === "simples" ? "analises_simples" : "analises_complexas", { p_dias: A.periodo === "tudo" ? null : A.periodo, p_cidade: A.cidade || null });
-      if (chave === chaveAnalises()) { D[tipo] = d; D.chave[tipo] = chave; D.erro[tipo] = null; }
+      const dias = A.periodo === "tudo" ? null : A.periodo;
+      const [d, ma, mb] = await Promise.all([
+        rpc(tipo === "simples" ? "analises_simples" : "analises_complexas", { p_dias: dias, p_cidade: A.cidade || null }),
+        rpc("metricas", {}),
+        S.me.papel_bloqueios ? rpc("metricas_bloqueios", { p_dias: dias, p_cidade: A.cidade || null }) : null]);
+      if (chave === chaveAnalises()) { D[tipo] = d; D.mAtiv = ma; D.mBloq = mb; D.chave[tipo] = chave; D.erro[tipo] = null; }
     } catch (e) { D.erro[tipo] = msgErro(e); }
   }
   const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -87,7 +92,14 @@
         el("div", { class: "destaques" }, destaque(at.enviados, "enviados no período"), destaque(at.aprovados, "aprovados"),
           destaque(at.enviados ? n(pct(at.aprovados, at.enviados)) + "%" : null, "taxa de aprovação"),
           destaque(at.em_aberto, "ainda em aberto"), destaque(at.encerrados, "encerrados"),
-          destaque(at.horas_ate_aprovar, "horas do envio à aprovação (mediana)"))),
+          destaque(at.horas_ate_aprovar, "horas do envio à aprovação (mediana)")),
+        D.mAtiv ? el("div", { class: "destaques" }, destaque(D.mAtiv.resumo.aprovados_hoje, "aprovados hoje"), destaque(D.mAtiv.resumo.aprovados_7d, "aprovados em 7 dias"),
+          destaque(D.mAtiv.resumo.aprovacao_1a_analise == null ? null : D.mAtiv.resumo.aprovacao_1a_analise + "%", "aprovados na 1ª análise")) : null),
+      D.mAtiv ? card("Ativação nos últimos 14 dias", "Enviados (pontos) e decisões por dia (barras): aprovados, reprovados e encerrados.",
+        el("div", { class: "legend" }, el("span", {}, el("i", { style: "background:var(--ok)" }), "Aprovados"), el("span", {}, el("i", { style: "background:var(--bad)" }), "Reprovados"),
+          el("span", {}, el("i", { style: "background:var(--gray)" }), "Encerrados"), el("span", {}, el("i", { style: "background:var(--accent);border-radius:50%" }), "Enviados")),
+        grafico(D.mAtiv.por_dia, [["aprovados", "var(--ok)", "aprovado(s)"], ["reprovados", "var(--bad)", "reprovado(s)"], ["encerrados", "var(--gray)", "encerrado(s)"]],
+          ["enviados", "var(--accent)", "enviado(s)"], "Enviados, aprovados, reprovados e encerrados por dia nos últimos 14 dias")) : null,
       card("Por que não aprovou", "Reprovações e encerramentos do período, pelo motivo escolhido na decisão (as decisões desfeitas não contam).",
         el("div", { class: "destaques" }, destaque(totalNao, "não aprovações"),
           destaque(mot.filter((x) => x.tipo === "reprovado").reduce((s, x) => s + x.qtd, 0), "reprovações"),
@@ -109,7 +121,13 @@
         card("Bloqueados agora, por cidade", "Onde estão os bloqueados neste momento e quantos saem hoje.",
           d.bloqueados_por_cidade.length ? el("div", { class: "tablewrap" }, el("table", {}, ...tabela([["Cidade"], ["Bloqueados", 1], ["Saem hoje", 1]],
             d.bloqueados_por_cidade.map((x) => el("tr", {}, el("td", { text: x.cidade }), el("td", { class: "num", text: x.agora }), el("td", { class: "num", text: x.saem_hoje }))), "")))
-            : el("p", { class: "meta", text: "Ninguém bloqueado agora." })));
+            : el("p", { class: "meta", text: "Ninguém bloqueado agora." })),
+        D.mBloq ? card("Bloqueios por dia", `Bloqueios e infrações leves ${textoPeriodo()}, separando 1ª ocorrência, reincidência e encerramento.`,
+          el("div", { class: "legend" }, el("span", {}, el("i", { style: "background:var(--accent)" }), "1ª ocorrência"), el("span", {}, el("i", { style: "background:var(--warn)" }), "Reincidência"),
+            el("span", {}, el("i", { style: "background:var(--bad)" }), "Encerramento"), el("span", {}, el("i", { style: "background:var(--gray)" }), "Infração leve")),
+          grafico(D.mBloq.por_dia.map((x) => ({ ...x, primeira: x.total - x.leves - x.reincidencias - x.encerramentos })),
+            [["primeira", "var(--accent)", "1ª ocorrência"], ["reincidencias", "var(--warn)", "reincidência(s)"], ["encerramentos", "var(--bad)", "encerramento(s)"], ["leves", "var(--gray)", "infração(ões) leve(s)"]],
+            null, "Bloqueios por dia")) : null);
     }
     cards.push(
       largo(card("Quando você registra", "Seus bloqueios, infrações leves e cadastros enviados, por dia da semana e hora. Mais escuro = mais registros seus.",
@@ -138,10 +156,12 @@
           ...barras(d.por_infracao.map((x) => ({ rotulo: x.infracao, qtd: x.qtd, extra: x.encerramentos ? `${x.qtd} · ${x.encerramentos} encerramento(s)` : null })), "var(--accent)", "Nenhum bloqueio no período.")),
         card("Tratativas no prazo", `Tratativas criadas no período (sem as da planilha). O prazo é de ${n(tr.prazo_horas)} h.`,
           el("div", { class: "destaques" }, destaque(tr.criadas, "criadas"), destaque(tr.concluidas, "resolvidas"),
-            destaque(tr.concluidas ? n(pct(tr.no_prazo, tr.concluidas)) + "%" : null, "resolvidas no prazo")),
+            destaque(tr.concluidas ? n(pct(tr.no_prazo, tr.concluidas)) + "%" : null, "resolvidas no prazo"),
+            D.mBloq ? destaque(horas(D.mBloq.resumo.horas_ate_tratativa), "do registro à tratativa (média)") : null,
+            D.mBloq?.resumo.dados_pendentes ? destaque(D.mBloq.resumo.dados_pendentes, "IDs com dados a completar") : null),
           tr.concluidas ? el("div", { class: "bar", style: "margin-top:6px" }, el("span", { style: `width:${pct(tr.no_prazo, tr.concluidas)}%;background:var(--ok)` })) : null));
     }
-    box.replaceChildren(...cards);
+    box.replaceChildren(...cards.filter(Boolean));
   }
 
   // ---------- análises complexas: para entender o que funciona ----------
@@ -154,7 +174,7 @@
     const ef = d.eficacia, ab = d.ativacao_bloqueio, es = d.escada, ra = d.resposta_ativacao;
     const tab = (cols, linhas, vazioTxt) => linhas.length ? el("div", { class: "tablewrap" }, el("table", {}, ...tabela(cols, linhas, ""))) : el("p", { class: "meta", text: vazioTxt });
     const td = (v, num) => el("td", { class: num ? "num" : null, text: v == null ? "—" : String(v) });
-    box.replaceChildren(
+    box.replaceChildren(...[
       card("Eficácia da punição", "Depois de cada punição, quantos entregadores voltaram a ser bloqueados em até 30 dias. Quanto menor a porcentagem, mais a punição funcionou. Só entram bloqueios com 30 dias ou mais.",
         tab([["Punição"], ["Bloqueios", 1], ["Voltaram em 30 dias", 1], ["%", 1]],
           ef.map((x) => el("tr", {}, td(x.punicao), td(x.bloqueios, 1), td(x.reincidiram_30d, 1), td(n(x.pct) + "%", 1))), "Ainda não há bloqueios com 30 dias no período.")),
@@ -176,6 +196,18 @@
       card("Punições desfeitas", "Bloqueios liberados antes do prazo (ou encerramentos revertidos), por infração. Muita liberação numa infração pode indicar regra dura demais ou registro sem prova.",
         tab([["Infração"], ["Bloqueios", 1], ["Liberados antes", 1], ["%", 1], ["Horas até liberar (média)", 1]],
           d.liberacoes.map((x) => el("tr", {}, td(x.infracao), td(x.bloqueios, 1), td(x.liberados, 1), td(n(x.pct) + "%", 1), td(n(x.horas_media), 1))), "Nenhuma punição desfeita no período.")),
+      D.mAtiv ? card("Ativação por cidade", "Todos os cadastros recebidos, por cidade (desde o início).",
+        tab([["Cidade"], ["Recebidos", 1], ["Em andamento", 1], ["Aprovados", 1], ["Reprovações", 1], ["Encerrados", 1], ["Tempo até aprovação", 1]],
+          D.mAtiv.por_cidade.map((c) => el("tr", {}, td(c.cidade), td(c.recebidos, 1), td(c.em_andamento, 1), td(c.aprovados, 1), td(c.reprovacoes, 1), td(c.encerrados, 1), td(horas(c.horas_ate_aprovacao), 1))),
+          "Nenhum cadastro ainda.")) : null,
+      card("Por pessoa", "O que cada pessoa fez. Ativação: desde o início; bloqueios: no período escolhido.",
+        D.mAtiv ? el("h4", { class: "an-sub", text: "Ativação" }) : null,
+        D.mAtiv ? tab([["Pessoa"], ["Acesso"], ["Enviados", 1], ["Envios por dia (14 dias)", 1], ["Aprovou", 1], ["Reprovou", 1], ["Encerrou", 1]],
+          D.mAtiv.por_pessoa.map((p) => el("tr", {}, td(p.id === S.me.id ? `${p.nome} (você)` : p.nome), td(PAPEL[p.papel]), td(p.enviados, 1),
+            td((p.enviados_14d / 14).toFixed(1).replace(".", ","), 1), td(p.aprovou, 1), td(p.reprovou, 1), td(p.encerrou, 1))), "Sem atividade.") : null,
+        D.mBloq ? el("h4", { class: "an-sub", text: "Bloqueios" }) : null,
+        D.mBloq ? tab([["Pessoa"], ["Bloqueios", 1], ["Leves", 1], ["Tratou", 1]],
+          D.mBloq.por_pessoa.map((x) => el("tr", {}, td(x.nome === S.me.nome ? `${x.nome} (você)` : x.nome), td(x.registrou - x.leves, 1), td(x.leves, 1), td(x.tratou, 1))), "Sem atividade no período.") : null),
       card("Tratativas por responsável", `Tratativas criadas no período (sem as importadas da planilha). O prazo é de ${S.resumo?.prazo_tratativa_horas ?? 32} h.`,
         tab([["Responsável"], ["Total", 1], ["Concluídas", 1], ["Tempo médio (h)", 1], ["Fora do prazo", 1], ["Pendentes", 1], ["Atrasadas agora", 1]],
           d.tratativas_por_responsavel.map((x) => el("tr", {}, td(x.responsavel), td(x.total, 1), td(x.concluidas, 1), td(n(x.horas_media), 1), td(x.fora_do_prazo, 1), td(x.pendentes, 1),
@@ -190,7 +222,7 @@
             return el("tr", {}, el("td", { text: m.mes.split("-").reverse().join("/") }), el("td", { class: "num", text: m.aprovados }),
               el("td", { class: "num", text: faixa(m.bloq_30, m.maduro_30) }), el("td", { class: "num", text: faixa(m.bloq_60, m.maduro_60) }), el("td", { class: "num", text: faixa(m.bloq_90, m.maduro_90) }));
           }), ""))) : el("p", { class: "meta", text: "Nenhum cadastro aprovado pelo sistema ainda." }),
-        ab.meses.some((m) => m.maduro_90 < m.aprovados) ? el("p", { class: "an-nota", text: "* conta só os aprovados que já completaram o prazo; — = ninguém do mês completou o prazo ainda." }) : null));
+        ab.meses.some((m) => m.maduro_90 < m.aprovados) ? el("p", { class: "an-nota", text: "* conta só os aprovados que já completaram o prazo; — = ninguém do mês completou o prazo ainda." }) : null)].filter(Boolean));
   }
   document.querySelectorAll("[data-an-periodo]").forEach((b) => b.addEventListener("click", () => {
     A.periodo = b.dataset.anPeriodo === "tudo" ? "tudo" : Number(b.dataset.anPeriodo); render(); App.carregar();

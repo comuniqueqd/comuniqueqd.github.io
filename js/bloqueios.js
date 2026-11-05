@@ -10,7 +10,6 @@
   const B = {
     regras: null, lista: { ativos: null, meus: null, todos: null }, tarefas: { pendente: null, concluida: null },
     metricas: null, previa: null, resultado: null, consulta: null, destaque: null,
-    painel: { periodo: 30, filtro: "todos", escolhidos: new Set(), cidade: "", infracao: "" },
     tratVer: "pendente", caixa: {}, confirmar: {}, tipo: "normal", rascunho: {}, pagina: 1, atencao: null,
   };
   const papel = () => S.me?.papel_bloqueios;
@@ -368,6 +367,8 @@
       el("div", { class: "grupo" }, el("h3", {}, tit, el("span", { class: "count", text: x.length })), el("div", { class: "queue" }, x.map((t) => cardBloqueio(t.bloqueio))))));
   }
 
+  document.querySelectorAll("[data-trat]").forEach((b) => b.addEventListener("click", () => { B.tratVer = b.dataset.trat; render(); carregar(); }));
+
   // ---------- bloqueados agora ----------
   function renderAtivos() {
     const l = B.lista.ativos, box = $("#bq-ativos-lista");
@@ -380,33 +381,6 @@
     if (!l.length) return box.replaceChildren(vazio("Ninguém bloqueado agora", ""));
     if (!lista.length) return box.replaceChildren(vazio("Nada com esse filtro", ""));
     box.replaceChildren(el("div", { class: "queue" }, lista.map((b) => cardBloqueio(b))));
-  }
-
-  // ---------- meus registros ----------
-  function renderMeus() {
-    const l = B.lista.meus;
-    const cont = (f) => (l || []).filter(f).length;
-    const tile = (k, v, cls = "") => el("div", { class: "tile " + cls }, el("div", { class: "k", text: k }), el("div", { class: "v", text: l ? v : "…" }));
-    $("#bq-meus-tiles").replaceChildren(
-      tile("Registrados por você", cont((b) => !b.leve)),
-      tile("Infrações leves", cont((b) => b.leve)),
-      tile("Bloqueados agora", cont((b) => b.situacao === "bloqueado" && !b.leve), "hl2"),
-      tile("Tratativas em andamento", cont((b) => b.tarefa?.status === "pendente"), "hl"),
-      tile("Tratativas realizadas", cont((b) => b.tarefa?.status === "concluida"), "good"),
-      tile("Encerramentos de parceria", cont((b) => b.situacao === "encerramento")));
-    const box = $("#bq-meus-lista");
-    if (!l) return box.replaceChildren(carregandoEl());
-    preencher($("#bq-meus-inf"), opcInfracoes(), "Todas as infrações");
-    const q = $("#bq-q-meus").value, sit = $("#bq-meus-sit").value, inf = $("#bq-meus-inf").value, tipo = $("#bq-meus-tipo").value;
-    const lista = l.filter((b) => buscaB(b, q) && (!inf || String(b.infracao_id) === inf) && filtroTipo(b, tipo) &&
-      (!sit || (sit === "tratativa_pendente" ? b.tarefa?.status === "pendente" : sit === "tratativa_feita" ? b.tarefa?.status === "concluida" : b.situacao === sit)));
-    if (!l.length) return box.replaceChildren(vazio("Você ainda não registrou bloqueios", "Os bloqueios que você registrar aparecem aqui, com o andamento da tratativa."));
-    if (!lista.length) return box.replaceChildren(vazio("Nada com esse filtro", ""));
-    box.replaceChildren(el("div", { class: "queue" }, lista.map((b) => cardBloqueio(b))));
-    if (B.destaque) {
-      const n = box.querySelector(`[data-id="${B.destaque}"]`);
-      if (n) { n.scrollIntoView({ block: "center", behavior: "smooth" }); const id = B.destaque; setTimeout(() => { if (B.destaque === id) { B.destaque = null; render(); } }, 8000); }
-    }
   }
 
   // ---------- novo bloqueio ----------
@@ -493,7 +467,7 @@
           el("div", { class: "meta", text: `Tarefa de contato enviada para ${g.responsavel}.` })) : null,
         el("div", { class: "actions" },
           el("button", { class: "btn primary", type: "button", onclick: () => { B.resultado = null; B.previa = null; renderNovo(); $("#bq-id").focus(); } }, "Registrar outra"),
-          el("a", { class: "btn", href: "#bloqueios/meus", onclick: () => { B.destaque = r.id; B.resultado = null; } }, "Ver em Meus registros")));
+          el("button", { class: "btn", type: "button", onclick: () => { B.resultado = null; verNoHistorico(r.id_app); } }, "Ver no Histórico")));
     }
     return el("div", { class: "previa" + (r.horas == null ? " encerra" : "") },
       el("div", { class: "meta", text: `Bloqueio registrado: ${r.nome} · ${ord(r.ocorrencia)} ocorrência de “${r.infracao}”` }),
@@ -502,7 +476,7 @@
       el("div", { class: "meta", text: r.tarefa ? `Tratativa enviada para ${r.responsavel}. Você recebe um aviso quando ela for feita.` : "Bloqueio curto: sem tratativa." }),
       el("div", { class: "actions" },
         el("button", { class: "btn primary", type: "button", onclick: () => { B.resultado = null; B.previa = null; renderNovo(); $("#bq-id").focus(); } }, "Registrar outro"),
-        el("a", { class: "btn", href: "#bloqueios/meus", onclick: () => { B.destaque = r.id; B.resultado = null; } }, "Ver em Meus registros")));
+        el("button", { class: "btn", type: "button", onclick: () => { B.resultado = null; verNoHistorico(r.id_app); } }, "Ver no Histórico")));
   }
   $("#bq-id").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, ""); B.resultado = null; pedirPrevia(); });
   $("#bq-infracao").addEventListener("change", () => { B.resultado = null; pedirPrevia(); });
@@ -706,6 +680,13 @@
     if (location.hash === "#bloqueios/historico") App.carregar(); else location.hash = "#bloqueios/historico";
   }
 
+  // depois de registrar: o Histórico já filtrado pelo ID (008c: o Histórico junta o antigo "Meus registros")
+  function verNoHistorico(id) {
+    ["#bq-hist-cidade", "#bq-hist-inf", "#bq-hist-quem", "#bq-hist-tipo", "#bq-hist-sit"].forEach((x) => ($(x).value = ""));
+    $("#bq-q-hist").value = id || "";
+    B.hist = null; B.pagina = 1;
+    if (location.hash === "#bloqueios/historico") App.carregar(); else location.hash = "#bloqueios/historico";
+  }
   function renderHist() {
     const h = B.hist, t = $("#bq-t-hist");
     const cols = [["Situação"], ["Entregador"], ["Infração"], ["Ocorr."], ["Punição"], ["Início"], ["Cidade"], ["Registrado por"], ["Tratativa"], [""]];
@@ -724,6 +705,7 @@
     t.replaceChildren(...tabela(cols, h.itens.map((b) => {
       const acoes = el("td", { style: "white-space:nowrap" });
       if (podeCorrigir(b) && !B.confirmar[b.id]) acoes.append(el("button", { class: "btn quiet", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir"));
+      acoes.append(botaoAnexos(b));
       if (mod()) {
         if (B.confirmar[b.id]) acoes.append(el("button", { class: "btn danger small", type: "button", onclick: (e) => excluir(b, e.currentTarget) }, "Confirmar exclusão"), el("button", { class: "btn link", type: "button", onclick: () => { delete B.confirmar[b.id]; render(); } }, "Cancelar"));
         else acoes.append(el("button", { class: "btn quiet", type: "button", onclick: () => { B.confirmar[b.id] = true; render(); } }, "Excluir"));
@@ -751,54 +733,6 @@
     itens.map((b) => [b.id_app, b.nome, b.cidade, b.leve ? "leve" : "bloqueio", b.infracao, b.ocorrencia, b.ocorrencia_total, b.horas ?? "encerramento", SIT[b.situacao], b.inicio, b.fim, b.registrado_por_nome,
       b.tarefa ? (b.tarefa.status === "pendente" ? "pendente" : "realizada") : "sem tratativa", b.tarefa?.responsavel_nome, b.tarefa?.concluida_em, b.tarefa?.nota, b.liberado_em, b.motivo_liberacao, b.revisar]));
   });
-
-  // ---------- painel ----------
-  function renderPainel() {
-    const P = B.painel;
-    document.querySelectorAll("[data-periodo]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.periodo === String(P.periodo))));
-    document.querySelectorAll("[data-filtro-bq]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.filtroBq === P.filtro)));
-    caixaPessoas($("#bq-pessoas"), P, () => { B.metricas = null; render(); carregar(); });
-    preencher($("#bq-f-cidade"), cidadesAtivas().map((c) => [c.nome, c.nome]), "Todas as cidades");
-    preencher($("#bq-f-infracao"), opcInfracoes(), "Todas as infrações");
-    const periodo = P.periodo === "tudo" ? "desde o início" : `nos últimos ${P.periodo} dias`;
-    const quem = P.filtro === "todos" ? "toda a equipe" : P.filtro === "eu" ? "você" : nomesEscolhidos(P);
-    $("#bq-painel-sub").textContent = `Bloqueios ${periodo}` + (P.filtro === "todos" ? "." : `, registrados ou tratados por ${quem}.`);
-    const m = B.metricas;
-    if (!m) { $("#bq-tiles").replaceChildren(vazio("Carregando…")); return; }
-    const r = m.resumo;
-    const tile = (k, v, d, cls = "") => el("div", { class: "tile " + cls }, el("div", { class: "k", text: k }), el("div", { class: "v", text: v }), el("div", { class: "d", text: d }));
-    $("#bq-tiles").replaceChildren(
-      tile("Bloqueios registrados", r.normais, `${r.entregadores} entregador(es) no total`),
-      tile("Infrações leves", r.leves, `${r.leves_que_geraram} viraram bloqueio · ${r.avisos_agora} em aviso agora`),
-      tile("Bloqueados agora", r.bloqueados_agora, "entre os do período", "hl2"),
-      tile("Reincidências", r.reincidentes, "2ª ocorrência ou mais", "hl"),
-      tile("Encerramentos de parceria", r.encerramentos, "bloqueios definitivos"),
-      tile("Tratativas pendentes", r.tratativas_pendentes, "aguardando o responsável", "hl"),
-      tile("Tratativas realizadas", r.tratativas_feitas, "pelo sistema (sem importadas)", "good"),
-      tile("Tempo até a tratativa", horas(r.horas_ate_tratativa), "média, do registro à tratativa"),
-      tile("Liberados antes do prazo", r.liberados_antes, "por monitorador ou moderador"),
-      tile("IDs com dados a completar", r.dados_pendentes, "registrados só com o ID", r.dados_pendentes ? "hl" : ""));
-    $("#bq-chart").replaceChildren(grafico(m.por_dia.map((d) => ({ ...d, primeira: d.total - d.leves - d.reincidencias - d.encerramentos })),
-      [["primeira", "var(--accent)", "1ª ocorrência"], ["reincidencias", "var(--warn)", "reincidência(s)"], ["encerramentos", "var(--bad)", "encerramento(s)"], ["leves", "var(--gray)", "infração(ões) leve(s)"]],
-      null, "Bloqueios por dia"));
-    $("#bq-t-infracao").replaceChildren(...tabela([["Infração"], ["Bloqueios", 1], ["Reincidências", 1], ["Encerramentos", 1]],
-      m.por_infracao.map((x) => el("tr", {}, el("td", { text: x.infracao + (x.leve ? " (leve)" : "") }), el("td", { class: "num", text: x.total }), el("td", { class: "num", text: x.reincidencias }), el("td", { class: "num", text: x.encerramentos }))), "Nenhum bloqueio no período."));
-    $("#bq-t-cidade").replaceChildren(...tabela([["Cidade"], ["Bloqueios", 1], ["Bloqueados agora", 1], ["Encerramentos", 1], ["Tratativas pendentes", 1]],
-      m.por_cidade.map((x) => el("tr", {}, el("td", { text: x.cidade }), el("td", { class: "num", text: x.total }), el("td", { class: "num", text: x.bloqueados_agora }), el("td", { class: "num", text: x.encerramentos }), el("td", { class: "num", text: x.tratativas_pendentes }))), "Nenhum bloqueio no período."));
-    $("#bq-t-pessoa").replaceChildren(...tabela([["Pessoa"], ["Bloqueios", 1], ["Leves", 1], ["Tratou", 1]],
-      m.por_pessoa.map((x) => el("tr", {}, el("td", { text: x.nome === S.me.nome ? `${x.nome} (você)` : x.nome }), el("td", { class: "num", text: x.registrou - x.leves }), el("td", { class: "num", text: x.leves }), el("td", { class: "num", text: x.tratou }))), "Sem atividade no período."));
-    $("#bq-t-reinc").replaceChildren(...tabela([["Entregador"], ["Cidade"], ["Registros", 1], ["Leves", 1], ["Último"], ["Situação"]],
-      m.reincidentes.map((x) => el("tr", {}, el("td", {}, x.nome, el("br"), el("span", { class: "mono meta", text: x.id_app })), el("td", { text: x.cidade || "—" }), el("td", { class: "num", text: x.bloqueios }), el("td", { class: "num", text: x.leves }), el("td", { text: dt(x.ultimo) }), el("td", { text: x.bloqueado_agora ? "Bloqueado" : "Liberado" }))),
-      "Nenhum entregador com mais de um bloqueio no período."));
-  }
-  document.querySelectorAll("[data-periodo]").forEach((b) => b.addEventListener("click", () => { B.painel.periodo = b.dataset.periodo === "tudo" ? "tudo" : Number(b.dataset.periodo); B.metricas = null; render(); carregar(); }));
-  document.querySelectorAll("[data-filtro-bq]").forEach((b) => b.addEventListener("click", () => {
-    B.painel.filtro = b.dataset.filtroBq;
-    if (B.painel.filtro === "escolher" && !B.painel.escolhidos.size) B.painel.escolhidos.add(S.me.id);
-    B.metricas = null; render(); carregar();
-  }));
-  ["#bq-f-cidade", "#bq-f-infracao", "#bq-f-tipo"].forEach((s) => $(s).addEventListener("change", () => { B.painel.cidade = $("#bq-f-cidade").value; B.painel.infracao = $("#bq-f-infracao").value; B.painel.tipo = $("#bq-f-tipo").value; B.metricas = null; render(); carregar(); }));
-  document.querySelectorAll("[data-trat]").forEach((b) => b.addEventListener("click", () => { B.tratVer = b.dataset.trat; render(); carregar(); }));
 
   // ---------- regras (moderador) ----------
   function renderRegras() {
@@ -904,7 +838,7 @@
   ["#bq-q-atencao", "#bq-atencao-motivo"].forEach((s) => $(s).addEventListener("input", () => renderAtencao()));
 
   // ---------- filtros que só redesenham ----------
-  ["#bq-q-trat", "#bq-trat-cidade", "#bq-q-ativos", "#bq-ativos-cidade", "#bq-ativos-inf", "#bq-q-meus", "#bq-meus-sit", "#bq-meus-inf", "#bq-meus-tipo",
+  ["#bq-q-trat", "#bq-trat-cidade", "#bq-q-ativos", "#bq-ativos-cidade", "#bq-ativos-inf",
   ].forEach((s) => $(s).addEventListener("input", render));
   ["#bq-q-hist", "#bq-hist-sit", "#bq-hist-cidade", "#bq-hist-inf", "#bq-hist-quem", "#bq-hist-tipo"].forEach((s) => $(s).addEventListener("input", filtrarHist));
 
@@ -917,10 +851,8 @@
       { id: "tratativas", nome: "Tratativas", secao: "v-bq-tratativas", pode: staff, contador: "c-trat", alerta: true },
       { id: "ativos", nome: "Bloqueados agora", secao: "v-bq-ativos", pode: staff },
       { id: "atencao", nome: "Atenção", secao: "v-bq-atencao", contador: "c-atencao" },
-      { id: "meus", nome: "Meus registros", secao: "v-bq-meus" },
       { id: "consultar", nome: "Consultar entregador", secao: "v-bq-consultar" },
-      { id: "painel", nome: "Painel", secao: "v-bq-painel" },
-      { id: "historico", nome: "Histórico", secao: "v-bq-historico", pode: staff },
+      { id: "historico", nome: "Histórico", secao: "v-bq-historico" },
       { id: "regras", nome: "Regras", secao: "v-bq-regras", pode: mod },
     ],
     padrao: () => "novo",  // 008c: a primeira tela é o Novo bloqueio, depois as tratativas
@@ -932,18 +864,12 @@
       if (aba === "tratativas") t.push(rpc("listar_tarefas", { p_status: B.tratVer }).then((d) => (B.tarefas[B.tratVer] = d)));
       if (aba === "ativos") t.push(rpc("listar_bloqueios", { p_escopo: "ativos" }).then((d) => (B.lista.ativos = d)));
       if (aba === "atencao") t.push(rpc("entregadores_atencao").then((d) => (B.atencao = d)));
-      if (aba === "meus") t.push(rpc("listar_bloqueios", { p_escopo: "meus" }).then((d) => (B.lista.meus = d)));
       if (aba === "historico") t.push(carregarHist());
-      if (aba === "painel") {
-        const P = B.painel;
-        t.push(rpc("metricas_bloqueios", { p_pessoas: filtroPessoas(P), p_dias: P.periodo === "tudo" ? null : P.periodo,
-          p_cidade: P.cidade || null, p_infracao: P.infracao ? Number(P.infracao) : null, p_tipo: P.tipo || null }).then((d) => (B.metricas = d)));
-      }
       await Promise.all(t);
     },
     render(aba) {
-      ({ tratativas: renderTratativas, novo: renderNovo, ativos: renderAtivos, atencao: renderAtencao, meus: renderMeus, consultar: renderConsulta,
-         painel: renderPainel, historico: renderHist, regras: renderRegras })[aba]?.();
+      ({ tratativas: renderTratativas, novo: renderNovo, ativos: renderAtivos, atencao: renderAtencao, consultar: renderConsulta,
+         historico: renderHist, regras: renderRegras })[aba]?.();
     },
     contadores() {
       if (staff()) App.contador("c-trat", S.resumo?.bloqueios?.tratativas_pendentes || 0);

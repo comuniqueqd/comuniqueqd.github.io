@@ -93,7 +93,7 @@
         itens.push(item({ modulo: "BLOQUEIOS", titulo: `Acompanhando: ${tipo.toLowerCase()} de ${b.nome}`, estado: "pendente",
           detalhe: `Pendente com ${t.responsavel_nome} há ${duracao(t.criada_em).txt} · ${b.infracao} · ${punicao}`,
           extra: App.u.previsao(t, "tarefa", t.id, false),
-          acoes: [el("a", { class: "btn small", href: "#bloqueios/meus" }, "Meus registros")] }));
+          acoes: [el("a", { class: "btn small", href: "#bloqueios/historico" }, "Ver no Histórico")] }));
       }
     }
     if (!itens.length && !opcionais.length) return box.replaceChildren(vazio("Tudo em dia", "Nenhuma pendência para você agora. Novas tarefas aparecem aqui assim que forem criadas."));

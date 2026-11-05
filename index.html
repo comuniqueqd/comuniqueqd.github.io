@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=008c">
+<link rel="stylesheet" href="estilo.css?v=008c2">
 </head>
 <body>
 <header class="top">
@@ -106,62 +106,19 @@
   </section>
 
   <!-- MEUS CADASTROS -->
-  <section class="view" id="v-meus" hidden>
-    <h2>Meus cadastros</h2>
-    <p class="sub">Tudo o que você enviou, com a situação atual. Clique numa linha para ver o histórico.</p>
-    <div class="tiles" id="meus-tiles"></div>
-    <div class="toolbar">
-      <input id="q-meus" type="search" placeholder="Buscar por nome, ID, CPF ou cidade" aria-label="Buscar nos meus cadastros">
-      <select id="f-meus-status" aria-label="Filtrar por situação"></select>
-    </div>
-    <div class="tablewrap"><table id="t-meus"></table></div>
-  </section>
-
-  <!-- PAINEL -->
-  <section class="view" id="v-painel" hidden>
-    <h2>Painel</h2>
-    <p class="sub" id="painel-sub">Números da operação, atualizados em tempo real.</p>
-    <div class="toolbar">
-      <span class="meta">Mostrar:</span>
-      <div class="seg" role="group" aria-label="Filtro de pessoas">
-        <button type="button" data-filtro="todos" aria-pressed="true">Todos</button>
-        <button type="button" data-filtro="eu" aria-pressed="false">Só eu</button>
-        <button type="button" data-filtro="escolher" aria-pressed="false">Escolher pessoas</button>
-      </div>
-    </div>
-    <div class="pessoas" id="pessoas" hidden></div>
-    <div class="tiles" id="tiles"></div>
-    <div class="panel">
-      <h3>Últimos 14 dias</h3>
-      <div class="legend"><span><i style="background:var(--ok)"></i>Aprovados</span><span><i style="background:var(--bad)"></i>Reprovados</span><span><i style="background:var(--gray)"></i>Encerrados</span><span><i style="background:var(--accent);border-radius:50%"></i>Enviados</span></div>
-      <div id="chart"></div>
-    </div>
-    <div class="panel">
-      <h3>Por cidade</h3>
-      <div class="tablewrap"><table id="t-cidade"></table></div>
-    </div>
-    <div class="two">
-      <div class="panel"><h3>Motivos de reprovação</h3><div id="motivos-rep"></div></div>
-      <div class="panel"><h3>Motivos de encerramento</h3><div id="motivos-enc"></div></div>
-    </div>
-    <div class="panel">
-      <h3>Por pessoa</h3>
-      <div class="tablewrap"><table id="t-pessoa"></table></div>
-    </div>
-  </section>
-
-  <!-- HISTÓRICO -->
   <section class="view" id="v-historico" hidden>
     <h2>Histórico de cadastros</h2>
-    <p class="sub">Todos os cadastros recebidos. Clique numa linha para ver o histórico de cada um.</p>
+    <p class="sub" id="hist-sub">Todos os cadastros recebidos. Clique numa linha para ver o histórico de cada um.</p>
+    <div class="tiles" id="hist-tiles"></div>
     <div class="toolbar">
       <input id="q-hist" type="search" placeholder="Buscar por nome, ID, CPF, cidade ou pessoa" aria-label="Buscar no histórico">
       <select id="f-hist-status" aria-label="Filtrar por situação"></select>
       <select id="f-hist-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
+      <label class="check" id="f-hist-meus-box" hidden><input type="checkbox" id="f-hist-meus"> Só os que eu enviei</label>
       <button class="btn" id="b-export" type="button">Baixar CSV</button>
     </div>
     <div class="tablewrap"><table id="t-hist"></table></div>
-    <div class="panel" style="margin-top:18px">
+    <div class="panel" id="ap-box" style="margin-top:18px">
       <h3>Aprovados: foram bloqueados depois?</h3>
       <p class="meta" id="ap-resumo">Carregando…</p>
       <div class="toolbar">
@@ -276,27 +233,6 @@
     <div id="bq-ativos-lista" class="protege-foco"></div>
   </section>
 
-  <section class="view" id="v-bq-meus" hidden>
-    <h2>Meus registros</h2>
-    <p class="sub">Os bloqueios que você registrou, com o tempo restante e o andamento da tratativa.</p>
-    <div class="tiles" id="bq-meus-tiles"></div>
-    <div class="toolbar">
-      <input id="bq-q-meus" type="search" placeholder="Buscar por nome, ID ou infração" aria-label="Buscar nos meus registros">
-      <select id="bq-meus-sit" aria-label="Filtrar por situação">
-        <option value="">Todas as situações</option>
-        <option value="bloqueado">Bloqueado agora</option>
-        <option value="liberado">Liberado (prazo cumprido)</option>
-        <option value="liberado_antes">Liberado antes do prazo</option>
-        <option value="encerramento">Parceria encerrada</option>
-        <option value="tratativa_pendente">Tratativa pendente</option>
-        <option value="tratativa_feita">Tratativa realizada</option>
-      </select>
-      <select id="bq-meus-inf" aria-label="Filtrar por infração"><option value="">Todas as infrações</option></select>
-      <select id="bq-meus-tipo" aria-label="Filtrar por tipo"><option value="">Bloqueios e infrações leves</option><option value="normal">Só bloqueios</option><option value="leve">Só infrações leves</option></select>
-    </div>
-    <div id="bq-meus-lista" class="protege-foco"></div>
-  </section>
-
   <section class="view" id="v-bq-consultar" hidden>
     <h2>Consultar entregador</h2>
     <p class="sub">Tudo sobre um entregador nos dois módulos: dados, comentários da equipe, linha do tempo, bloqueios e cadastro na ativação.</p>
@@ -306,42 +242,6 @@
       <button class="btn" type="button" id="bq-cadastrar-entregador" style="flex:0 0 auto">+ Cadastrar entregador</button>
     </form>
     <div id="bq-consulta" class="protege-foco"></div>
-  </section>
-
-  <section class="view" id="v-bq-painel" hidden>
-    <h2>Painel de bloqueios</h2>
-    <p class="sub" id="bq-painel-sub"></p>
-    <div class="toolbar">
-      <div class="seg" role="group" aria-label="Período">
-        <button type="button" data-periodo="7" aria-pressed="false">7 dias</button>
-        <button type="button" data-periodo="30" aria-pressed="true">30 dias</button>
-        <button type="button" data-periodo="90" aria-pressed="false">90 dias</button>
-        <button type="button" data-periodo="tudo" aria-pressed="false">Tudo</button>
-      </div>
-      <div class="seg" role="group" aria-label="Filtro de pessoas">
-        <button type="button" data-filtro-bq="todos" aria-pressed="true">Todos</button>
-        <button type="button" data-filtro-bq="eu" aria-pressed="false">Só eu</button>
-        <button type="button" data-filtro-bq="escolher" aria-pressed="false">Escolher pessoas</button>
-      </div>
-      <select id="bq-f-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
-      <select id="bq-f-infracao" aria-label="Filtrar por infração"><option value="">Todas as infrações</option></select>
-      <select id="bq-f-tipo" aria-label="Filtrar por tipo"><option value="">Bloqueios e infrações leves</option><option value="normal">Só bloqueios</option><option value="leve">Só infrações leves</option></select>
-    </div>
-    <div class="pessoas" id="bq-pessoas" hidden></div>
-    <div class="tiles" id="bq-tiles"></div>
-    <div class="panel">
-      <h3>Bloqueios por dia</h3>
-      <div class="legend"><span><i style="background:var(--accent)"></i>1ª ocorrência</span><span><i style="background:var(--warn)"></i>Reincidência</span><span><i style="background:var(--bad)"></i>Encerramento de parceria</span><span><i style="background:var(--gray)"></i>Infração leve</span></div>
-      <div id="bq-chart"></div>
-    </div>
-    <div class="two">
-      <div class="panel"><h3>Por infração</h3><div class="tablewrap"><table id="bq-t-infracao"></table></div></div>
-      <div class="panel"><h3>Por cidade</h3><div class="tablewrap"><table id="bq-t-cidade"></table></div></div>
-    </div>
-    <div class="two">
-      <div class="panel"><h3>Por pessoa</h3><div class="tablewrap"><table id="bq-t-pessoa"></table></div></div>
-      <div class="panel"><h3>Entregadores reincidentes</h3><div class="tablewrap"><table id="bq-t-reinc"></table></div></div>
-    </div>
   </section>
 
   <section class="view" id="v-bq-historico" hidden>
@@ -570,16 +470,16 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/base.js?v=008c"></script>
-<script src="js/inicio.js?v=008c"></script>
-<script src="js/ativacao.js?v=008c"></script>
-<script src="js/bloqueios.js?v=008c"></script>
-<script src="js/entregadores.js?v=008c"></script>
-<script src="js/atividades.js?v=008c"></script>
-<script src="js/avisos.js?v=008c"></script>
-<script src="js/analises.js?v=008c"></script>
-<script src="js/registros.js?v=008c"></script>
-<script src="js/equipe.js?v=008c"></script>
-<script src="js/busca.js?v=008c"></script>
+<script src="js/base.js?v=008c2"></script>
+<script src="js/inicio.js?v=008c2"></script>
+<script src="js/ativacao.js?v=008c2"></script>
+<script src="js/bloqueios.js?v=008c2"></script>
+<script src="js/entregadores.js?v=008c2"></script>
+<script src="js/atividades.js?v=008c2"></script>
+<script src="js/avisos.js?v=008c2"></script>
+<script src="js/analises.js?v=008c2"></script>
+<script src="js/registros.js?v=008c2"></script>
+<script src="js/equipe.js?v=008c2"></script>
+<script src="js/busca.js?v=008c2"></script>
 </body>
 </html>
