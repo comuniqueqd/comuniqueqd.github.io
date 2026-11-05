@@ -364,3 +364,39 @@ nav.grupo[hidden] { display: none; }
 .cidades-livres li { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding: 4px 0; font-size: 14px; }
 .cidades-livres .btn.link { font-size: 13px; padding: 2px 0; }
 .meus-pedidos li { font-size: 14px; }
+
+/* 008c: tela inicial com funções em destaque (botões grandes) e números discretos */
+.funcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 6px 0 28px; }
+a.funcao { position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; padding: 20px 18px;
+  border-radius: 16px; text-decoration: none; color: var(--ink); border: 1px solid var(--line); background: var(--surface);
+  box-shadow: 0 1px 2px rgba(10, 14, 20, .06); transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; overflow: hidden; }
+a.funcao::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--fcor, var(--accent)); }
+a.funcao:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(10, 14, 20, .12); border-color: var(--fcor, var(--accent)); }
+a.funcao:active { transform: translateY(0) scale(.98); box-shadow: 0 2px 6px rgba(10, 14, 20, .10); }
+a.funcao:focus-visible { outline: 3px solid var(--fcor, var(--accent)); outline-offset: 2px; }
+.funcao-icone { width: 48px; height: 48px; display: grid; place-items: center; font-size: 24px; border-radius: 14px;
+  background: color-mix(in srgb, var(--fcor, var(--accent)) 14%, transparent); transition: transform .2s ease; }
+a.funcao:hover .funcao-icone { transform: rotate(-6deg) scale(1.08); }
+.funcao-corpo { display: grid; gap: 3px; min-width: 0; }
+.funcao-corpo b { font-size: 17px; }
+.funcao-texto { font-size: 13px; color: var(--muted); }
+.funcao-vivo { font-size: 12px; font-weight: 600; color: var(--fcor, var(--accent)); }
+.funcao-seta { font-size: 20px; color: var(--muted); transition: transform .15s ease, color .15s ease; }
+a.funcao:hover .funcao-seta { transform: translateX(4px); color: var(--fcor, var(--accent)); }
+a.funcao.f-ativ { --fcor: var(--accent); }
+a.funcao.f-ent { --fcor: #7a4bd1; }
+a.funcao.f-sug { --fcor: var(--ok); }
+a.funcao.f-reg { --fcor: var(--warn); }
+@media (prefers-reduced-motion: reduce) { a.funcao, .funcao-icone, .funcao-seta { transition: none; } a.funcao:hover { transform: none; } }
+.inicio-dados-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.inicio-dados-topo h3 { margin: 0; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.inicio-dados .modulos-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.inicio-dados a.modulo-card { padding: 12px 14px; gap: 6px; border-top-width: 2px; background: transparent; }
+.inicio-dados a.modulo-card h3 { font-size: 14px; color: var(--muted); }
+.inicio-dados .numeros b { font-size: 18px; }
+
+/* 008c: análises simples */
+.an-grid .panel.largo { grid-column: 1 / -1; }
+.an-grid .an-sub { margin: 12px 0 6px; font-size: 14px; }
+.pico { margin: 0 0 10px; font-size: 14px; }
+.destaques .alerta b { color: var(--bad); }

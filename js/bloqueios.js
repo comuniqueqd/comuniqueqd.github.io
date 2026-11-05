@@ -913,8 +913,8 @@
     id: "bloqueios", nome: "Bloqueios",
     acesso: () => !!papel(),
     abas: [
-      { id: "tratativas", nome: "Tratativas", secao: "v-bq-tratativas", pode: staff, contador: "c-trat", alerta: true },
       { id: "novo", nome: "Novo bloqueio", secao: "v-bq-novo" },
+      { id: "tratativas", nome: "Tratativas", secao: "v-bq-tratativas", pode: staff, contador: "c-trat", alerta: true },
       { id: "ativos", nome: "Bloqueados agora", secao: "v-bq-ativos", pode: staff },
       { id: "atencao", nome: "Atenção", secao: "v-bq-atencao", contador: "c-atencao" },
       { id: "meus", nome: "Meus registros", secao: "v-bq-meus" },
@@ -923,7 +923,7 @@
       { id: "historico", nome: "Histórico", secao: "v-bq-historico", pode: staff },
       { id: "regras", nome: "Regras", secao: "v-bq-regras", pode: mod },
     ],
-    padrao: () => (staff() ? "tratativas" : "novo"),
+    padrao: () => "novo",  // 008c: a primeira tela é o Novo bloqueio, depois as tratativas
     async carregar(aba) {
       const t = [];
       // regras e cidades: recarrega na aba Regras e a cada 5 min (alguém pode ter mudado)

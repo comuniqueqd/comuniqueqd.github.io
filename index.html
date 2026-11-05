@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=008b6">
+<link rel="stylesheet" href="estilo.css?v=008c">
 </head>
 <body>
 <header class="top">
@@ -43,9 +43,13 @@
   <!-- ===================== INÍCIO ===================== -->
   <section class="view" id="v-inicio" hidden>
     <h2 id="ola">Olá!</h2>
-    <p class="sub">Escolha um módulo. Os números mostram o que está esperando por você.</p>
+    <p class="sub">O que você quer fazer agora?</p>
     <div id="inicio-novidades"></div>
-    <div class="modulos-grid" id="modulos-grid"></div>
+    <nav class="funcoes" id="inicio-funcoes" aria-label="Atalhos do dia a dia"></nav>
+    <div class="inicio-dados">
+      <div class="inicio-dados-topo"><h3>Seus números</h3><a class="btn link" href="#analises/simples">Ver mais nas Análises →</a></div>
+      <div class="modulos-grid" id="modulos-grid"></div>
+    </div>
   </section>
 
   <!-- ===================== ATIVAÇÃO ===================== -->
@@ -440,18 +444,35 @@
 
   <!-- ===================== ANÁLISES ===================== -->
   <!-- PLACAR DO DETETIVE (Análises, 008) -->
-  <section class="view" id="v-an-analises" hidden>
-    <h2>Análises</h2>
-    <p class="sub" id="an-sub">Números da operação para entender o que funciona. Só totais: nenhum dado pessoal.</p>
+  <section class="view" id="v-an-simples" hidden>
+    <h2>Análises simples</h2>
+    <p class="sub" id="as-sub">Os números do dia a dia.</p>
     <div class="toolbar">
       <div class="seg" role="group" aria-label="Período">
-        <button type="button" data-an-periodo="30">30 dias</button>
-        <button type="button" data-an-periodo="90" aria-pressed="true">90 dias</button>
+        <button type="button" data-an-periodo="7">7 dias</button>
+        <button type="button" data-an-periodo="30" aria-pressed="true">30 dias</button>
+        <button type="button" data-an-periodo="90">90 dias</button>
         <button type="button" data-an-periodo="180">6 meses</button>
         <button type="button" data-an-periodo="365">1 ano</button>
         <button type="button" data-an-periodo="tudo">Tudo</button>
       </div>
-      <select id="an-cidade" aria-label="Cidade"><option value="">Todas as cidades</option></select>
+      <select class="an-cidade" id="as-cidade" aria-label="Cidade"><option value="">Todas as cidades</option></select>
+    </div>
+    <div id="as-cards" class="an-grid"></div>
+  </section>
+  <section class="view" id="v-an-analises" hidden>
+    <h2>Análises complexas</h2>
+    <p class="sub" id="an-sub">Para entender o que funciona. Só totais: nenhum dado pessoal.</p>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Período">
+        <button type="button" data-an-periodo="7">7 dias</button>
+        <button type="button" data-an-periodo="30" aria-pressed="true">30 dias</button>
+        <button type="button" data-an-periodo="90">90 dias</button>
+        <button type="button" data-an-periodo="180">6 meses</button>
+        <button type="button" data-an-periodo="365">1 ano</button>
+        <button type="button" data-an-periodo="tudo">Tudo</button>
+      </div>
+      <select class="an-cidade" id="an-cidade" aria-label="Cidade"><option value="">Todas as cidades</option></select>
     </div>
     <div id="an-cards" class="an-grid"></div>
   </section>
@@ -549,16 +570,16 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/base.js?v=008b6"></script>
-<script src="js/inicio.js?v=008b6"></script>
-<script src="js/ativacao.js?v=008b6"></script>
-<script src="js/bloqueios.js?v=008b6"></script>
-<script src="js/entregadores.js?v=008b6"></script>
-<script src="js/atividades.js?v=008b6"></script>
-<script src="js/avisos.js?v=008b6"></script>
-<script src="js/analises.js?v=008b6"></script>
-<script src="js/registros.js?v=008b6"></script>
-<script src="js/equipe.js?v=008b6"></script>
-<script src="js/busca.js?v=008b6"></script>
+<script src="js/base.js?v=008c"></script>
+<script src="js/inicio.js?v=008c"></script>
+<script src="js/ativacao.js?v=008c"></script>
+<script src="js/bloqueios.js?v=008c"></script>
+<script src="js/entregadores.js?v=008c"></script>
+<script src="js/atividades.js?v=008c"></script>
+<script src="js/avisos.js?v=008c"></script>
+<script src="js/analises.js?v=008c"></script>
+<script src="js/registros.js?v=008c"></script>
+<script src="js/equipe.js?v=008c"></script>
+<script src="js/busca.js?v=008c"></script>
 </body>
 </html>

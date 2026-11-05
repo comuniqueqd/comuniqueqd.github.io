@@ -1,13 +1,13 @@
 // Módulo "Análises": números agregados para todos os papéis (supabase/005-analises-anexos.sql).
-// Aba Análises: eficácia da punição, reincidência, dia × hora, bloqueados por cidade, leves,
-// tratativas por responsável e da ativação ao bloqueio. Aba Resumo semanal: terça a segunda,
+// 008c: Análises simples (os números do dia a dia, analises_simples) e Análises complexas (para entender
+// o que funciona, analises_complexas), com o mesmo período e cidade. Aba Resumo semanal: terça a segunda,
 // com comparação entre semanas e download em CSV ou PDF.
 (() => {
   "use strict";
   const App = window.App;
   const { $, el, vazio, carregandoEl, rpc, msgErro, tabela, barras, baixarCSV } = App.u;
   const S = App.S;
-  const A = { periodo: 90, cidade: "", dados: null, chave: "", cidades: null, erro: null,
+  const A = { periodo: 30, cidade: "", dados: null, chave: "", cidades: null, erro: null,
               resumo: {}, semana: "", comparar: "anterior", semanas: null };
   const render = () => App.render();
   const n = (v) => (v == null ? "—" : String(v).replace(".", ","));
@@ -15,18 +15,21 @@
   const card = (titulo, nota, ...conteudo) => el("div", { class: "panel" }, el("h3", { text: titulo }), nota ? el("p", { class: "an-nota", text: nota }) : null, ...conteudo);
   const destaque = (v, rotulo) => el("div", {}, el("b", { text: n(v) }), el("span", { text: rotulo }));
 
-  // ---------- análises ----------
+  // ---------- análises (008c: simples e complexas) ----------
+  // as duas abas dividem o período e a cidade; cada uma guarda os próprios dados
+  const D = { simples: null, complexas: null, chave: {}, erro: {} };
   const chaveAnalises = () => `${A.periodo}|${A.cidade}`;
-  async function carregarAnalises() {
+  async function carregarAnalises(tipo) {
     if (!A.cidades) A.cidades = await rpc("listar_cidades").catch(() => []);
     const chave = chaveAnalises();
     try {
-      const d = await rpc("analises", { p_dias: A.periodo === "tudo" ? null : A.periodo, p_cidade: A.cidade || null });
-      if (chave === chaveAnalises()) { A.dados = d; A.chave = chave; A.erro = null; }
-    } catch (e) { A.erro = msgErro(e); }
+      const d = await rpc(tipo === "simples" ? "analises_simples" : "analises_complexas", { p_dias: A.periodo === "tudo" ? null : A.periodo, p_cidade: A.cidade || null });
+      if (chave === chaveAnalises()) { D[tipo] = d; D.chave[tipo] = chave; D.erro[tipo] = null; }
+    } catch (e) { D.erro[tipo] = msgErro(e); }
   }
   const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-  function mapaCalor(lista) {
+  const DIAS_LONGOS = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+  function mapaCalor(lista, cor = "var(--accent)") {
     const max = Math.max(1, ...lista.map((x) => x.qtd));
     const mapa = new Map(lista.map((x) => [`${x.dia}-${x.hora}`, x.qtd]));
     const cel = [el("span")];
@@ -36,54 +39,147 @@
       for (let h = 0; h < 24; h++) {
         const q = mapa.get(`${d}-${h}`) || 0;
         cel.push(el("span", { class: "c", title: `${DIAS[d]}, ${h}h: ${q} registro(s)`,
-          style: q ? `background:color-mix(in srgb, var(--accent) ${Math.round(15 + (85 * q) / max)}%, transparent)` : null }));
+          style: q ? `background:color-mix(in srgb, ${cor} ${Math.round(15 + (85 * q) / max)}%, transparent)` : null }));
       }
     }
     return el("div", { class: "calor", role: "img", "aria-label": "Registros por dia da semana e hora" }, cel);
   }
-  function renderAnalises() {
-    document.querySelectorAll("[data-an-periodo]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.anPeriodo === String(A.periodo))));
-    const sel = $("#an-cidade");
-    if (A.cidades && sel.dataset.sig !== String(A.cidades.length)) {
-      sel.dataset.sig = String(A.cidades.length);
-      sel.replaceChildren(el("option", { value: "", text: "Todas as cidades" }), ...A.cidades.map((c) => el("option", { value: c, text: c })));
-      sel.value = A.cidade;
-    }
-    const box = $("#an-cards"), d = A.dados;
-    if (A.erro && !d) return box.replaceChildren(el("p", { class: "err", text: A.erro }));
-    if (!d || A.chave !== chaveAnalises()) return box.replaceChildren(carregandoEl());
-    const periodo = A.periodo === "tudo" ? "desde o início" : `nos últimos ${A.periodo} dias`;
-    $("#an-sub").textContent = `Números da operação ${periodo}${A.cidade ? " em " + A.cidade : ""}. Só totais: nenhum dado pessoal.`;
+  // o que mais aparece no mapa: dia, hora e faixa do dia
+  function picos(lista) {
+    if (!lista.length) return null;
+    const total = lista.reduce((s, x) => s + x.qtd, 0);
+    const porDia = Array(7).fill(0), porHora = Array(24).fill(0);
+    for (const x of lista) { porDia[x.dia] += x.qtd; porHora[x.hora] += x.qtd; }
+    const dia = porDia.indexOf(Math.max(...porDia)), hora = porHora.indexOf(Math.max(...porHora));
+    const faixas = [["madrugada (0–6h)", 0, 6], ["manhã (6–12h)", 6, 12], ["tarde (12–18h)", 12, 18], ["noite (18–24h)", 18, 24]]
+      .map(([nome, a, b]) => [nome, porHora.slice(a, b).reduce((s, v) => s + v, 0)]);
+    const faixa = faixas.reduce((m, f) => (f[1] > m[1] ? f : m));
+    return { total, dia: DIAS_LONGOS[dia], hora, faixa: faixa[0], faixaPct: Math.round((100 * faixa[1]) / total) };
+  }
+  const largo = (painel) => (painel.classList.add("largo"), painel);
+  const hhmm = (iso) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
 
-    const ef = d.eficacia, ri = d.reincidencia, lv = d.leves, ab = d.ativacao_bloqueio;
-    const totalBloq = d.bloqueados_por_cidade.reduce((s, x) => s + x.agora, 0);
+  function prepararFiltros() {
+    document.querySelectorAll("[data-an-periodo]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.anPeriodo === String(A.periodo))));
+    document.querySelectorAll("select.an-cidade").forEach((sel) => {
+      if (A.cidades && sel.dataset.sig !== String(A.cidades.length)) {
+        sel.dataset.sig = String(A.cidades.length);
+        sel.replaceChildren(el("option", { value: "", text: "Todas as cidades" }), ...A.cidades.map((c) => el("option", { value: c, text: c })));
+      }
+      sel.value = A.cidade;
+    });
+  }
+  const textoPeriodo = () => (A.periodo === "tudo" ? "desde o início" : `nos últimos ${A.periodo} dias`) + (A.cidade ? " em " + A.cidade : "");
+
+  // ---------- análises simples: os números do dia a dia ----------
+  function renderSimples() {
+    prepararFiltros();
+    const box = $("#as-cards"), d = D.simples;
+    if (D.erro.simples && !d) return box.replaceChildren(el("p", { class: "err", text: D.erro.simples }));
+    if (!d || D.chave.simples !== chaveAnalises()) return box.replaceChildren(carregandoEl());
+    $("#as-sub").textContent = `Os números do dia a dia ${textoPeriodo()}. “Agora” é o momento atual; o resto vale para o período escolhido.`;
+    const at = d.ativacao, mot = d.motivos_nao_aprovacao, ag = d.agora, ri = d.reincidencia, lv = d.leves, tr = d.tratativas, av = d.atividades, vc = d.voce;
+    const pMeu = picos(d.dia_hora_meu), pEq = picos(d.dia_hora);
+    const totalNao = mot.reduce((s, x) => s + x.qtd, 0);
+    const cards = [
+      card("Ativação de entregadores", "Agora: o que espera análise ou novo contato. No período: o que entrou e como terminou.",
+        el("div", { class: "destaques" }, destaque(at.aguardando_analise, "aguardando análise agora"), destaque(at.aguardando_contato, "aguardando novo contato")),
+        el("div", { class: "destaques" }, destaque(at.enviados, "enviados no período"), destaque(at.aprovados, "aprovados"),
+          destaque(at.enviados ? n(pct(at.aprovados, at.enviados)) + "%" : null, "taxa de aprovação"),
+          destaque(at.em_aberto, "ainda em aberto"), destaque(at.encerrados, "encerrados"),
+          destaque(at.horas_ate_aprovar, "horas do envio à aprovação (mediana)"))),
+      card("Por que não aprovou", "Reprovações e encerramentos do período, pelo motivo escolhido na decisão (as decisões desfeitas não contam).",
+        el("div", { class: "destaques" }, destaque(totalNao, "não aprovações"),
+          destaque(mot.filter((x) => x.tipo === "reprovado").reduce((s, x) => s + x.qtd, 0), "reprovações"),
+          destaque(mot.filter((x) => x.tipo === "encerrado").reduce((s, x) => s + x.qtd, 0), "encerramentos")),
+        ...barras(mot.map((x) => ({ rotulo: `${x.motivo} (${x.tipo === "encerrado" ? "encerramento" : "reprovação"})`, qtd: x.qtd,
+          extra: `${x.qtd} · ${n(pct(x.qtd, totalNao))}%` })), "var(--bad)", "Nenhuma reprovação ou encerramento no período.")),
+    ];
+    if (d.tem_bloqueios) {
+      cards.push(
+        card("Bloqueios agora", "Quem está bloqueado neste momento e quem sai hoje (o fim do prazo libera sozinho).",
+          el("div", { class: "destaques" }, destaque(ag.bloqueados, "bloqueados agora"), destaque(ag.saem_hoje, "saem do bloqueio hoje"),
+            destaque(ag.sairam_hoje, "já saíram hoje"), destaque(ag.liberados_antes_hoje, "liberados antes do prazo hoje")),
+          el("div", { class: "destaques" }, destaque(ag.tratativas_pendentes, "tratativas pendentes"),
+            el("div", { class: ag.tratativas_atrasadas ? "alerta" : null }, el("b", { text: n(ag.tratativas_atrasadas) }), el("span", { text: "atrasadas" })),
+            destaque(ag.encerramentos_pendentes, "encerramentos a tratar")),
+          ag.saem_hoje ? el("p", { class: "an-nota", text: `O próximo a sair é às ${hhmm(ag.proximo_fim)}.` }) : null,
+          ag.saem_hoje ? el("div", {}, el("h4", { class: "an-sub", text: "Saem hoje, por hora" }),
+            ...barras(ag.saem_hoje_por_hora.map((x) => ({ rotulo: `${String(x.hora).padStart(2, "0")}h`, qtd: x.qtd })), "var(--ok)", "")) : null),
+        card("Bloqueados agora, por cidade", "Onde estão os bloqueados neste momento e quantos saem hoje.",
+          d.bloqueados_por_cidade.length ? el("div", { class: "tablewrap" }, el("table", {}, ...tabela([["Cidade"], ["Bloqueados", 1], ["Saem hoje", 1]],
+            d.bloqueados_por_cidade.map((x) => el("tr", {}, el("td", { text: x.cidade }), el("td", { class: "num", text: x.agora }), el("td", { class: "num", text: x.saem_hoje }))), "")))
+            : el("p", { class: "meta", text: "Ninguém bloqueado agora." })));
+    }
+    cards.push(
+      largo(card("Quando você registra", "Seus bloqueios, infrações leves e cadastros enviados, por dia da semana e hora. Mais escuro = mais registros seus.",
+        pMeu ? el("p", { class: "pico" }, "Seu pico: ", el("b", { text: `${pMeu.dia}, por volta das ${pMeu.hora}h` }), ` · ${pMeu.faixaPct}% dos seus registros são de ${pMeu.faixa} · ${pMeu.total} registro(s) no período`) : null,
+        pMeu ? mapaCalor(d.dia_hora_meu, "var(--ok)") : el("p", { class: "meta", text: "Você ainda não registrou nada no período." }))),
+      largo(card("Quando a equipe registra", "Bloqueios, infrações leves e cadastros de toda a equipe, por dia da semana e hora (sem os importados da planilha).",
+        pEq ? el("p", { class: "pico" }, "Pico da equipe: ", el("b", { text: `${pEq.dia}, por volta das ${pEq.hora}h` }), ` · ${pEq.faixaPct}% dos registros são de ${pEq.faixa}`) : null,
+        pEq ? mapaCalor(d.dia_hora) : el("p", { class: "meta", text: "Nenhum registro no período." }))),
+      card("Você no período", "O que você fez no período escolhido (só você vê os seus números).",
+        el("div", { class: "destaques" }, destaque(vc.cadastros, "cadastros enviados"), destaque(vc.decisoes, "decisões na ativação"),
+          d.tem_bloqueios ? destaque(vc.bloqueios, "bloqueios") : null, d.tem_bloqueios ? destaque(vc.leves, "infrações leves") : null,
+          d.tem_bloqueios ? destaque(vc.tratativas, "tratativas resolvidas") : null, destaque(vc.atividades, "atividades concluídas"),
+          d.tem_bloqueios ? destaque(vc.comentarios, "comentários nas fichas") : null)),
+      card("Atividades", "Atividades sugeridas entre a equipe.",
+        el("div", { class: "destaques" }, destaque(av.abertas_agora, "abertas agora"), destaque(av.em_andamento, "em andamento"),
+          destaque(av.sugeridas, "sugeridas no período"), destaque(av.concluidas, "concluídas no período"))));
+    if (d.tem_bloqueios) {
+      cards.push(
+        card("Tempo até reincidir", "Intervalo entre um bloqueio e o seguinte do mesmo entregador.",
+          el("div", { class: "destaques" }, destaque(ri.total, "reincidências no período"), destaque(ri.mediana_dias, "dias (mediana)")),
+          ...barras(ri.faixas.map((f) => ({ rotulo: f.faixa, qtd: f.qtd })), "var(--warn)", "Nenhuma reincidência no período.")),
+        card("Conversão das infrações leves", "Quantos entregadores com infração leve chegaram ao limite e ganharam um bloqueio normal.",
+          el("div", { class: "destaques" }, destaque(lv.total, "infrações leves"), destaque(lv.entregadores, "entregadores"),
+            destaque(lv.atingiram_limite, "chegaram ao limite"), destaque(lv.entregadores ? n(pct(lv.atingiram_limite, lv.entregadores)) + "%" : null, "conversão"))),
+        card("Infrações mais registradas", "Os bloqueios do período por infração (as 8 primeiras).",
+          ...barras(d.por_infracao.map((x) => ({ rotulo: x.infracao, qtd: x.qtd, extra: x.encerramentos ? `${x.qtd} · ${x.encerramentos} encerramento(s)` : null })), "var(--accent)", "Nenhum bloqueio no período.")),
+        card("Tratativas no prazo", `Tratativas criadas no período (sem as da planilha). O prazo é de ${n(tr.prazo_horas)} h.`,
+          el("div", { class: "destaques" }, destaque(tr.criadas, "criadas"), destaque(tr.concluidas, "resolvidas"),
+            destaque(tr.concluidas ? n(pct(tr.no_prazo, tr.concluidas)) + "%" : null, "resolvidas no prazo")),
+          tr.concluidas ? el("div", { class: "bar", style: "margin-top:6px" }, el("span", { style: `width:${pct(tr.no_prazo, tr.concluidas)}%;background:var(--ok)` })) : null));
+    }
+    box.replaceChildren(...cards);
+  }
+
+  // ---------- análises complexas: para entender o que funciona ----------
+  function renderComplexas() {
+    prepararFiltros();
+    const box = $("#an-cards"), d = D.complexas;
+    if (D.erro.complexas && !d) return box.replaceChildren(el("p", { class: "err", text: D.erro.complexas }));
+    if (!d || D.chave.complexas !== chaveAnalises()) return box.replaceChildren(carregandoEl());
+    $("#an-sub").textContent = `Para entender o que funciona, ${textoPeriodo()}. Só totais: nenhum dado pessoal.`;
+    const ef = d.eficacia, ab = d.ativacao_bloqueio, es = d.escada, ra = d.resposta_ativacao;
+    const tab = (cols, linhas, vazioTxt) => linhas.length ? el("div", { class: "tablewrap" }, el("table", {}, ...tabela(cols, linhas, ""))) : el("p", { class: "meta", text: vazioTxt });
+    const td = (v, num) => el("td", { class: num ? "num" : null, text: v == null ? "—" : String(v) });
     box.replaceChildren(
       card("Eficácia da punição", "Depois de cada punição, quantos entregadores voltaram a ser bloqueados em até 30 dias. Quanto menor a porcentagem, mais a punição funcionou. Só entram bloqueios com 30 dias ou mais.",
-        ef.length ? el("div", { class: "tablewrap" }, el("table", {}, ...tabela([["Punição"], ["Bloqueios", 1], ["Voltaram em 30 dias", 1], ["%", 1]],
-          ef.map((x) => el("tr", {}, el("td", { text: x.punicao }), el("td", { class: "num", text: x.bloqueios }), el("td", { class: "num", text: x.reincidiram_30d }), el("td", { class: "num", text: n(x.pct) + "%" }))), "")))
-          : el("p", { class: "meta", text: "Ainda não há bloqueios com 30 dias no período." })),
-      card("Tempo até reincidir", "Intervalo entre um bloqueio e o seguinte do mesmo entregador.",
-        el("div", { class: "destaques" }, destaque(ri.total, "reincidências no período"), destaque(ri.mediana_dias == null ? null : ri.mediana_dias, "dias (mediana)")),
-        ...barras(ri.faixas.map((f) => ({ rotulo: f.faixa, qtd: f.qtd })), "var(--warn)", "Nenhuma reincidência no período.")),
-      card("Quando a equipe registra", "Bloqueios por dia da semana e hora do registro (que é quando o problema foi visto). Mais escuro = mais registros. Sem os importados da planilha.",
-        d.dia_hora.length ? mapaCalor(d.dia_hora) : el("p", { class: "meta", text: "Nenhum registro no período." })),
-      card("Bloqueados agora, por cidade", "Quem está bloqueado neste momento, separando quem foi ativado pelo sistema de quem só existe pelos bloqueios.",
-        el("div", { class: "destaques" }, destaque(totalBloq, "bloqueados agora")),
-        d.bloqueados_por_cidade.length ? el("div", { class: "tablewrap" }, el("table", {}, ...tabela([["Cidade"], ["Agora", 1], ["Vieram da ativação", 1], ["Só pelos bloqueios", 1]],
-          d.bloqueados_por_cidade.map((x) => el("tr", {}, el("td", { text: x.cidade }), el("td", { class: "num", text: x.agora }), el("td", { class: "num", text: x.da_ativacao }), el("td", { class: "num", text: x.so_bloqueios }))), "")))
-          : el("p", { class: "meta", text: "Ninguém bloqueado agora." })),
-      card("Conversão das infrações leves", "Quantos entregadores com infração leve chegaram ao limite e ganharam um bloqueio normal.",
-        el("div", { class: "destaques" }, destaque(lv.total, "infrações leves"), destaque(lv.entregadores, "entregadores"),
-          destaque(lv.atingiram_limite, "chegaram ao limite"), destaque(lv.entregadores ? n(pct(lv.atingiram_limite, lv.entregadores)) + "%" : null, "conversão")),
-        lv.por_motivo.length ? el("div", { class: "tablewrap" }, el("table", {}, ...tabela([["Motivo"], ["Leves", 1], ["Geraram bloqueio", 1]],
-          lv.por_motivo.map((x) => el("tr", {}, el("td", { text: x.infracao }), el("td", { class: "num", text: x.qtd }), el("td", { class: "num", text: x.geraram }))), ""))) : null),
+        tab([["Punição"], ["Bloqueios", 1], ["Voltaram em 30 dias", 1], ["%", 1]],
+          ef.map((x) => el("tr", {}, td(x.punicao), td(x.bloqueios, 1), td(x.reincidiram_30d, 1), td(n(x.pct) + "%", 1))), "Ainda não há bloqueios com 30 dias no período.")),
+      card("Qual infração mais se repete", "Dos entregadores bloqueados por cada infração no período, quantos já tiveram essa mesma infração duas vezes ou mais (todo o histórico).",
+        tab([["Infração"], ["Bloqueios", 1], ["Entregadores", 1], ["Repetiram", 1], ["%", 1]],
+          d.reincidencia_por_infracao.map((x) => el("tr", {}, td(x.infracao), td(x.bloqueios, 1), td(x.entregadores, 1), td(x.repetiram, 1), td(n(x.pct) + "%", 1))), "Poucos dados no período.")),
+      card("Escada da reincidência", "Dos entregadores bloqueados no período, quantos bloqueios cada um já soma no histórico. Muita gente nos degraus de cima = a punição não está segurando.",
+        el("div", { class: "destaques" }, destaque(es.entregadores, "entregadores bloqueados no período"),
+          destaque(es.entregadores ? n(pct(es.faixas.slice(1).reduce((s, f) => s + f.qtd, 0), es.entregadores)) + "%" : null, "já têm 2 ou mais")),
+        ...barras(es.faixas.map((f) => ({ rotulo: f.faixa, qtd: f.qtd })), "var(--bad)", "Nenhum bloqueio no período.")),
+      card("Cidades", "Volume e gravidade por cidade: bloqueios por entregador, reincidentes (mesma infração 2 vezes ou mais), encerramentos e infrações leves.",
+        tab([["Cidade"], ["Bloqueios", 1], ["Entregadores", 1], ["Por entregador", 1], ["Reincidentes", 1], ["Encerramentos", 1], ["Leves", 1]],
+          d.cidades.map((x) => el("tr", {}, td(x.cidade), td(x.bloqueios, 1), td(x.entregadores, 1), td(n(x.por_entregador), 1), td(x.reincidentes, 1), td(x.encerramentos, 1), td(x.leves, 1))), "Nenhum bloqueio no período.")),
+      card("Tempo de resposta da ativação", "Do envio do cadastro à primeira decisão (aprovar, reprovar ou encerrar), em horas (mediana): por quem decidiu e pelo dia em que o cadastro chegou.",
+        tab([["Quem decidiu"], ["Decisões", 1], ["Aprovou", 1], ["Horas (mediana)", 1]],
+          ra.por_pessoa.map((x) => el("tr", {}, td(x.pessoa), td(x.decisoes, 1), td(x.aprovou, 1), td(n(x.horas_mediana), 1))), "Nenhuma decisão no período."),
+        ra.por_dia.length ? el("div", {}, el("h4", { class: "an-sub", text: "Horas até a 1ª decisão, pelo dia do envio" }),
+          ...barras(ra.por_dia.map((x) => ({ rotulo: `${DIAS_LONGOS[x.dia]} (${x.enviados} enviados)`, qtd: Number(x.horas_mediana) || 0, extra: n(x.horas_mediana) + " h" })), "var(--warn)", "")) : null),
+      card("Punições desfeitas", "Bloqueios liberados antes do prazo (ou encerramentos revertidos), por infração. Muita liberação numa infração pode indicar regra dura demais ou registro sem prova.",
+        tab([["Infração"], ["Bloqueios", 1], ["Liberados antes", 1], ["%", 1], ["Horas até liberar (média)", 1]],
+          d.liberacoes.map((x) => el("tr", {}, td(x.infracao), td(x.bloqueios, 1), td(x.liberados, 1), td(n(x.pct) + "%", 1), td(n(x.horas_media), 1))), "Nenhuma punição desfeita no período.")),
       card("Tratativas por responsável", `Tratativas criadas no período (sem as importadas da planilha). O prazo é de ${S.resumo?.prazo_tratativa_horas ?? 32} h.`,
-        d.tratativas_por_responsavel.length ? el("div", { class: "tablewrap" }, el("table", {}, ...tabela(
-          [["Responsável"], ["Total", 1], ["Concluídas", 1], ["Tempo médio (h)", 1], ["Fora do prazo", 1], ["Pendentes", 1], ["Atrasadas agora", 1]],
-          d.tratativas_por_responsavel.map((x) => el("tr", {}, el("td", { text: x.responsavel }), el("td", { class: "num", text: x.total }), el("td", { class: "num", text: x.concluidas }),
-            el("td", { class: "num", text: n(x.horas_media) }), el("td", { class: "num", text: x.fora_do_prazo }), el("td", { class: "num", text: x.pendentes }),
-            el("td", { class: "num" + (x.atrasadas_agora ? " err" : ""), text: x.atrasadas_agora }))), "")))
-          : el("p", { class: "meta", text: "Nenhuma tratativa no período." })),
+        tab([["Responsável"], ["Total", 1], ["Concluídas", 1], ["Tempo médio (h)", 1], ["Fora do prazo", 1], ["Pendentes", 1], ["Atrasadas agora", 1]],
+          d.tratativas_por_responsavel.map((x) => el("tr", {}, td(x.responsavel), td(x.total, 1), td(x.concluidas, 1), td(n(x.horas_media), 1), td(x.fora_do_prazo, 1), td(x.pendentes, 1),
+            el("td", { class: "num" + (x.atrasadas_agora ? " err" : ""), text: x.atrasadas_agora }))), "Nenhuma tratativa no período.")),
       card("Da ativação ao bloqueio", "Dos entregadores aprovados em cada mês, quantos levaram um bloqueio em até 30, 60 e 90 dias depois da aprovação. Um mês só entra na conta de 60 ou 90 dias quando já passou esse tempo.",
         el("div", { class: "destaques" }, destaque(ab.aprovados, "aprovados pelo sistema"), destaque(ab.bloqueados, "bloqueados depois"),
           destaque(ab.aprovados ? n(pct(ab.bloqueados, ab.aprovados)) + "%" : null, "do total"), destaque(ab.dias_medios, "dias até o 1º bloqueio (média)")),
@@ -99,7 +195,7 @@
   document.querySelectorAll("[data-an-periodo]").forEach((b) => b.addEventListener("click", () => {
     A.periodo = b.dataset.anPeriodo === "tudo" ? "tudo" : Number(b.dataset.anPeriodo); render(); App.carregar();
   }));
-  $("#an-cidade").addEventListener("change", (e) => { A.cidade = e.target.value; render(); App.carregar(); });
+  document.querySelectorAll("select.an-cidade").forEach((sel) => sel.addEventListener("change", (e) => { A.cidade = e.target.value; render(); App.carregar(); }));
 
   // ---------- resumo semanal ----------
   const fmtDia = (iso) => iso.slice(8, 10) + "/" + iso.slice(5, 7);
@@ -222,10 +318,12 @@
   App.modulo({
     id: "analises", nome: "Análises",
     abas: [
-      { id: "analises", nome: "Análises", secao: "v-an-analises" },
+      { id: "simples", nome: "Análises simples", secao: "v-an-simples" },
+      { id: "complexas", nome: "Análises complexas", secao: "v-an-analises" },
       { id: "resumo", nome: "Resumo semanal", secao: "v-an-resumo" },
     ],
-    carregar: (aba) => (aba === "resumo" ? carregarResumo() : carregarAnalises()),
-    render: (aba) => (aba === "resumo" ? renderResumo() : renderAnalises()),
+    padrao: () => "simples",
+    carregar: (aba) => (aba === "resumo" ? carregarResumo() : carregarAnalises(aba === "complexas" ? "complexas" : "simples")),
+    render: (aba) => (aba === "resumo" ? renderResumo() : aba === "complexas" ? renderComplexas() : renderSimples()),
   });
 })();

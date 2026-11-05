@@ -440,13 +440,13 @@
     id: "ativacao", nome: "Ativação de entregadores",
     acesso: () => !!S.me?.papel,
     abas: [
-      { id: "pendentes", nome: "Pendentes", secao: "v-pendentes", contador: "c-pend" },
       { id: "novo", nome: "Novo cadastro", secao: "v-novo" },
+      { id: "pendentes", nome: "Pendentes", secao: "v-pendentes", contador: "c-pend", alerta: true },
       { id: "meus", nome: "Meus cadastros", secao: "v-meus" },
       { id: "painel", nome: "Painel", secao: "v-painel" },
       { id: "historico", nome: "Histórico", secao: "v-historico", pode: staff },
     ],
-    padrao: () => "pendentes",
+    padrao: () => "novo",  // 008c: a primeira tela é o cadastro
     async carregar(aba) {
       if (aba === "novo") atualizarCidades();
       const t = [rpc("listar_cadastros", { p_escopo: "pendentes" }).then((d) => (S.lista.pendentes = d))];

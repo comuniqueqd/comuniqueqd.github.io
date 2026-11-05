@@ -35,6 +35,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/007-pao-quentinho.sql")
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008-espionagem.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008b-cadastrar-entregador.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008b-notificacoes.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008c-analises.sql"), "utf8"));
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
 for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001', 'Ciclano Atrasado', 'LAGARTO - SE', 'Atraso na Coleta ou na Entrega Sem Justificativa', now() - make_interval(days => $1), 'Planilha')", [d]);
 // registro importado com alerta de revisão (100 dias atrás: fora do painel de 30 dias)
@@ -84,7 +85,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "008b2"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "008c"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -139,7 +140,7 @@ try {
   const s = await abrir(sup, "#novo");
   await esperar(s, "#v-novo:not([hidden])");
   const abas = await s.$$eval("nav.tabs a:not([hidden])", (as) => as.map((x) => x.dataset.view));
-  ok(JSON.stringify(abas) === JSON.stringify(["pendentes", "novo", "meus", "painel"]), "suporte vê só Pendentes, Novo, Meus cadastros e Painel: " + abas);
+  ok(JSON.stringify(abas) === JSON.stringify(["novo", "pendentes", "meus", "painel"]), "suporte vê só Novo cadastro, Pendentes, Meus cadastros e Painel: " + abas);
   await s.fill("#f-idapp", "1a2b3c4d5e6f"); await s.fill("#f-cpf", "52998224725"); await s.fill("#f-cidade", "LAGARTO - SE"); await s.fill("#f-obs", "Documentos pelo WhatsApp");
   await s.click("#b-enviar");
   ok(await esperar(s, "#v-pendentes:not([hidden]) .card.destaque"), "após enviar, vai para Pendentes com o cadastro destacado");
@@ -270,9 +271,21 @@ try {
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
   await s.click("dialog.janela >> text=Entendi");
   await s.screenshot({ path: path.join(PRINTS, "b0-inicio.png"), fullPage: true });
-  await s.click("#card-bloqueios");
-  ok(await esperar(s, "#v-bq-novo:not([hidden])"), "suporte cai em Novo bloqueio");
+  // 008c: funções em destaque na tela inicial
+  { const fns = await s.$$eval("#inicio-funcoes a.funcao", (l) => l.map((x) => x.querySelector("b").textContent));
+    ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Cadastrar entregador", "Sugerir atividade", "Registros"]), "tela inicial: as 4 funções em destaque: " + fns); }
+  await s.click("#fn-sugerir");
+  ok(await esperar(s, "#v-at-sugeridas:not([hidden])") && await s.waitForFunction(() => document.querySelector("#at-nova-box")?.open && document.activeElement?.id === "at-titulo", null, { timeout: 5000 }).then(() => true, () => false), "Sugerir atividade abre a tela com o formulário aberto e o cursor no título");
+  await ir(s, "#inicio"); await esperar(s, "#fn-ativacao");
+  await s.click("#fn-ativacao");
+  ok(await esperar(s, "#v-novo:not([hidden])"), "Nova ativação abre o Novo cadastro");
+  await ir(s, "#bloqueios");
+  ok(await esperar(s, "#v-bq-novo:not([hidden])"), "Bloqueios abre em Novo bloqueio (008c)");
   const abasB = await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));
+  { await ir(s, "#ativacao"); await esperar(s, "#v-novo:not([hidden])");
+    const abasA = await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));
+    ok(abasA[0] === "novo" && abasA[1] === "pendentes" && await s.isVisible("nav.tabs a[data-view=pendentes] .count"), "Ativação abre no Novo cadastro, e Pendentes vem em seguida com o número: " + abasA);
+    await ir(s, "#bloqueios"); await esperar(s, "#v-bq-novo:not([hidden])"); }
   ok(JSON.stringify(abasB) === JSON.stringify(["novo", "atencao", "meus", "consultar", "painel"]), "suporte vê Novo, Atenção, Meus registros, Consultar e Painel: " + abasB);
   await s.fill("#bq-id", "mal00001"); await s.fill("#bq-nome", "Fulano de Tal");
   await s.selectOption("#bq-cidade", "LAGARTO - SE"); await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
@@ -309,7 +322,11 @@ try {
 
   // 11. monitorador: tratativas
   await ir(m, "#bloqueios"); await m.reload();
-  ok(await esperar(m, "#v-bq-tratativas:not([hidden]) .card"), "monitorador cai em Tratativas");
+  ok(await esperar(m, "#v-bq-novo:not([hidden])"), "monitorador também abre os Bloqueios no Novo bloqueio");
+  { const abasMB = await m.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));
+    ok(abasMB[0] === "novo" && abasMB[1] === "tratativas", "Novo bloqueio e, em seguida, Tratativas: " + abasMB); }
+  await ir(m, "#bloqueios/tratativas");
+  ok(await esperar(m, "#v-bq-tratativas:not([hidden]) .card"), "monitorador vê as Tratativas");
   ok((await texto(m, "#c-trat")) === "2", "contador de tratativas: 2 (mal uso e furto em LAGARTO)");
   ok(await m.isVisible(".grupo:has-text('Encerramentos de parceria') >> text=Ladrão"), "encerramento de parceria em grupo próprio");
   await m.screenshot({ path: path.join(PRINTS, "b3-tratativas.png"), fullPage: true });
@@ -564,10 +581,19 @@ try {
 
   // 17. migração 005: análises, resumo semanal, aprovados no histórico e anexos
   await ir(s, "#analises");
-  ok(await esperar(s, "#an-cards >> text=Eficácia da punição") && await s.isVisible("#an-cards >> text=Da ativação ao bloqueio"), "Análises abre para o suporte, com os cartões");
-  ok(await s.isVisible("#an-cards >> text=Quando a equipe registra") && (await s.$$("#an-cards .calor .c")).length === 168, "mapa dia × hora com 7 × 24 casas");
-  await s.click("[data-an-periodo=tudo]"); await s.waitForTimeout(800);
-  ok((await texto(s, "#an-sub")).includes("desde o início"), "período 'Tudo' nas análises");
+  ok(await esperar(s, "#v-an-simples:not([hidden]) #as-cards >> text=Ativação de entregadores"), "Análises abre nas simples");
+  for (const t of ["Por que não aprovou", "Bloqueios agora", "Bloqueados agora, por cidade", "Quando você registra", "Quando a equipe registra", "Você no período", "Tempo até reincidir", "Conversão das infrações leves", "Infrações mais registradas", "Tratativas no prazo", "Atividades"])
+    ok(await s.isVisible(`#as-cards h3:text-is('${t}')`), "análises simples: cartão " + t);
+  ok(await s.isVisible("#as-cards >> text=Seu pico:") && (await s.$$("#as-cards .calor .c")).length === 336, "dois mapas dia × hora (você e a equipe), com o seu pico");
+  ok(await s.isVisible("#as-cards >> text=Fotos sem camisa"), "motivos das não aprovações aparecem");
+  await s.click("#v-an-simples [data-an-periodo=tudo]"); await s.waitForTimeout(800);
+  ok((await texto(s, "#as-sub")).includes("desde o início"), "período 'Tudo' nas análises simples");
+  await s.screenshot({ path: path.join(PRINTS, "d0-analises-simples.png"), fullPage: true });
+  await ir(s, "#analises/complexas");
+  ok(await esperar(s, "#an-cards >> text=Eficácia da punição") && await s.isVisible("#an-cards >> text=Da ativação ao bloqueio"), "análises complexas, com os cartões de sempre");
+  for (const t of ["Qual infração mais se repete", "Escada da reincidência", "Cidades", "Tempo de resposta da ativação", "Punições desfeitas", "Tratativas por responsável"])
+    ok(await s.isVisible(`#an-cards h3:text-is('${t}')`), "análises complexas: cartão " + t);
+  ok((await texto(s, "#an-sub")).includes("desde o início"), "o período escolhido vale nas duas abas");
   await s.screenshot({ path: path.join(PRINTS, "d1-analises.png"), fullPage: true });
   await ir(s, "#analises/resumo");
   ok(await esperar(s, "#rs-corpo >> text=Bloqueios registrados") && (await texto(s, "#rs-titulo")).includes("terça"), "resumo semanal de terça a segunda");

@@ -236,3 +236,17 @@ O que muda:
 - **Casos suspeitos guardados**: a tela Casos saiu do app (guardada em `guardado/casos/` para voltar depois de revista). Os dados continuam no banco, mas um interruptor desligado (`parametros_casos.ligado`) faz com que nenhum caso novo seja aberto: CPF repetido volta a ser só a recusa de sempre.
 - **O suporte também revisa**: corrige os registros dos bloqueios marcados "revisar" e os que ele mesmo registrou (com motivo, como sempre), e marca "Os dados estão certos" nos cadastros.
 
+## Atualização 008c: análises simples e complexas, tela inicial com atalhos
+
+Para quem já rodou o `008b-notificacoes.sql`. **Não apaga** nada, não muda funções antigas e pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/008c-analises.sql`](supabase/008c-analises.sql) inteiro e clique em **Run**.
+2. Só depois publique o site (as Análises novas usam as funções desta migração).
+
+O que muda:
+
+- **Tela inicial**: em cima, as funções do dia a dia como botões grandes (Nova ativação, Cadastrar entregador, Sugerir atividade, Registros); embaixo, "Seus números", menores.
+- **Ativação** abre no **Novo cadastro** (Pendentes vem em seguida, com o número na aba); **Bloqueios** abre no **Novo bloqueio** (depois, Tratativas).
+- **Análises simples** (`analises_simples`): ativação (agora e no período, taxa de aprovação, horas até aprovar), **por que não aprovou** (motivos das reprovações e encerramentos), bloqueios agora e **quem sai hoje** (por hora), bloqueados por cidade, **quando você registra** e quando a equipe registra (com o pico), você no período, atividades, tempo até reincidir, conversão das leves, infrações mais registradas e tratativas no prazo.
+- **Análises complexas** (`analises_complexas`): eficácia da punição, **qual infração mais se repete**, **escada da reincidência**, **cidades** (bloqueios por entregador, reincidentes, encerramentos, leves), **tempo de resposta da ativação** (por quem decidiu e pelo dia do envio), **punições desfeitas**, tratativas por responsável e da ativação ao bloqueio.
+

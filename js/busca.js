@@ -50,17 +50,20 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "008b2";
+  const VERSAO = "008c";
   const NOVIDADES = {
-    tema: "📣 Espião ou fofoqueiro? Virou rede social?",
+    tema: "🧭 Tudo mais à mão",
     itens: [
-      ["Sino com tira", "Clique no sino: os avisos recentes abrem ali mesmo, sem sair da tela. Clicar num aviso leva direto para a ficha ou o cadastro."],
-      ["Avisos com busca e filtros", "Na tela de Avisos: busque por nome, ID, cidade ou qualquer palavra, e filtre por tipo, cidade ou só os não lidos."],
-      ["Sua cidade, seus avisos", "O responsável da cidade recebe tudo o que acontece nela (cadastros, bloqueios, comentários); os moderadores recebem tudo. Cidade sem responsável? Peça para ser a responsável na tela de Avisos."],
+      ["Tela inicial com atalhos", "Nova ativação, Cadastrar entregador, Sugerir atividade e Registros viraram botões grandes, logo no início. Os números ficaram embaixo, mais discretos."],
+      ["Começa pelo que mais se faz", "Ativação abre no Novo cadastro (Pendentes vem em seguida, com o número na aba) e Bloqueios abre no Novo bloqueio (depois, as Tratativas)."],
+      ["Análises simples e complexas", "Nas simples: por que não aprovou, quem sai do bloqueio hoje, bloqueados por cidade, quando você registra (e o seu pico), o que você fez no período e mais. Nas complexas: qual infração mais se repete, escada da reincidência, cidades, tempo de resposta da ativação e punições desfeitas."],
+      ["Sino com tira", "Clique no sino: os avisos recentes abrem ali mesmo. Clicar num aviso leva direto para a ficha ou o cadastro."],
+      ["Avisos com busca e filtros", "Busque por nome, ID, cidade ou palavra; filtre por tipo, cidade ou só os não lidos. Cidade sem responsável? Peça para ser a responsável."],
       ["O suporte também revisa", "Registros marcados “revisar” e os que você registrou podem ser corrigidos pelo suporte (com motivo); e “Os dados estão certos” nos cadastros."],
       ["Menu mais enxuto", "Ativação, Bloqueios e Cadastrar entregador ficam dentro de Entregadores, numa segunda barra."],
     ],
   };
+
 
 
   // grava na hora (o evento "close" chega um instante depois; recarregar logo em seguida perderia a marca)
