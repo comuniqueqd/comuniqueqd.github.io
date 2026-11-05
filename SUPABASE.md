@@ -217,7 +217,7 @@ Para quem já rodou o `007-pao-quentinho.sql`. **Não depende da 008** (pode rod
 
 O que muda:
 
-- **Bloqueios → Consultar entregador → “+ Cadastrar entregador”**: cria a ficha do entregador (ID, nome, cidade e um comentário opcional) sem precisar de ativação nem de bloqueio. Quando a busca não acha ninguém, aparece também o botão **Cadastrar este entregador**, já com o ID buscado.
-- Pode cadastrar quem tem o módulo de bloqueios (moderador, monitorador e suporte). ID que já tem ficha é recusado (para mudar os dados, use **Alterar dados** na ficha).
+- **Módulo novo no menu: Entregadores → Cadastrar entregador**: cria a ficha do entregador (ID, nome, cidade e um comentário opcional) sem precisar de ativação nem de bloqueio, e mostra ao lado os **cadastrados recentemente**. Também se chega lá pelo botão “+ Cadastrar entregador” em Consultar entregador, e por **Cadastrar este entregador** quando a busca não acha ninguém (já com o ID buscado).
+- O módulo aparece para quem tem o módulo de bloqueios (moderador, monitorador e suporte). ID que já tem ficha é recusado (para mudar os dados, use **Alterar dados** na ficha).
 - Os próximos registros deste ID (bloqueios e infrações leves) já vêm com nome e cidade. Se o ID tinha infrações leves esperando os dados, o monitorador ou moderador que cadastra completa esses registros e fecha a tarefa “completar dados”; quando é o suporte, a tarefa continua para o monitoramento.
 

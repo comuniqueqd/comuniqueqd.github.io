@@ -370,26 +370,30 @@ try {
   await s.click("#bq-consulta >> text=Adicionar comentário");
   ok(await esperar(s, "#bq-consulta .comentarios >> text=Ligou pedindo para ser liberado."), "suporte adiciona comentário na consulta");
   await s.screenshot({ path: path.join(PRINTS, "b6b-consulta.png"), fullPage: true });
-  // 008b: cadastro avulso do entregador (sem ativação e sem bloqueio)
+  // 008b: módulo Entregadores, cadastro avulso (sem ativação e sem bloqueio)
+  ok(await s.isVisible("nav.modulos a[data-mod=entregadores]"), "suporte com bloqueios vê o módulo Entregadores");
   await s.fill("#bq-q-consulta", "avulso01"); await s.click("#bq-f-consulta button[type=submit]");
   ok(await esperar(s, "#bq-consulta >> text=Cadastrar este entregador"), "consulta sem resultado oferece cadastrar o entregador");
   await s.click("#bq-consulta >> text=Cadastrar este entregador");
-  ok(await s.inputValue("dialog.janela input.mono") === "avulso01", "a janela já vem com o ID buscado");
-  await s.click("dialog.janela button:text-is('Cadastrar')");
-  ok(await esperar(s, "dialog.janela .warn-msg:has-text('Preencha o nome')"), "sem nome: avisa antes de enviar");
-  await s.fill("dialog.janela input:not(.mono)", "Avulso da Silva");
-  await s.selectOption("dialog.janela select", "LAGARTO - SE");
-  await s.fill("dialog.janela textarea", "Cadastrado pela tela nova.");
-  await s.screenshot({ path: path.join(PRINTS, "b6d-cadastrar-entregador.png") });
-  await s.click("dialog.janela button:text-is('Cadastrar')");
+  ok(await esperar(s, "#v-en-cadastrar:not([hidden])"), "o botão leva à tela Cadastrar entregador");
+  await s.waitForTimeout(200);
+  ok(await s.inputValue("#en-id") === "avulso01", "a tela já vem com o ID buscado");
+  await s.click("#en-enviar");
+  ok(await esperar(s, "#en-erro:has-text('Preencha o nome')"), "sem nome: avisa antes de enviar");
+  await s.fill("#en-nome", "Avulso da Silva");
+  ok(await s.isHidden("#en-erro"), "o aviso some ao digitar");
+  await s.selectOption("#en-cidade", "LAGARTO - SE");
+  await s.fill("#en-comentario", "Cadastrado pela tela nova.");
+  await s.screenshot({ path: path.join(PRINTS, "b6d-cadastrar-entregador.png"), fullPage: true });
+  await s.click("#en-enviar");
   ok(await esperar(s, "#toast:has-text('Entregador cadastrado')"), "entregador cadastrado sem ativação nem bloqueio");
-  ok(await esperar(s, "#bq-consulta h3:has-text('Avulso da Silva')") && await s.isVisible("#bq-consulta .comentarios >> text=Cadastrado pela tela nova."), "a ficha nova abre com o comentário");
-  await s.click("#bq-cadastrar-entregador");
-  await s.fill("dialog.janela input.mono", "avulso01"); await s.fill("dialog.janela input:not(.mono)", "Outro Nome");
-  await s.click("dialog.janela button:text-is('Cadastrar')");
-  ok(await esperar(s, "dialog.janela .warn-msg:has-text('já tem cadastro')"), "ID que já tem ficha: avisa e oferece abrir a ficha");
-  await s.click("dialog.janela >> text=Abrir a ficha");
-  ok(await esperar(s, "#bq-consulta h3:has-text('Avulso da Silva')"), "botão 'Abrir a ficha' leva à ficha existente");
+  ok(await esperar(s, "#en-recentes li:has-text('Avulso da Silva'):has-text('por você')") && await s.isVisible("#en-feito >> text=Avulso da Silva"), "aparece em Cadastrados recentemente e no quadro de confirmação");
+  ok(await s.inputValue("#en-id") === "" && await s.inputValue("#en-nome") === "", "o formulário fica limpo para o próximo");
+  await s.screenshot({ path: path.join(PRINTS, "b6e-entregador-cadastrado.png"), fullPage: true });
+  await s.fill("#en-id", "avulso01"); await s.fill("#en-nome", "Outro Nome"); await s.click("#en-enviar");
+  ok(await esperar(s, "#en-erro:has-text('já tem cadastro')"), "ID que já tem ficha: avisa e oferece abrir a ficha");
+  await s.click("#en-erro >> text=Abrir a ficha");
+  ok(await esperar(s, "#bq-consulta h3:has-text('Avulso da Silva')") && await s.isVisible("#bq-consulta .comentarios >> text=Cadastrado pela tela nova."), "'Abrir a ficha' leva à ficha, com o comentário");
   // moderador altera o cadastro e aplica aos bloqueios
   await ir(a, "#bloqueios/consultar");
   await a.fill("#bq-q-consulta", "mal00001"); await a.click("#bq-f-consulta button[type=submit]");

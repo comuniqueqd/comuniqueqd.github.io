@@ -60,7 +60,7 @@
     itens: [
       ["Casos suspeitos", "CPF que já existe tentando entrar com outro nome ou ID, entregador encerrado tentando voltar, troca de dados num cadastro aprovado: tudo vira um caso, e a equipe toda fica sabendo. Antes, a tentativa só era recusada e se perdia."],
       ["Investigação com método", "Na tela Casos 🕵️: “Eu verifico” ou “Pedir verificação”, checklist, comentários e o veredito (confirmado ou descartado) do monitorador ou moderador."],
-      ["Cadastrar entregador", "Em Bloqueios → Consultar entregador: “+ Cadastrar entregador” cria a ficha com ID, nome e cidade, sem precisar ativar nem bloquear."],
+      ["Entregadores", "Módulo novo no menu: cadastre o entregador (ID, nome e cidade) sem precisar ativar nem bloquear."],
       ["Lupa do detetive e placar", "A busca do topo agora acha também casos, comentários e os seus avisos. E nas Análises tem o Placar do detetive."],
     ],
   };

@@ -332,3 +332,9 @@ button.revisar-cad.discreto { font-size: 11px; padding: 0 6px; border-radius: 99
 .checklist { display: grid; gap: 4px; font-size: 14px; }
 .checklist label.marcar { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; }
 .checklist label.marcar input { width: auto; margin-top: 3px; }
+
+/* 008b: cadastrar entregador */
+.recentes-ent { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.recentes-ent li { border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.recentes-ent li:last-child { border-bottom: 0; }
+#en-feito:empty { display: none; }

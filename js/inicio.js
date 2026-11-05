@@ -40,6 +40,9 @@
              numero(b?.tratativas_pendentes, "suas tratativas em andamento", naEquipe(b?.equipe_tratativas_pendentes)),
              b?.atencao ? numero(b.atencao, "entregadores de atenção") : null])));
     }
+    if (S.me.papel_bloqueios) cards.push(el("a", { class: "modulo-card", href: "#entregadores/cadastrar", id: "card-entregadores", style: "border-top-color:var(--accent)" },
+      el("h3", { text: "Entregadores" }),
+      el("p", { text: "Cadastre um entregador sem precisar ativar nem bloquear." })));
     const at = r?.atividades;
     cards.push(el("a", { class: "modulo-card ativ", href: "#atividades/pendencias", id: "card-atividades" },
       el("h3", { text: "Atividades" }),

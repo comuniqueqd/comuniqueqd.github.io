@@ -69,5 +69,20 @@ begin
     'bloqueios_completados', feitos, 'bloqueios_pendentes', pend);
 end $$;
 
+-- Tela "Entregadores": cidades ativas (para o formulário) e as fichas criadas por esta tela, das mais novas.
+create or replace function public.entregadores_recentes(p_limite integer default 30)
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  perform public.exigir_bloq('moderador', 'monitorador', 'suporte');
+  return jsonb_build_object(
+    'cidades', coalesce((select jsonb_agg(c.nome order by c.nome) from public.cidades c where c.ativa), '[]'::jsonb),
+    'recentes', coalesce((select jsonb_agg(jsonb_build_object('id_app', e.id_app, 'nome', e.nome, 'cidade', e.cidade,
+        'criado_em', e.criado_em, 'criado_por_nome', e.criado_por_nome, 'meu', e.criado_por = auth.uid()) order by e.criado_em desc)
+      from (select * from public.entregadores where criado_por is not null
+             order by criado_em desc limit least(greatest(coalesce(p_limite, 30), 1), 200)) e), '[]'::jsonb));
+end $$;
+
 revoke all on function public.cadastrar_entregador(text, text, text, text) from public, anon;
 grant execute on function public.cadastrar_entregador(text, text, text, text) to authenticated;
+revoke all on function public.entregadores_recentes(integer) from public, anon;
+grant execute on function public.entregadores_recentes(integer) to authenticated;

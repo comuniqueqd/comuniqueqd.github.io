@@ -107,9 +107,19 @@ await t("suporte cadastrando um ID pendente: a tarefa continua para o monitorame
   igual(await pendentes(), antes);
 });
 
+await t("entregadores_recentes: cidades ativas e as fichas criadas pela tela, das mais novas", async () => {
+  const r = await rpc(mon, "entregadores_recentes", {});
+  igual(r.cidades.includes("LAGARTO - SE"), true);
+  igual(r.recentes.map((x) => x.id_app), ["pend0002", "pend0001", "novo0003", "novo0001"]);
+  igual([r.recentes[0].criado_por_nome, r.recentes[0].meu], ["Eduarda", false]);
+  igual((await rpc(sup, "entregadores_recentes", { p_limite: 1 })).recentes.map((x) => [x.id_app, x.meu]), [["pend0002", true]]);
+  await falha(rpc(semBq, "entregadores_recentes", {}));
+});
+
 await t("só quem está logado executa a função (anon não)", async () => {
-  const r = await um("select has_function_privilege('anon', 'public.cadastrar_entregador(text,text,text,text)', 'execute') a, has_function_privilege('authenticated', 'public.cadastrar_entregador(text,text,text,text)', 'execute') b");
-  igual([r.a, r.b], [false, true]);
+  const r = await um("select has_function_privilege('anon', 'public.cadastrar_entregador(text,text,text,text)', 'execute') a, has_function_privilege('authenticated', 'public.cadastrar_entregador(text,text,text,text)', 'execute') b, " +
+    "has_function_privilege('anon', 'public.entregadores_recentes(integer)', 'execute') c");
+  igual([r.a, r.b, r.c], [false, true, false]);
 });
 
 console.log(`\n${n - falhas}/${n} testes passaram`);

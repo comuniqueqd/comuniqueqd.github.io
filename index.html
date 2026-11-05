@@ -28,6 +28,7 @@
       <a href="#inicio" data-mod="inicio">Início</a>
       <a href="#ativacao" data-mod="ativacao">Ativação de entregadores</a>
       <a href="#bloqueios" data-mod="bloqueios">Bloqueios</a>
+      <a href="#entregadores" data-mod="entregadores">Entregadores</a>
       <a href="#atividades" data-mod="atividades">Atividades</a>
       <a href="#casos" data-mod="casos">Casos 🕵️ <span class="count alert" id="c-casos" hidden>0</span></a>
       <a href="#analises" data-mod="analises">Análises</a>
@@ -221,6 +222,36 @@
     </div>
   </section>
 
+  <section class="view" id="v-en-cadastrar" hidden>
+    <h2>Cadastrar entregador</h2>
+    <p class="sub">Cria a ficha do entregador sem precisar de ativação nem de bloqueio. Os próximos registros deste ID (bloqueios e infrações leves) já vêm com estes dados.</p>
+    <div class="two" style="align-items:start">
+      <form class="cad" id="en-form" novalidate>
+        <div class="grid2">
+          <label for="en-id"><span>ID do entregador <span class="req">*</span></span>
+            <input id="en-id" class="mono" autocomplete="off" spellcheck="false" maxlength="40" placeholder="ID no aplicativo de entregas">
+          </label>
+          <label for="en-nome"><span>Nome do entregador <span class="req">*</span></span>
+            <input id="en-nome" autocomplete="off" maxlength="120" placeholder="Nome completo">
+          </label>
+        </div>
+        <label for="en-cidade">Cidade
+          <select id="en-cidade"><option value="">Sem cidade (escolha uma, se souber)</option></select>
+        </label>
+        <label for="en-comentario">Comentário sobre o entregador <span class="hint">Opcional: fica na ficha e aparece para quem consultar ou registrar este ID depois.</span>
+          <textarea id="en-comentario" maxlength="1500" rows="3" placeholder="Ex.: indicado pelo operador, trabalha só à noite."></textarea>
+        </label>
+        <p class="warn-msg" id="en-erro" role="alert" hidden></p>
+        <div class="actions"><button class="btn primary" type="submit" id="en-enviar">Cadastrar entregador</button><button class="btn" type="reset">Limpar</button></div>
+        <div id="en-feito" aria-live="polite"></div>
+      </form>
+      <div class="panel" style="margin:0">
+        <h3>Cadastrados recentemente</h3>
+        <div id="en-recentes"></div>
+      </div>
+    </div>
+  </section>
+
   <section class="view" id="v-bq-atencao" hidden>
     <h2>Entregadores de atenção</h2>
     <p class="sub" id="bq-atencao-sub">Quem está perto de uma punição maior: a uma infração leve do limite, reincidentes, com mais de um tipo de infração, ou aprovados há pouco que já levaram bloqueio. Quem está com a parceria encerrada não aparece.</p>
@@ -265,7 +296,7 @@
 
   <section class="view" id="v-bq-consultar" hidden>
     <h2>Consultar entregador</h2>
-    <p class="sub">Tudo sobre um entregador nos dois módulos: dados, comentários da equipe, linha do tempo, bloqueios e cadastro na ativação. Entregador que ainda não está no sistema? Use “Cadastrar entregador” (não precisa ativar nem bloquear).</p>
+    <p class="sub">Tudo sobre um entregador nos dois módulos: dados, comentários da equipe, linha do tempo, bloqueios e cadastro na ativação.</p>
     <form class="toolbar" id="bq-f-consulta">
       <input id="bq-q-consulta" type="search" placeholder="ID do entregador ou parte do nome" aria-label="ID ou nome do entregador">
       <button class="btn primary" type="submit" style="flex:0 0 auto">Consultar</button>
@@ -551,6 +582,7 @@
 <script src="js/inicio.js"></script>
 <script src="js/ativacao.js"></script>
 <script src="js/bloqueios.js"></script>
+<script src="js/entregadores.js"></script>
 <script src="js/atividades.js"></script>
 <script src="js/analises.js"></script>
 <script src="js/registros.js"></script>
