@@ -76,7 +76,7 @@ const GIS_FALSO = `window.google = { accounts: { id: {
   } } } };`;
 
 async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) {
-  const c = await b.newContext({ viewport: { width: 1200, height: 900 }, acceptDownloads: true });
+  const c = await b.newContext({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: Number(process.env.ESCALA || 1), acceptDownloads: true });  // ESCALA=2: prints nítidos para material de divulgação
   await c.route("**/supabase-config.js", (r) => r.fulfill({ contentType: "text/javascript", body: `window.SUPABASE_URL=${JSON.stringify(API)};window.SUPABASE_ANON_KEY="chave-anon-de-teste";window.GOOGLE_CLIENT_ID=${JSON.stringify(googleId || "COLE_AQUI")};` }));
   await c.route("https://accounts.google.com/**", (r) => r.fulfill({ contentType: "text/javascript", body: googleId ? GIS_FALSO : "" }));
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
@@ -634,6 +634,7 @@ try {
   await ir(m7, "#atividades/pendencias"); await esperar(m7, "#at-lista .card.opcional:has-text('semnome77')");
   await m7.click("#at-lista .card.opcional:has-text('semnome77') >> text=Completar agora");
   ok(await esperar(m7, "dialog.janela >> text=falta o nome do entregador"), "janela de revisão mostra o que falta");
+  await m7.screenshot({ path: path.join(PRINTS, "f5-completar.png") });
   await m7.fill("dialog.janela input[aria-label='Nome do entregador']", "Maria Sem Nome");
   await m7.fill("dialog.janela input[aria-label='Motivo da alteração (opcional)']", "confirmado por telefone");
   await m7.click("dialog.janela .actions button.primary");
@@ -652,6 +653,7 @@ try {
   ok(await esperar(n7, "#b-avisos[data-novas=true]"), "quem enviou recebe aviso no sino");
   await ir(n7, "#atividades/avisos");
   ok(await esperar(n7, "#at-avisos >> text=Seu cadastro Maria Sem Nome (ID semnome77) foi aprovado por Monitor Um."), "aviso: cadastro aprovado por quem");
+  await n7.screenshot({ path: path.join(PRINTS, "f6-aviso.png") });
   // histórico do ID ao digitar no Novo cadastro (monitorador tem os bloqueios)
   await ir(m7, "#ativacao/novo"); await esperar(m7, "#form");
   await m7.fill("#f-idapp", "rev00002");
