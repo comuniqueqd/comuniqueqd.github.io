@@ -141,6 +141,54 @@ await t("complexas: reincidência por infração e liberações antes do prazo",
   igual([l.bloqueios, l.liberados], [4, 1]);
 });
 
+// revisão: o número de versão só sobe quando algo muda de verdade
+const versao = async () => Number((await um("select n from versao_dados")).n);
+await t("versão: entrar de novo, marcar avisos já lidos e verificar atrasos sem nada novo não sobem o número", async () => {
+  await rpc(mon, "marcar_notificacoes_lidas");
+  const v = await versao();
+  await rpc(mon, "entrar"); await rpc(sup, "entrar");
+  await rpc(mon, "marcar_notificacoes_lidas");
+  await rpc(mon, "verificar_atrasos");
+  igual(await versao(), v);
+});
+
+await t("versão: insert, update com mudança e delete sobem o número; update sem mudança não", async () => {
+  let v = await versao();
+  await rpc(sup, "comentar_entregador", { p_id_app: "blq00001", p_texto: "Comentário para a versão." });
+  if (!(await versao() > v)) throw new Error("insert não subiu");
+  v = await versao();
+  await db.query("update membros set nome = nome where email = $1", [sup.email]);
+  igual(await versao(), v, "update sem mudança:");
+  await db.query("update membros set nome = 'Eduarda S' where email = $1", [sup.email]);
+  if (!(await versao() > v)) throw new Error("update com mudança não subiu");
+  v = await versao();
+  await db.query("delete from comentarios_entregador where texto = 'Comentário para a versão.'");
+  if (!(await versao() > v)) throw new Error("delete não subiu");
+  v = await versao();
+  await db.query("delete from comentarios_entregador where false");
+  igual(await versao(), v, "delete sem linhas:");
+});
+
+await t("versão: tabelas com jsonb e bytea também funcionam; nenhum gatilho antigo sobrou", async () => {
+  await db.query("update casos set checklist = checklist where true");
+  await db.query("update anexos set nome = nome where true");
+  igual((await um("select count(*)::int n from pg_trigger where tgname = 'marcar_mudanca'")).n, 0);
+  if ((await um("select count(*)::int n from pg_trigger where tgname = 'marcar_mudanca_upd'")).n < 15) throw new Error("poucas tabelas com o gatilho novo");
+});
+
+await t("segurança: quem não é da equipe não descobre o nome da ficha pelo motivo_revisar_cadastro", async () => {
+  const fora = pessoa("curioso@gmail.com", "Curioso");
+  const linha = { id: randomUUID(), id_app: "blq00001", nome: "Outro Nome", cidade: "LAGARTO - SE", revisado: false };
+  const chamar = async (p) => {
+    await db.query("begin"); await db.query("set local role authenticated");
+    await db.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: p.sub, email: p.email, role: "authenticated" })]);
+    const r = (await db.query("select public.motivo_revisar_cadastro(jsonb_populate_record(null::public.cadastros, $1)) m", [JSON.stringify(linha)])).rows[0].m;
+    await db.query("commit"); return r;
+  };
+  igual(await chamar(fora), null);
+  if (!String(await chamar(mon)).includes("Sai Hoje")) throw new Error("a equipe deveria ver o motivo");
+});
+
 await t("fora da equipe não vê nada; anon não chama", async () => {
   await falha(rpc(pessoa("x@x.com", "X"), "analises_simples", {}));
   const r = await um("select has_function_privilege('anon', 'public.analises_simples(integer,text)', 'execute') a, has_function_privilege('anon', 'public.analises_complexas(integer,text)', 'execute') b");

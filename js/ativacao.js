@@ -3,11 +3,11 @@
   "use strict";
   const App = window.App;
   const { $, el, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
-          vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas } = App.u;
+          vazio, carregandoEl, rpc, msgErro, tabela, barras, baixarCSV } = App.u;
   const S = App.S;
   Object.assign(S, {
-    lista: { pendentes: null, meus: null, todos: null }, metricas: null,
-    filtro: "todos", escolhidos: new Set(), destaque: null,
+    lista: { pendentes: null, todos: null },
+    destaque: null,
     caixa: {},          // caixas abertas nos cards: id -> { acao, motivo, detalhe }
     eventos: {},        // histórico carregado por cadastro
     abertos: new Set(), // linhas com histórico aberto

@@ -400,3 +400,7 @@ a.funcao.f-reg { --fcor: var(--warn); }
 .an-grid .an-sub { margin: 12px 0 6px; font-size: 14px; }
 .pico { margin: 0 0 10px; font-size: 14px; }
 .destaques .alerta b { color: var(--bad); }
+
+/* "O que há de novo": um bloco por versão (008c, 008b, 008...) */
+.bloco-versao h4 { margin: 4px 0 8px; font-size: 15px; display: flex; gap: 8px; align-items: center; }
+.bloco-versao.antiga { border-top: 1px solid var(--line); padding-top: 10px; opacity: .85; }

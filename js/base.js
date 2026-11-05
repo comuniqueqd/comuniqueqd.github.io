@@ -451,11 +451,11 @@
     route();
     for (const f of App.aoEntrar) { try { f(); } catch (e) { console.error(e); } }
 
-    // tempo real: qualquer mudança no banco recarrega; e a cada 30 s por garantia
+    // tempo real (008c): só os avisos da própria pessoa (o RLS manda só os dela), para o sino acender na hora.
+    // O resto chega pelo tique (a cada 30 s pergunta só o número da última mudança): antes, cada mudança em
+    // 8 tabelas fazia todo mundo recarregar tudo na hora, por cima do tique.
     try {
-      const ch = S.sb.channel("mudancas");
-      for (const t of ["cadastros", "eventos", "membros", "pedidos_acesso", "bloqueios", "tarefas", "notificacoes", "atividades"]) ch.on("postgres_changes", { event: "*", schema: "public", table: t }, agendar);
-      ch.subscribe();
+      S.sb.channel("avisos").on("postgres_changes", { event: "INSERT", schema: "public", table: "notificacoes", filter: `para=eq.${S.me.id}` }, agendar).subscribe();
     } catch (_) {}
     setInterval(tique, 30000);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) { ultimoTique = 0; tique(); } });

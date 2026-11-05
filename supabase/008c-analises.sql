@@ -1,7 +1,7 @@
 -- =====================================================================
--- 008c · Análises simples e complexas
--- Para quem já rodou o 008b-notificacoes.sql. Não apaga nada, não muda
--- nenhuma função antiga e pode rodar mais de uma vez.
+-- 008c · Análises simples e complexas + revisão
+-- Para quem já rodou o 008b-notificacoes.sql. Não apaga nada e pode rodar
+-- mais de uma vez.
 --
 -- analises_simples(): os números do dia a dia (ativação, motivos das não
 --   aprovações, bloqueados agora e quem sai hoje, reincidência, quando a
@@ -209,6 +209,75 @@ begin
           from public.bloqueios b
          where not b.leve and not b.importado and b.inicio >= desde and (p_cidade is null or b.cidade = p_cidade)
          group by 1) x where x.liberados > 0), '[]'));
+end $$;
+
+-- ---------------------------------------------------------------------
+-- Revisão: o número de "algo mudou" (versao_dados) só sobe quando alguma
+-- linha mudou de verdade. Antes subia a cada comando, mesmo sem mudar nada
+-- (entrar() a cada abertura do app, marcar avisos como lidos, verificar
+-- atrasos a cada 5 min), e todo mundo recarregava as listas à toa.
+-- Um gatilho por evento, com as linhas do comando (tabelas de transição).
+-- ---------------------------------------------------------------------
+create or replace function public.marcar_mudanca_linhas()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if TG_OP = 'UPDATE' then
+    -- update que não mudou nenhum valor (ou não pegou nenhuma linha) não conta
+    if not exists (select 1 from (select * from novas except all select * from antigas) x) then return null; end if;
+  elsif TG_OP = 'INSERT' then
+    if not exists (select 1 from novas) then return null; end if;
+  else
+    if not exists (select 1 from antigas) then return null; end if;
+  end if;
+  update public.versao_dados set n = n + 1, em = now() where unico;  -- o Supabase recusa update sem where
+  return null;
+end $$;
+
+do $$
+declare t text;
+begin
+  for t in select distinct c.relname from pg_trigger g join pg_class c on c.oid = g.tgrelid join pg_namespace s on s.oid = c.relnamespace
+            where s.nspname = 'public' and g.tgname in ('marcar_mudanca', 'marcar_mudanca_ins') and not g.tgisinternal loop
+    execute format('drop trigger if exists marcar_mudanca on public.%I', t);
+    execute format('drop trigger if exists marcar_mudanca_ins on public.%I', t);
+    execute format('drop trigger if exists marcar_mudanca_upd on public.%I', t);
+    execute format('drop trigger if exists marcar_mudanca_del on public.%I', t);
+    execute format('create trigger marcar_mudanca_ins after insert on public.%I referencing new table as novas for each statement execute function public.marcar_mudanca_linhas()', t);
+    execute format('create trigger marcar_mudanca_upd after update on public.%I referencing old table as antigas new table as novas for each statement execute function public.marcar_mudanca_linhas()', t);
+    execute format('create trigger marcar_mudanca_del after delete on public.%I referencing old table as antigas for each statement execute function public.marcar_mudanca_linhas()', t);
+  end loop;
+end $$;
+revoke execute on function public.marcar_mudanca_linhas() from public, anon, authenticated;
+
+-- Revisão (segurança): motivo_revisar_cadastro() pode ser chamada direto pela API por qualquer conta
+-- logada (o listar_cadastros, que é invoker, precisa dela) e devolvia o nome da ficha de qualquer ID.
+-- Agora quem não é da equipe recebe nulo (no SQL Editor, sem usuário, continua funcionando).
+create or replace function public.motivo_revisar_cadastro(c public.cadastros)
+returns text language sql stable security definer set search_path = public as $$
+  select case when auth.uid() is not null and public.meu_papel() is null then null else nullif(concat_ws(' · ',
+    case when c.nome is null then 'falta o nome do entregador' end,
+    case when c.id_app is null then 'falta o ID do entregador' end,
+    case when not c.revisado and c.id_app is not null and c.nome is not null
+              and exists (select 1 from public.entregadores e where e.id_app = lower(c.id_app)
+                           and lower(btrim(e.nome)) <> lower(btrim(c.nome)))
+         then 'o ID já tem ficha com outro nome: ' || (select e.nome from public.entregadores e where e.id_app = lower(c.id_app)) end), '') end
+$$;
+
+-- Revisão: o app passa a ouvir em tempo real só os avisos da própria pessoa (o resto chega
+-- pelo número de versão a cada 30 s). As outras tabelas saem da publicação do Realtime.
+do $$
+declare t text;
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    foreach t in array array['cadastros', 'eventos', 'membros', 'pedidos_acesso', 'bloqueios', 'tarefas', 'atividades'] loop
+      if exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t) then
+        execute format('alter publication supabase_realtime drop table public.%I', t);
+      end if;
+    end loop;
+    if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'notificacoes') then
+      alter publication supabase_realtime add table public.notificacoes;
+    end if;
+  end if;
 end $$;
 
 -- as duas são para todos os papéis (só totais, como a analises() de sempre)

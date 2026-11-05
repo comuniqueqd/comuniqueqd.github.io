@@ -88,7 +88,7 @@
     const nv = App.novidades;
     $("#inicio-novidades").replaceChildren(nv ? el("div", { class: "faixa-novidades" },
       el("b", { text: `Novidades: ${nv.NOVIDADES.tema}` }),
-      el("span", { text: nv.NOVIDADES.itens.map(([t]) => t).join(" · ") }),
+      el("span", { text: nv.NOVIDADES.versoes[0].itens.map(([t]) => t).join(" · ") + ` · e mais: ${nv.NOVIDADES.versoes.slice(1).map((v) => v.versao).join(" e ")}` }),
       el("button", { class: "btn small", type: "button", onclick: () => nv.mostrar() }, "Ver o que há de novo")) : "");
   }
 

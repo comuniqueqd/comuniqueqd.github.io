@@ -51,20 +51,30 @@
 
   // ---------- o que há de novo ----------
   const VERSAO = "008c";
-  const NOVIDADES = {
-    tema: "🧭 Tudo mais à mão",
-    itens: [
-      ["Tela inicial com atalhos", "Nova ativação, Cadastrar entregador, Sugerir atividade e Registros viraram botões grandes, logo no início. Os números ficaram embaixo, mais discretos."],
+  // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
+  // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
+  const VERSOES = [
+    { versao: "008c", tema: "🧭 Tudo mais à mão", itens: [
+      ["Tela inicial com atalhos", "Nova ativação, Cadastrar entregador, Sugerir atividade e Registros viraram botões grandes, logo no início. Os seus números ficaram embaixo, mais discretos."],
       ["Começa pelo que mais se faz", "Ativação abre no Novo cadastro (Pendentes vem em seguida, com o número na aba) e Bloqueios abre no Novo bloqueio (depois, as Tratativas)."],
-      ["Análises simples e complexas", "Nas simples: por que não aprovou, quem sai do bloqueio hoje, bloqueados por cidade, quando você registra (e o seu pico), o que você fez no período e mais. Nas complexas: qual infração mais se repete, escada da reincidência, cidades, tempo de resposta da ativação e punições desfeitas."],
+      ["Menos telas", "“Meus cadastros” e “Meus registros” viraram o Histórico de cada módulo (quem é do suporte vê ali só o que enviou). Os Painéis viraram parte das Análises."],
+      ["Análises simples e complexas", "Nas simples: por que não aprovou, quem sai do bloqueio hoje, bloqueados por cidade, quando você registra (e o seu pico), o que você fez no período, gráficos por dia e mais. Nas complexas: qual infração mais se repete, escada da reincidência, cidades, tempo de resposta da ativação, punições desfeitas e por pessoa."],
+      ["Mais leve", "O app só recarrega as listas quando algo mudou de verdade: menos espera e menos consumo."],
+    ] },
+    { versao: "008b", tema: "📣 Espião ou fofoqueiro? Virou rede social?", itens: [
       ["Sino com tira", "Clique no sino: os avisos recentes abrem ali mesmo. Clicar num aviso leva direto para a ficha ou o cadastro."],
-      ["Avisos com busca e filtros", "Busque por nome, ID, cidade ou palavra; filtre por tipo, cidade ou só os não lidos. Cidade sem responsável? Peça para ser a responsável."],
+      ["Avisos com busca e filtros", "Busque por nome, ID, cidade ou palavra; filtre por tipo, cidade ou só os não lidos."],
+      ["Sua cidade, seus avisos", "O responsável da cidade recebe tudo o que acontece nela; os moderadores recebem tudo. Cidade sem responsável? Peça para ser a responsável na tela de Avisos."],
       ["O suporte também revisa", "Registros marcados “revisar” e os que você registrou podem ser corrigidos pelo suporte (com motivo); e “Os dados estão certos” nos cadastros."],
+    ] },
+    { versao: "008", tema: "🕵️ Espionagem profissional", itens: [
+      ["Cadastrar entregador", "A ficha do entregador (ID, nome e cidade) pode ser criada sem ativar nem bloquear."],
       ["Menu mais enxuto", "Ativação, Bloqueios e Cadastrar entregador ficam dentro de Entregadores, numa segunda barra."],
-    ],
-  };
-
-
+      ["Busca do topo mais esperta", "A busca acha também comentários sobre entregadores e os seus avisos."],
+      ["Casos suspeitos: em revisão", "A tela de casos saiu por enquanto e vai voltar revisada."],
+    ] },
+  ];
+  const NOVIDADES = { tema: VERSOES[0].tema, versoes: VERSOES, itens: VERSOES.flatMap((v) => v.itens) };
 
   // grava na hora (o evento "close" chega um instante depois; recarregar logo em seguida perderia a marca)
   const marcarVisto = () => { try { localStorage.setItem("comunique-novidades", VERSAO); } catch (_) {} };
@@ -73,8 +83,9 @@
     try { visto = localStorage.getItem("comunique-novidades"); } catch (_) {}
     if (visto === VERSAO) return;
     const d = janela("O que há de novo",
-      el("p", { class: "meta", style: "margin:0", text: NOVIDADES.tema }),
-      el("ol", { class: "novidades" }, NOVIDADES.itens.map(([t, x]) => el("li", {}, el("b", { text: t + ": " }), x))),
+      ...VERSOES.map((v, i) => el("div", { class: "bloco-versao" + (i ? " antiga" : "") },
+        el("h4", {}, el("span", { class: "tag", text: v.versao }), " ", v.tema),
+        el("ol", { class: "novidades" }, v.itens.map(([t, x]) => el("li", {}, el("b", { text: t + ": " }), x))))),
       el("div", { class: "actions" }, el("button", { class: "btn primary", type: "button", onclick: () => { marcarVisto(); d.close(); } }, "Entendi")));
     d.addEventListener("close", marcarVisto);  // o ✕ e o Esc também contam como visto
   }

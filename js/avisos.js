@@ -67,7 +67,8 @@
     } catch (e) { btn.disabled = false; toast(msgErro(e)); }
   }
   let espera = null;
-  const refiltrar = () => { clearTimeout(espera); espera = setTimeout(async () => { try { await carregar(); render(); } catch (e) { toast(msgErro(e)); } }, 300); };
+  const refiltrar = () => { clearTimeout(espera); espera = setTimeout(async () => {
+    try { const r = await rpc("listar_avisos", filtros()); V.lista = r.itens; V.mais = r.mais; V.cidades = r.cidades; render(); } catch (e) { toast(msgErro(e)); } }, 300); };
   $("#av-filtro").replaceChildren(...FILTROS.map(([v, t]) => el("option", { value: v, text: t })));
   for (const id of ["#av-filtro", "#av-cidade", "#av-nao-lidos"]) $(id).addEventListener("change", refiltrar);
   $("#av-q").addEventListener("input", refiltrar);

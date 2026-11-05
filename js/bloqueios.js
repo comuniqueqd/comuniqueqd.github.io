@@ -5,10 +5,10 @@
   "use strict";
   const App = window.App;
   const { $, el, janela, fmtCPF, norm, dt, dia, duracao, horas, toast, PAPEL, vazio, carregandoEl, rpc, msgErro,
-          tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas, nomesEscolhidos } = App.u;
+          tabela, barras, baixarCSV } = App.u;
   const S = App.S;
   const B = {
-    regras: null, lista: { ativos: null, meus: null, todos: null }, tarefas: { pendente: null, concluida: null },
+    regras: null, lista: { ativos: null, todos: null }, tarefas: { pendente: null, concluida: null },
     metricas: null, previa: null, resultado: null, consulta: null, destaque: null,
     tratVer: "pendente", caixa: {}, confirmar: {}, tipo: "normal", rascunho: {}, pagina: 1, atencao: null,
   };
