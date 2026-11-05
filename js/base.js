@@ -202,7 +202,10 @@
     entregadores: { nome: "Entregadores", membros: [
       { mod: "ativacao", nome: "Ativação", contador: "c-pend" },
       { mod: "bloqueios", nome: "Bloqueios", contador: "c-trat", alerta: true },
-      { mod: "entregadores", nome: "Cadastrar entregador" }] },
+      { mod: "casos", nome: "Casos 🕵️", contador: "c-casos", alerta: true },
+      { mod: "entregadores", nome: "Cadastrar entregador" }],
+      // número no item do menu de cima: o que está esperando pela pessoa dentro do grupo
+      aviso: () => (App.valores["c-trat"] || 0) + (S.resumo?.casos_para_mim || 0) },
   };
   const grupoDe = (id) => Object.keys(App.grupos).find((g) => App.grupos[g].membros.some((m) => m.mod === id));
   const podeMod = (id) => { const d = App.modulos[id]; return !!d && (!d.acesso || d.acesso()); };
@@ -321,6 +324,7 @@
     adiado = false;
     // contadores de todos os módulos
     for (const id of App.ordem) App.modulos[id].contadores?.();
+    for (const [g, def] of Object.entries(App.grupos)) if (def.aviso) App.contador("c-grupo-" + g, def.aviso());
     const nPed = S.resumo?.pedidos_acesso ?? S.equipe?.pedidos?.length ?? 0;
     $("#c-pedidos").textContent = nPed; $("#c-pedidos").hidden = !nPed;
     const nAv = S.notif?.nao_lidas || 0;
@@ -331,7 +335,9 @@
   };
   document.addEventListener("focusout", () => setTimeout(() => { if (adiado) App.render(); }, 0));
   const carregar = () => App.carregar();
+  App.valores = {};
   App.contador = (id, n) => {
+    App.valores[id] = n;
     const c = document.getElementById(id);
     if (c) { c.textContent = n; c.hidden = !n; }
     document.querySelectorAll(`[data-espelho="${id}"]`).forEach((x) => { x.textContent = n; x.hidden = !n; });

@@ -83,7 +83,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "008"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "008b"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -263,7 +263,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(await s.isVisible("#card-casos") && await s.isVisible("#card-entregadores"), "tela inicial mostra os cartões de Casos e Entregadores");
-  ok(await s.isVisible(".faixa-novidades >> text=Entregadores"), "tela inicial mostra a faixa das novidades");
+  ok(await s.isVisible(".faixa-novidades >> text=Menu mais enxuto"), "tela inicial mostra a faixa das novidades");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -380,9 +380,9 @@ try {
   // 008b: módulo Entregadores, cadastro avulso (sem ativação e sem bloqueio)
   ok(await s.isVisible("nav.grupo a[data-grupo-mod=entregadores]"), "suporte com bloqueios vê Cadastrar entregador na barra de Entregadores");
   { const topo = await s.$$eval("nav.modulos a:not([hidden])", (as) => as.map((x) => x.textContent.trim()));
-    ok(topo.includes("Entregadores") && !topo.some((t) => /Ativação|Bloqueios/.test(t)), "menu de cima: Ativação e Bloqueios ficam dentro de Entregadores: " + topo.join(", "));
+    ok(topo.some((t) => t.startsWith("Entregadores")) && !topo.some((t) => /Ativação|Bloqueios|Casos/.test(t)), "menu de cima: Ativação, Bloqueios e Casos ficam dentro de Entregadores: " + topo.join(", "));
     const grupo = await s.$$eval("nav.grupo a", (as) => as.map((x) => x.dataset.grupoMod));
-    ok(JSON.stringify(grupo) === JSON.stringify(["ativacao", "bloqueios", "entregadores"]), "barra de Entregadores: Ativação, Bloqueios e Cadastrar entregador: " + grupo);
+    ok(JSON.stringify(grupo) === JSON.stringify(["ativacao", "bloqueios", "casos", "entregadores"]), "barra de Entregadores: Ativação, Bloqueios, Casos e Cadastrar entregador: " + grupo);
     ok(await s.getAttribute("nav.modulos a[data-grupo=entregadores]", "aria-current") === "page", "Entregadores fica marcado no menu dentro dos Bloqueios"); }
   await s.screenshot({ path: path.join(PRINTS, "a1-menu-entregadores.png") });
   await s.fill("#bq-q-consulta", "avulso01"); await s.click("#bq-f-consulta button[type=submit]");
@@ -653,7 +653,7 @@ try {
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
-  ok(!(await n7.isVisible("dialog.janela")), "e não aparece de novo");
+  ok(!(await n7.isVisible("dialog.janela")), "e não aparece de novo" + ((await n7.isVisible("dialog.janela")) ? ": " + (await n7.textContent("dialog.janela[open]").catch(() => "?")) : ""));
   // suporte envia sem nome: marca revisar e tarefa para o admin (opcional para os outros)
   await ir(n7, "#ativacao/novo"); await esperar(n7, "#form");
   await n7.fill("#f-idapp", "semnome77"); await n7.fill("#f-cidade", "LAGARTO - SE"); await n7.click("#b-enviar");
@@ -732,7 +732,8 @@ try {
   const cartaoCaso = "#casos-lista .card.caso:has-text('outro1234')";
   ok(await esperar(m7, cartaoCaso), "tela Casos mostra o caso da tentativa com CPF repetido");
   ok((await texto(m7, cartaoCaso)).includes("CPF repetido com outro nome ou ID") && (await texto(m7, cartaoCaso)).includes("Cadastro que já existia"), "o caso traz o tipo e o cadastro que já existia");
-  ok(await m7.isVisible("#c-casos:not([hidden])"), "contador de casos no menu");
+  ok(await m7.isVisible("nav.grupo [data-espelho=c-casos]:not([hidden])"), "contador de casos na barra de Entregadores");
+  ok(await m7.isVisible("#c-grupo-entregadores:not([hidden])"), "o item Entregadores do menu mostra o que espera pela pessoa");
   await m7.click(`${cartaoCaso} >> text=Eu verifico`);
   ok(await esperar(m7, "#casos-lista .grupo:has-text('Para você verificar') .card:has-text('outro1234')"), "Eu verifico: o caso vai para 'Para você verificar'");
   await ir(m7, "#atividades/pendencias");

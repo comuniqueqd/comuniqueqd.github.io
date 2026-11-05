@@ -164,12 +164,14 @@
     render: renderCasos,
     contadores() {
       const r = S.resumo;
-      const c = $("#c-casos");
-      if (!r || !c) return;
+      if (!r) return;
       const n = r.casos_para_mim || r.casos_abertos || 0;
-      c.textContent = n; c.hidden = !n;
-      c.classList.toggle("alert", !!r.casos_para_mim);
-      c.title = r.casos_para_mim ? `${r.casos_para_mim} caso(s) para você verificar` : `${r.casos_abertos} caso(s) aberto(s)`;
+      App.contador("c-casos", n);
+      // vermelho só quando há caso esperando por você; senão, número neutro
+      document.querySelectorAll('[data-espelho="c-casos"]').forEach((c) => {
+        c.classList.toggle("alert", !!r.casos_para_mim);
+        c.title = r.casos_para_mim ? `${r.casos_para_mim} caso(s) para você verificar` : `${r.casos_abertos} caso(s) aberto(s)`;
+      });
     },
   });
 })();

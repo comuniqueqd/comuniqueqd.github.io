@@ -54,17 +54,19 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "008";
+  const VERSAO = "008b";
   const NOVIDADES = {
     tema: "🕵️ Espionagem profissional",
     itens: [
       ["Casos suspeitos", "CPF que já existe tentando entrar com outro nome ou ID, entregador encerrado tentando voltar, troca de dados num cadastro aprovado: tudo vira um caso, e a equipe toda fica sabendo. Antes, a tentativa só era recusada e se perdia."],
       ["Investigação com método", "Na tela Casos 🕵️: “Eu verifico” ou “Pedir verificação”, checklist, comentários e o veredito (confirmado ou descartado) do monitorador ou moderador."],
-      ["Entregadores", "Módulo novo no menu: cadastre o entregador (ID, nome e cidade) sem precisar ativar nem bloquear."],
+      ["Menu mais enxuto", "Ativação, Bloqueios e Casos agora ficam dentro de Entregadores, numa segunda barra. E lá também dá para cadastrar o entregador (ID, nome e cidade) sem precisar ativar nem bloquear."],
       ["Lupa do detetive e placar", "A busca do topo agora acha também casos, comentários e os seus avisos. E nas Análises tem o Placar do detetive."],
     ],
   };
 
+  // grava na hora (o evento "close" chega um instante depois; recarregar logo em seguida perderia a marca)
+  const marcarVisto = () => { try { localStorage.setItem("comunique-novidades", VERSAO); } catch (_) {} };
   function mostrarNovidades() {
     let visto = null;
     try { visto = localStorage.getItem("comunique-novidades"); } catch (_) {}
@@ -72,8 +74,8 @@
     const d = janela("O que há de novo",
       el("p", { class: "meta", style: "margin:0", text: NOVIDADES.tema }),
       el("ol", { class: "novidades" }, NOVIDADES.itens.map(([t, x]) => el("li", {}, el("b", { text: t + ": " }), x))),
-      el("div", { class: "actions" }, el("button", { class: "btn primary", type: "button", onclick: () => d.close() }, "Entendi")));
-    d.addEventListener("close", () => { try { localStorage.setItem("comunique-novidades", VERSAO); } catch (_) {} });
+      el("div", { class: "actions" }, el("button", { class: "btn primary", type: "button", onclick: () => { marcarVisto(); d.close(); } }, "Entendi")));
+    d.addEventListener("close", marcarVisto);  // o ✕ e o Esc também contam como visto
   }
 
   App.aoEntrar.push(() => { form.hidden = false; }, mostrarNovidades);
