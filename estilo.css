@@ -344,3 +344,11 @@ button.revisar-cad.discreto { font-size: 11px; padding: 0 6px; border-radius: 99
   border: 1px solid var(--accent); background: var(--accent-soft); border-radius: var(--radius); font-size: 14px; }
 .faixa-novidades span { color: var(--muted); flex: 1 1 260px; }
 a.modulo-card.casos { border-top-color: #7a4bd1; }
+
+/* segunda barra de um grupo do menu (Entregadores: Ativação · Bloqueios · Cadastrar entregador) */
+nav.grupo { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+nav.grupo a { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--line);
+  color: var(--muted); text-decoration: none; font-weight: 600; font-size: 13px; background: var(--surface); }
+nav.grupo a:hover { color: var(--ink); border-color: var(--muted); }
+nav.grupo a[aria-current="page"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+nav.grupo[hidden] { display: none; }

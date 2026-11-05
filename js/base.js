@@ -196,6 +196,17 @@
   const ANTIGAS = { pendentes: 1, novo: 1, meus: 1, painel: 1, historico: 1 };
   const abasPermitidas = (m) => m.abas.filter((a) => !a.pode || a.pode());
   App.atual = { mod: null, aba: null };
+  // Grupos: módulos que aparecem juntos sob um item só do menu, com uma segunda barra para escolher entre eles.
+  // As rotas continuam as de cada módulo (#ativacao/..., #bloqueios/...), então links antigos e avisos seguem valendo.
+  App.grupos = {
+    entregadores: { nome: "Entregadores", membros: [
+      { mod: "ativacao", nome: "Ativação", contador: "c-pend" },
+      { mod: "bloqueios", nome: "Bloqueios", contador: "c-trat", alerta: true },
+      { mod: "entregadores", nome: "Cadastrar entregador" }] },
+  };
+  const grupoDe = (id) => Object.keys(App.grupos).find((g) => App.grupos[g].membros.some((m) => m.mod === id));
+  const podeMod = (id) => { const d = App.modulos[id]; return !!d && (!d.acesso || d.acesso()); };
+  const ultimoDoGrupo = {};
   function lerRota() {
     let [m, a] = location.hash.replace("#", "").split("/");
     if (ANTIGAS[m] && !a) { a = m; m = "ativacao"; }
@@ -210,12 +221,24 @@
     let aba = abas.find((x) => x.id === a) || abas.find((x) => x.id === mod.padrao?.()) || abas[0];
     App.atual = { mod: mod.id, aba: aba.id };
     document.querySelectorAll("section.view").forEach((s) => (s.hidden = s.id !== aba.secao));
-    // menu de módulos
+    // menu de módulos (um item de grupo vale para todos os módulos dele)
+    const grupo = grupoDe(mod.id);
+    if (grupo) ultimoDoGrupo[grupo] = `#${mod.id}/${aba.id}`;
     document.querySelectorAll("nav.modulos a").forEach((x) => {
-      const def = App.modulos[x.dataset.mod];
-      x.hidden = !!def?.acesso && !def.acesso();
-      if (x.dataset.mod === mod.id) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current");
+      const g = x.dataset.grupo;
+      if (g) {
+        const membros = App.grupos[g].membros.filter((m) => podeMod(m.mod));
+        x.hidden = !membros.length;
+        x.href = ultimoDoGrupo[g] || (membros[0] ? "#" + membros[0].mod : "#inicio");
+      } else x.hidden = !podeMod(x.dataset.mod);
+      if ((g || x.dataset.mod) === (grupo || mod.id)) x.setAttribute("aria-current", "page"); else x.removeAttribute("aria-current");
     });
+    // segunda barra do grupo
+    const ng = $("nav.grupo");
+    ng.hidden = !grupo;
+    ng.replaceChildren(...(grupo ? App.grupos[grupo].membros.filter((m) => podeMod(m.mod)).map((m) =>
+      el("a", { href: "#" + m.mod, "data-grupo-mod": m.mod, "aria-current": m.mod === mod.id ? "page" : null }, m.nome,
+        m.contador ? el("span", { class: "count" + (m.alerta ? " alert" : ""), "data-espelho": m.contador, hidden: true, text: "0" }) : null)) : []));
     // abas do módulo
     const nav = $("nav.tabs");
     nav.hidden = abas.length < 2;
@@ -308,7 +331,11 @@
   };
   document.addEventListener("focusout", () => setTimeout(() => { if (adiado) App.render(); }, 0));
   const carregar = () => App.carregar();
-  App.contador = (id, n) => { const c = document.getElementById(id); if (c) { c.textContent = n; c.hidden = !n; } };
+  App.contador = (id, n) => {
+    const c = document.getElementById(id);
+    if (c) { c.textContent = n; c.hidden = !n; }
+    document.querySelectorAll(`[data-espelho="${id}"]`).forEach((x) => { x.textContent = n; x.hidden = !n; });
+  };
 
   // ---------- login ----------
   function gate(estado, extra = "") {

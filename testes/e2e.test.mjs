@@ -165,6 +165,7 @@ try {
   const abasM = await m.$$eval("nav.tabs a:not([hidden])", (as) => as.map((x) => x.dataset.view));
   ok(!abasM.includes("equipe") && abasM.includes("historico"), "monitorador vê Histórico e não vê Equipe");
   ok((await texto(m, "#c-pend")) === "3", "contador de pendentes: 3");
+  ok((await texto(m, "nav.grupo [data-espelho=c-pend]")) === "3", "o contador de pendentes aparece também na barra de Entregadores");
   const cardLagarto = "#queue .card:has-text('1a2b3c4d5e6f')";
   await m.click(`${cardLagarto} >> text=Reprovar`);
   await m.click(`${cardLagarto} >> text=Confirmar reprovação`);
@@ -377,7 +378,13 @@ try {
   ok(await esperar(s, "#bq-consulta .comentarios >> text=Ligou pedindo para ser liberado."), "suporte adiciona comentário na consulta");
   await s.screenshot({ path: path.join(PRINTS, "b6b-consulta.png"), fullPage: true });
   // 008b: módulo Entregadores, cadastro avulso (sem ativação e sem bloqueio)
-  ok(await s.isVisible("nav.modulos a[data-mod=entregadores]"), "suporte com bloqueios vê o módulo Entregadores");
+  ok(await s.isVisible("nav.grupo a[data-grupo-mod=entregadores]"), "suporte com bloqueios vê Cadastrar entregador na barra de Entregadores");
+  { const topo = await s.$$eval("nav.modulos a:not([hidden])", (as) => as.map((x) => x.textContent.trim()));
+    ok(topo.includes("Entregadores") && !topo.some((t) => /Ativação|Bloqueios/.test(t)), "menu de cima: Ativação e Bloqueios ficam dentro de Entregadores: " + topo.join(", "));
+    const grupo = await s.$$eval("nav.grupo a", (as) => as.map((x) => x.dataset.grupoMod));
+    ok(JSON.stringify(grupo) === JSON.stringify(["ativacao", "bloqueios", "entregadores"]), "barra de Entregadores: Ativação, Bloqueios e Cadastrar entregador: " + grupo);
+    ok(await s.getAttribute("nav.modulos a[data-grupo=entregadores]", "aria-current") === "page", "Entregadores fica marcado no menu dentro dos Bloqueios"); }
+  await s.screenshot({ path: path.join(PRINTS, "a1-menu-entregadores.png") });
   await s.fill("#bq-q-consulta", "avulso01"); await s.click("#bq-f-consulta button[type=submit]");
   ok(await esperar(s, "#bq-consulta >> text=Cadastrar este entregador"), "consulta sem resultado oferece cadastrar o entregador");
   await s.click("#bq-consulta >> text=Cadastrar este entregador");
