@@ -34,6 +34,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/006-equipe-previsao-ate
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/007-pao-quentinho.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008-espionagem.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008b-cadastrar-entregador.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008b-notificacoes.sql"), "utf8"));
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
 for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001', 'Ciclano Atrasado', 'LAGARTO - SE', 'Atraso na Coleta ou na Entrega Sem Justificativa', now() - make_interval(days => $1), 'Planilha')", [d]);
 // registro importado com alerta de revisão (100 dias atrás: fora do painel de 30 dias)
@@ -83,7 +84,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "008b"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "008b2"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -103,6 +104,8 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
 }
 const esperar = (p, sel, t = 10000) => p.waitForSelector(sel, { timeout: t }).then(() => true).catch(() => false);
 const texto = (p, sel) => p.textContent(sel).catch(() => "");
+// trecho em volta de uma palavra (para a mensagem de erro dizer onde apareceu "null"/"undefined")
+const perto = (t, w) => { const i = t.indexOf(w); return i < 0 ? "" : " → …" + t.slice(Math.max(0, i - 90), i + 20); };
 const ir = async (p, hash) => { await p.evaluate((h) => (location.hash = h), hash); await p.waitForTimeout(700); };
 
 try {
@@ -329,7 +332,10 @@ try {
   ok(await s.isVisible("#bq-meus-lista .card:has-text('Ladrão') >> text=Encerramento de parceria pendente"), "Meus registros: encerramento pendente com o responsável");
   await s.screenshot({ path: path.join(PRINTS, "b4-meus-registros.png"), fullPage: true });
   await s.click("#b-avisos");
-  ok(await esperar(s, "#at-avisos >> text=Tratativa realizada por Monitor Um"), "aviso: tratativa realizada");
+  ok(await esperar(s, "#tira-avisos:not([hidden]) >> text=Tratativa realizada por Monitor Um"), "sino abre a tira com o aviso: tratativa realizada");
+  await s.screenshot({ path: path.join(PRINTS, "h1-tira-sino.png") });
+  await s.click("#tira-avisos >> text=Ver todos os avisos");
+  ok(await esperar(s, "#at-avisos >> text=Tratativa realizada por Monitor Um") && await s.isHidden("#tira-avisos"), "Ver todos os avisos abre a tela de Avisos e fecha a tira");
   await s.waitForTimeout(1500);
   ok((await s.getAttribute("#b-avisos", "data-novas")) === "false", "avisos marcados como lidos");
 
@@ -372,7 +378,7 @@ try {
   ok(await esperar(s, "#bq-consulta >> text=1 bloqueio(s)"), "consulta por ID");
   ok(await s.isVisible("#bq-consulta .comentarios >> text=Educado, mas costuma atrasar a coleta."), "consulta mostra o comentário feito no registro");
   ok(!(await texto(s, "#bq-consulta")).includes("null"), "consulta sem textos vazios (null)");
-  ok(!(await s.isVisible("#bq-consulta >> text=Alterar dados")) && !(await s.isVisible("#bq-consulta >> text=Corrigir")), "suporte não altera dados nem corrige");
+  ok(!(await s.isVisible("#bq-consulta >> text=Alterar dados")) && await s.isVisible("#bq-consulta button:text-is('Corrigir')"), "suporte não altera a ficha, mas corrige o bloqueio que registrou (008b)");
   await s.fill("#bq-consulta textarea", "Ligou pedindo para ser liberado.");
   await s.click("#bq-consulta >> text=Adicionar comentário");
   ok(await esperar(s, "#bq-consulta .comentarios >> text=Ligou pedindo para ser liberado."), "suporte adiciona comentário na consulta");
@@ -517,8 +523,10 @@ try {
   ok(await esperar(a2, `${cardAt} >> text=realocada por Mateus Lopes`), "cartão mostra a realocação");
   await a2.reload();
   ok(await esperar(a2, "#b-avisos[data-novas=true]"), "sino do moderador acende com a tratativa atrasada");
-  await a2.click("#b-avisos");
-  ok(await esperar(a2, "#at-avisos >> text=Tratativa atrasada há"), "aviso de tratativa atrasada para o moderador");
+  await ir(a2, "#atividades/avisos"); await esperar(a2, "#at-avisos .aviso");
+  await a2.selectOption("#av-filtro", "pessoal");
+  ok(await esperar(a2, "#at-avisos >> text=Tratativa atrasada há"), "aviso de tratativa atrasada para o moderador (filtro: para você)");
+  await a2.selectOption("#av-filtro", "");
   ok(await esperar(a2, "#papel:has-text('Moderador')") && !(await texto(a2, "#papel")).includes("·"), "papel único no topo quando é igual nos dois módulos");
   // atividade sugerida: suporte cria para o monitorador; monitorador aceita e conclui
   await ir(s, "#atividades/sugeridas");
@@ -649,7 +657,7 @@ try {
     await d7.query("select importar_bloqueio('rev00002', 'Nome Velho', 'ITABAIANA - SE', 'Avaria de Produto', now() - interval '120 days', 'Planilha', 'Nome diferente na planilha', '24')");
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
-  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Lupa do detetive"), "janela O que há de novo aparece na primeira vez");
+  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -725,7 +733,7 @@ try {
   await n7.click("#queue .card:has-text('111.444.777-35') button.revisar-cad");
   ok(await esperar(n7, "dialog.janela >> text=Já existe uma tarefa aberta"), "cadastro novo incompleto já tem tarefa (não oferece outra)");
   await n7.click("dialog.janela >> text=Cancelar");
-  ok(!(await texto(n7, "main")).includes("null"), "telas da 007 sem textos vazios (null)");
+  { const t7 = await texto(n7, "main"); ok(!t7.includes("null"), "telas da 007 sem textos vazios (null)" + perto(t7, "null")); }
 
   // 17. migração 008 · "espionagem profissional": casos suspeitos
   await ir(m7, "#casos"); await m7.reload();
@@ -764,6 +772,47 @@ try {
   ok(await esperar(m7, "#t-placar >> text=Monitor Um"), "placar do detetive mostra quem verificou");
   await m7.screenshot({ path: path.join(PRINTS, "g3-placar.png"), fullPage: true });
   ok(!(await texto(m7, "main")).includes("null") && !(await texto(n7, "main")).includes("undefined"), "telas da 008 sem textos vazios");
+
+  // 18. 008b · avisos: tira, tela com busca e filtros, cidades sem responsável, suporte revisa
+  { const d8 = new pg.Client({ connectionString: DB }); await d8.connect();
+    var livre = (await d8.query("select nome from cidades where ativa and public.responsavel_cidade_email(nome) is null order by nome limit 1")).rows[0].nome;
+    await d8.query("select importar_bloqueio('rev00008', 'Nome Trocado', 'LAGARTO - SE', 'Avaria de Produto', now() - interval '80 days', 'Planilha', 'Nome diferente na planilha', '24')");
+    await d8.end(); }
+  const a8 = await abrir(admin, "#atividades/avisos");
+  ok(await esperar(a8, "#at-avisos .aviso >> text=Você recebeu porque você é moderador"), "moderador recebe os avisos de Registros, com o porquê");
+  await a8.fill("#av-q", "avulso01");
+  ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#at-avisos .aviso")]; return l.length && l.every((x) => x.textContent.includes("avulso01")); }, null, { timeout: 8000 }).then(() => true, () => false), "busca nos avisos pelo ID");
+  await a8.fill("#av-q", "");
+  await a8.selectOption("#av-filtro", "bloqueios");
+  ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#at-avisos .aviso .tag")]; return l.length && l.every((x) => x.textContent === "BLOQUEIOS"); }, null, { timeout: 8000 }).then(() => true, () => false), "filtro por tipo: só bloqueios");
+  await a8.screenshot({ path: path.join(PRINTS, "h2-tela-avisos.png"), fullPage: true });
+  await a8.click("#at-avisos .aviso a[href^='#ficha/']");
+  ok(await esperar(a8, "#v-bq-consultar:not([hidden]) #bq-consulta h3"), "clicar num aviso de bloqueio abre a ficha do entregador");
+  // cidade sem responsável: o suporte pede, o moderador aprova nas Pendências
+  const s8 = await abrir(sup, "#atividades/avisos");
+  await esperar(s8, "#av-cidades summary"); await s8.click("#av-cidades summary");
+  ok(await esperar(s8, `#av-cidades li:has-text('${livre}') >> text=Pedir para ser responsável`), "tela de Avisos lista as cidades sem responsável");
+  await s8.click(`#av-cidades li:has-text('${livre}') >> text=Pedir para ser responsável`);
+  ok(await esperar(s8, "#toast:has-text('Pedido enviado')") && await esperar(s8, `#av-cidades li:has-text('${livre}') >> text=Você já pediu`), "suporte pede para ser responsável pela cidade");
+  await s8.screenshot({ path: path.join(PRINTS, "h3-cidades-sem-responsavel.png"), fullPage: true });
+  await ir(a8, "#atividades/pendencias"); await a8.reload();
+  const cartaoPedido = `#at-lista .card:has-text('Suporte Um pediu para ser responsável por ${livre}')`;
+  ok(await esperar(a8, cartaoPedido), "o pedido aparece nas Pendências do moderador");
+  await a8.screenshot({ path: path.join(PRINTS, "h4-pedido-cidade.png"), fullPage: true });
+  await a8.click(`${cartaoPedido} >> text=Aprovar`);
+  ok(await esperar(a8, `#toast:has-text('agora é responsável por ${livre}')`), "moderador aprova o pedido");
+  await ir(s8, "#atividades/avisos"); await s8.reload();
+  ok(await esperar(s8, `#at-avisos >> text=agora você é responsável por ${livre}`), "quem pediu é avisado da aprovação");
+  // suporte corrige um registro "revisar" pela ficha
+  await ir(s8, "#bloqueios/consultar");
+  await s8.fill("#bq-q-consulta", "rev00008"); await s8.click("#bq-f-consulta button[type=submit]");
+  ok(await esperar(s8, "#bq-consulta button.alerta-revisar"), "o suporte vê o botão revisar no registro marcado");
+  await s8.click("#bq-consulta button.alerta-revisar");
+  await esperar(s8, "dialog.janela");
+  ok(await s8.isVisible("dialog.janela >> text=Motivo"), "a correção do suporte pede o motivo");
+  await s8.keyboard.press("Escape");
+  { const ta = await texto(a8, "main"), ts = await texto(s8, "main");
+    ok(!ta.includes("undefined") && !ts.includes("null") && !ta.includes("null"), "telas da 008b sem textos vazios" + perto(ta, "undefined") + perto(ts, "null") + perto(ta, "null")); }
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

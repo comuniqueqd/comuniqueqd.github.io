@@ -15,6 +15,8 @@
   };
   const papel = () => S.me?.papel_bloqueios;
   const staff = () => ["moderador", "monitorador"].includes(papel());
+  // corrigir um bloqueio: monitorador/moderador em qualquer um; o suporte nos marcados "revisar" e nos que registrou (008b)
+  const podeCorrigir = (b) => !b.dados_pendentes && (staff() || (!!papel() && (!!b.revisar || b.registrado_por === S.me?.id)));
   const mod = () => papel() === "moderador";
   const render = () => App.render();
   const carregar = () => App.carregar();
@@ -101,7 +103,7 @@
         mod() && b.tarefa?.status === "pendente" && b.tarefa.tipo !== "completar_dados" ? el("button", { class: "btn link", type: "button", onclick: () => realocar(b.tarefa, b) }, "Realocar…") : null,
         el("button", { class: "btn link", type: "button", onclick: () => abrirFicha(b.id_app) }, "Consultar entregador"),
         botaoAnexos(b),
-        staff() && !b.dados_pendentes ? el("button", { class: "btn link", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir dados") : null,
+        podeCorrigir(b) ? el("button", { class: "btn link", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir dados") : null,
         el("span", { class: "spacer" }),
         staff() && (sit === "bloqueado" || sit === "encerramento") ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrir(b.id, "liberar") }, sit === "encerramento" ? "Reverter encerramento…" : "Liberar antes do prazo…") : null) : null,
       cx ? caixa(b, cx) : null);
@@ -112,7 +114,7 @@
   function alertaRevisar(b, curto = false) {
     if (!b.revisar) return null;
     const txt = curto ? "revisar" : "Revisar: " + b.revisar;
-    return staff() && !b.dados_pendentes
+    return podeCorrigir(b)
       ? el("button", { class: "alerta-revisar", type: "button", title: "Revisar: " + b.revisar, onclick: (e) => { e.stopPropagation(); abrirCorrecao(b); } }, txt + " ›")
       : el("span", { class: "alerta-revisar", title: b.revisar, text: txt });
   }
@@ -628,7 +630,7 @@
         el("td", {}, b.nome, b.cidade ? el("div", { class: "meta", text: b.cidade }) : null, alertaRevisar(b, true)),
         el("td", { text: b.infracao + (b.leve ? " (leve)" : "") }), el("td", { text: b.leve ? "—" : ord(b.ocorrencia) }), el("td", { text: horasTxt(b.horas) }), el("td", {}, pillSit(b.situacao)),
         el("td", { text: b.registrado_por_nome }), el("td", {}, bulletTratativa(b)),
-        el("td", { style: "white-space:nowrap" }, staff() && !b.dados_pendentes ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir") : null, botaoAnexos(b)))), "")));
+        el("td", { style: "white-space:nowrap" }, podeCorrigir(b) ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir") : null, botaoAnexos(b)))), "")));
   }
   const MOD_TXT = { ativacao: "ATIVAÇÃO", bloqueios: "BLOQUEIOS" };
   function renderConsulta() {
@@ -728,7 +730,7 @@
       el("button", { class: "btn small", type: "button", disabled: h.pagina === paginas, onclick: () => ir(h.pagina + 1) }, "Próxima ›")] : []));
     t.replaceChildren(...tabela(cols, h.itens.map((b) => {
       const acoes = el("td", { style: "white-space:nowrap" });
-      if (staff() && !b.dados_pendentes && !B.confirmar[b.id]) acoes.append(el("button", { class: "btn quiet", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir"));
+      if (podeCorrigir(b) && !B.confirmar[b.id]) acoes.append(el("button", { class: "btn quiet", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir"));
       if (mod()) {
         if (B.confirmar[b.id]) acoes.append(el("button", { class: "btn danger small", type: "button", onclick: (e) => excluir(b, e.currentTarget) }, "Confirmar exclusão"), el("button", { class: "btn link", type: "button", onclick: () => { delete B.confirmar[b.id]; render(); } }, "Cancelar"));
         else acoes.append(el("button", { class: "btn quiet", type: "button", onclick: () => { B.confirmar[b.id] = true; render(); } }, "Excluir"));

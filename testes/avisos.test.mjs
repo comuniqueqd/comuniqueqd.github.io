@@ -205,6 +205,10 @@ await t("o suporte também revisa: corrige um registro 'revisar' e confere um ca
   const c = (await rpc(sup, "enviar_cadastro", { p_id_app: "aviso001", p_cpf: null, p_cidade: "LAGARTO - SE", p_nome: "Outro Nome" })).id;
   await rpc(sup, "marcar_cadastro_revisado", { p_cadastro: c });
   igual((await um("select revisado from cadastros where id = $1", [c])).revisado, true);
+  const outro = (await um("select id from bloqueios where id_app = 'aviso001'")).id;
+  await rpc(sup, "corrigir_bloqueio", { p_bloqueio: outro, p_id_app: "aviso001", p_nome: "Zeferino Teste", p_cidade: "LAGARTO - SE", p_motivo: "x" }).catch((e) => { if (!/Nada foi alterado/.test(e.message)) throw e; });
+  const deOutro = (await um("select id from bloqueios where id_app = 'imp00009'")).id;
+  await falha(rpc(sup, "corrigir_bloqueio", { p_bloqueio: deOutro, p_id_app: "imp00009", p_nome: "Outro", p_cidade: "LAGARTO - SE", p_motivo: "x" }), "só os registros marcados");
   await falha(rpc(semBq, "corrigir_bloqueio", { p_bloqueio: b, p_id_app: "rev00009", p_nome: "X", p_cidade: "LAGARTO - SE", p_motivo: "x" }));
 });
 

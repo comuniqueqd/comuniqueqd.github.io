@@ -352,3 +352,24 @@ nav.grupo a { display: inline-flex; align-items: center; gap: 6px; padding: 5px 
 nav.grupo a:hover { color: var(--ink); border-color: var(--muted); }
 nav.grupo a[aria-current="page"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
 nav.grupo[hidden] { display: none; }
+
+/* 008b: tira do sino e tela de Avisos */
+.tira-avisos { position: absolute; z-index: 50; width: min(420px, calc(100vw - 16px)); max-height: min(70vh, 560px); overflow: auto;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 32px rgba(10, 14, 20, .18); }
+.tira-avisos[hidden] { display: none; }
+.tira-topo, .tira-pe { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; }
+.tira-topo { border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
+.tira-pe { border-top: 1px solid var(--line); position: sticky; bottom: 0; background: var(--surface); }
+.lista-avisos { list-style: none; margin: 0; padding: 0; }
+.lista-avisos li.aviso a { display: grid; gap: 4px; padding: 10px 14px; color: inherit; text-decoration: none; border-bottom: 1px solid var(--line); }
+.lista-avisos li.aviso a:hover { background: var(--accent-soft); }
+.lista-avisos li.aviso.novo a { border-left: 3px solid var(--accent); padding-left: 11px; }
+.lista-avisos li.aviso.novo .aviso-texto { font-weight: 600; }
+.lista-avisos.pagina { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+.aviso-topo { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.aviso-texto { font-size: 14px; }
+.cidades-livres, .meus-pedidos { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px 18px; }
+.cidades-livres { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.cidades-livres li { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding: 4px 0; font-size: 14px; }
+.cidades-livres .btn.link { font-size: 13px; padding: 2px 0; }
+.meus-pedidos li { font-size: 14px; }

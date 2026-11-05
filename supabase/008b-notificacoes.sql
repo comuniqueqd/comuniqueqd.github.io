@@ -317,6 +317,15 @@ begin
     def := replace(replace(def,
       $x$exigir_bloq('moderador', 'monitorador')$x$, $x$exigir_bloq('moderador', 'monitorador', 'suporte')$x$),
       $x$exigir_papel('moderador', 'monitorador')$x$, $x$exigir_papel('moderador', 'monitorador', 'suporte')$x$);
+    -- o suporte corrige só o que está marcado "revisar" ou o que ele mesmo registrou
+    if f like '%corrigir_bloqueio%' and def not like '%O suporte corrige só%' then
+      def := replace(def, $x$if b.id is null then raise exception 'Bloqueio não encontrado.'; end if;$x$,
+        $x$if b.id is null then raise exception 'Bloqueio não encontrado.'; end if;
+  if public.meu_papel_bloq() = 'suporte' and b.revisar is null and b.registrado_por is distinct from auth.uid() then
+    raise exception 'O suporte corrige só os registros marcados “revisar” ou os que ele mesmo registrou.';
+  end if;$x$);
+      if def not like '%O suporte corrige só%' then raise exception 'Não consegui limitar a correção do suporte.'; end if;
+    end if;
     if def not like '%''suporte''%' then raise exception 'Não consegui liberar % para o suporte.', f; end if;
     execute def;
   end loop;

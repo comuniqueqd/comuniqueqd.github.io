@@ -54,16 +54,18 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "008b";
+  const VERSAO = "008b2";
   const NOVIDADES = {
-    tema: "🕵️ Espionagem profissional",
+    tema: "📣 Espião ou fofoqueiro? Virou rede social?",
     itens: [
-      ["Casos suspeitos", "CPF que já existe tentando entrar com outro nome ou ID, entregador encerrado tentando voltar, troca de dados num cadastro aprovado: tudo vira um caso, e a equipe toda fica sabendo. Antes, a tentativa só era recusada e se perdia."],
-      ["Investigação com método", "Na tela Casos 🕵️: “Eu verifico” ou “Pedir verificação”, checklist, comentários e o veredito (confirmado ou descartado) do monitorador ou moderador."],
-      ["Menu mais enxuto", "Ativação, Bloqueios e Casos agora ficam dentro de Entregadores, numa segunda barra. E lá também dá para cadastrar o entregador (ID, nome e cidade) sem precisar ativar nem bloquear."],
-      ["Lupa do detetive e placar", "A busca do topo agora acha também casos, comentários e os seus avisos. E nas Análises tem o Placar do detetive."],
+      ["Sino com tira", "Clique no sino: os avisos recentes abrem ali mesmo, sem sair da tela. Clicar num aviso leva direto para a ficha ou o cadastro."],
+      ["Avisos com busca e filtros", "Na tela de Avisos: busque por nome, ID, cidade ou qualquer palavra, e filtre por tipo, cidade ou só os não lidos."],
+      ["Sua cidade, seus avisos", "O responsável da cidade recebe tudo o que acontece nela (cadastros, bloqueios, comentários); os moderadores recebem tudo. Cidade sem responsável? Peça para ser a responsável na tela de Avisos."],
+      ["O suporte também revisa", "Registros marcados “revisar” e os que você registrou podem ser corrigidos pelo suporte (com motivo); e “Os dados estão certos” nos cadastros."],
+      ["Menu mais enxuto", "Ativação, Bloqueios, Casos e Cadastrar entregador ficam dentro de Entregadores, numa segunda barra."],
     ],
   };
+
 
   // grava na hora (o evento "close" chega um instante depois; recarregar logo em seguida perderia a marca)
   const marcarVisto = () => { try { localStorage.setItem("comunique-novidades", VERSAO); } catch (_) {} };

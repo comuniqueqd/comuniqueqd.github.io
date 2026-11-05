@@ -218,6 +218,14 @@
   function route() {
     if (!S.me) return;
     let { m, a } = lerRota();
+    // links dos avisos: #ficha/<ID> abre a ficha; #cadastro/<id> abre o cadastro por cima da tela atual
+    if ((m === "ficha" || m === "cadastro") && a) {
+      const alvo = decodeURIComponent(a);
+      history.replaceState(null, "", m === "ficha" ? "#bloqueios/consultar" : App.atual.mod ? `#${App.atual.mod}/${App.atual.aba}` : "#inicio");
+      route();
+      if (m === "ficha") App.abrirFicha?.(alvo); else App.abrirCadastro?.(alvo);
+      return;
+    }
     let mod = App.modulos[m];
     if (!mod || (mod.acesso && !mod.acesso())) mod = App.modulos.inicio;
     const abas = abasPermitidas(mod);

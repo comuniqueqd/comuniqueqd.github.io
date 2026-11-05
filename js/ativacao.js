@@ -217,7 +217,7 @@
       erro,
       el("div", { class: "actions" },
         el("button", { class: "btn primary", type: "button", onclick: (e) => salvar(e.currentTarget) }, "Salvar"),
-        c.revisar && c.nome && c.id_app && staff() ? el("button", { class: "btn", type: "button", onclick: async (e) => {
+        c.revisar && c.nome && c.id_app ? el("button", { class: "btn", type: "button", onclick: async (e) => {
           const b = e.currentTarget; b.disabled = true;
           try { await rpc("marcar_cadastro_revisado", { p_cadastro: id }); feito("Marcado como revisado."); } catch (err) { falhou(err, b); } } }, "Os dados estão certos") : null,
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")),

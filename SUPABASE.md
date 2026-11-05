@@ -221,3 +221,17 @@ O que muda:
 - O módulo aparece para quem tem o módulo de bloqueios (moderador, monitorador e suporte). ID que já tem ficha é recusado (para mudar os dados, use **Alterar dados** na ficha).
 - Os próximos registros deste ID (bloqueios e infrações leves) já vêm com nome e cidade. Se o ID tinha infrações leves esperando os dados, o monitorador ou moderador que cadastra completa esses registros e fecha a tarefa “completar dados”; quando é o suporte, a tarefa continua para o monitoramento.
 
+## Atualização: "Espião ou fofoqueiro? Virou rede social?" · avisos (migração 008b, parte 1)
+
+Para quem já rodou a `008-espionagem.sql` e o `008b-cadastrar-entregador.sql`. **Não apaga** nada e pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/008b-notificacoes.sql`](supabase/008b-notificacoes.sql) inteiro e clique em **Run**.
+2. Só depois publique o site (a tela de Avisos nova usa as funções desta migração).
+
+O que muda:
+
+- **Tudo o que entra em Registros vira aviso** para os **moderadores** (de qualquer módulo) e para o **responsável da cidade**: cadastros enviados e decididos, bloqueios, infrações leves, tratativas, liberações, correções, comentários e alterações na ficha. Quem fez a ação não recebe, e cada pessoa recebe **um aviso só por ação** (o aviso pessoal, como "seu cadastro foi aprovado", tem preferência). Assuntos dos bloqueios só vão para quem tem o módulo. Importações feitas pelo SQL Editor não geram avisos.
+- **Sino com tira**: os avisos recentes abrem por cima da tela. **Tela de Avisos** com busca por palavras (nome, ID, cidade…), filtros por tipo e cidade, "só os não lidos" e "Carregar mais".
+- **Cidades sem responsável**: listadas na tela de Avisos; qualquer pessoa pede para ser a responsável. O pedido aparece nas **Pendências dos moderadores**, que aprovam ou recusam (recusa com motivo). Aprovado, a pessoa vira o responsável da cidade (Regras de equipe) e passa a receber os avisos dela; as tratativas só vão para ela se for monitorador ou moderador dos bloqueios. Cidade de operador sem responsável dos operadores passa a usar o responsável da própria cidade.
+- **O suporte também revisa**: corrige os registros dos bloqueios marcados "revisar" e os que ele mesmo registrou (com motivo, como sempre), e marca "Os dados estão certos" nos cadastros.
+

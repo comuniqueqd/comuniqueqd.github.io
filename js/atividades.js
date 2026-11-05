@@ -16,7 +16,7 @@
     const r = S.resumo;
     if (!r) return null;
     return (staffAtiv() ? r.ativacao.aguardando_analise : 0) + (staffBloq() ? r.bloqueios?.tratativas_pendentes || 0 : 0)
-      + (r.atividades?.para_aceitar || 0) + (r.atividades?.minhas_em_andamento || 0);
+      + (r.atividades?.para_aceitar || 0) + (r.atividades?.minhas_em_andamento || 0) + (r.pedidos_cidade?.length || 0);
   }
 
   // opcional: cartão menor, com a etiqueta "Opcional" (formato reutilizável para tarefas que qualquer um pode pegar)
@@ -53,6 +53,8 @@
         acoes: [el("a", { class: "btn small", href: "#atividades/sugeridas" }, a.status === "aceita" ? "Concluir" : "Ver e aceitar"),
           a.cadastro_id ? el("button", { class: "btn link", type: "button", onclick: () => App.abrirCadastro(a.cadastro_id) }, "Completar o cadastro") : null].filter(Boolean),
         extra: a.status === "aceita" ? App.u.previsao(a, "atividade", a.id, a.pode_prever) : null }));
+    // Pedidos para ser responsável de cidade (moderadores, 008b)
+    itens.push(...App.avisos.cartoesPedidos(item));
     // Casos suspeitos para você verificar (008)
     if (r.casos_para_mim)
       itens.push(item({ modulo: "CASOS 🕵️", titulo: `${r.casos_para_mim} caso(s) suspeito(s) para você verificar`, estado: "atrasada",
@@ -104,23 +106,6 @@
       itens.length ? el("ul", { class: "queue", style: "padding:0;margin:0" }, itens) : vazio("Tudo em dia", "Nenhuma pendência só sua agora."),
       opcionais.length ? el("div", { class: "grupo" }, el("h3", {}, "Opcionais: quem puder, pega", el("span", { class: "count", text: opcionais.length })),
         el("ul", { class: "queue", style: "padding:0;margin:0" }, opcionais)) : null].filter(Boolean));
-  }
-
-  function renderAvisos() {
-    const box = $("#at-avisos");
-    const n = S.notif;
-    if (!n) return box.replaceChildren(carregandoEl());
-    if (!n.itens.length) return box.replaceChildren(vazio("Nenhum aviso", "Quando uma tratativa dos seus bloqueios for feita, ou um bloqueio for liberado antes do prazo, você recebe um aviso aqui."));
-    box.replaceChildren(el("ul", { class: "queue", style: "padding:0;margin:0" }, n.itens.map((x) => el("li", { class: "card" + (x.lida ? "" : " destaque"), style: "list-style:none" },
-      el("div", { class: "head" }, el("span", { class: "name", style: "font-weight:500;font-size:15px" }, x.lida ? null : el("span", { class: "tag", text: "NOVO" }), x.texto),
-        el("span", { class: "meta", text: dt(x.criada_em) })),
-      x.link ? el("div", { class: "actions" }, el("a", { class: "btn link", href: x.link }, "Abrir")) : null))));
-    // ao abrir a lista, os avisos passam a contar como lidos (continuam destacados nesta visita)
-    if (n.nao_lidas && !A.marcando) {
-      A.marcando = true;
-      rpc("marcar_notificacoes_lidas").then(() => { S.notif = { ...S.notif, nao_lidas: 0 }; App.render(); })
-        .catch((e) => toast(msgErro(e))).finally(() => (A.marcando = false));
-    }
   }
 
   // ---------- atividades sugeridas ----------
@@ -204,7 +189,6 @@
     box.replaceChildren(...grupos.map(([tit, x]) => el("div", { class: "grupo" }, el("h3", {}, tit, el("span", { class: "count", text: x.length })), el("div", { class: "queue" }, x.map(cartaoAtividade)))));
   }
 
-  $("#b-avisos").addEventListener("click", () => (location.hash = "#atividades/avisos"));
 
   App.modulo({
     id: "atividades", nome: "Atividades",
@@ -216,10 +200,10 @@
     async carregar(aba) {
       await Promise.all([
         aba === "pendencias" && S.me.papel_bloqueios ? rpc("listar_tarefas", { p_status: "pendente" }).then((d) => (A.tarefas = d)) : null,
-        aba !== "avisos" ? rpc("listar_atividades").then((d) => (A.atividades = d)) : null,
+        aba !== "avisos" ? rpc("listar_atividades").then((d) => (A.atividades = d)) : App.avisos.carregar(),
       ]);
     },
-    render(aba) { ({ avisos: renderAvisos, sugeridas: renderSugeridas, pendencias: renderPendencias })[aba]?.(); },
+    render(aba) { ({ avisos: () => App.avisos.render(), sugeridas: renderSugeridas, pendencias: renderPendencias })[aba]?.(); },
     contadores() {
       App.contador("c-at-pend", totalPendencias() || 0);
       App.contador("c-at-sug", S.resumo?.atividades?.para_aceitar || 0);
