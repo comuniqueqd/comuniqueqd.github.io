@@ -338,3 +338,9 @@ button.revisar-cad.discreto { font-size: 11px; padding: 0 6px; border-radius: 99
 .recentes-ent li { border-bottom: 1px solid var(--line); padding-bottom: 8px; }
 .recentes-ent li:last-child { border-bottom: 0; }
 #en-feito:empty { display: none; }
+
+/* tela inicial: faixa da versão nova e cartão dos casos */
+.faixa-novidades { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 0 0 16px; padding: 12px 16px;
+  border: 1px solid var(--accent); background: var(--accent-soft); border-radius: var(--radius); font-size: 14px; }
+.faixa-novidades span { color: var(--muted); flex: 1 1 260px; }
+a.modulo-card.casos { border-top-color: #7a4bd1; }

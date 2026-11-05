@@ -77,5 +77,5 @@
   }
 
   App.aoEntrar.push(() => { form.hidden = false; }, mostrarNovidades);
-  App.novidades = { VERSAO, mostrar: () => { try { localStorage.removeItem("comunique-novidades"); } catch (_) {} mostrarNovidades(); } };
+  App.novidades = { VERSAO, NOVIDADES, mostrar: () => { try { localStorage.removeItem("comunique-novidades"); } catch (_) {} mostrarNovidades(); } };
 })();

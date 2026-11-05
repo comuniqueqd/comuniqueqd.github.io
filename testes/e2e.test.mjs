@@ -261,6 +261,12 @@ try {
   await ir(s, "#inicio"); await s.reload();
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
+  ok(await s.isVisible("#card-casos") && await s.isVisible("#card-entregadores"), "tela inicial mostra os cartões de Casos e Entregadores");
+  ok(await s.isVisible(".faixa-novidades >> text=Entregadores"), "tela inicial mostra a faixa das novidades");
+  await s.click(".faixa-novidades button");
+  ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
+  await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
+  await s.click("dialog.janela >> text=Entendi");
   await s.screenshot({ path: path.join(PRINTS, "b0-inicio.png"), fullPage: true });
   await s.click("#card-bloqueios");
   ok(await esperar(s, "#v-bq-novo:not([hidden])"), "suporte cai em Novo bloqueio");
