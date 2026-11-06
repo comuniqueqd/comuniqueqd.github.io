@@ -508,6 +508,8 @@ end $$;
 
 -- Histórico de bloqueios paginado e filtrado no banco (o app baixa só a página da tela)
 -- p_situacao: '' | bloqueado | liberado | liberado_antes | encerramento | revertido | revisar | dados_pendentes
+-- se a 008d já rodou, a versão dela (com p_meus) sai antes; rodar a 007 de novo exige rodar as seguintes depois
+drop function if exists public.listar_bloqueios_pagina(integer, integer, text, text, text, smallint, text, text, boolean);
 create or replace function public.listar_bloqueios_pagina(
   p_pagina integer default 1, p_por integer default 100, p_busca text default null, p_situacao text default null,
   p_cidade text default null, p_infracao smallint default null, p_quem text default null, p_tipo text default null)

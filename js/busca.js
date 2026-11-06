@@ -62,6 +62,7 @@
       ["Previsão vencida", "Passou a previsão que você deu para um cadastro, tratativa ou atividade? Você recebe um aviso."],
       ["Resumo do dia no sino", "Ao abrir o sino: o que rolou hoje na equipe e quantos registros você fez."],
       ["O suporte revisa a planilha", "O cartão “Revisar registros da planilha” agora abre a lista também para o suporte."],
+      ["Histórico de bloqueios mais completo", "Como o da ativação: quadrinhos com os totais (clique para filtrar), “Só os que eu registrei” e o histórico de cada registro ao clicar na linha."],
     ] },
     { versao: "008c", tema: "🧭 Tudo mais à mão", itens: [
       ["Tela inicial com atalhos", "Nova ativação, Novo bloqueio, Cadastrar entregador, Sugerir atividade e Registros viraram botões grandes, logo no início. Os seus números ficaram embaixo, mais discretos."],

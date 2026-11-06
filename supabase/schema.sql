@@ -28,6 +28,7 @@ drop table if exists public.seguindo, public.preferencias_aviso, public.pedidos_
 drop type if exists public.papel, public.status_cadastro cascade;
 drop function if exists public.enviar_cadastro(text, text, text, text, text);  -- versão da 007 (com nome)
 drop function if exists public.avisar_registro(text, text, text, text, text, boolean, boolean);  -- versão da 008d (a 008b recria a de 6)
+drop function if exists public.listar_bloqueios_pagina(integer, integer, text, text, text, smallint, text, text, boolean);  -- versão da 008d (a 007 recria a de 8)
 
 -- ---------------------------------------------------------------------
 -- Tipos

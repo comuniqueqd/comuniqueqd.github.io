@@ -246,7 +246,9 @@
 
   <section class="view" id="v-bq-historico" hidden>
     <h2>Histórico de bloqueios</h2>
-    <p class="sub" id="bq-hist-total"></p>
+    <p class="sub" id="bq-hist-sub"></p>
+    <div class="tiles" id="bq-hist-tiles"></div>
+    <p class="meta" id="bq-hist-total"></p>
     <div class="toolbar">
       <input id="bq-q-hist" type="search" placeholder="Buscar por nome, ID, infração, cidade ou pessoa" aria-label="Buscar no histórico">
       <select id="bq-hist-sit" aria-label="Filtrar por situação">
@@ -255,6 +257,7 @@
         <option value="liberado">Liberado (prazo cumprido)</option>
         <option value="liberado_antes">Liberado antes do prazo</option>
         <option value="encerramento">Parceria encerrada</option>
+        <option value="tratativa_pendente">Tratativa pendente</option>
         <option value="revisar">Marcados para revisão</option>
         <option value="dados_pendentes">Dados a completar</option>
       </select>
@@ -262,6 +265,7 @@
       <select id="bq-hist-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
       <select id="bq-hist-inf" aria-label="Filtrar por infração"><option value="">Todas as infrações</option></select>
       <select id="bq-hist-quem" aria-label="Filtrar por quem registrou"><option value="">Registrado por qualquer pessoa</option></select>
+      <label class="check" id="bq-hist-meus-box" hidden><input type="checkbox" id="bq-hist-meus"> Só os que eu registrei</label>
       <button class="btn" id="bq-export" type="button">Baixar CSV</button>
     </div>
     <div class="tablewrap"><table id="bq-t-hist" class="protege-foco"></table></div>

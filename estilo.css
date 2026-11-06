@@ -428,3 +428,12 @@ a.funcao .funcao-seta { position: absolute; top: 16px; right: 14px; }
 .item-revisar { display: flex; justify-content: space-between; gap: 10px; align-items: center; border-bottom: 1px solid var(--line); padding: 6px 0; }
 .prefs-grid label.marcar { justify-content: flex-start; text-align: left; }
 .prefs-grid label.marcar input { width: auto; flex: 0 0 auto; margin: 0; }
+
+/* 008d: Histórico de bloqueios como o da ativação: quadrinhos clicáveis e histórico de cada registro */
+button.tile.clicavel { text-align: left; cursor: pointer; font: inherit; color: inherit; }
+button.tile.clicavel:hover { border-color: var(--accent); }
+button.tile.clicavel.ativo { outline: 2px solid var(--accent); outline-offset: -2px; }
+tr.detalhe-hist > td { background: var(--bg); }
+.detalhe-bloqueio { display: grid; gap: 6px; padding: 4px 2px; }
+.toolbar label.check { flex: 0 0 auto; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; font-size: 14px; }
+.toolbar label.check input { width: auto; margin: 0; }

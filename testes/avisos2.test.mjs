@@ -177,6 +177,19 @@ await t("revisar registros da planilha: o suporte recebe a lista inteira; sem bl
   await falha(rpc(semBq, "bloqueios_para_revisar"));
 });
 
+await t("histórico de bloqueios: totais por situação (sem o filtro de situação) e 'só os que eu registrei'", async () => {
+  const r = await rpc(mon, "listar_bloqueios_pagina", { p_situacao: "bloqueado" });
+  igual(r.contagens.todos >= r.total, true);
+  igual(r.itens.every((b) => b.situacao === "bloqueado"), true);
+  igual(r.contagens.bloqueado, r.total, "o quadrinho bate com o filtro:");
+  const meus = await rpc(mon, "listar_bloqueios_pagina", { p_meus: true });
+  igual(meus.itens.every((b) => b.registrado_por_nome === "Jocimara"), true);
+  const trat = await rpc(mon, "listar_bloqueios_pagina", { p_situacao: "tratativa_pendente" });
+  igual([trat.total, trat.itens.every((b) => b.tarefa?.status === "pendente")], [trat.contagens.tratativa_pendente, true]);
+  // chamada antiga (sem p_meus) continua funcionando
+  igual(typeof (await rpc(sup, "listar_bloqueios_pagina", { p_pagina: 1, p_por: 10 })).total, "number");
+});
+
 await t("internas não ficam expostas; anon não chama nada novo", async () => {
   const r = await um(`select has_function_privilege('authenticated', 'public.avisar_registro(text,text,text,text,text,boolean,boolean)', 'execute') a,
     has_function_privilege('anon', 'public.seguir(text,text,boolean)', 'execute') b,

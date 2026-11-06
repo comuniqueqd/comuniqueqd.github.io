@@ -838,6 +838,18 @@ try {
   ok(await esperar(s8, "dialog.janela >> text=Motivo"), "do item da lista, abre a correção");
   await s8.keyboard.press("Escape");
 
+  // Histórico de bloqueios como o da ativação: quadrinhos clicáveis, "só os que eu registrei" e o histórico de cada registro
+  await ir(a8, "#bloqueios/historico"); await a8.reload();
+  ok(await esperar(a8, "#bq-hist-tiles button.tile >> text=Bloqueados agora") && await a8.isVisible("#bq-hist-meus-box"), "Histórico de bloqueios com os quadrinhos e 'Só os que eu registrei'");
+  await a8.click("#bq-hist-tiles button.tile:has-text('Liberados antes')");
+  ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#bq-t-hist tbody tr.clicavel")]; return l.length && l.every((x) => x.textContent.includes("Liberado antes do prazo")); }, null, { timeout: 8000 }).then(() => true, () => false), "clicar num quadrinho filtra a tabela");
+  await a8.click("#bq-t-hist tbody tr.clicavel >> nth=0");
+  ok(await esperar(a8, "#bq-t-hist tr.detalhe-hist .timeline >> text=Registrado"), "clicar na linha abre o histórico do registro");
+  await a8.screenshot({ path: path.join(PRINTS, "i4-historico-bloqueios.png"), fullPage: true });
+  await a8.click("#bq-hist-tiles button.tile.ativo");
+  await a8.check("#bq-hist-meus");
+  ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#bq-t-hist tbody tr.clicavel")]; return l.every((x) => x.textContent.includes("Mateus Lopes")); }, null, { timeout: 8000 }).then(() => true, () => false), "'Só os que eu registrei' mostra só os do moderador");
+
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });
   ok(await esperar(g, "#g-google:not([hidden]) #botao-google-falso"), "com GOOGLE_CLIENT_ID, aparece o botão do Google");

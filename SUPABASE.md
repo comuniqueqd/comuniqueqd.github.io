@@ -267,4 +267,5 @@ O que muda:
 - **Previsão vencida**: quem deu a previsão de um cadastro, tratativa ou atividade recebe um aviso quando ela passa (uma vez por previsão).
 - **Resumo do dia** no topo da tira do sino.
 - **O suporte também revisa a planilha**: o cartão "Revisar registros da planilha" abre a lista para ele.
+- **Histórico de bloqueios mais completo**, como o da ativação: quadrinhos com os totais (clicar filtra), "Só os que eu registrei" e o histórico de cada registro ao clicar na linha.
 

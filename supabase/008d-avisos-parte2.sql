@@ -327,6 +327,54 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------
+-- Histórico de bloqueios parecido com o da ativação: totais por situação (para os quadrinhos
+-- clicáveis) e "só os que eu registrei". Os totais usam os mesmos filtros, menos a situação.
+-- ---------------------------------------------------------------------
+drop function if exists public.listar_bloqueios_pagina(integer, integer, text, text, text, smallint, text, text);
+create or replace function public.listar_bloqueios_pagina(
+  p_pagina integer default 1, p_por integer default 100, p_busca text default null, p_situacao text default null,
+  p_cidade text default null, p_infracao smallint default null, p_quem text default null, p_tipo text default null,
+  p_meus boolean default false)
+returns jsonb language plpgsql stable set search_path = public as $$
+declare
+  q   text := nullif(btrim(coalesce(p_busca, '')), '');
+  por integer := least(greatest(coalesce(p_por, 100), 1), 5000);
+  pg  integer := greatest(coalesce(p_pagina, 1), 1);
+begin
+  perform public.exigir_bloq('moderador', 'monitorador', 'suporte');
+  return (with f0 as (
+      select b.*, public.situacao_bloqueio(b) sit from public.bloqueios b
+       where (q is null or concat_ws(' ', b.id_app, b.nome_entregador, b.cidade, b.infracao, b.registrado_por_nome) ilike '%' || q || '%')
+         and (p_cidade is null or p_cidade = '' or b.cidade = p_cidade)
+         and (p_infracao is null or b.infracao_id = p_infracao)
+         and (p_quem is null or p_quem = '' or b.registrado_por_nome = p_quem)
+         and (p_tipo is null or p_tipo = '' or (p_tipo = 'leve') = b.leve)
+         and (not coalesce(p_meus, false) or b.registrado_por = auth.uid())),
+    f as (
+      select * from f0
+       where (p_situacao is null or p_situacao = ''
+              or (p_situacao = 'revisar' and revisar is not null)
+              or (p_situacao = 'dados_pendentes' and dados_pendentes)
+              or (p_situacao = 'tratativa_pendente' and exists (select 1 from public.tarefas t where t.bloqueio_id = f0.id and t.status = 'pendente'))
+              or sit = p_situacao))
+    select jsonb_build_object(
+      'total', (select count(*) from f),
+      'total_geral', (select count(*) from public.bloqueios),
+      'pagina', pg, 'por', por,
+      'contagens', (select jsonb_build_object(
+          'todos', count(*), 'bloqueado', count(*) filter (where sit = 'bloqueado'),
+          'liberado', count(*) filter (where sit = 'liberado'), 'liberado_antes', count(*) filter (where sit = 'liberado_antes'),
+          'encerramento', count(*) filter (where sit = 'encerramento'), 'leves', count(*) filter (where leve),
+          'revisar', count(*) filter (where revisar is not null),
+          'tratativa_pendente', count(*) filter (where exists (select 1 from public.tarefas t where t.bloqueio_id = f0.id and t.status = 'pendente')))
+        from f0),
+      'itens', coalesce((select jsonb_agg(public.json_bloqueio(x) order by x.inicio desc)
+                           from (select b.* from public.bloqueios b join (select id, inicio from f order by inicio desc offset (pg - 1) * por limit por) y on y.id = b.id) x), '[]'),
+      'quem', coalesce((select jsonb_agg(distinct registrado_por_nome) from public.bloqueios), '[]'),
+      'cidades', coalesce((select jsonb_agg(distinct cidade) from public.bloqueios where cidade is not null), '[]')));
+end $$;
+
+-- ---------------------------------------------------------------------
 -- Permissões e tráfego
 -- ---------------------------------------------------------------------
 do $$
@@ -354,7 +402,8 @@ do $$
 declare f text;
 begin
   foreach f in array array['public.minhas_preferencias()', 'public.salvar_preferencias(text[])', 'public.seguir(text, text, boolean)',
-                           'public.verificar_previsoes()', 'public.resumo_do_dia()', 'public.bloqueios_para_revisar()'] loop
+                           'public.verificar_previsoes()', 'public.resumo_do_dia()', 'public.bloqueios_para_revisar()',
+                           'public.listar_bloqueios_pagina(integer, integer, text, text, text, smallint, text, text, boolean)'] loop
     execute format('revoke all on function %s from public, anon', f);
     execute format('grant execute on function %s to authenticated', f);
   end loop;
