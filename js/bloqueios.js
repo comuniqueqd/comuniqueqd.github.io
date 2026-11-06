@@ -67,6 +67,19 @@
       t.importada ? " (registro importado da planilha)" : ` por ${t.concluida_por_nome} em ${dt(t.concluida_em)}`,
       t.nota ? ` — ${t.nota}` : ""));
   }
+  // versão curta para a tabela do Histórico: situação em negrito + quem e quando (a nota vai no histórico aberto)
+  function tratativaCurta(b) {
+    const t = b.tarefa, data = (iso) => iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) : "";
+    if (!t) return el("div", { class: "bullet sem trat-curta" }, el("span", {}, el("b", { text: b.leve ? "Leve" : "Sem tratativa" }),
+      el("span", { class: "meta", text: b.leve ? "conta para o limite" : "menos de 10 h" })));
+    const tipo = t.tipo === "tratativa" ? "" : (TAREFA[t.tipo] || "") + ": ";
+    if (t.status === "pendente") return el("div", { class: "bullet trat-curta " + (t.atrasada ? "atrasada" : "pendente") }, el("span", {},
+      el("b", { text: tipo + (t.atrasada ? "Atrasada" : "Pendente") }),
+      el("span", { class: "meta", text: `com ${t.tipo === "completar_dados" ? "o monitoramento" : t.responsavel_nome || "os moderadores"} · há ${duracao(t.criada_em).txt}` })));
+    return el("div", { class: "bullet concluida trat-curta", title: t.nota || null }, el("span", {},
+      el("b", { text: tipo + "Realizada" }),
+      el("span", { class: "meta", text: t.importada ? "veio da planilha" : `por ${t.concluida_por_nome} · ${data(t.concluida_em)}` + (t.nota ? " · com nota" : "") })));
+  }
   function cardBloqueio(b, { acoes = true } = {}) {
     const sit = b.situacao;
     const cx = B.caixa[b.id];
@@ -708,7 +721,7 @@
   }
   function renderHist() {
     const h = B.hist, t = $("#bq-t-hist");
-    const cols = [["Situação"], ["Entregador"], ["Infração"], ["Ocorr."], ["Punição"], ["Início"], ["Cidade"], ["Registrado por"], ["Tratativa"], [""]];
+    const cols = [["Situação"], ["Entregador"], ["Infração"], ["Punição"], ["Início"], ["Cidade"], ["Tratativa"], [""]];
     if (!h) { $("#bq-hist-total").textContent = ""; return t.replaceChildren(...tabela(cols, [], "Carregando…")); }
     preencher($("#bq-hist-cidade"), h.cidades.slice().sort().map((c) => [c, c]), "Todas as cidades");
     preencher($("#bq-hist-inf"), opcInfracoes(), "Todas as infrações");
@@ -733,7 +746,7 @@
       el("span", { text: `Página ${h.pagina} de ${paginas}` }),
       el("button", { class: "btn small", type: "button", disabled: h.pagina === paginas, onclick: () => ir(h.pagina + 1) }, "Próxima ›")] : []));
     t.replaceChildren(...tabela(cols, h.itens.map((b) => {
-      const acoes = el("td", { style: "white-space:nowrap" });
+      const acoes = el("td", { class: "acoes-hist" });
       if (podeCorrigir(b) && !B.confirmar[b.id]) acoes.append(el("button", { class: "btn quiet", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir"));
       acoes.append(botaoAnexos(b));
       if (mod()) {
@@ -745,9 +758,10 @@
       const linha = el("tr", { class: "clicavel", onclick: (e) => { if (!e.target.closest("button, a")) alternarHist(b.id); } }, el("td", {}, pillSit(b.situacao), b.revisar ? el("div", {}, alertaRevisar(b, true)) : null),
         el("td", {}, linkFicha(b), el("br"), el("span", { class: "mono meta", text: b.id_app })),
         el("td", {}, b.infracao, b.leve ? el("span", { class: "tag", style: "margin-left:6px", text: "LEVE" }) : null),
-        el("td", { text: b.leve ? "—" : ord(b.ocorrencia) + (b.ocorrencia < b.ocorrencia_total ? ` (${ord(b.ocorrencia_total)})` : "") }),
-        el("td", { text: horasTxt(b.horas) }), el("td", { text: dt(b.inicio) }), el("td", { text: b.cidade || "—" }), el("td", { text: b.registrado_por_nome }),
-        el("td", {}, bulletTratativa(b)), acoes);
+        el("td", {}, horasTxt(b.horas), b.leve ? null : el("div", { class: "meta", text: ord(b.ocorrencia) + " ocorrência" + (b.ocorrencia < b.ocorrencia_total ? ` (${ord(b.ocorrencia_total)} no total)` : "") })),
+        el("td", {}, el("span", { class: "nowrap-data", text: dt(b.inicio) }), el("div", { class: "meta", text: "por " + (b.registrado_por_nome || "—") })),
+        el("td", { text: b.cidade || "—" }),
+        el("td", {}, tratativaCurta(b)), acoes);
       return aberto ? [linha, el("tr", { class: "detalhe-hist" }, el("td", { colspan: String(cols.length) }, detalheHist(b)))] : [linha];
     }).flat(), "Nenhum bloqueio com esse filtro."));
   }
@@ -765,8 +779,8 @@
     const t = b.tarefa;
     return el("div", { class: "detalhe-bloqueio" },
       el("div", { class: "meta" }, [b.fim && b.horas != null ? `Fim do bloqueio: ${dt(b.fim)}` : null, b.observacao ? `Observação: ${b.observacao}` : null,
-        t ? `Tratativa: ${t.status === "pendente" ? "pendente com " + (t.responsavel_nome || "os moderadores") : "realizada" + (t.concluida_por_nome ? " por " + t.concluida_por_nome : "") + (t.nota ? " · " + t.nota : "")}` : null,
         b.motivo_liberacao ? `Motivo da liberação: ${b.motivo_liberacao}` : null, b.importado ? "Veio da planilha." : null].filter(Boolean).join(" · ")),
+      el("div", { class: "trat-completa" }, bulletTratativa(b)),
       !ev ? el("p", { class: "meta", text: "Carregando histórico…" }) : ev.erro ? el("p", { class: "err", text: ev.erro })
         : ev.length ? el("ol", { class: "timeline" }, ev.map((x) => el("li", {}, el("b", { text: EVB[x.tipo] || x.tipo }), ` ${x.por_nome ? "por " + x.por_nome + " " : ""}em ${dt(x.em)}${x.detalhe ? " · " + x.detalhe : ""}`)))
         : el("p", { class: "meta", text: "Sem eventos registrados." }));

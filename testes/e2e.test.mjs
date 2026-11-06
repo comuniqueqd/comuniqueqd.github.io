@@ -346,8 +346,12 @@ try {
   // 12. suporte recebe o aviso e acompanha
   await ir(s, "#bloqueios/meus"); await s.reload();
   ok(await esperar(s, "#b-avisos[data-novas=true]"), "sino de avisos acende para o suporte");
-  ok(await esperar(s, "#v-bq-historico:not([hidden]) #bq-t-hist tr:has-text('Fulano de Tal') >> text=Tratativa realizada"), "o antigo Meus registros abre o Histórico: tratativa realizada");
-  ok(await s.isVisible("#bq-t-hist tr:has-text('Ladrão') >> text=Encerramento de parceria pendente"), "Histórico do suporte: encerramento pendente com o responsável");
+  ok(await esperar(s, "#v-bq-historico:not([hidden]) #bq-t-hist tr:has-text('Fulano de Tal') .trat-curta >> text=Realizada"), "o antigo Meus registros abre o Histórico: tratativa realizada (resumida na linha)");
+  ok(await s.isVisible("#bq-t-hist tr:has-text('Ladrão') .trat-curta >> text=Encerramento de parceria: Pendente"), "Histórico do suporte: encerramento pendente com o responsável");
+  await s.click("#bq-t-hist tr:has-text('Fulano de Tal') >> text=Ver histórico");
+  ok(await esperar(s, "#bq-t-hist .trat-completa >> text=Tratativa realizada") && (await texto(s, "#bq-t-hist .trat-completa")).includes("Orientado por telefone"), "histórico aberto mostra a tratativa completa, com a nota");
+  await s.screenshot({ path: path.join(PRINTS, "i3b-historico-tratativa.png"), fullPage: true });
+  await s.click("#bq-t-hist tr:has-text('Fulano de Tal') >> text=Ocultar histórico");
   await s.screenshot({ path: path.join(PRINTS, "b4-meus-registros.png"), fullPage: true });
   await s.click("#b-avisos");
   ok(await esperar(s, "#tira-avisos:not([hidden]) >> text=Tratativa realizada por Monitor Um"), "sino abre a tira com o aviso: tratativa realizada");

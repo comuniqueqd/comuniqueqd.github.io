@@ -437,3 +437,12 @@ tr.detalhe-hist > td { background: var(--bg); }
 .detalhe-bloqueio { display: grid; gap: 6px; padding: 4px 2px; }
 .toolbar label.check { flex: 0 0 auto; display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; font-size: 14px; }
 .toolbar label.check input { width: auto; margin: 0; }
+
+/* 008d4: Histórico de bloqueios: tratativa curta na linha, completa no histórico aberto; ações empilhadas */
+#bq-t-hist .trat-curta { min-width: 150px; }
+#bq-t-hist .trat-curta > span { display: flex; flex-direction: column; gap: 2px; line-height: 1.3; }
+#bq-t-hist .trat-curta .meta { font-size: 12.5px; }
+#bq-t-hist td.nowrap-data { white-space: nowrap; }
+#bq-t-hist td.acoes-hist { text-align: right; }
+#bq-t-hist td.acoes-hist > * { display: block; margin: 0 0 4px auto; white-space: nowrap; }
+.detalhe-bloqueio .trat-completa { padding: 6px 10px; border-left: 3px solid var(--line); background: var(--panel, #fff); border-radius: 4px; }
