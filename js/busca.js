@@ -55,7 +55,7 @@
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
     { versao: "008c", tema: "🧭 Tudo mais à mão", itens: [
-      ["Tela inicial com atalhos", "Nova ativação, Cadastrar entregador, Sugerir atividade e Registros viraram botões grandes, logo no início. Os seus números ficaram embaixo, mais discretos."],
+      ["Tela inicial com atalhos", "Nova ativação, Novo bloqueio, Cadastrar entregador, Sugerir atividade e Registros viraram botões grandes, logo no início. Os seus números ficaram embaixo, mais discretos."],
       ["Começa pelo que mais se faz", "Ativação abre no Novo cadastro (Pendentes vem em seguida, com o número na aba) e Bloqueios abre no Novo bloqueio (depois, as Tratativas)."],
       ["Menos telas", "“Meus cadastros” e “Meus registros” viraram o Histórico de cada módulo (quem é do suporte vê ali só o que enviou). Os Painéis viraram parte das Análises."],
       ["Análises simples e complexas", "Nas simples: por que não aprovou, quem sai do bloqueio hoje, bloqueados por cidade, quando você registra (e o seu pico), o que você fez no período, gráficos por dia e mais. Nas complexas: qual infração mais se repete, escada da reincidência, cidades, tempo de resposta da ativação, punições desfeitas e por pessoa."],

@@ -265,12 +265,15 @@ try {
   await s.screenshot({ path: path.join(PRINTS, "b0-inicio.png"), fullPage: true });
   // 008c: funções em destaque na tela inicial
   { const fns = await s.$$eval("#inicio-funcoes a.funcao", (l) => l.map((x) => x.querySelector("b").textContent));
-    ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Cadastrar entregador", "Sugerir atividade", "Registros"]), "tela inicial: as 4 funções em destaque: " + fns); }
+    ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Novo bloqueio", "Cadastrar entregador", "Sugerir atividade", "Registros"]), "tela inicial: as 5 funções em destaque: " + fns); }
   await s.click("#fn-sugerir");
   ok(await esperar(s, "#v-at-sugeridas:not([hidden])") && await s.waitForFunction(() => document.querySelector("#at-nova-box")?.open && document.activeElement?.id === "at-titulo", null, { timeout: 5000 }).then(() => true, () => false), "Sugerir atividade abre a tela com o formulário aberto e o cursor no título");
   await ir(s, "#inicio"); await esperar(s, "#fn-ativacao");
   await s.click("#fn-ativacao");
   ok(await esperar(s, "#v-novo:not([hidden])"), "Nova ativação abre o Novo cadastro");
+  await ir(s, "#inicio"); await esperar(s, "#fn-bloqueio");
+  await s.click("#fn-bloqueio");
+  ok(await esperar(s, "#v-bq-novo:not([hidden])"), "o atalho Novo bloqueio abre o Novo bloqueio");
   await ir(s, "#bloqueios");
   ok(await esperar(s, "#v-bq-novo:not([hidden])"), "Bloqueios abre em Novo bloqueio (008c)");
   const abasB = await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));

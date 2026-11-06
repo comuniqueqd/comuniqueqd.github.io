@@ -44,7 +44,10 @@
     const fn = [
       funcao({ id: "fn-ativacao", href: "#ativacao/novo", icone: "📝", cor: "f-ativ", titulo: "Nova ativação",
         texto: "Enviar o cadastro de um entregador para aprovação.",
-        vivo: a ? (staffAtiv() ? `${a.equipe_aguardando_analise ?? a.aguardando_analise} aguardando análise` : `${a.meus_aguardando_analise} seus em análise`) : null }),
+        vivo: a ? (staffAtiv() ? `${a.equipe_aguardando_analise ?? a.aguardando_analise} aguardando análise` : `${a.meus_aguardando_analise} ${a.meus_aguardando_analise === 1 ? "seu" : "seus"} em análise`) : null }),
+      S.me.papel_bloqueios ? funcao({ id: "fn-bloqueio", href: "#bloqueios/novo", icone: "⛔", cor: "f-bloq", titulo: "Novo bloqueio",
+        texto: "Registrar um bloqueio ou uma infração leve, com a punição calculada.",
+        vivo: b ? `${b.equipe_bloqueados_agora ?? b.meus_bloqueados_agora ?? 0} bloqueados agora` : null }) : null,
       S.me.papel_bloqueios ? funcao({ id: "card-entregadores", href: "#entregadores/cadastrar", icone: "🪪", cor: "f-ent", titulo: "Cadastrar entregador",
         texto: "Criar a ficha com ID, nome e cidade, sem ativar nem bloquear." }) : null,
       funcao({ id: "fn-sugerir", href: "#atividades/sugeridas", icone: "💡", cor: "f-sug", titulo: "Sugerir atividade", onclick: abrirSugerir,
