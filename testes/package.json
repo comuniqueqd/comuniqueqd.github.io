@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "npm run test:sql && npm run test:bloqueios && npm run test:entregadores && npm run test:atividades && npm run test:analises && npm run test:equipe && npm run test:pao && npm run test:espiao && npm run test:cadastrar && npm run test:avisos && npm run test:analises008c && npm run test:e2e",
+    "test": "npm run test:sql && npm run test:bloqueios && npm run test:entregadores && npm run test:atividades && npm run test:analises && npm run test:equipe && npm run test:pao && npm run test:espiao && npm run test:cadastrar && npm run test:avisos && npm run test:analises008c && npm run test:avisos2 && npm run test:e2e",
     "test:sql": "node sql.test.mjs",
     "test:bloqueios": "node bloqueios.test.mjs",
     "test:entregadores": "node entregadores.test.mjs",
@@ -15,6 +15,7 @@
     "test:cadastrar": "node cadastrar.test.mjs",
     "test:avisos": "node avisos.test.mjs",
     "test:analises008c": "node analises008c.test.mjs",
+    "test:avisos2": "node avisos2.test.mjs",
     "test:e2e": "node e2e.test.mjs"
   },
   "devDependencies": {

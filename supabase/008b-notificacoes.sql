@@ -37,6 +37,8 @@ returns boolean language sql stable security definer set search_path = public as
   select coalesce(public.meu_papel() = 'moderador' or public.meu_papel_bloq() = 'moderador', false)
 $$;
 
+-- se a 008d já rodou, a versão dela (com p_leve) sai antes; rodar a 008b de novo exige rodar a 008d depois
+drop function if exists public.avisar_registro(text, text, text, text, text, boolean, boolean);
 -- Distribui um aviso de Registros. p_bq = assunto dos bloqueios (só vai para quem tem o módulo).
 -- Sem usuário logado (SQL Editor, importação da planilha) não avisa ninguém.
 create or replace function public.avisar_registro(
