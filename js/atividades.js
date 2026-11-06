@@ -41,7 +41,7 @@
           a.cadastro_id ? el("button", { class: "btn link", type: "button", onclick: () => App.abrirCadastro(a.cadastro_id) }, "Completar agora") : null].filter(Boolean) }));
     // os "revisar" dos bloqueios (vindos da planilha): um cartão só, opcional
     const nRev = S.resumo?.bloqueios_revisar || 0;
-    if (staffBloq() && nRev)
+    if (S.me.papel_bloqueios && nRev)
       opcionais.push(item({ modulo: "BLOQUEIOS", opcional: true, titulo: `Revisar registros da planilha: faltam ${nRev}`,
         detalhe: "Bloqueios com a marca “revisar” (dados conflitantes da importação). Cada um corrigido ou conferido sai da conta.",
         acoes: [el("button", { class: "btn small", type: "button", onclick: () => App.bloqueios?.abrirRevisar?.() }, "Abrir os registros para revisar")] }));

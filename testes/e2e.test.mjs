@@ -36,6 +36,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008-espionagem.sql"), "
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008b-cadastrar-entregador.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008b-notificacoes.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008c-analises.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008d-avisos-parte2.sql"), "utf8"));
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
 for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001', 'Ciclano Atrasado', 'LAGARTO - SE', 'Atraso na Coleta ou na Entrega Sem Justificativa', now() - make_interval(days => $1), 'Planilha')", [d]);
 // registro importado com alerta de revisão (100 dias atrás: fora do painel de 30 dias)
@@ -85,7 +86,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "008c"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "008d"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -257,7 +258,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Tela inicial com atalhos") && await s.isVisible(".faixa-novidades >> text=e mais: 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=De olho nele") && await s.isVisible(".faixa-novidades >> text=e mais: 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -681,7 +682,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["008c", "008b", "008"]), "as novidades de 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["008d", "008c", "008b", "008"]), "as novidades de 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -804,6 +805,38 @@ try {
   await s8.keyboard.press("Escape");
   { const ta = await texto(a8, "main"), ts = await texto(s8, "main");
     ok(!ta.includes("undefined") && !ts.includes("null") && !ta.includes("null"), "telas da 008b sem textos vazios" + perto(ta, "undefined") + perto(ts, "null") + perto(ta, "null")); }
+
+  // 19. 008d · de olho nele, seguir cidade, preferências, resumo do dia, revisar do suporte
+  await ir(s8, "#bloqueios/consultar");
+  await s8.fill("#bq-q-consulta", "mal00001"); await s8.click("#bq-f-consulta button[type=submit]");
+  ok(await esperar(s8, "#bq-consulta button.olho:has-text('Ficar de olho')"), "a ficha tem o botão Ficar de olho");
+  await s8.click("#bq-consulta button.olho");
+  ok(await esperar(s8, "#toast:has-text('Você está de olho')") && await esperar(s8, "#bq-consulta button.olho[aria-pressed=true]"), "Ficar de olho: o botão fica marcado");
+  await s8.screenshot({ path: path.join(PRINTS, "i1-de-olho.png") });
+  await ir(s8, "#atividades/avisos"); await s8.reload();
+  await esperar(s8, "#av-prefs summary"); await s8.click("#av-prefs summary");
+  ok(await esperar(s8, "#av-prefs >> text=De olho em") && await s8.isVisible("#av-prefs .link-ficha"), "Avisos mostra de quem você está de olho");
+  await s8.uncheck("#av-prefs [data-pref=leves]");
+  ok(await esperar(s8, "#toast:has-text('Preferências salvas')"), "silenciar as infrações leves agrupadas");
+  await s8.selectOption("#av-prefs select", "LAGARTO - SE");
+  await s8.click("#av-prefs >> text=Seguir cidade");
+  ok(await esperar(s8, "#av-prefs .chips-seguindo >> text=LAGARTO - SE"), "seguir uma cidade");
+  await s8.screenshot({ path: path.join(PRINTS, "i2-preferencias.png"), fullPage: true });
+  await s8.click("#b-avisos");
+  ok(await esperar(s8, "#tira-avisos .resumo-dia >> text=Hoje na equipe") && await esperar(s8, "#tira-avisos .resumo-dia:has-text('registro(s) hoje')"), "o sino mostra o resumo do dia");
+  await s8.screenshot({ path: path.join(PRINTS, "i3-resumo-dia.png") });
+  await s8.keyboard.press("Escape");
+  // o cartão de revisar a planilha abre a lista também para o suporte
+  { const d9 = new pg.Client({ connectionString: DB }); await d9.connect();
+    await d9.query("select importar_bloqueio('rev00011', 'Nome Trocado', 'LAGARTO - SE', 'Avaria de Produto', now() - interval '70 days', 'Planilha', 'Nome diferente na planilha', '24')");
+    await d9.end(); }
+  await ir(s8, "#atividades/pendencias"); await s8.reload();
+  ok(await esperar(s8, "#at-lista >> text=Revisar registros da planilha"), "o suporte vê o cartão de revisar a planilha");
+  await s8.click("#at-lista >> text=Abrir os registros para revisar");
+  ok(await esperar(s8, "dialog.janela .item-revisar:has-text('rev00011')"), "a lista de revisar abre para o suporte");
+  await s8.click("dialog.janela .item-revisar:has-text('rev00011') >> text=Revisar");
+  ok(await esperar(s8, "dialog.janela >> text=Motivo"), "do item da lista, abre a correção");
+  await s8.keyboard.press("Escape");
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

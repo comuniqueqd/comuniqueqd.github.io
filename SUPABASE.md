@@ -252,3 +252,19 @@ O que muda:
 - **Revisão (desempenho e segurança)**: o número de "algo mudou" só sobe quando uma linha muda de verdade (antes, abrir o app ou marcar avisos como lidos fazia todo mundo recarregar); o tempo real do Supabase passa a ouvir só os avisos (as outras tabelas saem da publicação do Realtime); e quem não é da equipe não consegue mais descobrir o nome da ficha de um ID por uma função interna.
 - **Análises complexas** (`analises_complexas`): eficácia da punição, **qual infração mais se repete**, **escada da reincidência**, **cidades** (bloqueios por entregador, reincidentes, encerramentos, leves), **tempo de resposta da ativação** (por quem decidiu e pelo dia do envio), **punições desfeitas**, tratativas por responsável e da ativação ao bloqueio.
 
+## Atualização 008d: fecha a 008 (de olho nele, seguir cidade, preferências, leves agrupadas, previsão vencida, resumo do dia)
+
+Para quem já rodou o `008c-analises.sql`. **Não apaga** nada e pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/008d-avisos-parte2.sql`](supabase/008d-avisos-parte2.sql) inteiro e clique em **Run**.
+2. Só depois publique o site.
+
+O que muda:
+
+- **"De olho nele"**: botão "Ficar de olho" na ficha do entregador. Quem marca recebe tudo o que acontecer com ele, de qualquer cidade.
+- **Seguir cidade** e **preferências** em Avisos → "O que você acompanha e recebe": escolher as cidades e os tipos de aviso que quer receber. O que é para a pessoa (tarefas, decisões dos cadastros dela, previsões vencidas) e o "de olho nele" sempre chegam.
+- **Infrações leves agrupadas**: um aviso só por cidade e por dia, que vai somando ("3 infrações leves novas em LAGARTO hoje") e volta para o topo como não lido.
+- **Previsão vencida**: quem deu a previsão de um cadastro, tratativa ou atividade recebe um aviso quando ela passa (uma vez por previsão).
+- **Resumo do dia** no topo da tira do sino.
+- **O suporte também revisa a planilha**: o cartão "Revisar registros da planilha" abre a lista para ele.
+

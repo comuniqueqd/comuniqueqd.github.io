@@ -625,7 +625,9 @@
         return el("div", { class: "panel ficha" },
           el("div", { class: "ficha-topo" },
             el("h3", {}, f.nome || "(sem nome no cadastro)", " ", el("span", { class: "mono meta", text: f.id_app })),
-            staff() ? el("button", { class: "btn small", type: "button", onclick: () => abrirEdicao(f, seus.filter((b) => !b.dados_pendentes).length) }, "Alterar dados") : null),
+            el("div", { class: "actions", style: "margin:0" },
+              App.avisos ? App.avisos.botaoOlho(f.id_app) : null,
+              staff() ? el("button", { class: "btn small", type: "button", onclick: () => abrirEdicao(f, seus.filter((b) => !b.dados_pendentes).length) }, "Alterar dados") : null)),
           el("div", { class: "chips", style: "margin-bottom:10px" },
             el("span", { class: "chip", text: f.cidade || "Sem cidade" }),
             el("span", { class: "chip" + (seus.some((b) => b.situacao === "bloqueado") ? " x" : ""), text: seus.some((b) => b.situacao === "bloqueado") ? "Bloqueado agora" : "Não está bloqueado agora" }),
@@ -673,7 +675,23 @@
   let histT = null;
   const filtrarHist = () => { clearTimeout(histT); histT = setTimeout(() => App.carregar(), 300); };
   // atalho do cartão "Revisar registros da planilha"
+  // 008d: o suporte não vê o Histórico dos outros (RLS); ele revisa por uma lista própria
+  async function abrirRevisarSuporte() {
+    const lista = el("div", { class: "lista-revisar" }, carregandoEl());
+    const d = janela("Revisar registros da planilha",
+      el("p", { class: "meta", style: "margin:0", text: "Registros com dados conflitantes. Confira cada um: corrija o que estiver errado (com o motivo) ou marque que os dados estão certos." }),
+      lista);
+    try {
+      const l = await rpc("bloqueios_para_revisar");
+      lista.replaceChildren(...(l.length ? l.map((b) => el("div", { class: "item-revisar" },
+        el("div", {}, el("b", { text: b.nome }), " ", el("span", { class: "mono meta", text: b.id_app }),
+          el("div", { class: "meta", text: `${dt(b.inicio)} · ${b.infracao} · ${b.cidade || "sem cidade"}` }),
+          el("div", { class: "alerta-revisar", text: b.revisar })),
+        el("button", { class: "btn small", type: "button", onclick: () => { d.close(); abrirCorrecao(b); } }, "Revisar"))) : [vazio("Nada para revisar", "Todos os registros da planilha já foram conferidos.")]));
+    } catch (e) { lista.replaceChildren(el("p", { class: "err", text: msgErro(e) })); }
+  }
   function abrirRevisar() {
+    if (!staff()) return abrirRevisarSuporte();
     ["#bq-q-hist", "#bq-hist-cidade", "#bq-hist-inf", "#bq-hist-quem", "#bq-hist-tipo"].forEach((x) => ($(x).value = ""));
     $("#bq-hist-sit").value = "revisar";
     B.hist = null;

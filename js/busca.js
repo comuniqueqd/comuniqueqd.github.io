@@ -50,10 +50,19 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "008c";
+  const VERSAO = "008d";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "008d", tema: "👀 De olho em tudo (e só no que importa)", itens: [
+      ["De olho nele", "Na ficha do entregador, “Ficar de olho”: você recebe tudo o que acontecer com ele (bloqueio, leve, comentário, cadastro), de qualquer cidade."],
+      ["Seguir cidade", "Em Avisos, “O que você acompanha e recebe”: siga as cidades que quiser, mesmo sem ser a responsável."],
+      ["Silenciar o que não precisa", "Escolha que tipos de aviso receber. O que é para você e o “de olho nele” sempre chegam."],
+      ["Leves agrupadas", "As infrações leves viram um aviso só por cidade e dia, que vai somando: “3 infrações leves novas em LAGARTO hoje”."],
+      ["Previsão vencida", "Passou a previsão que você deu para um cadastro, tratativa ou atividade? Você recebe um aviso."],
+      ["Resumo do dia no sino", "Ao abrir o sino: o que rolou hoje na equipe e quantos registros você fez."],
+      ["O suporte revisa a planilha", "O cartão “Revisar registros da planilha” agora abre a lista também para o suporte."],
+    ] },
     { versao: "008c", tema: "🧭 Tudo mais à mão", itens: [
       ["Tela inicial com atalhos", "Nova ativação, Novo bloqueio, Cadastrar entregador, Sugerir atividade e Registros viraram botões grandes, logo no início. Os seus números ficaram embaixo, mais discretos."],
       ["Começa pelo que mais se faz", "Ativação abre no Novo cadastro (Pendentes vem em seguida, com o número na aba) e Bloqueios abre no Novo bloqueio (depois, as Tratativas)."],

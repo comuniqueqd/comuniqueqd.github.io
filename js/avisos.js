@@ -1,16 +1,83 @@
 // Avisos (008b, parte 1): a tira do sino (os avisos recentes sem sair da tela), a tela de Avisos com
 // busca e filtros (listar_avisos) e as cidades sem responsável, com o pedido para ser a responsável.
 // Os pedidos esperando resposta aparecem nas Pendências dos moderadores (js/atividades.js).
+// 008d: o que a pessoa acompanha (seguir cidade, "de olho nele"), o que ela silenciou e o resumo do dia na tira.
 (() => {
   "use strict";
   const App = window.App;
   const { $, el, dt, toast, vazio, carregandoEl, rpc, msgErro, janela } = App.u;
   const S = App.S;
-  const V = { lista: null, mais: false, cidades: [], carregandoMais: false, semResp: null, marcando: false };
+  const V = { lista: null, mais: false, cidades: [], carregandoMais: false, semResp: null, marcando: false, pref: null, dia: null };
   const FILTROS = [["", "Todos os avisos"], ["pessoal", "Para você (tarefas e decisões)"], ["ativacao", "Ativação"],
-    ["bloqueios", "Bloqueios"], ["comentarios", "Comentários e fichas"], ["cidades", "Pedidos de cidade"]];
-  const ROTULO = { ativacao: "ATIVAÇÃO", bloqueios: "BLOQUEIOS", comentarios: "FICHA", cidades: "CIDADE" };
-  const porque = (x) => x.motivo === "cidade" ? `você é responsável por ${x.cidade}` : x.motivo === "moderador" ? "você é moderador" : null;
+    ["bloqueios", "Bloqueios"], ["leves", "Infrações leves (agrupadas)"], ["comentarios", "Comentários e fichas"], ["cidades", "Pedidos de cidade"]];
+  const ROTULO = { ativacao: "ATIVAÇÃO", bloqueios: "BLOQUEIOS", leves: "LEVES", comentarios: "FICHA", cidades: "CIDADE" };
+  const porque = (x) => ({ cidade: `você é responsável por ${x.cidade}`, moderador: "você é moderador", seguindo: `você segue ${x.cidade}`,
+    de_olho: "você está de olho neste entregador" })[x.motivo] || null;
+  // tipos que dá para silenciar (o que é para você e o "de olho nele" sempre chegam)
+  const TIPOS = [["ativacao", "Ativação (cadastros enviados e decididos)"], ["bloqueios", "Bloqueios, tratativas e correções"],
+    ["leves", "Infrações leves (um aviso por cidade e dia)"], ["comentarios", "Comentários e alterações nas fichas"], ["cidades", "Pedidos para ser responsável de cidade"]];
+
+  // ---------- o que acompanho e o que recebo ----------
+  async function carregarPref() { V.pref = await rpc("minhas_preferencias"); return V.pref; }
+  const seguindo = (tipo, alvo) => !!V.pref?.seguindo.some((x) => x.tipo === tipo && x.alvo === alvo);
+  async function alternar(tipo, alvo, seguir, btn) {
+    if (btn) btn.disabled = true;
+    try {
+      V.pref = await rpc("seguir", { p_tipo: tipo, p_alvo: alvo, p_seguir: seguir });
+      toast(tipo === "entregador" ? (seguir ? "Você está de olho: recebe tudo o que acontecer com ele." : "Você não está mais de olho nele.")
+        : (seguir ? `Você segue ${alvo}: recebe os avisos da cidade.` : `Você deixou de seguir ${alvo}.`));
+      App.render();
+    } catch (e) { toast(msgErro(e)); } finally { if (btn) btn.disabled = false; }
+  }
+  // botão da ficha do entregador (js/bloqueios.js)
+  function botaoOlho(id) {
+    if (!V.pref) { carregarPref().then(() => App.render()).catch(() => {}); return null; }
+    const on = seguindo("entregador", id);
+    return el("button", { class: "btn small olho", type: "button", "aria-pressed": String(on), title: on ? "Parar de acompanhar" : "Receber aviso de tudo o que acontecer com este entregador",
+      onclick: (e) => alternar("entregador", id, !on, e.currentTarget) }, on ? "👀 De olho nele" : "👀 Ficar de olho");
+  }
+  function renderPref() {
+    const box = $("#av-prefs"), p = V.pref;
+    if (!p) return box.replaceChildren();
+    const sil = new Set(p.silenciados);
+    const cidadesSeg = p.seguindo.filter((x) => x.tipo === "cidade"), olhos = p.seguindo.filter((x) => x.tipo === "entregador");
+    const sel = el("select", { "aria-label": "Cidade para seguir" }, el("option", { value: "", text: "Escolha uma cidade" }),
+      ...p.cidades.filter((c) => !cidadesSeg.some((x) => x.alvo === c)).map((c) => el("option", { value: c, text: c })));
+    box.replaceChildren(el("details", { class: "panel", open: box.dataset.aberto === "1" ? true : null, ontoggle: (e) => (box.dataset.aberto = e.target.open ? "1" : "") },
+      el("summary", {}, el("b", { text: "O que você acompanha e recebe" }),
+        el("span", { class: "meta", text: ` · ${cidadesSeg.length} cidade(s) · de olho em ${olhos.length} · ${sil.size ? sil.size + " tipo(s) silenciado(s)" : "recebe tudo"}` })),
+      el("div", { class: "prefs-grid" },
+        el("div", {}, el("h4", { text: "Receber avisos de" }),
+          ...TIPOS.map(([k, t]) => {
+            const cb = el("input", { type: "checkbox", "data-pref": k }); cb.checked = !sil.has(k);
+            cb.addEventListener("change", async () => {
+              const novos = TIPOS.map(([x]) => x).filter((x) => !box.querySelector(`[data-pref="${x}"]`).checked);
+              try { V.pref = await rpc("salvar_preferencias", { p_silenciados: novos }); toast("Preferências salvas."); App.render(); } catch (e) { toast(msgErro(e)); }
+            });
+            return el("label", { class: "marcar" }, cb, t);
+          }),
+          el("p", { class: "meta", text: "O que é para você (tarefas, decisões dos seus cadastros, previsões vencidas) e o que vem do “de olho nele” sempre chega." })),
+        el("div", {}, el("h4", { text: "Cidades que você segue" }),
+          cidadesSeg.length ? el("div", { class: "chips-seguindo" }, cidadesSeg.map((x) => el("span", { class: "chip" }, x.alvo,
+            el("button", { type: "button", title: "Deixar de seguir", "aria-label": "Deixar de seguir " + x.alvo, onclick: (e) => alternar("cidade", x.alvo, false, e.currentTarget) }, "✕"))))
+            : el("p", { class: "meta", text: "Nenhuma. Siga uma cidade para receber os avisos dela sem ser a responsável." }),
+          el("div", { class: "actions" }, sel, el("button", { class: "btn small", type: "button", onclick: (e) => sel.value && alternar("cidade", sel.value, true, e.currentTarget) }, "Seguir cidade"))),
+        S.me.papel_bloqueios ? el("div", {}, el("h4", { text: "De olho em" }),
+          olhos.length ? el("ul", { class: "meus-pedidos" }, olhos.map((x) => el("li", {},
+            el("button", { class: "link-ficha", type: "button", onclick: () => App.abrirFicha(x.alvo) }, x.nome || x.alvo), " ", el("span", { class: "mono meta", text: x.alvo }), " ",
+            el("button", { class: "btn link", type: "button", onclick: (e) => alternar("entregador", x.alvo, false, e.currentTarget) }, "Parar"))))
+            : el("p", { class: "meta", text: "Ninguém. Na ficha do entregador, use “Ficar de olho” para receber tudo o que acontecer com ele." })) : null)));
+  }
+
+  // resumo do dia na tira do sino
+  function linhaDia() {
+    const d = V.dia;
+    if (!d) return el("div", { class: "resumo-dia", text: "Hoje: carregando…" });
+    const partes = [[d.cadastros, "cadastro(s)"], [d.aprovados, "aprovado(s)"], [d.bloqueios, "bloqueio(s)"], [d.leves, "leve(s)"],
+      [d.tratativas, "tratativa(s) resolvida(s)"], [d.saem_hoje, "saem do bloqueio hoje"]].filter(([v]) => v != null);
+    return el("div", { class: "resumo-dia" }, el("b", { text: "Hoje na equipe: " }), partes.map(([v, t]) => `${v} ${t}`).join(" · "),
+      el("br"), `Você fez ${d.voce} registro(s) hoje.`);
+  }
 
   function marcarLidos() {
     if (!S.notif?.nao_lidas || V.marcando) return;
@@ -39,11 +106,13 @@
     tira.replaceChildren(
       el("div", { class: "tira-topo" }, el("b", { text: n?.nao_lidas ? `${n.nao_lidas} aviso(s) novo(s)` : "Avisos recentes" }),
         el("button", { class: "btn link", type: "button", onclick: fecharTira, "aria-label": "Fechar" }, "✕")),
+      linhaDia(),
       itens.length ? el("ul", { class: "lista-avisos" }, itens.slice(0, 12).map((x) => linhaAviso(x, () => fecharTira())))
         : el("p", { class: "meta", style: "padding:12px", text: "Nenhum aviso ainda." }),
       el("div", { class: "tira-pe" }, el("a", { class: "btn small", href: "#atividades/avisos", onclick: fecharTira }, "Ver todos os avisos")));
     tira.hidden = false;
     $("#b-avisos").setAttribute("aria-expanded", "true");
+    rpc("resumo_do_dia").then((d) => { V.dia = d; const velha = tira.querySelector(".resumo-dia"); if (velha) velha.replaceWith(linhaDia()); }).catch(() => {});
     marcarLidos();
   }
   $("#b-avisos").addEventListener("click", (e) => { e.stopPropagation(); tira.hidden ? abrirTira() : fecharTira(); });
@@ -55,7 +124,7 @@
   const filtros = () => ({ p_busca: $("#av-q").value.trim() || null, p_filtro: $("#av-filtro").value || null,
     p_cidade: $("#av-cidade").value || null, p_nao_lidos: $("#av-nao-lidos").checked });
   async function carregar() {
-    const [r, sr] = await Promise.all([rpc("listar_avisos", filtros()), rpc("cidades_sem_responsavel")]);
+    const [r, sr] = await Promise.all([rpc("listar_avisos", filtros()), rpc("cidades_sem_responsavel"), carregarPref()]);
     V.lista = r.itens; V.mais = r.mais; V.cidades = r.cidades; V.semResp = sr;
   }
   async function maisAvisos(btn) {
@@ -87,6 +156,7 @@
       ? "Nada com esses filtros. Tente outra palavra ou limpe os filtros." : "Quando algo acontecer nas suas cidades, ou para você, o aviso aparece aqui."));
     else box.replaceChildren(...[el("ul", { class: "lista-avisos pagina" }, V.lista.map((x) => linhaAviso(x))),
       V.mais ? el("div", { class: "actions" }, el("button", { class: "btn", type: "button", onclick: (e) => maisAvisos(e.currentTarget) }, "Carregar mais avisos")) : null].filter(Boolean));
+    renderPref();
     renderCidades();
     marcarLidos();
   }
@@ -151,5 +221,6 @@
         el("button", { class: "btn link", type: "button", onclick: (e) => decidir(p, false, e.currentTarget) }, "Recusar…")] }));
   }
 
-  App.avisos = { carregar, render, cartoesPedidos, abrirTira, fecharTira };
+  App.aoEntrar.push(() => { carregarPref().catch(() => {}); });
+  App.avisos = { carregar, render, cartoesPedidos, abrirTira, fecharTira, botaoOlho, carregarPref };
 })();
