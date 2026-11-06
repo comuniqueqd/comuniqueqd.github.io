@@ -201,7 +201,7 @@ try {
   await ir(s, "#meus");
   ok(await esperar(s, "#v-historico:not([hidden]) #t-hist tbody tr td .pill"), "o antigo #meus abre o Histórico (008c)");
   ok((await s.$$("#t-hist tbody tr")).length === 3 && (await texto(s, "#hist-sub")).includes("Tudo o que você enviou"), "Histórico do suporte lista só os 3 dele");
-  ok((await texto(s, "#hist-tiles")).replace(/\s/g, "").includes("Aprovados1") && await s.isHidden("#f-hist-meus-box") && await s.isHidden("#ap-box"), "Histórico do suporte: 1 aprovado, sem 'Só os meus' e sem a lista de aprovados");
+  ok((await texto(s, "#hist-tiles")).replace(/\s/g, "").includes("Aprovados1") && await s.isHidden("#f-hist-meus-box"), "Histórico do suporte: 1 aprovado, sem 'Só os meus'");
   await s.click("#t-hist tr:has-text('1a2b3c4d5e6f')");
   ok(await esperar(s, "#t-hist .timeline >> text=Reprovado"), "histórico do cadastro: " + (await texto(s, "#t-hist .timeline")).replace(/\s+/g, " ").slice(0, 120));
   await s.screenshot({ path: path.join(PRINTS, "5-meus-cadastros.png"), fullPage: true });
@@ -608,7 +608,7 @@ try {
   ok(await esperar(s, "#rs-corpo table") && !(await s.isVisible("#rs-corpo th:has-text('Diferença')")), "resumo sem comparação");
   // histórico da ativação: aprovados e bloqueios depois (moderador)
   await ir(a2, "#ativacao/historico");
-  ok(await esperar(a2, "#ap-resumo:not(:has-text('Carregando'))") && await a2.isVisible("#t-aprovados"), "histórico da ativação mostra os aprovados e se foram bloqueados");
+  ok(await esperar(a2, "#t-hist tbody tr") && !(await a2.$("#t-aprovados")), "histórico da ativação sem a lista 'aprovados: foram bloqueados depois?' (retirada; o número está nas Análises complexas)");
   // anexos: suporte anexa uma imagem no próprio bloqueio
   await ir(s, "#bloqueios/historico"); await s.reload();
   const cardAx = "#bq-t-hist tr:has-text('Atrasildo')";
