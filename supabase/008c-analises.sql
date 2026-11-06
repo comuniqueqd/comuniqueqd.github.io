@@ -278,6 +278,9 @@ begin
       alter publication supabase_realtime add table public.notificacoes;
     end if;
   end if;
+exception when others then
+  -- sem permissão na publicação (ou outro problema nela): não impede o resto da migração
+  raise notice 'Realtime não ajustado: %', sqlerrm;
 end $$;
 
 -- as duas são para todos os papéis (só totais, como a analises() de sempre)
@@ -285,3 +288,7 @@ revoke all on function public.analises_simples(integer, text) from public, anon;
 grant execute on function public.analises_simples(integer, text) to authenticated;
 revoke all on function public.analises_complexas(integer, text) from public, anon;
 grant execute on function public.analises_complexas(integer, text) to authenticated;
+
+-- avisa a API do Supabase que há funções novas (sem isso ela pode demorar a enxergá-las)
+notify pgrst, 'reload schema';
+
