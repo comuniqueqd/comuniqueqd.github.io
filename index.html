@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=008d2">
+<link rel="stylesheet" href="estilo.css?v=008d3">
 </head>
 <body>
 <header class="top">
@@ -422,8 +422,7 @@
   </section>
   <section class="view" id="v-eq-regras" hidden>
     <h2>Regras de equipe</h2>
-    <p class="sub">Quem cuida de cada cidade. O responsável recebe as tratativas da cidade, um aviso a cada cadastro novo e o aviso de tratativa atrasada. Cidades de operador logístico usam o responsável pelos operadores.</p>
-    <div class="panel" id="eq-resp-op"></div>
+    <p class="sub">Quem cuida de cada cidade. O responsável recebe as tratativas da cidade, um aviso a cada cadastro novo e o aviso de tratativa atrasada. Cidades de operador logístico usam o responsável pelos operadores (aba Operadores logísticos).</p>
     <div class="panel">
       <h3>Cidades</h3>
       <div class="toolbar">
@@ -434,16 +433,16 @@
       </div>
       <div class="tablewrap"><table id="eq-t-cidades"></table></div>
     </div>
+  </section>
+  <section class="view" id="v-eq-operadores" hidden>
+    <h2>Operadores logísticos</h2>
+    <p class="sub">Parceiros de fora do Comunique que cuidam de cidades, e quem da equipe responde por eles.</p>
+    <div class="panel" id="eq-resp-op"></div>
     <div class="panel">
-      <h3>Operadores logísticos</h3>
-      <p class="sub">Parceiros de fora do Comunique. Um operador pode cuidar de várias cidades.</p>
+      <h3>Operadores</h3>
+      <p class="sub">Um operador pode cuidar de várias cidades. O contato aparece também nas cidades dele, na Regras de equipe.</p>
       <div class="tablewrap"><table id="eq-t-operadores"></table></div>
       <div class="actions" style="margin-top:10px"><button class="btn" type="button" id="eq-novo-operador" hidden>+ Novo operador</button></div>
-    </div>
-    <div class="panel" id="eq-contatos-box" hidden>
-      <h3>Telefones da equipe</h3>
-      <p class="sub">Aparecem ao lado do nome do responsável em cada cidade.</p>
-      <div class="tablewrap"><table id="eq-t-contatos" class="protege-foco"></table></div>
     </div>
   </section>
 </main>
@@ -467,16 +466,16 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/base.js?v=008d2"></script>
-<script src="js/inicio.js?v=008d2"></script>
-<script src="js/ativacao.js?v=008d2"></script>
-<script src="js/bloqueios.js?v=008d2"></script>
-<script src="js/entregadores.js?v=008d2"></script>
-<script src="js/atividades.js?v=008d2"></script>
-<script src="js/avisos.js?v=008d2"></script>
-<script src="js/analises.js?v=008d2"></script>
-<script src="js/registros.js?v=008d2"></script>
-<script src="js/equipe.js?v=008d2"></script>
-<script src="js/busca.js?v=008d2"></script>
+<script src="js/base.js?v=008d3"></script>
+<script src="js/inicio.js?v=008d3"></script>
+<script src="js/ativacao.js?v=008d3"></script>
+<script src="js/bloqueios.js?v=008d3"></script>
+<script src="js/entregadores.js?v=008d3"></script>
+<script src="js/atividades.js?v=008d3"></script>
+<script src="js/avisos.js?v=008d3"></script>
+<script src="js/analises.js?v=008d3"></script>
+<script src="js/registros.js?v=008d3"></script>
+<script src="js/equipe.js?v=008d3"></script>
+<script src="js/busca.js?v=008d3"></script>
 </body>
 </html>

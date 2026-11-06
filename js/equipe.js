@@ -88,7 +88,7 @@
     ...(R.dados?.membros || []).map((m) => el("option", { value: m.email, text: m.nome + (["moderador", "monitorador"].includes(m.papel_bloqueios) ? "" : " (não recebe tratativas)") }))];
   async function salvar(fn, args, btn, msg, d) {
     if (btn) btn.disabled = true;
-    try { await rpc(fn, args); d?.close(); toast(msg); R.dados = await rpc("regras_equipe"); render(); }
+    try { await rpc(fn, args); d?.close(); toast(msg); R.dados = await rpc("regras_equipe"); App.render(); }
     catch (e) { if (btn) btn.disabled = false; toast(msgErro(e)); }
   }
   function editarCidade(c) {
@@ -137,18 +137,29 @@
         el("button", { class: "btn primary", type: "button", onclick: (e) => salvar("salvar_operador", { p_id: o.id, p_nome: nome.value, p_contato: tel.value, p_ativo: ativo.checked }, e.currentTarget, "Operador salvo.", d) }, "Salvar"),
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
-  function renderRegras() {
+  // aba Operadores logísticos: quem responde por eles e a lista com os contatos
+  function renderOperadores() {
     const D = R.dados, pode = !!D?.pode_editar;
-    $("#eq-nova-cidade").hidden = !pode; $("#eq-novo-operador").hidden = !pode; $("#eq-contatos-box").hidden = !pode;
-    if (!D) return $("#eq-t-cidades").replaceChildren(...App.u.tabela([["Cidade"]], [], R.erro || "Carregando…"));
-    // responsável pelos operadores
+    $("#eq-novo-operador").hidden = !pode;
+    if (!D) { $("#eq-resp-op").replaceChildren(); return $("#eq-t-operadores").replaceChildren(...App.u.tabela([["Operador"]], [], R.erro || "Carregando…")); }
     const ro = D.responsavel_operadores;
     const sel = pode ? el("select", { "aria-label": "Responsável pelos operadores logísticos", onchange: (e) => salvar("salvar_responsavel_operadores", { p_email: e.target.value || null }, e.target, "Responsável pelos operadores atualizado.") }, ...opcMembros(ro?.email, "Ninguém (vai para os moderadores)")) : null;
     if (sel) sel.value = ro?.email || "";
     $("#eq-resp-op").replaceChildren(...[el("h3", { text: "Responsável pelos operadores logísticos" }),
       el("p", { class: "sub", text: "Recebe os avisos de todas as cidades de operador logístico." }),
-      pode ? sel : el("p", {}, el("b", { text: ro?.nome || "Ninguém escolhido (vai para os moderadores)" }), " ", ro?.telefone ? el("span", { class: "contato", text: ro.telefone }) : null),
+      pode ? sel : el("p", {}, el("b", { text: ro?.nome || "Ninguém escolhido (vai para os moderadores)" })),
       ro && !ro.recebe_tratativas ? el("p", { class: "alerta-revisar bloco", text: `${ro.nome} não é monitorador nos bloqueios: as tratativas dessas cidades vão para os moderadores (os outros avisos chegam normalmente).` }) : null].filter(Boolean));
+    $("#eq-t-operadores").replaceChildren(...App.u.tabela([["Operador"], ["Contato"], ["Cidades", 1], [""]],
+      D.operadores.map((o) => el("tr", { style: o.ativo ? null : "opacity:.6" }, el("td", { text: o.nome + (o.ativo ? "" : " (inativo)") }), el("td", { text: o.contato || "—" }),
+        el("td", { class: "num", title: D.cidades.filter((c) => c.operador_id === o.id).map((c) => c.nome).join(", ") || null, text: o.cidades }),
+        el("td", {}, pode ? el("button", { class: "btn quiet small", type: "button", onclick: () => editarOperador(o) }, "Editar") : null))),
+      "Nenhum operador cadastrado."));
+  }
+  // aba Regras de equipe: só as cidades (as de operador mostram o operador e o contato dele)
+  function renderRegras() {
+    const D = R.dados, pode = !!D?.pode_editar;
+    $("#eq-nova-cidade").hidden = !pode;
+    if (!D) return $("#eq-t-cidades").replaceChildren(...App.u.tabela([["Cidade"]], [], R.erro || "Carregando…"));
     // cidades
     const q = App.u.norm($("#eq-q").value), g = $("#eq-gestao").value, inativas = $("#eq-inativas").checked;
     const lista = D.cidades.filter((c) => (inativas || c.ativa) && (!g || c.gestao === g) && (!q || App.u.norm([c.nome, c.operador_nome, c.responsavel_nome].join(" ")).includes(q)));
@@ -158,25 +169,13 @@
         el("td", {}, c.nome, c.ativa ? null : el("div", { class: "meta", text: "desativada" })),
         el("td", {}, el("span", { class: "gestao " + c.gestao, text: GESTAO[c.gestao] })),
         el("td", {}, c.gestao === "operador" ? [c.operador_nome || "—", contato(c.operador_contato)] : "—"),
-        el("td", {}, c.responsavel_nome || el("span", { class: "meta", text: "Moderadores" }), contato(c.responsavel_telefone),
+        el("td", {}, c.responsavel_nome || el("span", { class: "meta", text: "Moderadores" }),
           c.responsavel_nome && !c.recebe_tratativas ? el("div", { class: "alerta-revisar", text: "tratativas vão para os moderadores" }) : null),
         el("td", { class: "num", text: brl(c.tarifa_inicial) }),
         el("td", { text: c.tarifa_tipo === "km" ? "km" : c.tarifa_tipo === "bairro" ? "bairro" : "—" }),
         el("td", { class: "num", text: c.tarifa_tipo === "km" ? brl(c.adicional_km) : "—" }),
         el("td", {}, pode ? el("button", { class: "btn quiet small", type: "button", onclick: () => editarCidade(c) }, "Editar") : null))),
       "Nenhuma cidade com esse filtro."));
-    // operadores
-    $("#eq-t-operadores").replaceChildren(...App.u.tabela([["Operador"], ["Contato"], ["Cidades", 1], [""]],
-      D.operadores.map((o) => el("tr", { style: o.ativo ? null : "opacity:.6" }, el("td", { text: o.nome + (o.ativo ? "" : " (inativo)") }), el("td", { text: o.contato || "—" }), el("td", { class: "num", text: o.cidades }),
-        el("td", {}, pode ? el("button", { class: "btn quiet small", type: "button", onclick: () => editarOperador(o) }, "Editar") : null))),
-      "Nenhum operador cadastrado."));
-    // telefones da equipe (moderador)
-    if (pode) $("#eq-t-contatos").replaceChildren(...App.u.tabela([["Pessoa"], ["Telefone"], [""]],
-      D.membros.map((m) => {
-        const tel = el("input", { maxlength: "40", placeholder: "(79) 9 9999-9999", "aria-label": "Telefone de " + m.nome }); tel.value = m.telefone || "";
-        return el("tr", {}, el("td", { text: m.nome }), el("td", {}, tel),
-          el("td", {}, el("button", { class: "btn small", type: "button", onclick: (e) => salvar("salvar_telefone", { p_email: m.email, p_telefone: tel.value }, e.currentTarget, "Telefone salvo.") }, "Salvar")));
-      }), ""));
   }
   $("#eq-nova-cidade").addEventListener("click", () => editarCidade(null));
   $("#eq-novo-operador").addEventListener("click", () => editarOperador(null));
@@ -187,11 +186,12 @@
     abas: [
       { id: "equipe", nome: "Equipe", secao: "v-equipe", pode: () => S.me?.papel === "moderador" },
       { id: "regras", nome: "Regras de equipe", secao: "v-eq-regras" },
+      { id: "operadores", nome: "Operadores logísticos", secao: "v-eq-operadores" },
     ],
     padrao: () => (S.me?.papel === "moderador" ? "equipe" : "regras"),
     async carregar(aba) {
-      if (aba === "regras") { try { R.dados = await rpc("regras_equipe"); R.erro = null; } catch (e) { R.erro = msgErro(e); throw e; } }
+      if (aba === "regras" || aba === "operadores") { try { R.dados = await rpc("regras_equipe"); R.erro = null; } catch (e) { R.erro = msgErro(e); throw e; } }
     },
-    render: (aba) => (aba === "regras" ? renderRegras() : renderEquipe()),
+    render: (aba) => (aba === "regras" ? renderRegras() : aba === "operadores" ? renderOperadores() : renderEquipe()),
   });
 })();

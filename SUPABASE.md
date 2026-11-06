@@ -163,7 +163,7 @@ O que muda:
 Para quem já rodou o `005-analises-anexos.sql`. **Não apaga** nada e pode rodar mais de uma vez.
 
 1. **SQL Editor → New query**: cole [`supabase/006-equipe-previsao-atencao.sql`](supabase/006-equipe-previsao-atencao.sql) inteiro e clique em **Run**.
-2. (Opcional) **Importar a planilha de cidades**: rode o arquivo de importação gerado a partir da planilha "Cidades do Quero Log e taxas" (aba JULHO 2026). Ele tem telefones e **não fica no repositório**. Pode rodar de novo (atualiza). No fim, ele lista as cidades e quem recebe os avisos; quem aparecer como "escolher na tela" se ajusta em Equipe → Regras de equipe.
+2. (Opcional) **Importar a planilha de cidades**: rode o arquivo de importação gerado a partir da planilha "Cidades do Quero Log e taxas" (aba JULHO 2026). Ele tem telefones e **não fica no repositório**. Pode rodar de novo (atualiza). No fim, ele lista as cidades e quem recebe os avisos; quem aparecer como "escolher na tela" se ajusta em Equipe → Regras de equipe (o responsável pelos operadores fica em Equipe → Operadores logísticos).
 3. Só depois publique a versão nova do site (a `main`).
 
 O que muda:

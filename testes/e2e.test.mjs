@@ -629,8 +629,9 @@ try {
   // 18. migração 006: regras de equipe, prazo editável, previsão, atenção
   await ir(s, "#equipe/regras"); await s.reload();
   ok(await esperar(s, "#eq-t-cidades >> text=LAGARTO - SE") && !(await s.isVisible("#eq-t-cidades >> text=Editar")) && !(await s.isVisible("#eq-nova-cidade")), "suporte vê a Regras de equipe sem editar");
-  ok((await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).join() === "regras", "suporte só vê a aba Regras de equipe (não a Equipe)");
-  await ir(a2, "#equipe/regras"); await a2.reload();
+  ok((await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).join() === "regras,operadores", "suporte vê Regras de equipe e Operadores logísticos (não a Equipe)");
+  ok(!(await s.isVisible("#eq-t-cidades >> text=Telefone")), "Regras de equipe sem os telefones da equipe");
+  await ir(a2, "#equipe/operadores"); await a2.reload();
   await esperar(a2, "#eq-novo-operador:not([hidden])");
   await a2.click("#eq-novo-operador");
   await a2.fill("dialog.janela input >> nth=0", "Kleber"); await a2.fill("dialog.janela input >> nth=1", "75 0000-0001");
@@ -638,6 +639,11 @@ try {
   ok(await esperar(a2, "#eq-t-operadores >> text=Kleber"), "moderador cadastra operador logístico");
   await a2.selectOption("#eq-resp-op select", "monitor@x.com");
   ok(await esperar(a2, "#toast:has-text('Responsável pelos operadores atualizado')"), "moderador escolhe o responsável pelos operadores");
+  ok(await esperar(a2, "#eq-t-operadores tr:has-text('Kleber') >> text=75 0000-0001"), "operador aparece com o contato na aba Operadores logísticos");
+  await a2.screenshot({ path: path.join(PRINTS, "e1b-operadores.png"), fullPage: true });
+  ok(!(await texto(a2, "#v-eq-operadores")).includes("null"), "Operadores logísticos sem textos vazios (null)");
+  await ir(a2, "#equipe/regras");
+  ok(!(await a2.isVisible("#v-eq-regras #eq-resp-op")) && !(await a2.isVisible("#v-eq-regras #eq-t-operadores")), "Regras de equipe só com as cidades");
   await a2.click("#eq-t-cidades tr:has-text('SERRINHA - BA') >> text=Editar");
   await a2.selectOption("dialog.janela select >> nth=0", "operador");
   await a2.selectOption("dialog.janela select >> nth=1", { label: "Kleber" });
