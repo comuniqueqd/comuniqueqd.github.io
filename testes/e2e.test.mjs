@@ -263,6 +263,13 @@ try {
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
   await s.click("dialog.janela >> text=Entendi");
   await s.screenshot({ path: path.join(PRINTS, "b0-inicio.png"), fullPage: true });
+  // versão nova publicada: o app avisa quem está com a antiga aberta
+  await s.evaluate(() => App.conferirVersao(true)); await s.waitForTimeout(400);
+  ok(!(await s.isVisible("#aviso-versao")), "com a versão em dia, nenhum aviso de atualização");
+  await s.route("**/versao.txt*", (r) => r.fulfill({ contentType: "text/plain", body: "999-nova\n" }));
+  await s.evaluate(() => App.conferirVersao(true));
+  ok(await esperar(s, "#aviso-versao >> text=Saiu uma versão nova do Comunique"), "versão nova publicada: aparece o aviso com Atualizar agora");
+  await s.click("#aviso-versao >> text=Depois"); await s.unroute("**/versao.txt*");
   // 008c: funções em destaque na tela inicial
   { const fns = await s.$$eval("#inicio-funcoes a.funcao", (l) => l.map((x) => x.querySelector("b").textContent));
     ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Novo bloqueio", "Cadastrar entregador", "Sugerir atividade", "Registros"]), "tela inicial: as 5 funções em destaque: " + fns); }

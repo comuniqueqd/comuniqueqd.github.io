@@ -408,3 +408,8 @@ a.funcao.f-reg { --fcor: var(--warn); }
 /* 5 atalhos numa linha: ícone em cima, texto embaixo, seta no canto */
 a.funcao { grid-template-columns: 1fr; align-items: start; align-content: start; gap: 10px; padding: 18px 16px 16px 20px; }
 a.funcao .funcao-seta { position: absolute; top: 16px; right: 14px; }
+
+/* aviso de versão nova publicada */
+.aviso-versao { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 60; display: flex; gap: 10px; align-items: center;
+  flex-wrap: wrap; padding: 10px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--accent);
+  box-shadow: 0 10px 28px rgba(10, 14, 20, .18); font-size: 14px; max-width: calc(100vw - 24px); }

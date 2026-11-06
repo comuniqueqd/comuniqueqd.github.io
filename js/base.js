@@ -312,7 +312,29 @@
   // o ciclo passa de 30 s para 2 min; com a aba escondida, não atualiza.
   let versao = null, ultimaCompleta = 0, ultimoTique = 0, mexeuEm = Date.now();
   for (const ev of ["pointermove", "keydown", "touchstart", "scroll", "focusin"]) addEventListener(ev, () => (mexeuEm = Date.now()), { passive: true, capture: true });
+  // Versão nova publicada: quem está com o app aberto há muito tempo continua com os arquivos antigos
+  // (a página não recarrega sozinha). A cada 5 min, e ao voltar para a aba, o app confere o versao.txt
+  // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
+  // desta publicação (trocar os dois juntos, com o ?v= do index.html).
+  const VERSAO_APP = "008c5";
+  let versaoConferida = 0;
+  async function conferirVersao(forcar = false) {
+    if (!forcar && Date.now() - versaoConferida < 300000) return;
+    versaoConferida = Date.now();
+    try {
+      const r = await fetch("versao.txt?t=" + Date.now(), { cache: "no-store" });
+      const v = r.ok ? (await r.text()).trim() : "";
+      if (v && v !== VERSAO_APP && !document.getElementById("aviso-versao")) {
+        document.body.append(el("div", { class: "aviso-versao", id: "aviso-versao", role: "status" },
+          el("span", { text: "Saiu uma versão nova do Comunique." }),
+          el("button", { class: "btn primary small", type: "button", onclick: () => location.reload() }, "Atualizar agora"),
+          el("button", { class: "btn link", type: "button", onclick: (e) => e.currentTarget.parentElement.remove() }, "Depois")));
+      }
+    } catch (_) {}
+  }
+  App.conferirVersao = conferirVersao;
   async function tique() {
+    conferirVersao();
     if (document.hidden || !S.me) return;
     if (Date.now() - mexeuEm > 300000 && Date.now() - ultimoTique < 120000) return;
     ultimoTique = Date.now();
@@ -458,7 +480,7 @@
       S.sb.channel("avisos").on("postgres_changes", { event: "INSERT", schema: "public", table: "notificacoes", filter: `para=eq.${S.me.id}` }, agendar).subscribe();
     } catch (_) {}
     setInterval(tique, 30000);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) { ultimoTique = 0; tique(); } });
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) { ultimoTique = 0; versaoConferida = 0; tique(); } });
   }
   gate("carregando");
   addEventListener("DOMContentLoaded", iniciar);
