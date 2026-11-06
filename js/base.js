@@ -313,10 +313,10 @@
   let versao = null, ultimaCompleta = 0, ultimoTique = 0, mexeuEm = Date.now();
   for (const ev of ["pointermove", "keydown", "touchstart", "scroll", "focusin"]) addEventListener(ev, () => (mexeuEm = Date.now()), { passive: true, capture: true });
   // Versão nova publicada: quem está com o app aberto há muito tempo continua com os arquivos antigos
-  // (a página não recarrega sozinha). A cada 5 min, e ao voltar para a aba, o app confere o versao.txt
+  // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "008c5";
+  const VERSAO_APP = "008c6";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;
@@ -334,7 +334,7 @@
   }
   App.conferirVersao = conferirVersao;
   async function tique() {
-    conferirVersao();
+    if (Date.now() - versaoConferida > 1800000) conferirVersao();  // aba aberta o tempo todo: confere a cada 30 min
     if (document.hidden || !S.me) return;
     if (Date.now() - mexeuEm > 300000 && Date.now() - ultimoTique < 120000) return;
     ultimoTique = Date.now();
@@ -480,7 +480,7 @@
       S.sb.channel("avisos").on("postgres_changes", { event: "INSERT", schema: "public", table: "notificacoes", filter: `para=eq.${S.me.id}` }, agendar).subscribe();
     } catch (_) {}
     setInterval(tique, 30000);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) { ultimoTique = 0; versaoConferida = 0; tique(); } });
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) { ultimoTique = 0; conferirVersao(); tique(); } });
   }
   gate("carregando");
   addEventListener("DOMContentLoaded", iniciar);
