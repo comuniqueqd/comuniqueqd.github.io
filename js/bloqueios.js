@@ -721,7 +721,7 @@
   }
   function renderHist() {
     const h = B.hist, t = $("#bq-t-hist");
-    const cols = [["Situação"], ["Entregador"], ["Infração"], ["Punição"], ["Início"], ["Cidade"], ["Tratativa"], [""]];
+    const cols = [["Situação"], ["Entregador"], ["Infração e punição"], ["Registro"], ["Tratativa"], [""]];
     if (!h) { $("#bq-hist-total").textContent = ""; return t.replaceChildren(...tabela(cols, [], "Carregando…")); }
     preencher($("#bq-hist-cidade"), h.cidades.slice().sort().map((c) => [c, c]), "Todas as cidades");
     preencher($("#bq-hist-inf"), opcInfracoes(), "Todas as infrações");
@@ -756,11 +756,10 @@
       const aberto = B.abertos.has(b.id);
       acoes.prepend(el("button", { class: "btn link", type: "button", "aria-expanded": String(aberto), onclick: (e) => { e.stopPropagation(); alternarHist(b.id); } }, aberto ? "Ocultar histórico" : "Ver histórico"));
       const linha = el("tr", { class: "clicavel", onclick: (e) => { if (!e.target.closest("button, a")) alternarHist(b.id); } }, el("td", {}, pillSit(b.situacao), b.revisar ? el("div", {}, alertaRevisar(b, true)) : null),
-        el("td", {}, linkFicha(b), el("br"), el("span", { class: "mono meta", text: b.id_app })),
-        el("td", {}, b.infracao, b.leve ? el("span", { class: "tag", style: "margin-left:6px", text: "LEVE" }) : null),
-        el("td", {}, horasTxt(b.horas), b.leve ? null : el("div", { class: "meta", text: ord(b.ocorrencia) + " ocorrência" + (b.ocorrencia < b.ocorrencia_total ? ` (${ord(b.ocorrencia_total)} no total)` : "") })),
+        el("td", { class: "col-entregador" }, linkFicha(b), el("div", { class: "meta" }, el("span", { class: "mono", text: b.id_app }), " · " + (b.cidade || "sem cidade"))),
+        el("td", { class: "col-infracao" }, el("div", {}, b.infracao, b.leve ? el("span", { class: "tag", style: "margin-left:6px", text: "LEVE" }) : null),
+          el("div", { class: "meta" }, horasTxt(b.horas) + (b.leve ? "" : " · " + ord(b.ocorrencia) + " ocorrência" + (b.ocorrencia < b.ocorrencia_total ? ` (${ord(b.ocorrencia_total)} no total)` : "")))),
         el("td", {}, el("span", { class: "nowrap-data", text: dt(b.inicio) }), el("div", { class: "meta", text: "por " + (b.registrado_por_nome || "—") })),
-        el("td", { text: b.cidade || "—" }),
         el("td", {}, tratativaCurta(b)), acoes);
       return aberto ? [linha, el("tr", { class: "detalhe-hist" }, el("td", { colspan: String(cols.length) }, detalheHist(b)))] : [linha];
     }).flat(), "Nenhum bloqueio com esse filtro."));
@@ -774,16 +773,30 @@
       render();
     }
   }
+  // 008d6: histórico aberto em blocos: dados do registro, tratativa e o que aconteceu (data na frente)
   function detalheHist(b) {
     const ev = B.eventos[b.id];
-    const t = b.tarefa;
+    const sit = b.situacao;
     return el("div", { class: "detalhe-bloqueio" },
-      el("div", { class: "meta" }, [b.fim && b.horas != null ? `Fim do bloqueio: ${dt(b.fim)}` : null, b.observacao ? `Observação: ${b.observacao}` : null,
-        b.motivo_liberacao ? `Motivo da liberação: ${b.motivo_liberacao}` : null, b.importado ? "Veio da planilha." : null].filter(Boolean).join(" · ")),
-      el("div", { class: "trat-completa" }, bulletTratativa(b)),
-      !ev ? el("p", { class: "meta", text: "Carregando histórico…" }) : ev.erro ? el("p", { class: "err", text: ev.erro })
-        : ev.length ? el("ol", { class: "timeline" }, ev.map((x) => el("li", {}, el("b", { text: EVB[x.tipo] || x.tipo }), ` ${x.por_nome ? "por " + x.por_nome + " " : ""}em ${dt(x.em)}${x.detalhe ? " · " + x.detalhe : ""}`)))
-        : el("p", { class: "meta", text: "Sem eventos registrados." }));
+      el("div", { class: "det-bloco" }, el("h4", { text: "Dados do registro" }),
+        el("dl", { class: "fields" },
+          fld(b.leve ? "Infração leve" : "Infração", b.infracao),
+          fld("Ocorrência", b.leve ? "Conta para o limite de leves" : b.ocorrencia < b.ocorrencia_total ? `${ord(b.ocorrencia)} para a punição (${ord(b.ocorrencia_total)} no histórico)` : ord(b.ocorrencia)),
+          fld("Punição", horasTxt(b.horas)),
+          fld("Início", dt(b.inicio)),
+          fld(sit === "bloqueado" ? "Libera em" : "Fim", b.fim ? dt(b.fim) + (sit === "bloqueado" ? ` (falta ${falta(b.fim)})` : "") : "—"),
+          fld("Cidade", b.cidade),
+          fld("Registrado por", b.registrado_por === S.me.id ? "Você" : b.registrado_por_nome),
+          b.observacao ? fld("Observação", b.observacao) : null,
+          b.motivo_liberacao ? fld("Motivo da liberação", b.motivo_liberacao) : null,
+          b.importado ? fld("Origem", "Veio da planilha") : null)),
+      el("div", { class: "det-bloco" }, el("h4", { text: "Tratativa" }), el("div", { class: "trat-completa" }, bulletTratativa(b))),
+      el("div", { class: "det-bloco" }, el("h4", { text: "O que aconteceu" }),
+        !ev ? el("p", { class: "meta", text: "Carregando histórico…" }) : ev.erro ? el("p", { class: "err", text: ev.erro })
+          : ev.length ? el("ol", { class: "timeline det-linha" }, ev.map((x) => el("li", {},
+              el("span", { class: "quando", text: dt(x.em) }),
+              el("span", {}, el("b", { text: EVB[x.tipo] || x.tipo }), x.por_nome ? ` por ${x.por_nome}` : "", x.detalhe ? el("div", { class: "meta", text: x.detalhe }) : null))))
+          : el("p", { class: "meta", text: "Sem eventos registrados." })));
   }
   async function excluir(b, btn) {
     btn.disabled = true;

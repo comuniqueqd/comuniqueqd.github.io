@@ -449,3 +449,15 @@ tr.detalhe-hist > td { background: var(--bg); }
 
 /* 008d5: cidades do operador ao lado do nome */
 #eq-t-operadores td.op-cidades { min-width: 220px; }
+
+/* 008d6: Histórico de bloqueios mais legível: colunas agrupadas e histórico aberto em blocos */
+#bq-t-hist td { vertical-align: top; }
+#bq-t-hist td.col-entregador { min-width: 170px; }
+#bq-t-hist td.col-infracao { min-width: 220px; }
+#bq-t-hist td .meta { margin-top: 2px; }
+.detalhe-bloqueio { gap: 14px; padding: 8px 4px 10px; }
+.detalhe-bloqueio .det-bloco h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.detalhe-bloqueio dl.fields { margin: 0; }
+.detalhe-bloqueio .det-linha li { display: grid; grid-template-columns: 130px 1fr; gap: 10px; }
+.detalhe-bloqueio .det-linha .quando { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 640px) { .detalhe-bloqueio .det-linha li { grid-template-columns: 1fr; gap: 0; } }
