@@ -446,3 +446,6 @@ tr.detalhe-hist > td { background: var(--bg); }
 #bq-t-hist td.acoes-hist { text-align: right; }
 #bq-t-hist td.acoes-hist > * { display: block; margin: 0 0 4px auto; white-space: nowrap; }
 .detalhe-bloqueio .trat-completa { padding: 6px 10px; border-left: 3px solid var(--line); background: var(--panel, #fff); border-radius: 4px; }
+
+/* 008d5: cidades do operador ao lado do nome */
+#eq-t-operadores td.op-cidades { min-width: 220px; }

@@ -149,11 +149,15 @@
       el("p", { class: "sub", text: "Recebe os avisos de todas as cidades de operador logístico." }),
       pode ? sel : el("p", {}, el("b", { text: ro?.nome || "Ninguém escolhido (vai para os moderadores)" })),
       ro && !ro.recebe_tratativas ? el("p", { class: "alerta-revisar bloco", text: `${ro.nome} não é monitorador nos bloqueios: as tratativas dessas cidades vão para os moderadores (os outros avisos chegam normalmente).` }) : null].filter(Boolean));
-    $("#eq-t-operadores").replaceChildren(...App.u.tabela([["Operador"], ["Contato"], ["Cidades", 1], [""]],
-      D.operadores.map((o) => el("tr", { style: o.ativo ? null : "opacity:.6" }, el("td", { text: o.nome + (o.ativo ? "" : " (inativo)") }), el("td", { text: o.contato || "—" }),
-        el("td", { class: "num", title: D.cidades.filter((c) => c.operador_id === o.id).map((c) => c.nome).join(", ") || null, text: o.cidades }),
-        el("td", {}, pode ? el("button", { class: "btn quiet small", type: "button", onclick: () => editarOperador(o) }, "Editar") : null))),
-      "Nenhum operador cadastrado."));
+    // 008d5: as cidades de cada operador aparecem ao lado do nome
+    $("#eq-t-operadores").replaceChildren(...App.u.tabela([["Operador"], ["Cidades"], ["Contato"], [""]],
+      D.operadores.map((o) => {
+        const cids = D.cidades.filter((c) => c.operador_id === o.id).map((c) => c.nome).sort((x, y) => x.localeCompare(y, "pt-BR"));
+        return el("tr", { style: o.ativo ? null : "opacity:.6" }, el("td", { text: o.nome + (o.ativo ? "" : " (inativo)") }),
+        el("td", { class: "op-cidades" }, cids.length ? el("div", { class: "chips" }, cids.map((n) => el("span", { class: "chip", text: n }))) : el("span", { class: "meta", text: "Nenhuma cidade" })),
+        el("td", { text: o.contato || "—" }),
+        el("td", {}, pode ? el("button", { class: "btn quiet small", type: "button", onclick: () => editarOperador(o) }, "Editar") : null));
+      }), "Nenhum operador cadastrado."));
   }
   // aba Regras de equipe: só as cidades (as de operador mostram o operador e o contato dele)
   function renderRegras() {

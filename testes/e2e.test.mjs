@@ -644,6 +644,7 @@ try {
   await a2.selectOption("#eq-resp-op select", "monitor@x.com");
   ok(await esperar(a2, "#toast:has-text('Responsável pelos operadores atualizado')"), "moderador escolhe o responsável pelos operadores");
   ok(await esperar(a2, "#eq-t-operadores tr:has-text('Kleber') >> text=75 0000-0001"), "operador aparece com o contato na aba Operadores logísticos");
+  // (as cidades do operador ao lado do nome são conferidas depois que SERRINHA vira de operador)
   await a2.screenshot({ path: path.join(PRINTS, "e1b-operadores.png"), fullPage: true });
   ok(!(await texto(a2, "#v-eq-operadores")).includes("null"), "Operadores logísticos sem textos vazios (null)");
   await ir(a2, "#equipe/regras");
@@ -658,6 +659,10 @@ try {
   ok(await esperar(a2, "#eq-t-cidades tr:has-text('SERRINHA - BA') >> text=Operador Logístico") && await a2.isVisible("#eq-t-cidades tr:has-text('SERRINHA - BA') >> text=Kleber")
     && (await texto(a2, "#eq-t-cidades tr:has-text('SERRINHA - BA')")).includes("Monitor Um"), "cidade passa a ser de operador, com o operador e o responsável dos operadores");
   await a2.screenshot({ path: path.join(PRINTS, "e1-regras-equipe.png"), fullPage: true });
+  await ir(a2, "#equipe/operadores");
+  ok(await esperar(a2, "#eq-t-operadores tr:has-text('Kleber') .op-cidades >> text=SERRINHA - BA"), "Operadores logísticos mostra as cidades ao lado do nome do operador");
+  await a2.screenshot({ path: path.join(PRINTS, "e1b-operadores.png"), fullPage: true });
+  await ir(a2, "#equipe/regras");
   ok(!(await texto(a2, "#v-eq-regras")).includes("null"), "Regras de equipe sem textos vazios (null)");
   // prazo da tratativa editável
   await ir(a2, "#bloqueios/regras"); await a2.reload();
