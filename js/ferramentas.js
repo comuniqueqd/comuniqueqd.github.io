@@ -144,6 +144,101 @@
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
 
+  // ---------- mensagens prontas (009c) ----------
+  // marcadores: {nome} {infracao} {regra} {ocorrencia} {punicao} {termino} {agravante} {reincidencia} {cidade}
+  //             {estabelecimento} {meu_nome} {leves_limite} {leves_janela} {leves_situacao}
+  const M = { dados: null, erro: null, chave: "" };
+  const MARCADORES = "{nome} {infracao} {regra} {ocorrencia} {punicao} {termino} {agravante} {reincidencia} {cidade} {estabelecimento} {meu_nome} {leves_limite} {leves_janela} {leves_situacao}";
+  const primeiroNome = (n) => { const p = (n || "").trim().split(/\s+/)[0] || ""; return p ? p[0].toUpperCase() + p.slice(1).toLowerCase() : ""; };
+  const preencher = (texto, v) => texto.replace(/\{(\w+)\}/g, (m, k) => (v[k] ?? "")).replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  async function carregarMensagens(forcar) { if (!M.dados || forcar) M.dados = await rpc("mensagens"); return M.dados; }
+  async function copiar(texto, onde) {
+    try { await navigator.clipboard.writeText(texto); toast("Mensagem copiada."); }
+    catch (_) { onde?.select?.(); toast("Selecione o texto e copie (Ctrl+C)."); }
+  }
+  // janela com a mensagem pronta, editável, e o botão Copiar
+  async function abrirMensagem(chave, vars, titulo) {
+    let d;
+    try { await carregarMensagens(); } catch (e) { return toast(msgErro(e)); }
+    const mod = M.dados.modelos.find((m) => m.chave === chave);
+    if (!mod) return toast("Modelo de mensagem não encontrado.");
+    const v = { meu_nome: primeiroNome(S.me?.nome), leves_limite: M.dados.leves?.limite, leves_janela: M.dados.leves?.janela_dias, ...vars };
+    const area = el("textarea", { rows: 12, class: "msg-texto" });
+    area.value = preencher(mod.texto, v);
+    d = App.u.janela(titulo || mod.titulo,
+      el("p", { class: "meta", style: "margin:0", text: "Confira e ajuste se precisar. A mensagem não é enviada pelo app: copie e mande pelo canal de sempre." }),
+      area,
+      el("div", { class: "actions" },
+        el("button", { class: "btn primary", type: "button", onclick: () => copiar(area.value, area) }, "Copiar mensagem"),
+        el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Fechar")));
+  }
+  // dados de cada infração (explicação), para quem monta a mensagem
+  App.mensagens = { carregar: carregarMensagens, abrir: abrirMensagem, primeiroNome, preencher,
+    explicacao: (id) => M.dados?.infracoes.find((i) => i.id === id)?.explicacao || "" };
+
+  $("#fe-msg-modelo").addEventListener("change", (e) => { M.chave = e.target.value; renderMensagens(true); });
+  ["#fe-msg-nome", "#fe-msg-estab", "#fe-msg-cidade"].forEach((s) => $(s).addEventListener("input", () => renderMensagens(true)));
+  $("#fe-msg-form").addEventListener("submit", (e) => e.preventDefault());
+  $("#fe-msg-copiar").addEventListener("click", () => copiar($("#fe-msg-texto").value, $("#fe-msg-texto")));
+  function renderMensagens(refazer = false) {
+    const D = M.dados;
+    if (!D) { $("#fe-msg-modelos").replaceChildren(carregandoEl()); return; }
+    const livres = D.modelos.filter((m) => m.grupo !== "bloqueio");
+    const sel = $("#fe-msg-modelo");
+    if (sel.options.length !== livres.length) sel.replaceChildren(...livres.map((m) => el("option", { value: m.chave, text: m.titulo })));
+    if (!M.chave || !livres.some((m) => m.chave === M.chave)) { M.chave = livres[0]?.chave || ""; refazer = true; }
+    sel.value = M.chave;
+    const cs = $("#fe-msg-cidade"), cids = (F.dados?.cidades || []).map((c) => c.nome);
+    if (cs.options.length !== cids.length + 1) { const a = cs.value; cs.replaceChildren(el("option", { value: "", text: "Escolha a cidade" }), ...cids.map((c) => el("option", { value: c, text: c }))); cs.value = a; }
+    const mod = livres.find((m) => m.chave === M.chave);
+    document.querySelectorAll("[data-msg-campo]").forEach((x) => (x.hidden = !mod || !mod.texto.includes("{" + x.dataset.msgCampo + "}")));
+    if (refazer && mod) $("#fe-msg-texto").value = preencher(mod.texto, { nome: primeiroNome($("#fe-msg-nome").value) || "[nome]",
+      estabelecimento: $("#fe-msg-estab").value.trim() || "[estabelecimento]", cidade: cs.value || "[cidade]", meu_nome: primeiroNome(S.me?.nome) });
+    // lista dos modelos (moderador edita)
+    $("#fe-msg-modelos").replaceChildren(el("ul", { class: "lista-modelos" }, D.modelos.map((m) => el("li", {},
+      el("strong", { text: m.titulo }), el("span", { class: "meta", text: m.grupo === "bloqueio" ? " · sai pelo bloqueio" : "" }),
+      D.pode_editar ? el("button", { class: "btn link", type: "button", onclick: () => editarModelo(m) }, "Editar") : null))));
+    // explicação de cada regra
+    $("#fe-msg-regras").replaceChildren(...tabela([["Infração"], ["O que diz a regra"], ["Agravante"], [""]],
+      D.infracoes.filter((i) => !i.leve).map((i) => el("tr", { style: i.ativa ? null : "opacity:.6" },
+        el("td", { text: i.nome }), el("td", { text: i.explicacao || "—" }),
+        el("td", { text: i.agravante ? `${i.agravante} (${i.agravante_efeito === "encerra" ? "encerra a parceria" : "conta como a próxima ocorrência"})` : "—" }),
+        el("td", {}, S.me?.papel_bloqueios === "moderador" ? el("button", { class: "btn quiet small", type: "button", onclick: () => editarRegra(i) }, "Editar") : null))),
+      "Nenhuma infração."));
+  }
+  function editarModelo(m) {
+    const area = el("textarea", { rows: 12 }); area.value = m.texto;
+    const erroJ = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    const d = App.u.janela("Editar: " + m.titulo,
+      el("p", { class: "meta", style: "margin:0", text: "Marcadores: " + MARCADORES + ". Lembrete: nas mensagens, bloqueio temporário é \"restrição temporária\"." }),
+      area, erroJ,
+      el("div", { class: "actions" },
+        el("button", { class: "btn primary", type: "button", onclick: async (e) => {
+          e.currentTarget.disabled = true; erroJ.hidden = true;
+          try { await rpc("salvar_modelo_mensagem", { p_chave: m.chave, p_texto: area.value }); d.close(); toast("Modelo salvo."); await carregarMensagens(true); render(); }
+          catch (err) { e.currentTarget.disabled = false; erroJ.textContent = msgErro(err); erroJ.hidden = false; }
+        } }, "Salvar"),
+        el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
+  }
+  function editarRegra(i) {
+    const area = el("textarea", { rows: 5, maxlength: 600 }); area.value = i.explicacao || "";
+    const ag = el("input", { value: i.agravante || "", maxlength: 160 });
+    const ef = el("select", {}, el("option", { value: "mais_uma", text: "Conta como a próxima ocorrência" }), el("option", { value: "encerra", text: "Encerra a parceria" }));
+    ef.value = i.agravante_efeito || "mais_uma";
+    const erroJ = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    const d = App.u.janela(i.nome,
+      el("label", {}, "O que diz a regra (vai para a mensagem ao entregador)", area),
+      el("label", {}, "Agravante (deixe em branco se não houver)", ag), el("label", {}, "O que o agravante faz", ef), erroJ,
+      el("div", { class: "actions" },
+        el("button", { class: "btn primary", type: "button", onclick: async (e) => {
+          e.currentTarget.disabled = true; erroJ.hidden = true;
+          try { await rpc("salvar_explicacao_infracao", { p_infracao: i.id, p_explicacao: area.value, p_agravante: ag.value || null, p_agravante_efeito: ag.value ? ef.value : null });
+                d.close(); toast("Regra salva."); await carregarMensagens(true); render(); }
+          catch (err) { e.currentTarget.disabled = false; erroJ.textContent = msgErro(err); erroJ.hidden = false; }
+        } }, "Salvar"),
+        el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
+  }
+
   // atalho para os pendentes em tudo o que é de adicional (a tela de pendentes é do Financeiro)
   App.atalhoPendentes = () => {
     const n = S.resumo?.financeiro_pendentes || 0;
@@ -156,10 +251,11 @@
     abas: [
       { id: "calculadora", nome: "Calculadora de bairro", secao: "v-fe-calc" },
       { id: "tarifas", nome: "Tarifas dos bairros", secao: "v-fe-tarifas" },
+      { id: "mensagens", nome: "Mensagens prontas", secao: "v-fe-mensagens" },
     ],
-    async carregar() {
-      try { F.dados = await rpc("tarifas_bairros"); F.erro = null; } catch (e) { F.erro = msgErro(e); throw e; }
+    async carregar(aba) {
+      try { F.dados = await rpc("tarifas_bairros"); if (aba === "mensagens") await carregarMensagens(true); F.erro = null; } catch (e) { F.erro = msgErro(e); throw e; }
     },
-    render(aba) { App.atalhoPendentes(); if (aba === "tarifas") renderTarifas(); else renderCalc(); },
+    render(aba) { App.atalhoPendentes(); if (aba === "tarifas") renderTarifas(); else if (aba === "mensagens") renderMensagens(); else renderCalc(); },
   });
 })();

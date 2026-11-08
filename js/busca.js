@@ -50,10 +50,16 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009b";
+  const VERSAO = "009c";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009c", tema: "✉️ Mensagens prontas e agravante", itens: [
+      ["Gerar mensagem", "Depois de registrar um bloqueio ou uma leve (e no Histórico), o botão “Gerar mensagem” traz o texto pronto, já com o nome do entregador, o motivo, a regra explicada e o tempo. É só copiar."],
+      ["Restrição temporária", "Nas mensagens ao entregador, o bloqueio temporário aparece como “restrição temporária”."],
+      ["Agravante", "Algumas infrações têm agravante na política (ex.: não responder o suporte em 8 horas na retenção). Marque a caixinha no Novo bloqueio e a punição sobe."],
+      ["Mensagens prontas", "Em Ferramentas: engajamento de entregadores e o primeiro contato com o parceiro, preenchidos com nome e cidade."],
+      ["O que diz cada regra", "A explicação de cada infração, tirada da política, fica em Ferramentas → Mensagens prontas."]] },
     { versao: "009b", tema: "🧮 Ferramentas do dia a dia e o Financeiro", itens: [
       ["Calculadora de bairro", "Em Ferramentas: o cliente informou um bairro e a entrega terminou em outro? Escolha os dois e veja quanto falta pagar ao entregador. Dá para registrar o ajuste ali mesmo."],
       ["Tarifas dos bairros", "Quanto cada bairro custa e quanto o entregador recebe (valor menos a taxa do log), por cidade."],

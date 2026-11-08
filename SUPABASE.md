@@ -290,3 +290,16 @@ O que muda:
 - **Financeiro** (menu novo): **Registrar adicional** (adicional = valor combinado − valor da entrega; origem QD/outros, mercado, motivo), **Adicionais pendentes** (o que a pessoa registrou e ainda não lançou no sistema; qualquer um pode marcar como lançado) e **Lançamentos** (lista, números e CSV).
 - **Aviso** a cada adicional ou ajuste para o responsável da cidade, moderadores e quem segue a cidade (categoria "Financeiro", dá para silenciar).
 
+## Atualização 009c: mensagens prontas e agravante
+
+Para quem já rodou a 009b. **Não apaga** nada e pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/009c-mensagens-agravante.sql`](supabase/009c-mensagens-agravante.sql) inteiro e clique em **Run**.
+2. Só depois publique o site.
+
+O que muda:
+
+- **Gerar mensagem** depois de registrar um bloqueio ou uma infração leve, e no Histórico: texto pronto com o primeiro nome do entregador, o motivo, a regra explicada (da Política de Boas Práticas e Conduta), o tempo e o término previsto. Bloqueio temporário aparece como **"restrição temporária"**.
+- **Agravante** no Novo bloqueio: retenção de valores sem resposta ao suporte em 8 h (conta como a próxima ocorrência) e uso da conta por terceiro menor de 18 anos (encerra a parceria). Fica anotado no registro.
+- **Ferramentas → Mensagens prontas**: engajamento de entregadores e primeiro contato com o parceiro. Moderadores editam os modelos e a explicação de cada regra.
+

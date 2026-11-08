@@ -30,6 +30,29 @@
   };
   const TAREFA = { tratativa: "Tratativa", encerramento_parceria: "Encerramento de parceria", leves_acumuladas: "Contato por infrações leves", completar_dados: "Completar dados do entregador" };
   const ord = (n) => `${n}ª`;
+  // 009c: término "por volta das 15h" (hora cheia mais próxima)
+  const termino = (iso) => {
+    if (!iso) return "";
+    const d = new Date(new Date(iso).getTime() + 30 * 60000);
+    return `${d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}, por volta das ${d.getHours()}h`;
+  };
+  // gera a mensagem ao entregador (sempre "restrição temporária" no texto); b = bloqueio (json_bloqueio ou o resultado do registro)
+  async function gerarMensagem(b, extra = {}) {
+    try { await App.mensagens.carregar(); } catch (e) { return toast(msgErro(e)); }
+    const chave = b.leve ? "leve" : b.situacao === "liberado_antes" ? "liberacao" : b.horas == null ? "encerramento" : "restricao";
+    const nomeInf = (b.infracao || "").replace(/\s*\(aviso\)\s*$/i, "");
+    const v = {
+      nome: App.mensagens.primeiroNome(b.nome) || "[nome]", cidade: b.cidade || "",
+      infracao: b.leve ? nomeInf.charAt(0).toLowerCase() + nomeInf.slice(1) : nomeInf,
+      regra: App.mensagens.explicacao(b.infracao_id) || "[explique a regra]",
+      ocorrencia: b.ocorrencia ? ord(b.ocorrencia) : "", punicao: horasTxt(b.horas), termino: termino(b.fim),
+      agravante: b.agravante ? `Foi considerado também: ${b.agravante.charAt(0).toLowerCase() + b.agravante.slice(1)}.\n` : "",
+      reincidencia: !b.leve && b.horas == null && b.ocorrencia > 1 ? `Esta foi a sua ${ord(b.ocorrencia)} ocorrência desse tipo, e a política prevê o encerramento a partir dela.\n` : "",
+      leves_situacao: extra.leves ? ` Você está com ${extra.leves} de ${extra.limite}.` : "", ...extra.vars };
+    App.mensagens.abrir(chave, v);
+  }
+  const botaoMensagem = (b, extra) => el("button", { class: "btn", type: "button", onclick: (e) => { e.stopPropagation(); gerarMensagem(b, extra); } }, "Gerar mensagem");
+
   function falta(iso) {
     const min = Math.max(0, Math.round((new Date(iso) - Date.now()) / 60000));
     if (min < 60) return `${min} min`;
@@ -451,6 +474,17 @@
         el("div", { class: "grande", text: p.encerramento ? "Encerramento de parceria" : `Aplicar ${horasTxt(p.horas)} de bloqueio` }),
         !p.encerramento ? el("div", { text: `Se registrar agora, o bloqueio termina em ${dt(new Date(Date.now() + p.horas * 3600000).toISOString())} e é retirado automaticamente.` }) : el("div", { text: "Bloqueio definitivo: o entregador não volta à operação." }),
         el("div", { class: "meta", text: p.gera_tratativa ? `Gera ${p.encerramento ? "tarefa de encerramento de parceria" : "tratativa"} para ${respDaCidade($("#bq-cidade").value)}.` : "Bloqueio curto: não gera tratativa." })));
+      // 009c: agravante da política (só aparece na infração que tem)
+      if (p.agravante) {
+        const cb = el("input", { type: "checkbox", id: "bq-agravante", onchange: (e) => { B.agravante = e.target.checked; renderNovo(); } });
+        cb.checked = !!B.agravante;
+        partes.push(el("label", { class: "agravante", for: "bq-agravante" }, cb,
+          el("span", {}, el("b", { text: "Agravante: " }), p.agravante.texto,
+            el("div", { class: "meta", text: p.agravante.encerramento ? "Marcado, vira encerramento de parceria." : `Marcado, a punição passa para ${horasTxt(p.agravante.horas)}.` }))));
+        if (B.agravante) partes.push(el("div", { class: "previa encerra" },
+          el("div", { class: "meta", text: "Com o agravante" }),
+          el("div", { class: "grande", text: p.agravante.encerramento ? "Encerramento de parceria" : `Aplicar ${horasTxt(p.agravante.horas)} de bloqueio` })));
+      }
     }
     if (p.comentarios?.length) partes.push(el("div", { class: "panel", style: "margin:0" },
       el("h3", { text: "Comentários sobre este entregador" }), listaComentarios(p.comentarios.slice(0, 5))));
@@ -479,6 +513,7 @@
           g.fim ? el("div", { text: `Até ${dt(g.fim)}.` }) : null,
           el("div", { class: "meta", text: `Tarefa de contato enviada para ${g.responsavel}.` })) : null,
         el("div", { class: "actions" },
+          botaoMensagem({ leve: true, nome: r.nome, cidade: r.cidade, infracao: r.infracao, infracao_id: r.infracao_id }, { leves: r.leves, limite: r.limite }),
           el("button", { class: "btn primary", type: "button", onclick: () => { B.resultado = null; B.previa = null; renderNovo(); $("#bq-id").focus(); } }, "Registrar outra"),
           el("button", { class: "btn", type: "button", onclick: () => { B.resultado = null; verNoHistorico(r.id_app); } }, "Ver no Histórico")));
     }
@@ -486,13 +521,15 @@
       el("div", { class: "meta", text: `Bloqueio registrado: ${r.nome} · ${ord(r.ocorrencia)} ocorrência de “${r.infracao}”` }),
       el("div", { class: "grande", text: r.horas == null ? "Encerramento de parceria registrado" : `Aplique ${horasTxt(r.horas)} de bloqueio` }),
       r.fim ? el("div", { text: `Até ${dt(r.fim)}. O sistema retira o bloqueio sozinho nesse horário.` }) : null,
+      r.agravante ? el("div", { class: "meta", text: `Com agravante: ${r.agravante}.` }) : null,
       el("div", { class: "meta", text: r.tarefa ? `Tratativa enviada para ${r.responsavel}. Você recebe um aviso quando ela for feita.` : "Bloqueio curto: sem tratativa." }),
       el("div", { class: "actions" },
+        botaoMensagem({ ...r, situacao: r.horas == null ? "encerramento" : "bloqueado" }),
         el("button", { class: "btn primary", type: "button", onclick: () => { B.resultado = null; B.previa = null; renderNovo(); $("#bq-id").focus(); } }, "Registrar outro"),
         el("button", { class: "btn", type: "button", onclick: () => { B.resultado = null; verNoHistorico(r.id_app); } }, "Ver no Histórico")));
   }
-  $("#bq-id").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, ""); B.resultado = null; pedirPrevia(); });
-  $("#bq-infracao").addEventListener("change", () => { B.resultado = null; pedirPrevia(); });
+  $("#bq-id").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, ""); B.resultado = null; B.agravante = false; pedirPrevia(); });
+  $("#bq-infracao").addEventListener("change", () => { B.resultado = null; B.agravante = false; pedirPrevia(); });
   $("#bq-cidade").addEventListener("change", () => renderNovo());
   $("#bq-nome").addEventListener("change", () => renderNovo());
   $("#bq-form").addEventListener("input", () => ($("#bq-erro").hidden = true));
@@ -513,7 +550,7 @@
     if (leve) {
       try {
         const r = await rpc("registrar_infracao_leve", { p_id_app: v.id, p_infracao: Number(v.inf), p_observacao: v.obs || null, p_comentario: v.com || null });
-        B.resultado = { ...r, leve: true, id_app: v.id, infracao: todasInfracoes().find((i) => String(i.id) === v.inf)?.nome };
+        B.resultado = { ...r, leve: true, id_app: v.id, infracao_id: Number(v.inf), infracao: todasInfracoes().find((i) => String(i.id) === v.inf)?.nome };
         $("#bq-form").reset(); B.previa = null;
         toast(r.gerado ? "Infração leve registrada e bloqueio normal gerado." : `Infração leve registrada: aplique ${horasTxt(r.horas)}.`);
         renderNovo(); carregar();
@@ -522,8 +559,10 @@
       return;
     }
     try {
-      const r = await rpc("registrar_bloqueio", { p_id_app: v.id, p_nome: v.nome, p_cidade: v.cidade, p_infracao: Number(v.inf), p_observacao: v.obs || null, p_comentario: v.com || null });
-      B.resultado = { ...r, nome: v.nome, infracao: todasInfracoes().find((i) => String(i.id) === v.inf)?.nome, responsavel: respDaCidade(v.cidade) };
+      const r = await rpc("registrar_bloqueio_agravante", { p_id_app: v.id, p_nome: v.nome, p_cidade: v.cidade, p_infracao: Number(v.inf), p_observacao: v.obs || null,
+        p_comentario: v.com || null, p_agravante: !!(B.agravante && B.previa?.agravante) });
+      B.agravante = false;
+      B.resultado = { ...r, nome: v.nome, cidade: v.cidade, infracao: todasInfracoes().find((i) => String(i.id) === v.inf)?.nome, responsavel: respDaCidade(v.cidade) };
       const cidade = v.cidade;
       $("#bq-form").reset(); $("#bq-cidade").value = cidade;
       B.previa = null;
@@ -791,6 +830,7 @@
           b.motivo_liberacao ? fld("Motivo da liberação", b.motivo_liberacao) : null,
           b.importado ? fld("Origem", "Veio da planilha") : null)),
       el("div", { class: "det-bloco" }, el("h4", { text: "Tratativa" }), el("div", { class: "trat-completa" }, bulletTratativa(b))),
+      b.dados_pendentes || sit === "revertido" ? null : el("div", { class: "actions" }, botaoMensagem(b), el("span", { class: "meta", text: sit === "liberado_antes" ? "Mensagem de liberação antes do prazo." : b.leve ? "Aviso de infração leve." : b.horas == null ? "Mensagem de encerramento de parceria." : "Mensagem de restrição temporária." })),
       el("div", { class: "det-bloco" }, el("h4", { text: "O que aconteceu" }),
         !ev ? el("p", { class: "meta", text: "Carregando histórico…" }) : ev.erro ? el("p", { class: "err", text: ev.erro })
           : ev.length ? el("ol", { class: "timeline det-linha" }, ev.map((x) => el("li", {},

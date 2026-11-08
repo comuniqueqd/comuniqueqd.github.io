@@ -40,6 +40,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008d-avisos-parte2.sql"
 // 009b (Ferramentas e Financeiro). A 009a (horas da política) não entra aqui: os passos do e2e usam as horas antigas;
 // ela é testada no financeiro.test.mjs.
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009b-ferramentas-financeiro.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009c-mensagens-agravante.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -91,7 +92,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009b"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009c"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -263,7 +264,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Calculadora de bairro") && await s.isVisible(".faixa-novidades >> text=e mais: 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Gerar mensagem") && await s.isVisible(".faixa-novidades >> text=e mais: 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -702,7 +703,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009b", "008d", "008c", "008b", "008"]), "as novidades de 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -912,6 +913,33 @@ try {
   ok(await esperar(a8, "#fe-t-tabela tr:has-text('BREJO') >> text=R$ 17,00"), "editar a tarifa de um bairro");
   await ir(s8, "#ferramentas/tarifas"); await s8.reload();
   ok(await esperar(s8, "#fe-t-tabela tr:has-text('CENTRO')") && !(await s8.isVisible("#fe-t-tabela >> text=Editar")) && !(await s8.isVisible("#fe-t-novo")), "suporte consulta as tarifas sem editar");
+
+  // 21. 009c · agravante no Novo bloqueio e mensagens prontas ("restrição temporária", nunca "bloqueio")
+  await ir(a8, "#bloqueios/novo"); await a8.reload();
+  await a8.waitForFunction(() => document.querySelector("#bq-infracao")?.options.length > 1, null, { timeout: 8000 }).catch(() => {});
+  await a8.fill("#bq-id", "ret00001"); await a8.fill("#bq-nome", "Rita Retida"); await a8.selectOption("#bq-cidade", "LAGARTO - SE");
+  await a8.selectOption("#bq-infracao", { label: "Retenção de Valores ou Equipamentos de Pagamento" });
+  ok(await esperar(a8, "#bq-previa label.agravante >> text=Não respondeu ao contato do suporte em até 8 horas"), "infração com agravante mostra a caixinha na prévia");
+  await a8.check("#bq-agravante");
+  ok(await esperar(a8, "#bq-previa .previa >> text=Com o agravante"), "marcar o agravante mostra a punição com ele");
+  await a8.screenshot({ path: path.join(PRINTS, "k1-agravante.png"), fullPage: true });
+  await a8.click("#bq-enviar");
+  ok(await esperar(a8, "#bq-previa >> text=Com agravante: Não respondeu"), "registrado com agravante");
+  await a8.click("#bq-previa button:has-text('Gerar mensagem')");
+  ok(await esperar(a8, "dialog.janela textarea.msg-texto"), "Gerar mensagem abre a janela com o texto pronto");
+  const msg = await a8.inputValue("dialog.janela textarea.msg-texto");
+  ok(msg.startsWith("Olá, Rita.") && msg.includes("Retenção de Valores") && msg.includes("até 1 hora") && msg.includes("não respondeu ao contato do suporte") && !/bloqueio/i.test(msg),
+    "mensagem com o primeiro nome, a infração, a regra da política e o agravante, sem a palavra bloqueio");
+  await a8.screenshot({ path: path.join(PRINTS, "k2-gerar-mensagem.png") });
+  await a8.click("dialog.janela >> text=Fechar");
+  await ir(a8, "#ferramentas/mensagens"); await a8.reload();
+  await a8.waitForFunction(() => document.querySelector("#fe-msg-modelo")?.options.length > 1, null, { timeout: 8000 }).catch(() => {});
+  await a8.selectOption("#fe-msg-modelo", "parceiro_ativacao");
+  await a8.fill("#fe-msg-estab", "Padaria Teste"); await a8.selectOption("#fe-msg-cidade", "LAGARTO - SE");
+  const txt = await a8.inputValue("#fe-msg-texto");
+  ok(txt.includes("Olá, Padaria Teste!") && txt.includes("Aqui é Mateus") && txt.includes("em LAGARTO - SE") && await a8.isHidden("[data-msg-campo=nome]"), "Mensagens prontas: modelo do parceiro preenchido, só com os campos que ele usa");
+  ok(await esperar(a8, "#fe-msg-regras tr:has-text('Retenção de Valores') >> text=até 1 hora") && await a8.isVisible("#fe-msg-modelos >> text=Editar"), "explicação de cada regra e moderador edita os modelos");
+  await a8.screenshot({ path: path.join(PRINTS, "k3-mensagens-prontas.png"), fullPage: true });
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });
