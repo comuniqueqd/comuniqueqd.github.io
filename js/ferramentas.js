@@ -147,7 +147,10 @@
   // ---------- mensagens prontas (009c) ----------
   // marcadores: {nome} {infracao} {regra} {ocorrencia} {punicao} {termino} {agravante} {reincidencia} {cidade}
   //             {estabelecimento} {meu_nome} {leves_limite} {leves_janela} {leves_situacao}
-  const M = { dados: null, erro: null, chave: "" };
+  const M = { dados: null, erro: null, tipo: "", opcao: 1 };
+  // 009c2: cada modelo tem tipo e opção (1, 2, 3); sem nome, o "movimento alto" vira a versão para a cidade
+  const tipoDe = (m) => m.tipo || m.chave, opcaoDe = (m) => m.opcao || 1;
+  const PARA_CIDADE = { engajamento_movimento: "engajamento_cidade" };
   const MARCADORES = "{nome} {infracao} {regra} {ocorrencia} {punicao} {termino} {agravante} {reincidencia} {cidade} {estabelecimento} {meu_nome} {leves_limite} {leves_janela} {leves_situacao}";
   const primeiroNome = (n) => { const p = (n || "").trim().split(/\s+/)[0] || ""; return p ? p[0].toUpperCase() + p.slice(1).toLowerCase() : ""; };
   const preencher = (texto, v) => texto.replace(/\{(\w+)\}/g, (m, k) => (v[k] ?? "")).replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
@@ -176,7 +179,7 @@
   App.mensagens = { carregar: carregarMensagens, abrir: abrirMensagem, primeiroNome, preencher,
     explicacao: (id) => M.dados?.infracoes.find((i) => i.id === id)?.explicacao || "" };
 
-  $("#fe-msg-modelo").addEventListener("change", (e) => { M.chave = e.target.value; renderMensagens(true); });
+  $("#fe-msg-modelo").addEventListener("change", (e) => { M.tipo = e.target.value; M.opcao = 1; renderMensagens(true); });
   ["#fe-msg-nome", "#fe-msg-estab", "#fe-msg-cidade"].forEach((s) => $(s).addEventListener("input", () => renderMensagens(true)));
   $("#fe-msg-form").addEventListener("submit", (e) => e.preventDefault());
   $("#fe-msg-copiar").addEventListener("click", () => copiar($("#fe-msg-texto").value, $("#fe-msg-texto")));
@@ -184,19 +187,33 @@
     const D = M.dados;
     if (!D) { $("#fe-msg-modelos").replaceChildren(carregandoEl()); return; }
     const livres = D.modelos.filter((m) => m.grupo !== "bloqueio");
+    // um item por tipo no seletor (a versão "para a cidade" entra sozinha quando não há nome)
+    const tipos = [...new Map(livres.filter((m) => m.grupo !== "cidade").map((m) => [tipoDe(m), m])).values()];
     const sel = $("#fe-msg-modelo");
-    if (sel.options.length !== livres.length) sel.replaceChildren(...livres.map((m) => el("option", { value: m.chave, text: m.titulo })));
-    if (!M.chave || !livres.some((m) => m.chave === M.chave)) { M.chave = livres[0]?.chave || ""; refazer = true; }
-    sel.value = M.chave;
+    if (sel.options.length !== tipos.length) sel.replaceChildren(...tipos.map((m) => el("option", { value: tipoDe(m), text: m.titulo.replace(/\s*\(.*\)$/, "") })));
+    if (!M.tipo || !tipos.some((m) => tipoDe(m) === M.tipo)) { M.tipo = tipos[0] ? tipoDe(tipos[0]) : ""; M.opcao = 1; refazer = true; }
+    sel.value = M.tipo;
     const cs = $("#fe-msg-cidade"), cids = (F.dados?.cidades || []).map((c) => c.nome);
     if (cs.options.length !== cids.length + 1) { const a = cs.value; cs.replaceChildren(el("option", { value: "", text: "Escolha a cidade" }), ...cids.map((c) => el("option", { value: c, text: c }))); cs.value = a; }
-    const mod = livres.find((m) => m.chave === M.chave);
-    document.querySelectorAll("[data-msg-campo]").forEach((x) => (x.hidden = !mod || !mod.texto.includes("{" + x.dataset.msgCampo + "}")));
-    if (refazer && mod) $("#fe-msg-texto").value = preencher(mod.texto, { nome: primeiroNome($("#fe-msg-nome").value) || "[nome]",
+    const nome = primeiroNome($("#fe-msg-nome").value);
+    const paraCidade = !nome && PARA_CIDADE[M.tipo] && livres.some((m) => tipoDe(m) === PARA_CIDADE[M.tipo]);
+    const tipoUsado = paraCidade ? PARA_CIDADE[M.tipo] : M.tipo;
+    const opcoes = livres.filter((m) => tipoDe(m) === tipoUsado).sort((a, b) => opcaoDe(a) - opcaoDe(b));
+    if (!opcoes.some((m) => opcaoDe(m) === M.opcao)) M.opcao = opcoes[0] ? opcaoDe(opcoes[0]) : 1;
+    const mod = opcoes.find((m) => opcaoDe(m) === M.opcao);
+    $("#fe-msg-opcoes").replaceChildren(...(opcoes.length > 1 ? [el("span", { class: "meta", text: "Texto:" }), ...opcoes.map((m) =>
+      el("button", { class: "chip", type: "button", "aria-pressed": String(opcaoDe(m) === M.opcao), onclick: () => { M.opcao = opcaoDe(m); renderMensagens(true); } }, `Opção ${opcaoDe(m)}`))] : []));
+    const dica = $("#fe-msg-dica");
+    dica.hidden = !PARA_CIDADE[M.tipo];
+    dica.textContent = paraCidade ? "Sem nome do entregador: a mensagem sai para os entregadores da cidade." : "Com o nome do entregador, a mensagem sai para ele. Deixe em branco para mandar para a cidade toda.";
+    // campos: o nome aparece sempre que o tipo usa nome (mesmo na versão para a cidade, para poder preencher)
+    const base = livres.find((m) => tipoDe(m) === M.tipo);
+    document.querySelectorAll("[data-msg-campo]").forEach((x) => (x.hidden = !base || !(base.texto.includes("{" + x.dataset.msgCampo + "}") || mod?.texto.includes("{" + x.dataset.msgCampo + "}"))));
+    if (refazer && mod) $("#fe-msg-texto").value = preencher(mod.texto, { nome: nome || "[nome]",
       estabelecimento: $("#fe-msg-estab").value.trim() || "[estabelecimento]", cidade: cs.value || "[cidade]", meu_nome: primeiroNome(S.me?.nome) });
     // lista dos modelos (moderador edita)
     $("#fe-msg-modelos").replaceChildren(el("ul", { class: "lista-modelos" }, D.modelos.map((m) => el("li", {},
-      el("strong", { text: m.titulo }), el("span", { class: "meta", text: m.grupo === "bloqueio" ? " · sai pelo bloqueio" : "" }),
+      el("strong", { text: m.titulo }), el("span", { class: "meta", text: (opcaoDe(m) > 1 || D.modelos.some((x) => x !== m && tipoDe(x) === tipoDe(m)) ? ` · opção ${opcaoDe(m)}` : "") + (m.grupo === "bloqueio" ? " · sai pelo bloqueio" : "") }),
       D.pode_editar ? el("button", { class: "btn link", type: "button", onclick: () => editarModelo(m) }, "Editar") : null))));
     // explicação de cada regra
     $("#fe-msg-regras").replaceChildren(...tabela([["Infração"], ["O que diz a regra"], ["Agravante"], [""]],

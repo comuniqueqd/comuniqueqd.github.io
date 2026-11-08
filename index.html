@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009c">
+<link rel="stylesheet" href="estilo.css?v=009c2">
 </head>
 <body>
 <header class="top">
@@ -267,11 +267,13 @@
     <div class="two" style="align-items:start">
       <form class="cad" id="fe-msg-form" novalidate>
         <label for="fe-msg-modelo">Modelo <select id="fe-msg-modelo"></select></label>
+        <div class="chips" id="fe-msg-opcoes" aria-label="Opções do texto"></div>
         <div class="grid2">
           <label for="fe-msg-nome" data-msg-campo="nome">Nome do entregador <input id="fe-msg-nome" autocomplete="off" maxlength="120"></label>
           <label for="fe-msg-estab" data-msg-campo="estabelecimento">Nome do estabelecimento <input id="fe-msg-estab" autocomplete="off" maxlength="120"></label>
           <label for="fe-msg-cidade" data-msg-campo="cidade">Cidade <select id="fe-msg-cidade"></select></label>
         </div>
+        <p class="meta" id="fe-msg-dica" hidden></p>
         <label for="fe-msg-texto">Mensagem <span class="hint">Pode ajustar antes de copiar.</span><textarea id="fe-msg-texto" rows="9"></textarea></label>
         <div class="actions"><button class="btn primary" type="button" id="fe-msg-copiar">Copiar mensagem</button></div>
       </form>
@@ -612,18 +614,18 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/base.js?v=009c"></script>
-<script src="js/inicio.js?v=009c"></script>
-<script src="js/ativacao.js?v=009c"></script>
-<script src="js/bloqueios.js?v=009c"></script>
-<script src="js/entregadores.js?v=009c"></script>
-<script src="js/atividades.js?v=009c"></script>
-<script src="js/avisos.js?v=009c"></script>
-<script src="js/analises.js?v=009c"></script>
-<script src="js/registros.js?v=009c"></script>
-<script src="js/equipe.js?v=009c"></script>
-<script src="js/ferramentas.js?v=009c"></script>
-<script src="js/financeiro.js?v=009c"></script>
-<script src="js/busca.js?v=009c"></script>
+<script src="js/base.js?v=009c2"></script>
+<script src="js/inicio.js?v=009c2"></script>
+<script src="js/ativacao.js?v=009c2"></script>
+<script src="js/bloqueios.js?v=009c2"></script>
+<script src="js/entregadores.js?v=009c2"></script>
+<script src="js/atividades.js?v=009c2"></script>
+<script src="js/avisos.js?v=009c2"></script>
+<script src="js/analises.js?v=009c2"></script>
+<script src="js/registros.js?v=009c2"></script>
+<script src="js/equipe.js?v=009c2"></script>
+<script src="js/ferramentas.js?v=009c2"></script>
+<script src="js/financeiro.js?v=009c2"></script>
+<script src="js/busca.js?v=009c2"></script>
 </body>
 </html>

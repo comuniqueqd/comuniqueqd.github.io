@@ -41,6 +41,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008d-avisos-parte2.sql"
 // ela é testada no financeiro.test.mjs.
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009b-ferramentas-financeiro.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009c-mensagens-agravante.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009c2-mensagens-opcoes.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -950,6 +951,14 @@ try {
   await a8.fill("#fe-msg-estab", "Padaria Teste"); await a8.selectOption("#fe-msg-cidade", "LAGARTO - SE");
   const txt = await a8.inputValue("#fe-msg-texto");
   ok(txt.includes("Olá, Padaria Teste!") && txt.includes("Aqui é Mateus") && txt.includes("em LAGARTO - SE") && await a8.isHidden("[data-msg-campo=nome]"), "Mensagens prontas: modelo do parceiro preenchido, só com os campos que ele usa");
+  ok(txt.includes("PDF") && txt.includes("áudio"), "mensagem do parceiro avisa do PDF e do áudio");
+  await a8.selectOption("#fe-msg-modelo", "engajamento_movimento");
+  await a8.fill("#fe-msg-nome", "");
+  ok((await a8.inputValue("#fe-msg-texto")).includes("entregadores de LAGARTO - SE") && await a8.isVisible("#fe-msg-dica >> text=para os entregadores da cidade"), "movimento alto sem nome: mensagem para a cidade");
+  await a8.fill("#fe-msg-nome", "ana souza");
+  ok((await a8.inputValue("#fe-msg-texto")).startsWith("Fala, Ana!"), "movimento alto com nome: mensagem para o entregador");
+  await a8.click("#fe-msg-opcoes button:has-text('Opção 2')");
+  ok((await a8.inputValue("#fe-msg-texto")).startsWith("Ana, tudo certo?") && (await a8.$$("#fe-msg-opcoes button")).length === 3, "três opções de texto para escolher");
   ok(await esperar(a8, "#fe-msg-regras tr:has-text('Retenção de Valores') >> text=até 1 hora") && await a8.isVisible("#fe-msg-modelos >> text=Editar"), "explicação de cada regra e moderador edita os modelos");
   await a8.screenshot({ path: path.join(PRINTS, "k3-mensagens-prontas.png"), fullPage: true });
 

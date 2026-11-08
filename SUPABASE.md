@@ -302,5 +302,6 @@ O que muda:
 - **Gerar mensagem** depois de registrar um bloqueio ou uma infração leve, e no Histórico: texto pronto com o primeiro nome do entregador, o motivo, a regra explicada (da Política de Boas Práticas e Conduta), o tempo e o término previsto. Bloqueio temporário aparece como **"restrição temporária"**.
 - **Agravante** no Novo bloqueio: retenção de valores sem resposta ao suporte em 8 h (conta como a próxima ocorrência) e uso da conta por terceiro menor de 18 anos (encerra a parceria). Fica anotado no registro.
 - **Avisos rápidos** na tela inicial: na retenção de valores, o Novo bloqueio pergunta "Já foi solucionado?". Se não, aparece para todos como "Aguardando prestação de contas" (com o nome do entregador, ou o ID) até alguém marcar como resolvido; a resolução fica no histórico do bloqueio.
+- **009c2 (`supabase/009c2-mensagens-opcoes.sql`, rodar depois da 009c, pode rodar de novo)**: três opções de texto para cada mensagem de engajamento, versão "para a cidade" do movimento alto (sem nome do entregador) e a mensagem do parceiro avisando do PDF e do áudio. Textos já editados no app não são trocados.
 - **Ferramentas → Mensagens prontas**: engajamento de entregadores e primeiro contato com o parceiro. Moderadores editam os modelos e a explicação de cada regra.
 

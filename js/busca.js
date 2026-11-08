@@ -59,7 +59,7 @@
       ["Restrição temporária", "Nas mensagens ao entregador, o bloqueio temporário aparece como “restrição temporária”."],
       ["Agravante", "Algumas infrações têm agravante na política (ex.: não responder o suporte em 8 horas na retenção). Marque a caixinha no Novo bloqueio e a punição sobe."],
       ["Avisos rápidos", "Retenção de valores ainda não resolvida? Marque “Não” em “Já foi solucionado?” e ela fica na tela inicial de todos como “Aguardando prestação de contas”, até alguém marcar como resolvido."],
-      ["Mensagens prontas", "Em Ferramentas: engajamento de entregadores e o primeiro contato com o parceiro, preenchidos com nome e cidade."],
+      ["Mensagens prontas", "Em Ferramentas: engajamento de entregadores (3 opções de texto cada) e o primeiro contato com o parceiro, que avisa do PDF e do áudio. Sem o nome do entregador, o “movimento alto” sai para a cidade toda."],
       ["O que diz cada regra", "A explicação de cada infração, tirada da política, fica em Ferramentas → Mensagens prontas."]] },
     { versao: "009b", tema: "🧮 Ferramentas do dia a dia e o Financeiro", itens: [
       ["Calculadora de bairro", "Em Ferramentas: o cliente informou um bairro e a entrega terminou em outro? Escolha os dois e veja quanto falta pagar ao entregador. Dá para registrar o ajuste ali mesmo."],

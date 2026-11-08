@@ -16,7 +16,7 @@ for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/
   "../supabase/008b-notificacoes.sql", "../supabase/008c-analises.sql", "../supabase/008d-avisos-parte2.sql",
   "../supabase/009a-regras-politica.sql", "../supabase/009b-ferramentas-financeiro.sql", "../supabase/009c-mensagens-agravante.sql",
   // rodar de novo não pode quebrar
-  "../supabase/009c-mensagens-agravante.sql"]) await db.query(arquivo(f));
+  "../supabase/009c-mensagens-agravante.sql", "../supabase/009c2-mensagens-opcoes.sql", "../supabase/009c2-mensagens-opcoes.sql"]) await db.query(arquivo(f));
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -128,6 +128,17 @@ await t("resolver o aviso rápido: qualquer pessoa; some da tela e fica no hist�
   await falha(rpc(sup, "resolver_aviso_rapido", { p_id: a.id }), "já foi resolvido");
   const n = await um("select texto from notificacoes where texto like '%marcou como resolvido%' order by id desc limit 1");
   if (!n?.texto.includes("aguardando prestação de contas")) throw new Error("aviso de Registros: " + n?.texto);
+});
+
+await t("009c2: três opções por mensagem de engajamento, versão para a cidade e o parceiro avisa do PDF e do áudio", async () => {
+  const m = (await rpc(sup, "mensagens")).modelos;
+  const conta = (tipo) => m.filter((x) => x.tipo === tipo).map((x) => x.opcao);
+  for (const tp of ["engajamento_movimento", "engajamento_reconhecimento", "engajamento_voltar", "engajamento_cidade"]) igual(conta(tp), [1, 2, 3], tp + ":");
+  igual(conta("parceiro_ativacao"), [1]);
+  if (m.filter((x) => x.grupo === "cidade").some((x) => x.texto.includes("{nome}"))) throw new Error("versão para a cidade não pode pedir nome");
+  const p = m.find((x) => x.chave === "parceiro_ativacao").texto;
+  if (!p.includes("PDF") || !p.includes("áudio")) throw new Error(p);
+  igual(m.find((x) => x.chave === "liberacao").texto, "Olá, {nome}! Liberado.", "texto editado no app não é trocado:");
 });
 
 await t("segurança: a tabela de modelos não abre direto; a função interna não fica exposta", async () => {
