@@ -87,7 +87,7 @@ await t("prévia: mostra a punição com o agravante (retenção 1ª: 24 h, com 
 });
 
 await t("registrar com agravante: conta como a próxima ocorrência e fica anotado", async () => {
-  const r = await rpc(sup, "registrar_bloqueio_agravante", { p_id_app: "agr00001", p_nome: "Ana Agravo", p_cidade: "LAGARTO - SE", p_infracao: RET, p_agravante: true });
+  const r = await rpc(sup, "registrar_bloqueio_agravante", { p_id_app: "agr00001", p_nome: "Ana Agravo", p_cidade: "LAGARTO - SE", p_infracao: RET, p_agravante: true, p_solucionado: true });
   igual([r.ocorrencia, num(r.horas), r.agravante.includes("8 horas"), r.tarefa], [1, 168, true, true]);
   const ev = await um("select detalhe from eventos_bloqueio where bloqueio_id = $1 and tipo = 'registrado'", [r.id]);
   if (!ev.detalhe.includes("agravante")) throw new Error(ev.detalhe);
@@ -100,10 +100,34 @@ await t("agravante que encerra: encerramento já na 1ª, com tarefa de encerrame
 });
 
 await t("sem agravante: igual ao registro normal; agravante em infração sem agravante é recusado", async () => {
-  const r = await rpc(sup, "registrar_bloqueio_agravante", { p_id_app: "agr00003", p_nome: "Caio Normal", p_cidade: "LAGARTO - SE", p_infracao: RET });
-  igual([num(r.horas), r.agravante], [24, null]);
+  const r = await rpc(sup, "registrar_bloqueio_agravante", { p_id_app: "agr00003", p_nome: "Caio Normal", p_cidade: "LAGARTO - SE", p_infracao: RET, p_solucionado: true });
+  igual([num(r.horas), r.agravante, r.pendencia], [24, null, null]);
   await falha(rpc(sup, "registrar_bloqueio_agravante", { p_id_app: "agr00004", p_nome: "Dani", p_cidade: "LAGARTO - SE", p_infracao: MAL, p_agravante: true }), "não tem agravante");
-  await falha(rpc(sup, "registrar_bloqueio_agravante", { p_id_app: "agr00003", p_nome: "Caio Normal", p_cidade: "LAGARTO - SE", p_infracao: RET }), "há poucos minutos");
+  await falha(rpc(sup, "registrar_bloqueio_agravante", { p_id_app: "agr00003", p_nome: "Caio Normal", p_cidade: "LAGARTO - SE", p_infracao: RET, p_solucionado: true }), "há poucos minutos");
+});
+
+await t("pendência: retenção pergunta se já foi solucionado; se não, nasce o aviso rápido na tela inicial", async () => {
+  igual((await rpc(sup, "previa_bloqueio", { p_id_app: "pen00001", p_infracao: RET })).pendencia, "Aguardando prestação de contas");
+  igual((await rpc(sup, "previa_bloqueio", { p_id_app: "pen00001", p_infracao: MAL })).pendencia, null);
+  await falha(rpc(sup, "registrar_bloqueio_agravante", { p_id_app: "pen00001", p_nome: "Paulo Pendente", p_cidade: "LAGARTO - SE", p_infracao: RET }), "já foi solucionado");
+  const r = await rpc(sup, "registrar_bloqueio_agravante", { p_id_app: "pen00001", p_nome: "Paulo Pendente", p_cidade: "LAGARTO - SE", p_infracao: RET, p_solucionado: false });
+  igual(r.pendencia, "Aguardando prestação de contas");
+  const av = (await rpc(mon, "resumo_e_avisos")).resumo.avisos_rapidos;
+  igual(av.map((a) => [a.titulo, a.nome, a.id_app, a.criado_por_nome]), [["Aguardando prestação de contas", "Paulo Pendente", "pen00001", "Eduarda"]]);
+  // sem pendência em outra infração, mesmo com p_solucionado falso
+  await rpc(sup, "registrar_bloqueio_agravante", { p_id_app: "pen00002", p_nome: "Quem", p_cidade: "LAGARTO - SE", p_infracao: MAL, p_solucionado: false });
+  igual((await rpc(admin, "resumo_e_avisos")).resumo.avisos_rapidos.length, 1);
+});
+
+await t("resolver o aviso rápido: qualquer pessoa; some da tela e fica no histórico do bloqueio", async () => {
+  const [a] = (await rpc(admin, "resumo_e_avisos")).resumo.avisos_rapidos;
+  await rpc(mon, "resolver_aviso_rapido", { p_id: a.id, p_nota: "Prestou contas na loja" });
+  igual((await rpc(sup, "resumo_e_avisos")).resumo.avisos_rapidos, []);
+  const ev = await um("select tipo, por_nome, detalhe from eventos_bloqueio where bloqueio_id = $1 and tipo = 'pendencia_resolvida'", [a.bloqueio_id]);
+  igual([ev.por_nome, ev.detalhe], ["Jocimara", "Aguardando prestação de contas · Prestou contas na loja"]);
+  await falha(rpc(sup, "resolver_aviso_rapido", { p_id: a.id }), "já foi resolvido");
+  const n = await um("select texto from notificacoes where texto like '%marcou como resolvido%' order by id desc limit 1");
+  if (!n?.texto.includes("aguardando prestação de contas")) throw new Error("aviso de Registros: " + n?.texto);
 });
 
 await t("segurança: a tabela de modelos não abre direto; a função interna não fica exposta", async () => {

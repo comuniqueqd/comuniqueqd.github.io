@@ -16,7 +16,13 @@
 --   Regra permanente: bloqueio temporário se chama "restrição temporária".
 -- * registrar_bloqueio_agravante(): igual ao registrar_bloqueio, com p_agravante.
 --   (nome novo de propósito: não cria uma segunda versão de registrar_bloqueio)
--- * previa_bloqueio(): ganha o bloco "agravante" (texto e punição com ele).
+-- * previa_bloqueio(): ganha o bloco "agravante" (texto e punição com ele) e a "pendencia".
+-- * Pendência e avisos rápidos (pedido do usuário): infracoes.pendencia (ex.: retenção de
+--   valores → "Aguardando prestação de contas"). No Novo bloqueio pergunta-se "já foi
+--   solucionado?"; se não, nasce um aviso rápido (avisos_rapidos) que fica na tela inicial
+--   de todos até alguém marcar como resolvido (resolver_aviso_rapido). Resolver grava o
+--   evento "pendencia_resolvida" no histórico do bloqueio. A tabela é genérica: na 009d
+--   recebe também o aviso geral e o pedido de ajuda.
 --
 -- Pode rodar mais de uma vez. Rodar depois da 009b.
 -- =====================================================================
@@ -25,6 +31,35 @@ alter table public.infracoes add column if not exists explicacao text check (len
 alter table public.infracoes add column if not exists agravante text check (length(agravante) <= 160);
 alter table public.infracoes add column if not exists agravante_efeito text check (agravante_efeito in ('mais_uma', 'encerra'));
 alter table public.bloqueios add column if not exists agravante text;
+alter table public.infracoes add column if not exists pendencia text check (length(pendencia) <= 80);
+update public.infracoes set pendencia = 'Aguardando prestação de contas'
+ where nome = 'Retenção de Valores ou Equipamentos de Pagamento' and pendencia is null;
+
+-- avisos rápidos da tela inicial (genérico: hoje a pendência do bloqueio; na 009d, aviso geral e ajuda)
+create table if not exists public.avisos_rapidos (
+  id                 bigint generated always as identity primary key,
+  tipo               text not null check (tipo in ('pendencia')),
+  titulo             text not null,
+  bloqueio_id        uuid references public.bloqueios (id) on delete cascade,
+  id_app             text,
+  nome               text,
+  cidade             text,
+  criado_por         uuid,
+  criado_por_nome    text,
+  criado_em          timestamptz not null default now(),
+  resolvido_em       timestamptz,
+  resolvido_por      uuid,
+  resolvido_por_nome text,
+  nota               text check (length(nota) <= 500)
+);
+create index if not exists avisos_rapidos_abertos on public.avisos_rapidos (criado_em) where resolvido_em is null;
+alter table public.avisos_rapidos enable row level security;
+revoke all on public.avisos_rapidos from anon, authenticated;
+
+-- histórico do bloqueio ganha "pendência resolvida"
+alter table public.eventos_bloqueio drop constraint if exists eventos_bloqueio_tipo_check;
+alter table public.eventos_bloqueio add constraint eventos_bloqueio_tipo_check
+  check (tipo in ('registrado', 'liberado_antes', 'tratativa_concluida', 'corrigido', 'revisado', 'realocada', 'pendencia_resolvida'));
 
 -- explicações da política (só onde ainda não há)
 update public.infracoes i set explicacao = p.txt, atualizada_em = now(), atualizada_por = 'política de conduta (009c)'
@@ -154,9 +189,11 @@ returns numeric language sql immutable as $$
   select case when i.agravante_efeito = 'encerra' then null else public.horas_previstas(i, n + 1) end
 $$;
 
+drop function if exists public.registrar_bloqueio_agravante(text, text, text, smallint, text, text, boolean);
+-- p_solucionado: só para infração com pendência (ex.: retenção). Falso = nasce o aviso rápido.
 create or replace function public.registrar_bloqueio_agravante(
   p_id_app text, p_nome text, p_cidade text, p_infracao smallint, p_observacao text default null,
-  p_comentario text default null, p_agravante boolean default false)
+  p_comentario text default null, p_agravante boolean default false, p_solucionado boolean default null)
 returns jsonb language plpgsql security definer set search_path = public as $$
 declare
   v_id     text := regexp_replace(coalesce(p_id_app, ''), '[^A-Za-z0-9]', '', 'g');
@@ -178,6 +215,9 @@ begin
   select * into i from public.infracoes where id = p_infracao and ativa and not leve;
   if i.id is null then raise exception 'Escolha a infração.'; end if;
   usar := coalesce(p_agravante, false);
+  if i.pendencia is not null and p_solucionado is null then
+    raise exception 'Diga se já foi solucionado (%).', lower(i.pendencia);
+  end if;
   if usar and i.agravante is null then raise exception 'Esta infração não tem agravante.'; end if;
   perform pg_advisory_xact_lock(hashtext(lower(v_id)));
   select * into ja from public.bloqueios
@@ -198,8 +238,14 @@ begin
                                  (select nome from public.membros where email = public.meu_email()), v_obs);
   end if;
   perform public.anotar_entregador(v_id, 'comentario', p_comentario, b.id);
+  if i.pendencia is not null and not p_solucionado then
+    insert into public.avisos_rapidos (tipo, titulo, bloqueio_id, id_app, nome, cidade, criado_por, criado_por_nome)
+    values ('pendencia', i.pendencia, b.id, b.id_app, case when b.dados_pendentes then null else b.nome_entregador end, b.cidade,
+            auth.uid(), public.nome_de(auth.uid()));
+  end if;
   return jsonb_build_object('id', b.id, 'ocorrencia', b.ocorrencia, 'horas', b.horas, 'fim', b.fim, 'agravante', b.agravante,
-    'infracao_id', i.id, 'tarefa', exists (select 1 from public.tarefas where bloqueio_id = b.id));
+    'infracao_id', i.id, 'tarefa', exists (select 1 from public.tarefas where bloqueio_id = b.id),
+    'pendencia', case when i.pendencia is not null and not p_solucionado then i.pendencia end);
 end $$;
 
 -- prévia: + o agravante da infração (texto e punição com ele)
@@ -207,6 +253,12 @@ do $$
 declare def text;
 begin
   def := pg_get_functiondef('public.previa_bloqueio(text, smallint)'::regprocedure);
+  if position('''pendencia''' in def) = 0 then
+    def := replace(def, '''nome_conhecido'', conh.nome,', '''pendencia'', case when not coalesce(i.leve, false) then i.pendencia end,
+    ''nome_conhecido'', conh.nome,');
+    execute def;
+    def := pg_get_functiondef('public.previa_bloqueio(text, smallint)'::regprocedure);
+  end if;
   if position('''agravante''' in def) = 0 then
     def := replace(def, '''nome_conhecido'', conh.nome,',
       '''agravante'', case when i.agravante is not null and not coalesce(i.leve, false) and n is not null then jsonb_build_object(
@@ -215,6 +267,77 @@ begin
     ''nome_conhecido'', conh.nome,');
     if position('''agravante''' in def) = 0 then raise exception '009c: não achei onde pôr o agravante na previa_bloqueio'; end if;
     execute def;
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------------
+-- Avisos rápidos
+-- ---------------------------------------------------------------------
+create or replace function public.avisos_rapidos_abertos()
+returns jsonb language sql stable security definer set search_path = public as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id', a.id, 'tipo', a.tipo, 'titulo', a.titulo, 'id_app', a.id_app,
+      'nome', coalesce(a.nome, (select e.nome from public.entregadores e where e.id_app = lower(a.id_app))),
+      'cidade', a.cidade, 'bloqueio_id', a.bloqueio_id, 'criado_em', a.criado_em, 'criado_por_nome', a.criado_por_nome)
+      order by a.criado_em), '[]')
+    from public.avisos_rapidos a where a.resolvido_em is null
+$$;
+
+-- qualquer pessoa da equipe marca como resolvido
+create or replace function public.resolver_aviso_rapido(p_id bigint, p_nota text default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare a public.avisos_rapidos;
+begin
+  perform public.exigir_papel('moderador', 'monitorador', 'suporte');
+  update public.avisos_rapidos set resolvido_em = now(), resolvido_por = auth.uid(), resolvido_por_nome = public.nome_de(auth.uid()),
+         nota = nullif(btrim(coalesce(p_nota, '')), '')
+   where id = p_id and resolvido_em is null
+  returning * into a;
+  if a.id is null then raise exception 'Este aviso já foi resolvido.'; end if;
+  if a.bloqueio_id is not null then
+    insert into public.eventos_bloqueio (bloqueio_id, tipo, por, por_nome, detalhe)
+    values (a.bloqueio_id, 'pendencia_resolvida', auth.uid(), a.resolvido_por_nome, a.titulo || coalesce(' · ' || a.nota, ''));
+  end if;
+end $$;
+
+-- resumo do topo: + avisos rápidos abertos (todos veem)
+create or replace function public.resumo_e_avisos()
+returns jsonb language plpgsql stable security definer set search_path = public as $$
+begin
+  perform public.exigir_papel('moderador', 'monitorador', 'suporte');
+  return jsonb_build_object(
+    'resumo', public.resumo_inicio() || jsonb_build_object(
+      'pedidos_acesso', case when public.meu_papel() = 'moderador' then (select count(*) from public.pedidos_acesso) end,
+      'bloqueios_revisar', case when public.meu_papel_bloq() is not null then (select count(*) from public.bloqueios where revisar is not null) end,
+      'versao', (select n from public.versao_dados),
+      'casos_abertos', (select count(*) from public.casos where status = 'aberto'),
+      'casos_para_mim', (select count(*) from public.casos k where public.caso_para_mim(k)),
+      'pedidos_cidade', case when public.sou_moderador() then coalesce((select jsonb_agg(jsonb_build_object('id', p.id, 'cidade', p.cidade,
+          'nome', p.nome, 'email', p.email, 'criado_em', p.criado_em,
+          'papel_bloqueios', (select m.papel_bloqueios from public.membros m where m.email = p.email)) order by p.id)
+        from public.pedidos_cidade p where p.status = 'pendente'), '[]') end,
+      'financeiro_pendentes', (select count(*) from public.lancamentos_financeiros where registrado_por = auth.uid() and not lancado),
+      'avisos_rapidos', public.avisos_rapidos_abertos()),
+    'notif', public.minhas_notificacoes());
+end $$;
+
+-- o aviso de Registros entende o evento novo
+do $$
+declare def text;
+begin
+  def := pg_get_functiondef('public.aviso_evento_bloqueio()'::regprocedure);
+  if position('pendencia_resolvida' in def) = 0 then
+    def := replace(def, $r$when 'realocada' then 'realocou a tratativa'$r$,
+      $r$when 'realocada' then 'realocou a tratativa' when 'pendencia_resolvida' then 'marcou como resolvido (' || lower(coalesce(new.detalhe, 'pendência')) || ')'$r$);
+    if position('pendencia_resolvida' in def) = 0 then raise exception '009c: não achei onde pôr o evento novo no aviso de bloqueios'; end if;
+    execute def;
+  end if;
+end $$;
+
+do $$ begin
+  if not exists (select 1 from pg_trigger g join pg_class c on c.oid = g.tgrelid where c.relname = 'avisos_rapidos' and g.tgname = 'marcar_mudanca_ins') then
+    create trigger marcar_mudanca_ins after insert on public.avisos_rapidos referencing new table as novas for each statement execute function public.marcar_mudanca_linhas();
+    create trigger marcar_mudanca_upd after update on public.avisos_rapidos referencing old table as antigas new table as novas for each statement execute function public.marcar_mudanca_linhas();
+    create trigger marcar_mudanca_del after delete on public.avisos_rapidos referencing old table as antigas for each statement execute function public.marcar_mudanca_linhas();
   end if;
 end $$;
 
@@ -229,12 +352,14 @@ do $$ begin
   end if;
 end $$;
 revoke all on function public.horas_com_agravante(public.infracoes, integer) from public, anon, authenticated;
+revoke all on function public.avisos_rapidos_abertos() from public, anon, authenticated;
 do $$
 declare f text;
 begin
   foreach f in array array['public.mensagens()', 'public.salvar_modelo_mensagem(text, text)',
                            'public.salvar_explicacao_infracao(smallint, text, text, text)',
-                           'public.registrar_bloqueio_agravante(text, text, text, smallint, text, text, boolean)',
+                           'public.registrar_bloqueio_agravante(text, text, text, smallint, text, text, boolean, boolean)',
+                           'public.resolver_aviso_rapido(bigint, text)', 'public.resumo_e_avisos()',
                            'public.previa_bloqueio(text, smallint)'] loop
     execute format('revoke all on function %s from public, anon', f);
     execute format('grant execute on function %s to authenticated', f);

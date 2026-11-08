@@ -153,7 +153,7 @@
       ? el("button", { class: "alerta-revisar", type: "button", title: "Revisar: " + b.revisar, onclick: (e) => { e.stopPropagation(); abrirCorrecao(b); } }, txt + " ›")
       : el("span", { class: "alerta-revisar", title: b.revisar, text: txt });
   }
-  const EVB = { registrado: "Registrado", liberado_antes: "Liberado antes do prazo", tratativa_concluida: "Tratativa realizada", corrigido: "Dados corrigidos", revisado: "Marcado como revisado", realocada: "Tratativa realocada" };
+  const EVB = { registrado: "Registrado", liberado_antes: "Liberado antes do prazo", tratativa_concluida: "Tratativa realizada", corrigido: "Dados corrigidos", revisado: "Marcado como revisado", realocada: "Tratativa realocada", pendencia_resolvida: "Pendência resolvida" };
   function opcoesCidade(atual) {
     const nomes = (B.regras?.cidades || []).filter((c) => c.ativa || c.nome === atual).map((c) => c.nome);
     return [el("option", { value: "", text: atual ? "Escolha a cidade" : "Sem cidade (escolha uma, se souber)" }), ...nomes.map((n) => el("option", { value: n, text: n }))];
@@ -474,6 +474,15 @@
         el("div", { class: "grande", text: p.encerramento ? "Encerramento de parceria" : `Aplicar ${horasTxt(p.horas)} de bloqueio` }),
         !p.encerramento ? el("div", { text: `Se registrar agora, o bloqueio termina em ${dt(new Date(Date.now() + p.horas * 3600000).toISOString())} e é retirado automaticamente.` }) : el("div", { text: "Bloqueio definitivo: o entregador não volta à operação." }),
         el("div", { class: "meta", text: p.gera_tratativa ? `Gera ${p.encerramento ? "tarefa de encerramento de parceria" : "tratativa"} para ${respDaCidade($("#bq-cidade").value)}.` : "Bloqueio curto: não gera tratativa." })));
+      // 009c: pendência (ex.: retenção → aguardando prestação de contas): já foi solucionado?
+      if (p.pendencia) {
+        const op = (v, rot) => { const r = el("input", { type: "radio", name: "bq-solucionado", value: v, onchange: () => { B.solucionado = v === "sim"; renderNovo(); } });
+          r.checked = B.solucionado === (v === "sim"); return el("label", {}, r, " " + rot); };
+        partes.push(el("div", { class: "pendencia-pergunta" },
+          el("div", {}, el("b", { text: "Já foi solucionado? " }), el("span", { class: "req", text: "*" }),
+            el("div", { class: "meta", text: `Se não, fica em Avisos rápidos na tela inicial como “${p.pendencia}” até alguém marcar como resolvido.` })),
+          el("div", { class: "opcoes", role: "radiogroup", "aria-label": "Já foi solucionado?" }, op("sim", "Sim"), op("nao", "Não"))));
+      }
       // 009c: agravante da política (só aparece na infração que tem)
       if (p.agravante) {
         const cb = el("input", { type: "checkbox", id: "bq-agravante", onchange: (e) => { B.agravante = e.target.checked; renderNovo(); } });
@@ -522,14 +531,15 @@
       el("div", { class: "grande", text: r.horas == null ? "Encerramento de parceria registrado" : `Aplique ${horasTxt(r.horas)} de bloqueio` }),
       r.fim ? el("div", { text: `Até ${dt(r.fim)}. O sistema retira o bloqueio sozinho nesse horário.` }) : null,
       r.agravante ? el("div", { class: "meta", text: `Com agravante: ${r.agravante}.` }) : null,
+      r.pendencia ? el("div", { class: "meta", text: `Ficou em Avisos rápidos na tela inicial: “${r.pendencia}”, até alguém marcar como resolvido.` }) : null,
       el("div", { class: "meta", text: r.tarefa ? `Tratativa enviada para ${r.responsavel}. Você recebe um aviso quando ela for feita.` : "Bloqueio curto: sem tratativa." }),
       el("div", { class: "actions" },
         botaoMensagem({ ...r, situacao: r.horas == null ? "encerramento" : "bloqueado" }),
         el("button", { class: "btn primary", type: "button", onclick: () => { B.resultado = null; B.previa = null; renderNovo(); $("#bq-id").focus(); } }, "Registrar outro"),
         el("button", { class: "btn", type: "button", onclick: () => { B.resultado = null; verNoHistorico(r.id_app); } }, "Ver no Histórico")));
   }
-  $("#bq-id").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, ""); B.resultado = null; B.agravante = false; pedirPrevia(); });
-  $("#bq-infracao").addEventListener("change", () => { B.resultado = null; B.agravante = false; pedirPrevia(); });
+  $("#bq-id").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, ""); B.resultado = null; B.agravante = false; B.solucionado = null; pedirPrevia(); });
+  $("#bq-infracao").addEventListener("change", () => { B.resultado = null; B.agravante = false; B.solucionado = null; pedirPrevia(); });
   $("#bq-cidade").addEventListener("change", () => renderNovo());
   $("#bq-nome").addEventListener("change", () => renderNovo());
   $("#bq-form").addEventListener("input", () => ($("#bq-erro").hidden = true));
@@ -544,7 +554,8 @@
     const v = { id: $("#bq-id").value.trim(), nome: $("#bq-nome").value.trim(), cidade: $("#bq-cidade").value, inf: $("#bq-infracao").value, obs: $("#bq-obs").value.trim(), com: $("#bq-comentario").value.trim() };
     const leve = B.tipo === "leve";
     const erro = v.id.length < 4 ? "Preencha o ID do entregador." : leve ? (!v.inf ? "Escolha o motivo." : "")
-      : !v.nome ? "Preencha o nome do entregador." : !v.cidade ? "Escolha a cidade." : !v.inf ? "Escolha a infração." : "";
+      : !v.nome ? "Preencha o nome do entregador." : !v.cidade ? "Escolha a cidade." : !v.inf ? "Escolha a infração."
+      : B.previa?.pendencia && B.solucionado == null ? `Diga se já foi solucionado (${B.previa.pendencia.toLowerCase()}).` : "";
     if (erro) { $("#bq-erro").textContent = erro; $("#bq-erro").hidden = false; return; }
     const btn = $("#bq-enviar"); btn.disabled = true;
     if (leve) {
@@ -560,8 +571,8 @@
     }
     try {
       const r = await rpc("registrar_bloqueio_agravante", { p_id_app: v.id, p_nome: v.nome, p_cidade: v.cidade, p_infracao: Number(v.inf), p_observacao: v.obs || null,
-        p_comentario: v.com || null, p_agravante: !!(B.agravante && B.previa?.agravante) });
-      B.agravante = false;
+        p_comentario: v.com || null, p_agravante: !!(B.agravante && B.previa?.agravante), p_solucionado: B.previa?.pendencia ? B.solucionado : null });
+      B.agravante = false; B.solucionado = null;
       B.resultado = { ...r, nome: v.nome, cidade: v.cidade, infracao: todasInfracoes().find((i) => String(i.id) === v.inf)?.nome, responsavel: respDaCidade(v.cidade) };
       const cidade = v.cidade;
       $("#bq-form").reset(); $("#bq-cidade").value = cidade;

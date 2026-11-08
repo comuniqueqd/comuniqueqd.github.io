@@ -58,6 +58,7 @@
       ["Gerar mensagem", "Depois de registrar um bloqueio ou uma leve (e no Histórico), o botão “Gerar mensagem” traz o texto pronto, já com o nome do entregador, o motivo, a regra explicada e o tempo. É só copiar."],
       ["Restrição temporária", "Nas mensagens ao entregador, o bloqueio temporário aparece como “restrição temporária”."],
       ["Agravante", "Algumas infrações têm agravante na política (ex.: não responder o suporte em 8 horas na retenção). Marque a caixinha no Novo bloqueio e a punição sobe."],
+      ["Avisos rápidos", "Retenção de valores ainda não resolvida? Marque “Não” em “Já foi solucionado?” e ela fica na tela inicial de todos como “Aguardando prestação de contas”, até alguém marcar como resolvido."],
       ["Mensagens prontas", "Em Ferramentas: engajamento de entregadores e o primeiro contato com o parceiro, preenchidos com nome e cidade."],
       ["O que diz cada regra", "A explicação de cada infração, tirada da política, fica em Ferramentas → Mensagens prontas."]] },
     { versao: "009b", tema: "🧮 Ferramentas do dia a dia e o Financeiro", itens: [

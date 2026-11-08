@@ -922,9 +922,14 @@ try {
   ok(await esperar(a8, "#bq-previa label.agravante >> text=Não respondeu ao contato do suporte em até 8 horas"), "infração com agravante mostra a caixinha na prévia");
   await a8.check("#bq-agravante");
   ok(await esperar(a8, "#bq-previa .previa >> text=Com o agravante"), "marcar o agravante mostra a punição com ele");
+  ok(await esperar(a8, "#bq-previa .pendencia-pergunta >> text=Já foi solucionado?"), "retenção pergunta se já foi solucionado");
+  await a8.click("#bq-enviar");
+  ok(await esperar(a8, "#bq-erro:not([hidden]) >> text=Diga se já foi solucionado"), "não registra sem responder se já foi solucionado");
+  await a8.check("input[name=bq-solucionado][value=nao]");
   await a8.screenshot({ path: path.join(PRINTS, "k1-agravante.png"), fullPage: true });
   await a8.click("#bq-enviar");
   ok(await esperar(a8, "#bq-previa >> text=Com agravante: Não respondeu"), "registrado com agravante");
+  ok(await esperar(a8, "#bq-previa >> text=Ficou em Avisos rápidos na tela inicial"), "não solucionado: avisa que ficou em Avisos rápidos");
   await a8.click("#bq-previa button:has-text('Gerar mensagem')");
   ok(await esperar(a8, "dialog.janela textarea.msg-texto"), "Gerar mensagem abre a janela com o texto pronto");
   const msg = await a8.inputValue("dialog.janela textarea.msg-texto");
@@ -932,6 +937,13 @@ try {
     "mensagem com o primeiro nome, a infração, a regra da política e o agravante, sem a palavra bloqueio");
   await a8.screenshot({ path: path.join(PRINTS, "k2-gerar-mensagem.png") });
   await a8.click("dialog.janela >> text=Fechar");
+  await ir(a8, "#inicio");
+  ok(await esperar(a8, "#inicio-rapidos .rapido >> text=Aguardando prestação de contas") && await a8.isVisible("#inicio-rapidos .rapido >> text=Rita Retida"), "tela inicial: Avisos rápidos com 'Aguardando prestação de contas' e o nome do entregador");
+  await a8.screenshot({ path: path.join(PRINTS, "k4-avisos-rapidos.png") });
+  await a8.click("#inicio-rapidos button:has-text('Marcar como resolvido')");
+  await a8.fill("dialog.janela input", "Prestou contas na loja");
+  await a8.click("dialog.janela button.primary");
+  ok(await esperar(a8, "#toast:has-text('Marcado como resolvido')") && await a8.waitForFunction(() => document.querySelector("#inicio-rapidos")?.hidden, null, { timeout: 8000 }).then(() => true, () => false), "marcar como resolvido tira o aviso da tela inicial");
   await ir(a8, "#ferramentas/mensagens"); await a8.reload();
   await a8.waitForFunction(() => document.querySelector("#fe-msg-modelo")?.options.length > 1, null, { timeout: 8000 }).catch(() => {});
   await a8.selectOption("#fe-msg-modelo", "parceiro_ativacao");

@@ -36,7 +36,35 @@
         vivo ? el("span", { class: "funcao-vivo", text: vivo }) : null),
       el("span", { class: "funcao-seta", "aria-hidden": "true", text: "→" }));
 
+  // 009c: avisos rápidos (pendências que esperam alguém resolver, ex.: aguardando prestação de contas)
+  function resolverRapido(a) {
+    const nota = el("input", { maxlength: 300, placeholder: "Ex.: prestou contas na loja às 15h" });
+    const erro = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    const d = App.u.janela(a.titulo,
+      el("p", { style: "margin:0", text: `${a.nome || "ID " + a.id_app}${a.cidade ? " · " + a.cidade : ""}` }),
+      el("label", {}, "O que foi resolvido (opcional)", nota), erro,
+      el("div", { class: "actions" },
+        el("button", { class: "btn primary", type: "button", onclick: async (e) => {
+          e.currentTarget.disabled = true;
+          try { await App.u.rpc("resolver_aviso_rapido", { p_id: a.id, p_nota: nota.value.trim() || null }); d.close(); App.u.toast("Marcado como resolvido."); App.carregar(); }
+          catch (err) { e.currentTarget.disabled = false; erro.textContent = App.u.msgErro(err); erro.hidden = false; }
+        } }, "Marcar como resolvido"),
+        el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
+  }
+  function renderRapidos() {
+    const box = $("#inicio-rapidos"), lista = S.resumo?.avisos_rapidos || [];
+    box.hidden = !lista.length;
+    box.replaceChildren(...(lista.length ? [el("h2", { class: "rapidos-titulo" }, "Avisos rápidos ", el("span", { class: "count alert", text: lista.length })),
+      el("div", { class: "rapidos-lista" }, lista.map((a) => el("article", { class: "rapido" },
+        el("div", { class: "rapido-tipo", text: a.titulo }),
+        el("div", { class: "rapido-quem" }, App.abrirFicha ? el("button", { class: "link-ficha", type: "button", onclick: () => App.abrirFicha(a.id_app) }, a.nome || "ID " + a.id_app) : (a.nome || "ID " + a.id_app),
+          a.nome ? el("span", { class: "mono meta", text: " " + a.id_app }) : null),
+        el("div", { class: "meta", text: `${a.cidade ? a.cidade + " · " : ""}há ${App.u.duracao(a.criado_em).txt} · por ${a.criado_por_nome || "—"}` }),
+        el("button", { class: "btn small", type: "button", onclick: () => resolverRapido(a) }, "Marcar como resolvido"))))] : []));
+  }
+
   function render() {
+    renderRapidos();
     const r = S.resumo, a = r?.ativacao, b = r?.bloqueios, at = r?.atividades;
     $("#ola").textContent = `Olá, ${S.me.nome.split(" ")[0]}!`;
 
