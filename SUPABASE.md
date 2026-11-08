@@ -269,3 +269,24 @@ O que muda:
 - **O suporte também revisa a planilha**: o cartão "Revisar registros da planilha" abre a lista para ele.
 - **Histórico de bloqueios mais completo**, como o da ativação: quadrinhos com os totais (clicar filtra), "Só os que eu registrei" e o histórico de cada registro ao clicar na linha.
 
+## Atualização 009a: punições iguais à Política de Boas Práticas e Conduta
+
+Para quem já rodou a 008d. Só muda as horas das infrações normais (os bloqueios já registrados guardam as horas de quando foram feitos). Pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/009a-regras-politica.sql`](supabase/009a-regras-politica.sql) inteiro e clique em **Run**. No fim aparece a tabela da 1ª à 5ª ocorrência de cada infração, para conferir.
+2. Se o aviso disser que alguma infração "não foi achada", ela foi renomeada na tela de Regras: ajuste por lá.
+
+## Atualização 009b: Ferramentas (calculadora de bairro, tarifas) e Financeiro (adicionais)
+
+Para quem já rodou a 009a. **Não apaga** nada e pode rodar mais de uma vez.
+
+1. **SQL Editor → New query**: cole [`supabase/009b-ferramentas-financeiro.sql`](supabase/009b-ferramentas-financeiro.sql) inteiro e clique em **Run**.
+2. Rode o arquivo de **importação dos bairros** (entregue à parte, fora do repositório): Tobias Barreto, Lagarto e Itabaiana. Pode rodar de novo (atualiza valores). No fim ele mostra quantos bairros cada cidade tem.
+3. Só depois publique o site.
+
+O que muda:
+
+- **Ferramentas** (menu novo): **Calculadora de bairro** (o entregador recebe valor − taxa do log; ajuste = bairro real − bairro informado, nunca negativo) e **Tarifas dos bairros** (consulta para todos; moderador da ativação cria e edita, com apelidos para nomes repetidos).
+- **Financeiro** (menu novo): **Registrar adicional** (adicional = valor combinado − valor da entrega; origem QD/outros, mercado, motivo), **Adicionais pendentes** (o que a pessoa registrou e ainda não lançou no sistema; qualquer um pode marcar como lançado) e **Lançamentos** (lista, números e CSV).
+- **Aviso** a cada adicional ou ajuste para o responsável da cidade, moderadores e quem segue a cidade (categoria "Financeiro", dá para silenciar).
+

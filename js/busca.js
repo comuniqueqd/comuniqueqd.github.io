@@ -50,10 +50,18 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "008d";
+  const VERSAO = "009b";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009b", tema: "🧮 Ferramentas do dia a dia e o Financeiro", itens: [
+      ["Calculadora de bairro", "Em Ferramentas: o cliente informou um bairro e a entrega terminou em outro? Escolha os dois e veja quanto falta pagar ao entregador. Dá para registrar o ajuste ali mesmo."],
+      ["Tarifas dos bairros", "Quanto cada bairro custa e quanto o entregador recebe (valor menos a taxa do log), por cidade."],
+      ["Registrar adicional", "No Financeiro: valor da entrega, do pedido e o combinado; o app calcula o adicional. Com botões de adicional rápido (+R$ 2, +R$ 5…)."],
+      ["Adicionais pendentes", "Registrou e ainda não lançou no sistema? Fica na sua lista de pendentes, com o número no menu, até alguém lançar."],
+      ["Lançamentos e números", "Quanto se paga a mais por cidade, motivo, tamanho do pedido, origem (QD ou outros), mercado e os bairros mais trocados."],
+      ["Regras pela política", "As punições seguem a Política de Boas Práticas e Conduta (continuam editáveis em Bloqueios → Regras)."],
+      ["Aviso de adicional", "O responsável da cidade recebe um aviso a cada adicional ou ajuste (dá para silenciar em Avisos)."]] },
     { versao: "008d", tema: "👀 De olho em tudo (e só no que importa)", itens: [
       ["De olho nele", "Na ficha do entregador, “Ficar de olho”: você recebe tudo o que acontecer com ele (bloqueio, leve, comentário, cadastro), de qualquer cidade."],
       ["Seguir cidade", "Em Avisos, “O que você acompanha e recebe”: siga as cidades que quiser, mesmo sem ser a responsável."],

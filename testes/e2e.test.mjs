@@ -37,6 +37,11 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008b-cadastrar-entregad
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008b-notificacoes.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008c-analises.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008d-avisos-parte2.sql"), "utf8"));
+// 009b (Ferramentas e Financeiro). A 009a (horas da política) não entra aqui: os passos do e2e usam as horas antigas;
+// ela é testada no financeiro.test.mjs.
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009b-ferramentas-financeiro.sql"), "utf8"));
+await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
+  ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
 for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001', 'Ciclano Atrasado', 'LAGARTO - SE', 'Atraso na Coleta ou na Entrega Sem Justificativa', now() - make_interval(days => $1), 'Planilha')", [d]);
 // registro importado com alerta de revisão (100 dias atrás: fora do painel de 30 dias)
@@ -86,7 +91,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "008d"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009b"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -258,7 +263,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=De olho nele") && await s.isVisible(".faixa-novidades >> text=e mais: 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Calculadora de bairro") && await s.isVisible(".faixa-novidades >> text=e mais: 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -273,7 +278,7 @@ try {
   await s.click("#aviso-versao >> text=Depois"); await s.unroute("**/versao.txt*");
   // 008c: funções em destaque na tela inicial
   { const fns = await s.$$eval("#inicio-funcoes a.funcao", (l) => l.map((x) => x.querySelector("b").textContent));
-    ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Novo bloqueio", "Cadastrar entregador", "Sugerir atividade", "Registros"]), "tela inicial: as 5 funções em destaque: " + fns); }
+    ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Novo bloqueio", "Cadastrar entregador", "Calculadora de bairro", "Registrar adicional", "Sugerir atividade", "Registros"]), "tela inicial: as 7 funções em destaque: " + fns); }
   await s.click("#fn-sugerir");
   ok(await esperar(s, "#v-at-sugeridas:not([hidden])") && await s.waitForFunction(() => document.querySelector("#at-nova-box")?.open && document.activeElement?.id === "at-titulo", null, { timeout: 5000 }).then(() => true, () => false), "Sugerir atividade abre a tela com o formulário aberto e o cursor no título");
   await ir(s, "#inicio"); await esperar(s, "#fn-ativacao");
@@ -697,7 +702,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["008d", "008c", "008b", "008"]), "as novidades de 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009b", "008d", "008c", "008b", "008"]), "as novidades de 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -864,6 +869,49 @@ try {
   await a8.click("#bq-hist-tiles button.tile.ativo");
   await a8.check("#bq-hist-meus");
   ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#bq-t-hist tbody tr.clicavel")]; return l.every((x) => x.textContent.includes("Mateus Lopes")); }, null, { timeout: 8000 }).then(() => true, () => false), "'Só os que eu registrei' mostra só os do moderador");
+
+  // 20. 009b · Ferramentas (calculadora de bairro, tarifas) e Financeiro (adicional, pendentes, lançamentos)
+  await ir(a8, "#inicio"); await a8.reload();
+  ok(await esperar(a8, "#inicio-funcoes #fn-calculadora") && await a8.isVisible("#inicio-funcoes #fn-adicional"), "tela inicial com Calculadora de bairro e Registrar adicional");
+  await a8.click("#fn-calculadora");
+  ok(await a8.waitForFunction(() => document.querySelector("#fe-cidade")?.value === "LAGARTO - SE", null, { timeout: 8000 }).then(() => true, () => false), "calculadora já escolhe a única cidade com bairros");
+  await a8.fill("#fe-informado", "centro"); await a8.fill("#fe-real", "Brejo");
+  ok(await esperar(a8, "#fe-resultado .fe-total strong:has-text('R$ 11,50')") && (await texto(a8, "#fe-resultado")).includes("R$ 4,50 para o entregador"), "calculadora: ajuste = recebe(real) − recebe(informado) = R$ 11,50");
+  await a8.fill("#fe-informado", "Aldemar de Carvalho");
+  ok(await esperar(a8, "#fe-resultado >> text=ADEMAR DE CARVALHO"), "calculadora acha o bairro pelo outro nome (apelido)");
+  await a8.fill("#fe-informado", "Centro");
+  await a8.fill("#fe-id", "fin00001"); await a8.fill("#fe-nome", "Zé das Entregas"); await a8.selectOption("#fe-origem", "qd");
+  await a8.screenshot({ path: path.join(PRINTS, "j1-calculadora.png"), fullPage: true });
+  await a8.click("#fe-enviar");
+  ok(await esperar(a8, "#toast:has-text('Ficou em Adicionais pendentes')"), "registrar o ajuste sem lançar: vai para os pendentes");
+  ok(await esperar(a8, "#c-fin:not([hidden]):has-text('1')"), "menu Financeiro mostra 1 pendente");
+  ok(await esperar(a8, "#v-fe-calc a.fin-pend"), "a calculadora mostra o atalho para os pendentes");
+  await ir(a8, "#financeiro/adicional");
+  await a8.fill("#fi-id", "mal00001"); await a8.check("input[name=fi-origem][value=qd]"); await a8.check("input[name=fi-mercado][value=nao]");
+  await a8.selectOption("#fi-motivo", "Chuva"); await a8.fill("#fi-entrega", "6"); await a8.fill("#fi-valor-pedido", "80");
+  await a8.click("#fi-rapidos button:has-text('+ R$ 5')");
+  ok((await a8.inputValue("#fi-combinado")) === "11,00" && await esperar(a8, "#fi-previa strong:has-text('R$ 5,00')"), "adicional rápido: combinado = entrega + R$ 5, prévia de R$ 5,00");
+  await a8.check("#fi-lancado");
+  await a8.screenshot({ path: path.join(PRINTS, "j2-registrar-adicional.png"), fullPage: true });
+  await a8.click("#fi-enviar");
+  ok(await esperar(a8, "#toast:has-text('Adicional de R$ 5,00 registrado.')"), "adicional registrado já lançado");
+  ok(await esperar(a8, "#fi-meus .fin-card >> text=Fulano de Tal Souza"), "o nome veio da ficha do entregador");
+  await ir(a8, "#financeiro/pendentes");
+  ok(await esperar(a8, "#fi-pend-lista .fin-card >> text=CENTRO → BREJO"), "Adicionais pendentes mostra o ajuste não lançado");
+  await a8.click("#fi-pend-lista button:has-text('Marcar como lançado')");
+  ok(await esperar(a8, "#fi-pend-lista >> text=Nada pendente") && await a8.waitForFunction(() => document.querySelector("#c-fin")?.hidden, null, { timeout: 8000 }).then(() => true, () => false), "marcar como lançado tira dos pendentes e zera o número do menu");
+  await ir(a8, "#financeiro/lancamentos");
+  ok(await esperar(a8, "#fi-l-tiles .tile >> text=R$ 16,50") && (await a8.$$("#fi-l-tabela tbody tr")).length === 2, "Lançamentos: total de R$ 16,50 e os 2 registros");
+  ok(!(await texto(a8, "#v-fi-lancamentos")).includes("null") && !(await texto(a8, "#v-fi-lancamentos")).includes("undefined"), "Lançamentos sem textos vazios (null)");
+  await a8.screenshot({ path: path.join(PRINTS, "j3-lancamentos.png"), fullPage: true });
+  await ir(a8, "#ferramentas/tarifas");
+  ok(await esperar(a8, "#fe-t-tabela tr:has-text('BREJO') >> text=R$ 16,00") && await a8.isVisible("#fe-t-novo"), "Tarifas: moderador vê o que o entregador recebe e pode editar");
+  await a8.click("#fe-t-tabela tr:has-text('BREJO') >> text=Editar");
+  await a8.fill("dialog.janela input >> nth=1", "17,99");
+  await a8.click("dialog.janela .actions button.primary");
+  ok(await esperar(a8, "#fe-t-tabela tr:has-text('BREJO') >> text=R$ 17,00"), "editar a tarifa de um bairro");
+  await ir(s8, "#ferramentas/tarifas"); await s8.reload();
+  ok(await esperar(s8, "#fe-t-tabela tr:has-text('CENTRO')") && !(await s8.isVisible("#fe-t-tabela >> text=Editar")) && !(await s8.isVisible("#fe-t-novo")), "suporte consulta as tarifas sem editar");
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

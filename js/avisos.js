@@ -9,13 +9,13 @@
   const S = App.S;
   const V = { lista: null, mais: false, cidades: [], carregandoMais: false, semResp: null, marcando: false, pref: null, dia: null };
   const FILTROS = [["", "Todos os avisos"], ["pessoal", "Para você (tarefas e decisões)"], ["ativacao", "Ativação"],
-    ["bloqueios", "Bloqueios"], ["leves", "Infrações leves (agrupadas)"], ["comentarios", "Comentários e fichas"], ["cidades", "Pedidos de cidade"]];
-  const ROTULO = { ativacao: "ATIVAÇÃO", bloqueios: "BLOQUEIOS", leves: "LEVES", comentarios: "FICHA", cidades: "CIDADE" };
+    ["bloqueios", "Bloqueios"], ["leves", "Infrações leves (agrupadas)"], ["comentarios", "Comentários e fichas"], ["cidades", "Pedidos de cidade"], ["financeiro", "Financeiro"]];
+  const ROTULO = { ativacao: "ATIVAÇÃO", bloqueios: "BLOQUEIOS", leves: "LEVES", comentarios: "FICHA", cidades: "CIDADE", financeiro: "FINANCEIRO" };
   const porque = (x) => ({ cidade: `você é responsável por ${x.cidade}`, moderador: "você é moderador", seguindo: `você segue ${x.cidade}`,
     de_olho: "você está de olho neste entregador" })[x.motivo] || null;
   // tipos que dá para silenciar (o que é para você e o "de olho nele" sempre chegam)
   const TIPOS = [["ativacao", "Ativação (cadastros enviados e decididos)"], ["bloqueios", "Bloqueios, tratativas e correções"],
-    ["leves", "Infrações leves (um aviso por cidade e dia)"], ["comentarios", "Comentários e alterações nas fichas"], ["cidades", "Pedidos para ser responsável de cidade"]];
+    ["leves", "Infrações leves (um aviso por cidade e dia)"], ["comentarios", "Comentários e alterações nas fichas"], ["cidades", "Pedidos para ser responsável de cidade"], ["financeiro", "Financeiro (adicionais e ajustes de bairro)"]];
 
   // ---------- o que acompanho e o que recebo ----------
   async function carregarPref() { V.pref = await rpc("minhas_preferencias"); return V.pref; }

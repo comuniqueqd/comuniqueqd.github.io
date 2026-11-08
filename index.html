@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=008d6">
+<link rel="stylesheet" href="estilo.css?v=009b">
 </head>
 <body>
 <header class="top">
@@ -28,6 +28,8 @@
       <a href="#inicio" data-mod="inicio">Início</a>
       <a href="#ativacao" data-grupo="entregadores">Entregadores <span class="count alert" id="c-grupo-entregadores" hidden title="Esperando por você">0</span></a>
       <a href="#atividades" data-mod="atividades">Atividades</a>
+      <a href="#ferramentas" data-mod="ferramentas">Ferramentas</a>
+      <a href="#financeiro" data-mod="financeiro">Financeiro <span class="count alert" id="c-fin" hidden title="Seus lançamentos que ainda não foram lançados no sistema">0</span></a>
       <a href="#analises" data-mod="analises">Análises</a>
       <a href="#registros" data-mod="registros">Registros</a>
       <a href="#equipe" data-mod="equipe">Equipe <span class="count alert" id="c-pedidos" hidden>0</span></a>
@@ -202,6 +204,122 @@
         <div id="en-recentes"></div>
       </div>
     </div>
+  </section>
+
+  <!-- 009b: Ferramentas -->
+  <section class="view" id="v-fe-calc" hidden>
+    <h2>Calculadora de bairro</h2>
+    <p class="sub">O cliente informou um bairro e a entrega terminou em outro? A calculadora mostra quanto falta pagar ao entregador. O entregador recebe o valor do bairro menos a taxa do log.</p>
+    <div class="fin-atalho" data-fin-atalho></div>
+    <div class="two" style="align-items:start">
+      <form class="cad" id="fe-form" novalidate>
+        <label for="fe-cidade"><span>Cidade <span class="req">*</span></span><select id="fe-cidade"></select></label>
+        <div class="grid2">
+          <label for="fe-informado"><span>Bairro informado pelo cliente <span class="req">*</span></span>
+            <input id="fe-informado" list="fe-bairros" autocomplete="off" placeholder="Digite para buscar"></label>
+          <label for="fe-real"><span>Bairro onde a entrega terminou <span class="req">*</span></span>
+            <input id="fe-real" list="fe-bairros" autocomplete="off" placeholder="Digite para buscar"></label>
+        </div>
+        <datalist id="fe-bairros"></datalist>
+        <div id="fe-resultado" aria-live="polite"></div>
+        <fieldset class="fe-registrar" id="fe-registrar" hidden>
+          <legend>Registrar o ajuste para o entregador</legend>
+          <div class="grid2">
+            <label for="fe-id"><span>ID do entregador <span class="req">*</span></span><input id="fe-id" class="mono" autocomplete="off" spellcheck="false" maxlength="40"></label>
+            <label for="fe-nome">Nome do entregador <span class="hint">Em branco: usa o da ficha.</span><input id="fe-nome" autocomplete="off" maxlength="120"></label>
+            <label for="fe-origem"><span>De onde veio o pedido <span class="req">*</span></span><select id="fe-origem"><option value="">Escolha</option><option value="qd">QD</option><option value="outros">Outros</option></select></label>
+            <label for="fe-pedido">Número do pedido <span class="hint">Opcional.</span><input id="fe-pedido" autocomplete="off" maxlength="60"></label>
+          </div>
+          <label for="fe-motivo">Motivo <select id="fe-motivo"><option value="Cliente informou o bairro errado">Cliente informou o bairro errado</option><option value="Endereço desatualizado no app">Endereço desatualizado no app</option><option value="Outro">Outro</option></select></label>
+          <label class="check"><input type="checkbox" id="fe-lancado"> Já lancei no sistema (o entregador vai receber)</label>
+          <p class="warn-msg" id="fe-erro" role="alert" hidden></p>
+          <div class="actions"><button class="btn primary" type="submit" id="fe-enviar">Registrar ajuste</button><button class="btn" type="reset">Limpar</button></div>
+        </fieldset>
+      </form>
+      <div class="panel" style="margin:0">
+        <h3>Como funciona</h3>
+        <ol class="passos">
+          <li>Escolha a cidade e os dois bairros. Dá para digitar só um pedaço do nome.</li>
+          <li>A diferença é o que o entregador deixou de receber. Se der negativa, fica zero (e isso não deveria acontecer: confira os bairros).</li>
+          <li>Registre o ajuste. Se ainda não lançou no sistema, ele fica em <a href="#financeiro/pendentes">Adicionais pendentes</a> até alguém lançar.</li>
+        </ol>
+        <p class="meta" id="fe-km" hidden>Cidades cobradas por km ainda não entram na calculadora.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-fe-tarifas" hidden>
+    <h2>Tarifas dos bairros</h2>
+    <p class="sub">Quanto cada bairro custa e quanto o entregador recebe (valor menos a taxa do log). Só moderadores alteram.</p>
+    <div class="toolbar">
+      <select id="fe-t-cidade" aria-label="Cidade"></select>
+      <input id="fe-t-q" type="search" placeholder="Buscar bairro" aria-label="Buscar bairro">
+      <label class="check"><input type="checkbox" id="fe-t-inativos"> Mostrar desativados</label>
+      <button class="btn" type="button" id="fe-t-novo" hidden>+ Novo bairro</button>
+    </div>
+    <div class="tablewrap"><table id="fe-t-tabela"></table></div>
+  </section>
+
+  <!-- 009b: Financeiro -->
+  <section class="view" id="v-fi-adicional" hidden>
+    <h2>Registrar adicional</h2>
+    <p class="sub">O que foi combinado com o entregador além do valor da entrega. O adicional é o valor combinado menos o valor da entrega.</p>
+    <div class="fin-atalho" data-fin-atalho></div>
+    <div class="two" style="align-items:start">
+      <form class="cad" id="fi-form" novalidate>
+        <div class="grid2">
+          <label for="fi-id"><span>ID do entregador <span class="req">*</span></span><input id="fi-id" class="mono" autocomplete="off" spellcheck="false" maxlength="40"></label>
+          <label for="fi-nome">Nome do entregador <span class="hint">Em branco: usa o da ficha.</span><input id="fi-nome" autocomplete="off" maxlength="120"></label>
+          <label for="fi-cidade">Cidade <span class="hint">Em branco: usa a da ficha.</span><select id="fi-cidade"></select></label>
+          <label for="fi-pedido">Número do pedido <span class="hint">Opcional.</span><input id="fi-pedido" autocomplete="off" maxlength="60"></label>
+        </div>
+        <div class="grid2">
+          <div class="campo"><span>De onde veio o pedido <span class="req">*</span></span>
+            <div class="opcoes" role="radiogroup" aria-label="De onde veio o pedido">
+              <label><input type="radio" name="fi-origem" value="qd"> QD</label><label><input type="radio" name="fi-origem" value="outros"> Outros</label></div></div>
+          <div class="campo"><span>É pedido de mercado? <span class="req">*</span></span>
+            <div class="opcoes" role="radiogroup" aria-label="É pedido de mercado?">
+              <label><input type="radio" name="fi-mercado" value="sim"> Sim</label><label><input type="radio" name="fi-mercado" value="nao"> Não</label></div></div>
+        </div>
+        <label for="fi-motivo"><span>Motivo <span class="req">*</span></span>
+          <select id="fi-motivo"><option value="">Escolha</option><option>Pedido grande</option><option>Distância</option><option>Chuva</option><option>Horário de pico</option><option>Sem entregador disponível</option><option>Outro</option></select></label>
+        <div class="grid3">
+          <label for="fi-entrega"><span>Valor da entrega (R$) <span class="req">*</span></span><input id="fi-entrega" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+          <label for="fi-valor-pedido"><span>Valor do pedido (R$) <span class="req">*</span></span><input id="fi-valor-pedido" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+          <label for="fi-combinado"><span>Valor combinado, total (R$) <span class="req">*</span></span><input id="fi-combinado" inputmode="decimal" autocomplete="off" placeholder="0,00"></label>
+        </div>
+        <div class="chips" id="fi-rapidos" aria-label="Adicional rápido"></div>
+        <div id="fi-previa" aria-live="polite"></div>
+        <label for="fi-obs">Observação <span class="hint">Opcional.</span><textarea id="fi-obs" rows="2" maxlength="500"></textarea></label>
+        <label class="check"><input type="checkbox" id="fi-lancado"> Já lancei no sistema (o entregador vai receber)</label>
+        <p class="warn-msg" id="fi-erro" role="alert" hidden></p>
+        <div class="actions"><button class="btn primary" type="submit" id="fi-enviar">Registrar adicional</button><button class="btn" type="reset">Limpar</button></div>
+      </form>
+      <div class="panel" style="margin:0">
+        <h3>Seus últimos registros</h3>
+        <div id="fi-meus"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-fi-pendentes" hidden>
+    <h2>Adicionais pendentes</h2>
+    <p class="sub">Adicionais e ajustes que você registrou e ainda não foram lançados no sistema. Enquanto não forem lançados, o entregador não recebe.</p>
+    <div id="fi-pend-lista"></div>
+  </section>
+
+  <section class="view" id="v-fi-lancamentos" hidden>
+    <h2>Lançamentos</h2>
+    <p class="sub">Tudo o que foi pago ao entregador fora da corrida normal: adicionais e ajustes de bairro.</p>
+    <div class="toolbar">
+      <select id="fi-l-dias" aria-label="Período"><option value="7">Últimos 7 dias</option><option value="30" selected>Últimos 30 dias</option><option value="90">Últimos 90 dias</option><option value="365">Último ano</option></select>
+      <select id="fi-l-cidade" aria-label="Cidade"><option value="">Todas as cidades</option></select>
+      <select id="fi-l-tipo" aria-label="Tipo"><option value="">Adicionais e ajustes</option><option value="adicional">Só adicionais</option><option value="ajuste_bairro">Só ajustes de bairro</option></select>
+      <button class="btn" type="button" id="fi-l-csv">Baixar CSV</button>
+    </div>
+    <div class="tiles" id="fi-l-tiles"></div>
+    <div class="two" id="fi-l-graficos"></div>
+    <div class="panel"><h3>Registros</h3><div class="tablewrap"><table id="fi-l-tabela"></table></div></div>
   </section>
 
   <section class="view" id="v-bq-atencao" hidden>
@@ -466,16 +584,18 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/base.js?v=008d6"></script>
-<script src="js/inicio.js?v=008d6"></script>
-<script src="js/ativacao.js?v=008d6"></script>
-<script src="js/bloqueios.js?v=008d6"></script>
-<script src="js/entregadores.js?v=008d6"></script>
-<script src="js/atividades.js?v=008d6"></script>
-<script src="js/avisos.js?v=008d6"></script>
-<script src="js/analises.js?v=008d6"></script>
-<script src="js/registros.js?v=008d6"></script>
-<script src="js/equipe.js?v=008d6"></script>
-<script src="js/busca.js?v=008d6"></script>
+<script src="js/base.js?v=009b"></script>
+<script src="js/inicio.js?v=009b"></script>
+<script src="js/ativacao.js?v=009b"></script>
+<script src="js/bloqueios.js?v=009b"></script>
+<script src="js/entregadores.js?v=009b"></script>
+<script src="js/atividades.js?v=009b"></script>
+<script src="js/avisos.js?v=009b"></script>
+<script src="js/analises.js?v=009b"></script>
+<script src="js/registros.js?v=009b"></script>
+<script src="js/equipe.js?v=009b"></script>
+<script src="js/ferramentas.js?v=009b"></script>
+<script src="js/financeiro.js?v=009b"></script>
+<script src="js/busca.js?v=009b"></script>
 </body>
 </html>
