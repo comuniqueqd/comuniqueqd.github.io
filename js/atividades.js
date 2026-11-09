@@ -48,9 +48,9 @@
         detalhe: "Bloqueios com a marca “revisar” (dados conflitantes da importação). Cada um corrigido ou conferido sai da conta.",
         acoes: [el("button", { class: "btn small", type: "button", onclick: () => App.bloqueios?.abrirRevisar?.() }, "Abrir os registros para revisar")] }));
     // Atividades sugeridas: para aceitar e as que você aceitou
-    for (const a of A.atividades.filter((x) => (x.status === "aberta" && x.pode_aceitar && !x.opcional_para_mim && x.criada_por !== S.me.id) || (x.status === "aceita" && x.aceita_por === S.me.id)))
+    for (const a of A.atividades.filter((x) => (x.status === "aberta" && x.pode_aceitar && !x.opcional_para_mim && x.criada_por !== S.me.id) || (x.status === "aceita" && x.sou_participante)))
       itens.push(item({ modulo: "ATIVIDADE", titulo: a.titulo, estado: a.status === "aceita" ? "concluida" : "pendente",
-        detalhe: a.status === "aceita" ? `Você aceitou há ${duracao(a.aceita_em).txt}${a.prazo ? " · prazo " + dt(a.prazo) : ""}.`
+        detalhe: a.status === "aceita" ? `${a.participantes?.length > 1 ? "Com " + a.participantes.join(", ") + " · " : ""}Você está nela; aceita há ${duracao(a.aceita_em).txt}${a.prazo ? " · prazo " + dt(a.prazo) : ""}.`
           : `Sugerida por ${a.criada_por_nome} há ${duracao(a.criada_em).txt}${a.para_mim ? " para você" : ""}, esperando alguém aceitar.`,
         acoes: [el("a", { class: "btn small", href: "#atividades/sugeridas" }, a.status === "aceita" ? "Concluir" : "Ver e aceitar"),
           a.cadastro_id ? el("button", { class: "btn link", type: "button", onclick: () => App.abrirCadastro(a.cadastro_id) }, "Completar o cadastro") : null].filter(Boolean),
@@ -302,7 +302,8 @@
     const nota = cx ? el("textarea", { rows: "2", maxlength: "600", placeholder: "Como ficou? (opcional)", "aria-label": "Nota da conclusão", oninput: (e) => (cx.texto = e.target.value) }) : null;
     if (nota) nota.value = cx.texto;
     const prevPassou = a.status === "aceita" && a.previsao && new Date(a.previsao) < Date.now();
-    const minha = a.aceita_por === S.me.id;
+    const minha = a.sou_participante;
+    const quemEsta = (a.participantes?.length ? a.participantes : [a.aceita_por_nome]).map((n) => (n === S.me.nome ? "você" : n)).join(", ");
     const tempos = a.status === "aberta" ? null
       : a.modo === "registro" ? "Registro do que já foi feito"
       : a.status === "concluida" ? (a.seg_execucao == null ? null : `Esperou ${tempo(a.seg_espera)} até alguém pegar · levou ${tempo(a.seg_execucao)}`)
@@ -318,7 +319,8 @@
       el("div", { class: "meta", text: `Criada por ${a.criada_por === S.me.id ? "você" : a.criada_por_nome} em ${dt(a.criada_em)}${a.cidade ? " · " + a.cidade : ""}${a.modo === "registro" ? "" : " · " + para}` }),
       a.prazo && a.status !== "concluida" ? el("div", { class: "meta" + (atrasada ? " err" : ""), text: `Prazo: ${dt(a.prazo)}${atrasada ? " (passou)" : ""}` }) : null,
       a.aguardando_desde ? el("div", { class: "bullet aguardando" }, el("span", {}, el("b", { text: "⏳ Aguardando terceiro" }), ` desde ${dt(a.aguardando_desde)}: ${a.aguardando_motivo}`)) : null,
-      a.status === "aceita" && !a.aguardando_desde ? el("div", { class: "bullet pendente" }, el("span", {}, el("b", { text: "Em andamento" }), ` com ${minha ? "você" : a.aceita_por_nome} desde ${dt(a.aceita_em)}`)) : null,
+      a.status === "aceita" && !a.aguardando_desde ? el("div", { class: "bullet pendente" }, el("span", {}, el("b", { text: "Em andamento" }), ` com ${quemEsta} desde ${dt(a.aceita_em)}`)) : null,
+      a.pode_entrar ? el("div", { class: "bullet juntos" }, el("span", {}, el("b", { text: "🤝 Já tem gente trabalhando nela" }), ` (${quemEsta}). Dá para entrar junto: as suas aprovações também contam.`)) : null,
       a.status === "aceita" ? App.u.previsao(a, "atividade", a.id, a.pode_prever) : null,
       a.status === "concluida" ? el("div", { class: "bullet concluida" }, el("span", {}, el("b", { text: "Concluída" }), ` por ${a.concluida_por_nome} em ${dt(a.concluida_em)}${a.nota ? " — " + a.nota : ""}`)) : null,
       tempos ? el("div", { class: "meta tempos", text: "⏱ " + tempos }) : null,
@@ -328,14 +330,15 @@
       a.revisao ? el("div", { class: "bullet " + (a.revisao.resultado === "ok" ? "concluida" : "atrasada") }, el("span", {},
         el("b", { text: a.revisao.resultado === "ok" ? "✅ Revisada: tudo certo" : "✏️ Revisada: pediu ajuste" }), ` por ${a.revisao.por_nome}${a.revisao.comentario ? " — " + a.revisao.comentario : ""}`)) : null,
       el("div", { class: "actions" },
-        a.pode_aceitar ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Tarefa aceita. Ela está com você.") }, "Eu faço") : null,
+        a.pode_aceitar ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, a.compartilhavel ? "Tarefa aceita. Outras pessoas ainda podem entrar junto." : "Tarefa aceita. Ela está com você.") }, "Eu faço") : null,
+        a.pode_entrar ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Você entrou na tarefa. Suas aprovações contam junto.") }, "🤝 Entrar junto") : null,
         a.status === "aberta" ? el("button", { class: "btn small", type: "button", onclick: () => janelaPedir(a) }, "Pedir para alguém") : null,
         a.cadastro_id && a.status !== "concluida" ? el("button", { class: "btn small", type: "button", onclick: () => App.abrirCadastro(a.cadastro_id) }, "Completar o cadastro") : null,
         a.pode_concluir && !cx ? el("button", { class: "btn approve small", type: "button", onclick: () => { A.caixa["a" + a.id] = { texto: "" }; render(); } }, "Concluir") : null,
         cx ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("concluir_atividade", { p_id: a.id, p_nota: cx.texto || null }, e.currentTarget, "Tarefa concluída.") }, "Confirmar conclusão") : null,
         cx ? el("button", { class: "btn link", type: "button", onclick: () => { delete A.caixa["a" + a.id]; render(); } }, "Cancelar") : null,
-        a.pode_concluir && !cx && !a.aguardando_desde ? el("button", { class: "btn small", type: "button", onclick: () => janelaAguardar(a) }, "⏳ Aguardando terceiro") : null,
-        a.pode_concluir && a.aguardando_desde ? el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoAtividade("aguardar_terceiro", { p_id: a.id, p_motivo: null }, e.currentTarget, "Tarefa retomada.") }, "▶ Retomar") : null,
+        a.pode_concluir && !a.pode_entrar && !cx && !a.aguardando_desde ? el("button", { class: "btn small", type: "button", onclick: () => janelaAguardar(a) }, "⏳ Aguardando terceiro") : null,
+        a.pode_concluir && !a.pode_entrar && a.aguardando_desde ? el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoAtividade("aguardar_terceiro", { p_id: a.id, p_motivo: null }, e.currentTarget, "Tarefa retomada.") }, "▶ Retomar") : null,
         el("button", { class: "btn small quiet", type: "button", onclick: () => janelaComentarios(a) }, `💬 ${a.comentarios || ""}`.trim()),
         a.pode_agradecer ? el("button", { class: "btn small quiet", type: "button", "aria-pressed": String(a.agradeci), onclick: (e) => acaoAtividade("agradecer_tarefa", { p_id: a.id }, e.currentTarget, a.agradeci ? null : "Agradecimento enviado.") }, a.agradeci ? "👏 Agradecido" : "👏 Agradecer") : null,
         el("span", { class: "spacer" }),
@@ -371,11 +374,11 @@
     App.painel?.renderRecorrentes();
     const box = $("#at-sug-lista"), l = A.atividades;
     if (!l) return box.replaceChildren(carregandoEl());
-    const paraMim = (a) => (a.status === "aberta" && a.para_mim) || (a.status === "aceita" && a.aceita_por === S.me.id);
+    const paraMim = (a) => (a.status === "aberta" && a.para_mim) || (a.status === "aceita" && a.sou_participante);
     const grupos = [
       ["Para você", l.filter(paraMim)],
-      ["Abertas: quem puder, pega", l.filter((a) => a.status === "aberta" && !a.para_mim).sort((x, y) => String(x.prazo || "9").localeCompare(String(y.prazo || "9")) || String(x.criada_em).localeCompare(String(y.criada_em)))],
-      ["Em andamento com a equipe", l.filter((a) => a.status === "aceita" && a.aceita_por !== S.me.id)],
+      ["Abertas: quem puder, pega", l.filter((a) => (a.status === "aberta" && !a.para_mim) || a.pode_entrar).sort((x, y) => String(x.prazo || "9").localeCompare(String(y.prazo || "9")) || String(x.criada_em).localeCompare(String(y.criada_em)))],
+      ["Em andamento com a equipe", l.filter((a) => a.status === "aceita" && !a.sou_participante && !a.pode_entrar)],
       ["Concluídas nos últimos 30 dias", l.filter((a) => a.status === "concluida").sort((x, y) => String(y.concluida_em).localeCompare(String(x.concluida_em)))],
     ].filter(([, x]) => x.length);
     if (!grupos.length) return box.replaceChildren(vazio("Nenhuma tarefa", "Use “Nova tarefa” para pedir algo à equipe ou registrar o que você fez."));

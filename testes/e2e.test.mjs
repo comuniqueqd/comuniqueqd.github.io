@@ -47,6 +47,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009d2-tarefas-cards.sql
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009d3-painel-metas-recorrentes.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009e-parceiros.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009f-parceiros-completo.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009g-tarefas-compartilhadas.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -98,7 +99,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009f"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009g"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -270,7 +271,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Notícias rápidas") && await s.isVisible(".faixa-novidades >> text=e mais: 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Entrar junto") && await s.isVisible(".faixa-novidades >> text=e mais: 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -709,7 +710,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -1164,6 +1165,7 @@ try {
   await s8.fill("#pa-estab", "Padaria Sol"); await s8.fill("#pa-cidade", "LAGARTO - SE"); await s8.fill("#pa-obs", "Abre às 6h");
   await s8.click("#pa-enviar");
   ok(await esperar(s8, "#toast:has-text('Contou para: Aprovar 2 parceiro(s) · LAGARTO - SE (1 de 2)')"), "ativar parceiro avisa em qual tarefa contou");
+  ok(await esperar(s8, "#toast:has-text('entregador')"), "e avisa da tarefa de aprovar entregadores da cidade");
   ok(await esperar(s8, "#pa-tarefas >> text=1 de 2") && await s8.isVisible("#pa-tarefas li:has-text('Padaria Sol')"), "progresso sobe e o parceiro aparece nos seus últimos");
   await s8.fill("#pa-estab", "padaria sol"); await s8.fill("#pa-cidade", "LAGARTO - SE");
   await s8.click("#pa-enviar");
@@ -1179,6 +1181,18 @@ try {
   await s8.screenshot({ path: path.join(PRINTS, "o3-parceiros-cidade.png"), fullPage: true });
   await ir(a8, "#inicio"); await a8.evaluate(() => App.carregar());
   ok(await esperar(a8, "#inicio-noticias .noticia >> text=Padaria Sol") && await a8.isVisible("#inicio-noticias >> text=Notícias rápidas"), "tela inicial: notícia comemorativa da ativação");
+  // 009g · tarefa compartilhada: o suporte pega a de entregadores de Lagarto, o admin entra junto
+  await ir(s8, "#atividades/sugeridas"); await s8.reload();
+  const cardEnt = "#at-sug-lista .tarefa-card[data-tipo=ativar_entregadores]:has-text('LAGARTO - SE'):has(button:has-text('Eu faço'))";
+  ok(await esperar(s8, cardEnt), "a tarefa de aprovar entregadores da cidade do parceiro está aberta para a equipe");
+  await s8.click(cardEnt + " >> text=Eu faço");
+  await ir(a8, "#atividades/sugeridas"); await a8.reload();
+  const cardJunto = "#at-sug-lista .tarefa-card:has(button:has-text('Entrar junto'))";
+  ok(await esperar(a8, cardJunto) && await a8.isVisible(cardJunto + " >> text=Já tem gente trabalhando nela"), "quem não está na tarefa vê que já tem gente e pode entrar junto");
+  await a8.click(cardJunto + " button:has-text('Entrar junto')");
+  ok(await esperar(a8, "#toast:has-text('Você entrou na tarefa')"), "entrar junto");
+  ok(await esperar(a8, "#at-sug-lista .grupo:has-text('Para você') .tarefa-card[data-tipo=ativar_entregadores] >> text=com Suporte Um, você"), "a tarefa aparece em Para você, com os dois");
+  await a8.screenshot({ path: path.join(PRINTS, "o5-entrar-junto.png"), fullPage: true });
   await a8.screenshot({ path: path.join(PRINTS, "o4-noticias.png") });
 
   // 009e2 · botão de teste de avisos e sons na tela Equipe

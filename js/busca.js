@@ -50,10 +50,14 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009f";
+  const VERSAO = "009g";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009g", tema: "🤝 Tarefas em equipe", itens: [
+      ["Parceiro novo puxa entregadores", "Ativou um parceiro? Nasce sozinha a tarefa “Aprovar 5 entregadores” na cidade dele, aberta para a equipe. Se já existe uma na cidade, ela só sobe 5."],
+      ["Entrar junto", "Nas tarefas de aprovar entregadores e parceiros, quem aceita não fecha para os outros: dá para “Entrar junto”, e as aprovações de todo mundo contam na mesma meta."],
+      ["Tira de avisos", "A tira do sino ficou um pouco mais larga."]] },
     { versao: "009f", tema: "🎉 Parceiros completo e Notícias rápidas", itens: [
       ["Parceiros ativos", "A lista de todos os parceiros ativados, com busca, filtro por cidade e “Só os que eu ativei”."],
       ["Por cidade", "Cada cidade com os parceiros ativos, quantos entraram nos últimos 30 dias, o último ativado e quem mais ativou."],

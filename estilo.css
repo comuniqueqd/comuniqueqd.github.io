@@ -345,7 +345,7 @@ nav.grupo a[aria-current="page"] { color: var(--accent); border-color: var(--acc
 nav.grupo[hidden] { display: none; }
 
 /* 008b: tira do sino e tela de Avisos */
-.tira-avisos { position: absolute; z-index: 50; width: min(420px, calc(100vw - 16px)); max-height: min(70vh, 560px); overflow: auto;
+.tira-avisos { position: absolute; z-index: 50; width: min(500px, calc(100vw - 16px)); max-height: min(70vh, 560px); overflow: auto;
   background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 32px rgba(10, 14, 20, .18); }
 .tira-avisos[hidden] { display: none; }
 .tira-topo, .tira-pe { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; }
@@ -627,3 +627,4 @@ a.funcao.f-par { --fcor: #a16207; }
 .noticia-texto { font-weight: 600; }
 .noticia .meta { white-space: nowrap; }
 @media (max-width: 600px) { .noticia { flex-direction: column; align-items: flex-start; } .parceiro { flex-direction: column; align-items: flex-start; } }
+.bullet.juntos { color: var(--ok); }

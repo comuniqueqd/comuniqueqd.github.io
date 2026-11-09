@@ -25,7 +25,9 @@
     try {
       const r = await rpc("registrar_parceiro", { p_estabelecimento: $("#pa-estab").value.trim(), p_cidade: $("#pa-cidade").value.trim(), p_observacao: $("#pa-obs").value.trim() || null });
       form.reset(); $("#pa-estab").focus();
-      toast(`🎉 Parceiro ativado: ${r.parceiro.estabelecimento}!${App.contouPara(r.tarefas)}`);
+      const te = r.tarefa_entregadores;
+      toast(`🎉 Parceiro ativado: ${r.parceiro.estabelecimento}!${App.contouPara(r.tarefas)}` +
+        (te ? (te.nova ? ` Nasceu a tarefa “${te.titulo}” para a equipe.` : ` A tarefa de entregadores da cidade subiu para ${te.meta}.`) : ""));
       await App.carregar();
     } catch (e) { erro.textContent = msgErro(e); erro.hidden = false; } finally { b.disabled = false; }
   });
@@ -101,7 +103,7 @@
         else {
           const [l, t] = await Promise.all([rpc("listar_parceiros", { p_meus: true, p_limite: 8 }), rpc("listar_atividades")]);
           P.meus = l.itens;
-          P.tarefas = t.filter((a) => a.tipo === "ativar_parceiro" && a.status === "aceita" && a.aceita_por === S.me.id && a.modo === "solicitacao");
+          P.tarefas = t.filter((a) => a.tipo === "ativar_parceiro" && a.status === "aceita" && a.sou_participante && a.modo === "solicitacao");
         }
         P.erro = null;
       } catch (e) { P.erro = msgErro(e); throw e; }

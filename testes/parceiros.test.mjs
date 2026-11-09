@@ -18,7 +18,8 @@ for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/
   "../supabase/009d2-tarefas-cards.sql",
   "../supabase/009d3-painel-metas-recorrentes.sql",
   "../supabase/009e-parceiros.sql", "../supabase/009e-parceiros.sql",
-  "../supabase/009f-parceiros-completo.sql", "../supabase/009f-parceiros-completo.sql"]) await db.query(arquivo(f));
+  "../supabase/009f-parceiros-completo.sql", "../supabase/009f-parceiros-completo.sql",
+  "../supabase/009g-tarefas-compartilhadas.sql", "../supabase/009g-tarefas-compartilhadas.sql"]) await db.query(arquivo(f));
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -128,11 +129,50 @@ await t("009f: por cidade e notícias rápidas", async () => {
   igual((await rpc(sup2, "noticias_rapidas", { p_limite: 20 })).some((x) => x.cidade === "ITABAIANA - SE"), false, "mais de 7 dias sai:");
 });
 
+await t("009g: ativar parceiro cria 'Aprovar 5 entregadores' aberta na cidade, ou soma 5 na que já existe", async () => {
+  const r = await rpc(sup2, "registrar_parceiro", { p_estabelecimento: "Açougue Novo", p_cidade: "SIMÃO DIAS - SE" });
+  igual([r.tarefa_entregadores.titulo, r.tarefa_entregadores.meta, r.tarefa_entregadores.nova], ["Aprovar 5 entregador(es) · SIMÃO DIAS - SE", 5, true]);
+  let t = (await rpc(mon, "listar_atividades")).find((x) => x.titulo === "Aprovar 5 entregador(es) · SIMÃO DIAS - SE");
+  igual([t.status, t.sugeridas_nomes, t.para_todos, t.compartilhavel, t.campos.motivo], ["aberta", [], true, true, "Parceiro novo: Açougue Novo"]);
+  await rpc(mon, "aceitar_atividade", { p_id: t.id });
+  const r2 = await rpc(sup, "registrar_parceiro", { p_estabelecimento: "Bar do Zé", p_cidade: "SIMÃO DIAS - SE" });
+  igual([r2.tarefa_entregadores.meta, r2.tarefa_entregadores.nova, r2.tarefa_entregadores.titulo], [10, false, "Aprovar 10 entregador(es) · SIMÃO DIAS - SE"]);
+  t = (await rpc(mon, "listar_atividades")).find((x) => x.id === t.id);
+  igual([t.meta, t.campos.quantidade, t.descricao.includes("+5 com o parceiro Bar do Zé")], [10, 10, true]);
+  igual((await avisos(mon)).filter((x) => x.startsWith("A tarefa subiu para 10 entregadores")).length, 1);
+});
+
+await t("009g: tarefa compartilhada: entrar junto, progresso somado, qualquer participante conclui", async () => {
+  const t0 = (await rpc(admin, "listar_atividades")).find((x) => x.cidade === "SIMÃO DIAS - SE" && x.tipo === "ativar_entregadores");
+  let v = (await rpc(sup, "listar_atividades")).find((x) => x.id === t0.id);
+  igual([v.status, v.participantes, v.pode_entrar, v.pode_concluir], ["aceita", ["Monitora Teste"], true, false]);
+  await rpc(admin, "aceitar_atividade", { p_id: t0.id });
+  await falha(rpc(admin, "aceitar_atividade", { p_id: t0.id }), "já está nesta tarefa");
+  igual((await avisos(mon)).filter((x) => x.startsWith("Mateus Lopes entrou junto")).length, 1);
+  const ids = [];
+  for (const i of ["sim0001", "sim0002", "sim0003"]) ids.push((await rpc(sup, "enviar_cadastro", { p_id_app: i, p_cpf: null, p_cidade: "SIMÃO DIAS - SE", p_nome: "Teste " + i })).id);
+  await rpc(mon, "decidir", { p_cadastro: ids[0], p_acao: "aprovar" });
+  await rpc(admin, "decidir", { p_cadastro: ids[1], p_acao: "aprovar" });
+  await rpc(admin, "decidir", { p_cadastro: ids[2], p_acao: "aprovar" });
+  v = (await rpc(admin, "listar_atividades")).find((x) => x.id === t0.id);
+  igual([v.progresso, v.participantes, v.sou_participante, v.pode_concluir], [3, ["Monitora Teste", "Mateus Lopes"], true, true]);
+  igual((await rpc(admin, "tarefas_que_contam", { p_tipo: "ativar_entregadores", p_cidade: "SIMÃO DIAS - SE" })).map((x) => x.progresso), [3]);
+  await falha(rpc(sup, "concluir_atividade", { p_id: t0.id }), "Só quem está na tarefa");
+  await rpc(mon, "aguardar_terceiro", { p_id: t0.id, p_motivo: "esperando documentos" });
+  await rpc(admin, "aguardar_terceiro", { p_id: t0.id });
+  await rpc(mon, "concluir_atividade", { p_id: t0.id, p_nota: "3 de 10" });
+  igual((await avisos(admin)).filter((x) => x.startsWith("Monitora Teste concluiu a tarefa em que você estava")).length, 1);
+  // tarefa não compartilhável continua sendo de uma pessoa só
+  const z = await rpc(admin, "criar_tarefa", { p_tipo: "criar_comunicado", p_campos: { cidade: "SIMÃO DIAS - SE", motivo: "x" } });
+  await rpc(mon, "aceitar_atividade", { p_id: z.id });
+  await falha(rpc(sup, "aceitar_atividade", { p_id: z.id }), "já foi aceita");
+});
+
 await t("segurança: tabela fechada e funções internas não expostas", async () => {
   await db.query("begin"); await db.query("set local role authenticated");
   await falha(db.query("select * from parceiros"), "permission denied"); await db.query("rollback");
   const r = await um(`select bool_or(has_function_privilege('authenticated', p.oid, 'execute')) x from pg_proc p
-                       where p.proname in ('aprovacoes_de', 'parceiro_json', 'progresso_tarefa', 'titulo_tarefa', 'json_atividade')`);
+                       where p.proname in ('aprovacoes_de', 'parceiro_json', 'progresso_tarefa', 'titulo_tarefa', 'json_atividade', 'compartilhavel', 'participantes_de', 'participa', 'tarefa_entregadores_do_parceiro', 'pode_mexer_tarefa')`);
   igual(r.x, false);
 });
 
