@@ -561,3 +561,30 @@ dialog.janela:has(#ag-turno-texto) { width: min(720px, 94vw); }
 .acordo-topo { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .acordo-topo .pill { margin-left: auto; }
 .acordo .actions { margin: 2px 0 0; }
+
+/* tarefas em cards (009d2) */
+.tipo-chip { padding: 5px 12px; }
+#at-form .opcoes { margin: 10px 0; }
+.campos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px 14px; }
+.campos-grid .largo { grid-column: 1 / -1; }
+.campos-grid label[hidden] { display: none; }
+.tag.tipo { background: var(--accent-soft); color: var(--accent); }
+.tarefa-card .campos-tarefa { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 14px; }
+.tarefa-card .tempos { font-variant-numeric: tabular-nums; }
+.tarefa-card.aguardando { border-left: 4px solid var(--gray); }
+.bullet.aguardando { color: var(--gray); }
+.progresso-tarefa { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.progresso-tarefa .barra { flex: 1 1 160px; max-width: 320px; height: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.progresso-tarefa .barra span { display: block; height: 100%; background: var(--ok); }
+.checklist-tarefa summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+.checklist-tarefa ul { list-style: none; padding: 0; margin: 6px 0; display: grid; gap: 2px; }
+.checklist-tarefa li { display: flex; align-items: center; gap: 6px; }
+.checklist-tarefa label.feito { text-decoration: line-through; color: var(--muted); }
+.checklist-tarefa form input { flex: 1; min-width: 0; }
+.comentarios-tarefa { display: grid; gap: 10px; max-height: 50vh; overflow: auto; margin-bottom: 10px; }
+.comentario { border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.prazos-tipos { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.prazos-tipos .linha { display: flex; gap: 6px; align-items: center; }
+.prazos-tipos input { width: 90px; }
+.opcoes-col label, .checklist-tarefa label { display: flex; flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
+.opcoes-col input, .checklist-tarefa input[type=checkbox] { width: auto; margin: 0; flex: 0 0 auto; }

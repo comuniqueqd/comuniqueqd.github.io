@@ -43,6 +43,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009b-ferramentas-financ
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009c-mensagens-agravante.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009c2-mensagens-opcoes.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009d-ajuda-aviso-turno.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009d2-tarefas-cards.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -94,7 +95,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009d"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009d2"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -266,7 +267,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Pedir ajuda") && await s.isVisible(".faixa-novidades >> text=e mais: 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Pegar a próxima") && await s.isVisible(".faixa-novidades >> text=e mais: 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -281,9 +282,9 @@ try {
   await s.click("#aviso-versao >> text=Depois"); await s.unroute("**/versao.txt*");
   // 008c: funções em destaque na tela inicial
   { const fns = await s.$$eval("#inicio-funcoes a.funcao", (l) => l.map((x) => x.querySelector("b").textContent));
-    ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Novo bloqueio", "Cadastrar entregador", "Calculadora de bairro", "Registrar adicional", "Sugerir atividade", "Registros"]), "tela inicial: as 7 funções em destaque: " + fns); }
+    ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Novo bloqueio", "Cadastrar entregador", "Calculadora de bairro", "Registrar adicional", "Nova tarefa", "Registros"]), "tela inicial: as 7 funções em destaque: " + fns); }
   await s.click("#fn-sugerir");
-  ok(await esperar(s, "#v-at-sugeridas:not([hidden])") && await s.waitForFunction(() => document.querySelector("#at-nova-box")?.open && document.activeElement?.id === "at-titulo", null, { timeout: 5000 }).then(() => true, () => false), "Sugerir atividade abre a tela com o formulário aberto e o cursor no título");
+  ok(await esperar(s, "#v-at-sugeridas:not([hidden])") && await s.waitForFunction(() => document.querySelector("#at-nova-box")?.open && document.activeElement?.id === "at-titulo", null, { timeout: 5000 }).then(() => true, () => false), "Nova tarefa abre a tela com o formulário aberto e o cursor no título");
   await ir(s, "#inicio"); await esperar(s, "#fn-ativacao");
   await s.click("#fn-ativacao");
   ok(await esperar(s, "#v-novo:not([hidden])"), "Nova ativação abre o Novo cadastro");
@@ -568,7 +569,7 @@ try {
   await ir(m, "#atividades/pendencias"); await m.reload();
   ok(await esperar(m, "#at-lista >> text=Ligar para o restaurante Sabor"), "pessoa sugerida vê a atividade nas pendências");
   await ir(m, "#atividades/sugeridas");
-  await m.click("#at-sug-lista .card:has-text('Sabor') >> text=Aceitar");
+  await m.click("#at-sug-lista .card:has-text('Sabor') >> text=Eu faço");
   ok(await esperar(m, "#at-sug-lista .card:has-text('Sabor') >> text=Em andamento"), "monitorador aceita");
   await m.click("#at-sug-lista .card:has-text('Sabor') >> text=Concluir");
   await m.fill("#at-sug-lista .card:has-text('Sabor') textarea", "Entregue, confirmado");
@@ -705,7 +706,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -1047,6 +1048,77 @@ try {
   await a8.evaluate(() => App.carregar());
   await a8.selectOption("#fi-ac-filtro", "ajustados");
   ok(await esperar(a8, "#fi-ac-lista .acordo.ajustado >> text=Ajuste feito por Suporte Um"), "o acordo fica no histórico com quem fez o ajuste");
+
+  // 23. 009d2 · tarefas em cards
+  await ir(s8, "#atividades/sugeridas"); await s8.reload();
+  await esperar(s8, "#at-tipos .chip[data-tipo=ativar_entregadores]");
+  ok((await s8.$$("#at-tipos .chip")).length === 10, "Nova tarefa: 10 tipos para escolher");
+  await s8.click("#at-nova-box summary");
+  await s8.click("#at-tipos .chip[data-tipo=ativar_entregadores]");
+  ok(await s8.isHidden("#at-titulo-box") && await s8.isVisible("#at-prazo-dica >> text=prazo padrão do tipo (3 dia(s))"), "tipo com campos próprios: sem título livre e com o prazo padrão");
+  await s8.click("#at-enviar");
+  ok(await esperar(s8, "#at-erro:not([hidden]) >> text=Preencha: a cidade"), "campo obrigatório do tipo é cobrado");
+  await s8.fill("#at-campos [data-campo=cidade]", "LAGARTO - SE"); await s8.fill("#at-campos [data-campo=quantidade]", "3");
+  await s8.check("#at-para label:has-text('Monitor Um') input");
+  await s8.screenshot({ path: path.join(PRINTS, "m1-nova-tarefa.png"), fullPage: true });
+  await s8.click("#at-enviar");
+  const cardAtiv = "#at-sug-lista .tarefa-card:has-text('Ativar 3 entregador(es) · LAGARTO - SE')";
+  ok(await esperar(s8, cardAtiv) && await s8.isVisible(cardAtiv + " >> text=Ativar entregadores") && await s8.isVisible(cardAtiv + " >> text=0 de 3"), "card com o tipo, o título montado e a meta");
+  await ir(m7, "#atividades/sugeridas"); await m7.reload();
+  await esperar(m7, cardAtiv);
+  ok(await m7.isVisible("#at-sug-lista .grupo:has-text('Para você') " + cardAtiv.replace("#at-sug-lista ", "")), "quem foi indicado vê em “Para você”");
+  await m7.click(cardAtiv + " >> text=Eu faço");
+  ok(await esperar(m7, cardAtiv + " >> text=Em andamento") && await m7.isVisible(cardAtiv + " >> text=Esperou"), "Eu faço: em andamento, com o tempo de espera");
+  await m7.click(cardAtiv + " .checklist-tarefa summary");
+  await m7.fill(cardAtiv + " .checklist-tarefa input[aria-label='Novo item do checklist']", "Ligar para os indicados");
+  await m7.click(cardAtiv + " .checklist-tarefa button:has-text('Incluir')");
+  ok(await esperar(m7, cardAtiv + " .checklist-tarefa >> text=Checklist 0/1"), "checklist: item incluído");
+  await m7.click(cardAtiv + " .checklist-tarefa li input[type=checkbox]");
+  ok(await esperar(m7, cardAtiv + " .checklist-tarefa >> text=Checklist 1/1"), "checklist: item marcado");
+  await m7.click(cardAtiv + " button:has-text('Aguardando terceiro')");
+  await m7.fill("#janela-aguardar input", "Esperando os documentos do parceiro");
+  await m7.click("#janela-aguardar button.primary");
+  ok(await esperar(m7, cardAtiv + " .bullet.aguardando >> text=Esperando os documentos do parceiro"), "aguardando terceiro pausa a tarefa");
+  await m7.click(cardAtiv + " button:has-text('Retomar')");
+  ok(await esperar(m7, cardAtiv + " >> text=Em andamento"), "retomar volta para em andamento");
+  await m7.click(cardAtiv + " button:has-text('💬')");
+  await m7.selectOption("#janela-comentarios select", "Suporte Um");
+  await m7.type("#at-comentario", "dá uma olhada nos de ontem");
+  await m7.click("#janela-comentarios button.primary");
+  ok(await esperar(m7, "#janela-comentarios .comentario >> text=@Suporte Um dá uma olhada nos de ontem"), "comentário com @menção");
+  await m7.screenshot({ path: path.join(PRINTS, "m2-comentarios.png") });
+  await m7.click("#janela-comentarios .janela-topo button");
+  ok(await esperar(m7, cardAtiv + " button:has-text('💬 1')"), "o card mostra quantos comentários tem");
+  await m7.screenshot({ path: path.join(PRINTS, "m3-tarefas.png"), fullPage: true });
+  await m7.click(cardAtiv + " >> text=Concluir");
+  await m7.click(cardAtiv + " >> text=Confirmar conclusão");
+  ok(await esperar(m7, cardAtiv + " >> text=levou"), "concluída mostra quanto tempo levou");
+  await s8.evaluate(() => App.carregar());
+  ok(await esperar(s8, cardAtiv + " button:has-text('Agradecer')"), "quem pediu pode agradecer");
+  await s8.click(cardAtiv + " button:has-text('Agradecer')");
+  ok(await esperar(s8, cardAtiv + " >> text=👏 Suporte Um") && await s8.isVisible(cardAtiv + " button:has-text('Agradecido')"), "agradecimento aparece no card");
+
+  await s8.click("#at-nova-box summary");
+  await s8.click("#at-tipos .chip[data-tipo=contato_entregador]");
+  await s8.check("#at-modo input[value=registro]");
+  ok(await s8.isHidden("#at-para-box") && await s8.isHidden("#at-prazo-box") && await s8.isVisible("#at-enviar:has-text('Registrar o que fiz')"), "registrar o que já fiz: sem prazo e sem para quem");
+  await s8.fill("#at-campos [data-campo=id_app]", "abc123"); await s8.selectOption("#at-campos [data-campo=tratativa]", "nao");
+  ok(await s8.isVisible("#at-campos [data-campo=motivo]"), "contato que não é tratativa pede o motivo da lista");
+  await s8.selectOption("#at-campos [data-campo=motivo]", "Retorno de itens");
+  await s8.click("#at-enviar");
+  ok(await esperar(s8, "#at-sug-lista .grupo:has-text('Concluídas') .tarefa-card:has-text('Retorno de itens') >> text=Registro do que já foi feito"), "o registro entra direto como concluído");
+
+  await a8.evaluate(() => { location.hash = "#atividades/sugeridas"; });
+  await esperar(a8, "#at-tipos .chip[data-tipo=procurar_entregador]");
+  await a8.click("#at-nova-box summary");
+  await a8.click("#at-tipos .chip[data-tipo=procurar_entregador]");
+  await a8.fill("#at-campos [data-campo=cidade]", "ITABAIANA - SE");
+  await a8.click("#at-enviar");
+  ok(await esperar(a8, "#at-sug-lista .tarefa-card:has-text('Procurar entregador · ITABAIANA - SE')"), "moderador cria tarefa para a equipe");
+  ok(await a8.isVisible("#at-prazos summary >> text=Prazos padrão por tipo"), "moderador vê os prazos padrão por tipo");
+  await m7.evaluate(() => App.carregar());
+  await m7.click("#at-proxima");
+  ok(await esperar(m7, "#toast:has-text('Com você agora: Procurar entregador · ITABAIANA - SE')"), "Pegar a próxima entrega a tarefa aberta");
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

@@ -64,18 +64,18 @@
   const descricao = (l) => l.tipo === "ajuste_bairro" ? `${l.bairro_informado} → ${l.bairro_real}` : `${l.motivo || "Adicional"}${l.mercado ? " · mercado" : ""} · pedido ${brl(l.valor_pedido)}`;
   function botaoLancar(l) {
     return el("button", { class: "btn small" + (l.lancado ? " quiet" : " primary"), type: "button", onclick: async (e) => {
-      e.currentTarget.disabled = true;
+      const bt = e.currentTarget; bt.disabled = true;
       try { await rpc("marcar_lancado", { p_id: l.id, p_lancado: !l.lancado }); toast(l.lancado ? "Voltou para pendente." : "Marcado como lançado."); App.carregar(); }
-      catch (err) { e.currentTarget.disabled = false; toast(msgErro(err)); }
+      catch (err) { bt.disabled = false; toast(msgErro(err)); }
     } }, l.lancado ? "Desfazer lançado" : "Marcar como lançado");
   }
   function botaoApagar(l) {
     if (!(l.meu || S.me?.papel === "moderador" || S.me?.papel_bloqueios === "moderador")) return null;
     if (!G.confirmar[l.id]) return el("button", { class: "btn quiet small", type: "button", onclick: () => { G.confirmar[l.id] = true; App.render(); } }, "Apagar");
     return el("span", {}, el("button", { class: "btn danger small", type: "button", onclick: async (e) => {
-      e.currentTarget.disabled = true;
+      const bt = e.currentTarget; bt.disabled = true;
       try { await rpc("excluir_lancamento", { p_id: l.id }); delete G.confirmar[l.id]; toast("Registro apagado."); App.carregar(); }
-      catch (err) { e.currentTarget.disabled = false; toast(msgErro(err)); }
+      catch (err) { bt.disabled = false; toast(msgErro(err)); }
     } }, "Confirmar"), el("button", { class: "btn link", type: "button", onclick: () => { delete G.confirmar[l.id]; App.render(); } }, "Cancelar"));
   }
   const cartao = (l, acoes = true) => el("article", { class: "card fin-card" + (l.lancado ? "" : " pendente") },
@@ -185,9 +185,9 @@
       el("label", {}, "O que foi feito (opcional)", nota), e2,
       el("div", { class: "actions" },
         el("button", { class: "btn primary", type: "button", onclick: async (e) => {
-          e.currentTarget.disabled = true;
+          const bt = e.currentTarget; bt.disabled = true;
           try { await rpc("ajustar_acordo", { p_id: a.id, p_nota: nota.value.trim() || null }); d.close(); toast("Ajuste registrado. O aviso saiu da tela de todos."); App.carregar(); }
-          catch (err) { e.currentTarget.disabled = false; e2.textContent = msgErro(err); e2.hidden = false; }
+          catch (err) { bt.disabled = false; e2.textContent = msgErro(err); e2.hidden = false; }
         } }, "Ajuste feito"),
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
     d.id = "janela-acordo";

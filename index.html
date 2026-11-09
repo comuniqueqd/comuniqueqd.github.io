@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009d">
+<link rel="stylesheet" href="estilo.css?v=009d2">
 </head>
 <body>
 <header class="top">
@@ -471,30 +471,37 @@
     <div id="at-lista" class="protege-foco"></div>
   </section>
   <section class="view" id="v-at-sugeridas" hidden>
-    <h2>Atividades sugeridas</h2>
-    <p class="sub">Qualquer pessoa pode sugerir uma atividade e indicar quem deve fazer. Se ninguém indicado aceitar em 10 minutos, ela fica aberta para todos.</p>
+    <div class="inicio-topo"><h2>Tarefas</h2><button class="btn primary small" type="button" id="at-proxima">▶ Pegar a próxima</button></div>
+    <p class="sub">Peça algo para alguém ou para a equipe, ou registre o que você já fez. Se ninguém indicado aceitar em 10 minutos, a tarefa fica aberta para todos. “Pegar a próxima” escolhe a mais justa para você.</p>
     <details class="panel" id="at-nova-box">
-      <summary><b>Sugerir atividade</b></summary>
+      <summary><b>Nova tarefa</b></summary>
       <form class="cad" id="at-form" novalidate style="margin-top:12px">
-        <label for="at-titulo"><span>O que precisa ser feito <span class="req">*</span></span>
+        <div class="chips-linha" id="at-tipos" role="group" aria-label="Tipo de tarefa"></div>
+        <div class="opcoes" id="at-modo" role="radiogroup" aria-label="Pedido ou registro">
+          <label><input type="radio" name="at-modo" value="solicitacao" checked> Pedir (para alguém ou para a equipe)</label>
+          <label><input type="radio" name="at-modo" value="registro"> Registrar o que já fiz</label>
+        </div>
+        <label for="at-titulo" id="at-titulo-box"><span>O que precisa ser feito <span class="req">*</span></span>
           <input id="at-titulo" maxlength="150" autocomplete="off">
         </label>
+        <div class="campos-grid" id="at-campos"></div>
         <label for="at-descricao">Detalhes <span class="hint">Opcional</span>
           <textarea id="at-descricao" maxlength="1500" rows="2"></textarea>
         </label>
         <div class="grid2">
-          <label for="at-prazo">Prazo <span class="hint">Opcional</span>
+          <label for="at-prazo" id="at-prazo-box">Prazo <span class="hint" id="at-prazo-dica">Opcional</span>
             <input id="at-prazo" type="datetime-local">
           </label>
-          <div><span style="font-size:14px">Para quem <span class="hint">Opcional: sem ninguém marcado, vai para todos</span></span>
+          <div id="at-para-box"><span style="font-size:14px">Para quem <span class="hint">Opcional: sem ninguém marcado, vai para todos</span></span>
             <div class="pessoas" id="at-para"></div>
           </div>
         </div>
         <p class="warn-msg" id="at-erro" role="alert" hidden></p>
-        <div class="actions"><button class="btn primary" type="submit" id="at-enviar">Sugerir</button></div>
+        <div class="actions"><button class="btn primary" type="submit" id="at-enviar">Criar tarefa</button></div>
       </form>
     </details>
     <div id="at-sug-lista" class="protege-foco"></div>
+    <div id="at-prazos"></div>
   </section>
   <section class="view" id="v-at-avisos" hidden>
     <h2>Avisos</h2>
@@ -637,20 +644,20 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/base.js?v=009d"></script>
-<script src="js/inicio.js?v=009d"></script>
-<script src="js/ativacao.js?v=009d"></script>
-<script src="js/bloqueios.js?v=009d"></script>
-<script src="js/entregadores.js?v=009d"></script>
-<script src="js/atividades.js?v=009d"></script>
-<script src="js/avisos.js?v=009d"></script>
-<script src="js/analises.js?v=009d"></script>
-<script src="js/registros.js?v=009d"></script>
-<script src="js/equipe.js?v=009d"></script>
-<script src="js/ferramentas.js?v=009d"></script>
-<script src="js/financeiro.js?v=009d"></script>
-<script src="js/busca.js?v=009d"></script>
-<script src="js/sons.js?v=009d"></script>
-<script src="js/agora.js?v=009d"></script>
+<script src="js/base.js?v=009d2"></script>
+<script src="js/inicio.js?v=009d2"></script>
+<script src="js/ativacao.js?v=009d2"></script>
+<script src="js/bloqueios.js?v=009d2"></script>
+<script src="js/entregadores.js?v=009d2"></script>
+<script src="js/atividades.js?v=009d2"></script>
+<script src="js/avisos.js?v=009d2"></script>
+<script src="js/analises.js?v=009d2"></script>
+<script src="js/registros.js?v=009d2"></script>
+<script src="js/equipe.js?v=009d2"></script>
+<script src="js/ferramentas.js?v=009d2"></script>
+<script src="js/financeiro.js?v=009d2"></script>
+<script src="js/busca.js?v=009d2"></script>
+<script src="js/sons.js?v=009d2"></script>
+<script src="js/agora.js?v=009d2"></script>
 </body>
 </html>

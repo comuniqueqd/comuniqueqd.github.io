@@ -50,10 +50,17 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009d";
+  const VERSAO = "009d2";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009d2", tema: "🗂️ Tarefas em cards", itens: [
+      ["Tarefas por tipo", "Em Atividades → Tarefas, “Nova tarefa” tem tipos com os campos certos: Ativar entregadores, Ativar parceiro, Fazer contato, Contato com entregador, Pedido com problema, Pagamento ao entregador, Revisar registro, Criar comunicado, Procurar entregador ou texto livre."],
+      ["Pedir ou registrar", "Peça para alguém, para a equipe, ou registre o que você já fez (entra direto nos seus números)."],
+      ["Prazo e tempos", "Cada tipo tem um prazo padrão (o moderador ajusta). O card mostra quanto esperou até alguém pegar e quanto levou. “⏳ Aguardando terceiro” pausa o relógio."],
+      ["Progresso", "Ativar entregadores conta sozinho os cadastros aprovados da cidade; nos outros com meta é só tocar em +1."],
+      ["Checklist, comentários e 👏", "Checklist dentro da tarefa, comentários com @ para avisar alguém e “Agradecer” quem fez."],
+      ["Pegar a próxima", "O botão escolhe a tarefa mais justa para você: primeiro as pedidas para você, depois a de prazo mais perto."]] },
     { versao: "009d", tema: "🆘 Acontecendo agora", itens: [
       ["Pedir ajuda", "Na tela inicial, “🆘 Pedir ajuda”: escolha Monitoramento, Suporte (Crisp) ou Suporte (Blip). Toda a equipe vê, com som, por 10 minutos ou até alguém tocar em “Eu ajudo”. Ninguém pegou? Peça de novo ou mande para os moderadores."],
       ["Aviso geral", "“📢 Aviso geral” deixa um recado na tela inicial de todos pelo tempo que você escolher (até 12 h). Quem criou ou um moderador encerra antes."],

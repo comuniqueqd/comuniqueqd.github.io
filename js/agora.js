@@ -29,17 +29,15 @@
       return el("label", { class: "marcar" }, r, t);
     });
     const texto = el("textarea", { id: "ag-ajuda-texto", rows: 3, maxlength: 500, placeholder: "Ex.: fila no Crisp com 12 conversas esperando" });
-    const link = el("input", { id: "ag-ajuda-link", maxlength: 300, placeholder: "Link ou protocolo (opcional)" });
     const erro = erroEl();
     const d = janela("Pedir ajuda agora",
       el("p", { class: "meta", style: "margin-top:0", text: "Aparece na tela inicial de toda a equipe, com som, por 10 minutos ou até alguém aceitar." }),
       el("fieldset", { class: "opcoes-col" }, el("legend", { text: "Do que é a ajuda?" }), ...radios),
-      el("label", {}, "O que está acontecendo (opcional)", texto),
-      el("label", {}, "Link ou protocolo", link), erro,
+      el("label", {}, "O que está acontecendo (opcional)", texto), erro,
       el("div", { class: "actions" },
         acao("🆘 Pedir ajuda", async () => {
           await rpc("pedir_ajuda", { p_categoria: d.querySelector("input[name=ag-categoria]:checked").value,
-            p_texto: texto.value.trim() || null, p_link: link.value.trim() || null });
+            p_texto: texto.value.trim() || null });
           d.close();
         }, { classe: "btn primary", ok: "Pedido enviado para a equipe.", erro }),
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));

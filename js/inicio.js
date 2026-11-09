@@ -15,7 +15,7 @@
       extra ? el("span", { class: "equipe", text: extra }) : null);
   const naEquipe = (v) => (v == null ? null : `${v} na equipe`);
 
-  // "Sugerir atividade" abre a tela já com o formulário aberto e o cursor no título
+  // "Nova tarefa" abre a tela já com o formulário aberto e o cursor no título
   function abrirSugerir() {
     setTimeout(() => {
       const box = $("#at-nova-box");
@@ -45,9 +45,9 @@
       el("label", {}, "O que foi resolvido (opcional)", nota), erro,
       el("div", { class: "actions" },
         el("button", { class: "btn primary", type: "button", onclick: async (e) => {
-          e.currentTarget.disabled = true;
+          const bt = e.currentTarget; bt.disabled = true;
           try { await App.u.rpc("resolver_aviso_rapido", { p_id: a.id, p_nota: nota.value.trim() || null }); d.close(); App.u.toast("Marcado como resolvido."); App.carregar(); }
-          catch (err) { e.currentTarget.disabled = false; erro.textContent = App.u.msgErro(err); erro.hidden = false; }
+          catch (err) { bt.disabled = false; erro.textContent = App.u.msgErro(err); erro.hidden = false; }
         } }, "Marcar como resolvido"),
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
@@ -102,8 +102,8 @@
       funcao({ id: "fn-adicional", href: "#financeiro/adicional", icone: "💰", cor: "f-fin", titulo: "Registrar adicional",
         texto: "Valor combinado com o entregador além da entrega.",
         vivo: r?.financeiro_pendentes ? `${r.financeiro_pendentes} seu(s) ainda não lançado(s)` : null }),
-      funcao({ id: "fn-sugerir", href: "#atividades/sugeridas", icone: "💡", cor: "f-sug", titulo: "Sugerir atividade", onclick: abrirSugerir,
-        texto: "Pedir algo para a equipe ou para alguém em especial.",
+      funcao({ id: "fn-sugerir", href: "#atividades/sugeridas", icone: "💡", cor: "f-sug", titulo: "Nova tarefa", onclick: abrirSugerir,
+        texto: "Pedir algo para alguém ou registrar o que você já fez.",
         vivo: at ? `${at.equipe_abertas} abertas na equipe` : null }),
       funcao({ id: "card-registros", href: "#registros", icone: "🗂️", cor: "f-reg", titulo: "Registros",
         texto: "Tudo o que a equipe fez, em ordem: quem, o quê e quando." }),

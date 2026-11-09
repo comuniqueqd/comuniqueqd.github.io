@@ -134,12 +134,12 @@
       el("label", { class: "check" }, ativo, " Ativo (aparece na calculadora)"), erroJ,
       el("div", { class: "actions" },
         el("button", { class: "btn primary", type: "button", onclick: async (e) => {
-          e.currentTarget.disabled = true; erroJ.hidden = true;
+          const bt = e.currentTarget; bt.disabled = true; erroJ.hidden = true;
           try {
             await rpc("salvar_bairro", { p_id: b?.id ?? null, p_cidade: cidade.value, p_nome: nome.value, p_valor: n(valor), p_taxa_log: n(taxa),
               p_apelidos: apel.value.split(",").map((x) => x.trim()).filter(Boolean), p_ativo: ativo.checked });
             d.close(); toast(b ? "Bairro atualizado." : "Bairro criado."); F.tCidade = cidade.value; App.carregar();
-          } catch (err) { e.currentTarget.disabled = false; erroJ.textContent = msgErro(err); erroJ.hidden = false; }
+          } catch (err) { bt.disabled = false; erroJ.textContent = msgErro(err); erroJ.hidden = false; }
         } }, "Salvar"),
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
@@ -231,9 +231,9 @@
       area, erroJ,
       el("div", { class: "actions" },
         el("button", { class: "btn primary", type: "button", onclick: async (e) => {
-          e.currentTarget.disabled = true; erroJ.hidden = true;
+          const bt = e.currentTarget; bt.disabled = true; erroJ.hidden = true;
           try { await rpc("salvar_modelo_mensagem", { p_chave: m.chave, p_texto: area.value }); d.close(); toast("Modelo salvo."); await carregarMensagens(true); render(); }
-          catch (err) { e.currentTarget.disabled = false; erroJ.textContent = msgErro(err); erroJ.hidden = false; }
+          catch (err) { bt.disabled = false; erroJ.textContent = msgErro(err); erroJ.hidden = false; }
         } }, "Salvar"),
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
@@ -248,10 +248,10 @@
       el("label", {}, "Agravante (deixe em branco se não houver)", ag), el("label", {}, "O que o agravante faz", ef), erroJ,
       el("div", { class: "actions" },
         el("button", { class: "btn primary", type: "button", onclick: async (e) => {
-          e.currentTarget.disabled = true; erroJ.hidden = true;
+          const bt = e.currentTarget; bt.disabled = true; erroJ.hidden = true;
           try { await rpc("salvar_explicacao_infracao", { p_infracao: i.id, p_explicacao: area.value, p_agravante: ag.value || null, p_agravante_efeito: ag.value ? ef.value : null });
                 d.close(); toast("Regra salva."); await carregarMensagens(true); render(); }
-          catch (err) { e.currentTarget.disabled = false; erroJ.textContent = msgErro(err); erroJ.hidden = false; }
+          catch (err) { bt.disabled = false; erroJ.textContent = msgErro(err); erroJ.hidden = false; }
         } }, "Salvar"),
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
