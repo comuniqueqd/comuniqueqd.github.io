@@ -965,6 +965,23 @@ try {
   ok((await a8.inputValue("#fe-msg-texto")).startsWith("Fala, Ana!"), "movimento alto com nome: mensagem para o entregador");
   await a8.click("#fe-msg-opcoes button:has-text('Opção 2')");
   ok((await a8.inputValue("#fe-msg-texto")).startsWith("Ana, tudo certo?") && (await a8.$$("#fe-msg-opcoes button")).length === 3, "três opções de texto para escolher");
+  await a8.selectOption("#fe-msg-modelo", "restricao");
+  await a8.fill("#fe-msg-nome", "carla dias");
+  await a8.selectOption("#fe-msg-infracao", { label: "Retenção de Valores ou Equipamentos de Pagamento" });
+  await a8.fill("#fe-msg-ocorrencia", "2"); await a8.fill("#fe-msg-horas", "48");
+  { const t = await a8.inputValue("#fe-msg-texto");
+    ok(t.startsWith("Olá, Carla!") && t.includes("restrição temporária") && t.includes("Retenção de Valores") && t.includes("2ª ocorrência") && t.includes("2 dias (48 h)") && !/bloqueio/i.test(t),
+      "Mensagens prontas: modelo de restrição preenchido à mão (infração, ocorrência e tempo)"); }
+  ok((await a8.$$eval("#fe-msg-modelo option", (l) => l.map((o) => o.value))).includes("leve"), "os modelos de encerramento, liberação e aviso também aparecem");
+  await a8.waitForFunction(() => document.querySelectorAll("#fe-msg-bloqueio option").length > 1, null, { timeout: 8000 }).catch(() => {});
+  { const op = await a8.$$eval("#fe-msg-bloqueio option", (l) => l.map((o) => [o.value, o.textContent]).filter(([v]) => v));
+    ok(op.length > 0, "dá para escolher um entregador com restrição: " + op.length);
+    if (op.length) {
+      await a8.selectOption("#fe-msg-bloqueio", op[0][0]);
+      const t = await a8.inputValue("#fe-msg-texto");
+      ok(t.startsWith("Olá, ") && !t.includes("[infração]") && !t.includes("[tempo") && !/bloqueio/i.test(t) && await a8.isHidden("#fe-msg-infracao"), "escolhido o entregador, a mensagem vem pronta com os dados do bloqueio");
+      await a8.selectOption("#fe-msg-bloqueio", "");
+    } }
   ok(await esperar(a8, "#fe-msg-regras tr:has-text('Retenção de Valores') >> text=até 1 hora") && await a8.isVisible("#fe-msg-modelos >> text=Editar"), "explicação de cada regra e moderador edita os modelos");
   await a8.screenshot({ path: path.join(PRINTS, "k3-mensagens-prontas.png"), fullPage: true });
 

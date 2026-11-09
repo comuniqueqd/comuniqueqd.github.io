@@ -37,8 +37,8 @@
     return `${d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}, por volta das ${d.getHours()}h`;
   };
   // gera a mensagem ao entregador (sempre "restrição temporária" no texto); b = bloqueio (json_bloqueio ou o resultado do registro)
-  async function gerarMensagem(b, extra = {}) {
-    try { await App.mensagens.carregar(); } catch (e) { return toast(msgErro(e)); }
+  // modelo e marcadores da mensagem de um bloqueio (também usado em Ferramentas → Mensagens prontas)
+  function varsMensagem(b, extra = {}) {
     const chave = b.leve ? "leve" : b.situacao === "liberado_antes" ? "liberacao" : b.horas == null ? "encerramento" : "restricao";
     const nomeInf = (b.infracao || "").replace(/\s*\(aviso\)\s*$/i, "");
     const v = {
@@ -49,6 +49,11 @@
       agravante: b.agravante ? `Foi considerado também: ${b.agravante.charAt(0).toLowerCase() + b.agravante.slice(1)}.\n` : "",
       reincidencia: !b.leve && b.horas == null && b.ocorrencia > 1 ? `Esta foi a sua ${ord(b.ocorrencia)} ocorrência desse tipo, e a política prevê o encerramento a partir dela.\n` : "",
       leves_situacao: extra.leves ? ` Você está com ${extra.leves} de ${extra.limite}.` : "", ...extra.vars };
+    return { chave, v };
+  }
+  async function gerarMensagem(b, extra = {}) {
+    try { await App.mensagens.carregar(); } catch (e) { return toast(msgErro(e)); }
+    const { chave, v } = varsMensagem(b, extra);
     App.mensagens.abrir(chave, v);
   }
   const botaoMensagem = (b, extra) => el("button", { class: "btn", type: "button", onclick: (e) => { e.stopPropagation(); gerarMensagem(b, extra); } }, "Gerar mensagem");
@@ -973,7 +978,7 @@
   ].forEach((s) => $(s).addEventListener("input", render));
   ["#bq-q-hist", "#bq-hist-sit", "#bq-hist-cidade", "#bq-hist-inf", "#bq-hist-quem", "#bq-hist-tipo", "#bq-hist-meus"].forEach((s) => $(s).addEventListener("input", filtrarHist));
 
-  App.bloqueios = { cardBloqueio, concluir, horasTxt, ord, B, TAREFA, realocar, abrirFicha, abrirRevisar };
+  App.bloqueios = { cardBloqueio, concluir, horasTxt, ord, termino, varsMensagem, B, TAREFA, realocar, abrirFicha, abrirRevisar };
   App.modulo({
     id: "bloqueios", nome: "Bloqueios",
     acesso: () => !!papel(),

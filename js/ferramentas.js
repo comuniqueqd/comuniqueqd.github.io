@@ -147,7 +147,7 @@
   // ---------- mensagens prontas (009c) ----------
   // marcadores: {nome} {infracao} {regra} {ocorrencia} {punicao} {termino} {agravante} {reincidencia} {cidade}
   //             {estabelecimento} {meu_nome} {leves_limite} {leves_janela} {leves_situacao}
-  const M = { dados: null, erro: null, tipo: "", opcao: 1 };
+  const M = { dados: null, erro: null, tipo: "", opcao: 1, bloqueios: null, bloqueio: null };
   // 009c2: cada modelo tem tipo e opção (1, 2, 3); sem nome, o "movimento alto" vira a versão para a cidade
   const tipoDe = (m) => m.tipo || m.chave, opcaoDe = (m) => m.opcao || 1;
   const PARA_CIDADE = { engajamento_movimento: "engajamento_cidade" };
@@ -180,17 +180,33 @@
     explicacao: (id) => M.dados?.infracoes.find((i) => i.id === id)?.explicacao || "" };
 
   $("#fe-msg-modelo").addEventListener("change", (e) => { M.tipo = e.target.value; M.opcao = 1; renderMensagens(true); });
-  ["#fe-msg-nome", "#fe-msg-estab", "#fe-msg-cidade"].forEach((s) => $(s).addEventListener("input", () => renderMensagens(true)));
+  // 009g5: escolher um entregador com restrição e já preencher tudo com os dados do bloqueio
+  $("#fe-msg-bloqueio").addEventListener("change", (e) => {
+    M.bloqueio = (M.bloqueios || []).find((b) => String(b.id) === e.target.value) || null;
+    if (M.bloqueio && App.bloqueios?.varsMensagem) { M.tipo = App.bloqueios.varsMensagem(M.bloqueio).chave; $("#fe-msg-modelo").value = M.tipo; }
+    renderMensagens(true);
+  });
+  async function carregarBloqueiosAtivos() {
+    if (M.bloqueios || M.carregandoBq || !S.me?.papel_bloqueios) return;
+    M.carregandoBq = true;
+    try { M.bloqueios = await rpc("listar_bloqueios", { p_escopo: "ativos" }); } catch (_) { M.bloqueios = []; }
+    M.carregandoBq = false; renderMensagens(false);
+  }
+  ["#fe-msg-nome", "#fe-msg-estab", "#fe-msg-cidade", "#fe-msg-infracao", "#fe-msg-ocorrencia", "#fe-msg-horas", "#fe-msg-agravante"].forEach((s) => $(s).addEventListener("input", () => renderMensagens(true)));
   $("#fe-msg-form").addEventListener("submit", (e) => e.preventDefault());
   $("#fe-msg-copiar").addEventListener("click", () => copiar($("#fe-msg-texto").value, $("#fe-msg-texto")));
   function renderMensagens(refazer = false) {
     const D = M.dados;
     if (!D) { $("#fe-msg-modelos").replaceChildren(carregandoEl()); return; }
-    const livres = D.modelos.filter((m) => m.grupo !== "bloqueio");
+    // 009g5: os modelos de bloqueio também entram (preenchidos à mão; pelo bloqueio, "Gerar mensagem" já sai preenchido)
+    const livres = D.modelos;
     // um item por tipo no seletor (a versão "para a cidade" entra sozinha quando não há nome)
     const tipos = [...new Map(livres.filter((m) => m.grupo !== "cidade").map((m) => [tipoDe(m), m])).values()];
     const sel = $("#fe-msg-modelo");
-    if (sel.options.length !== tipos.length) sel.replaceChildren(...tipos.map((m) => el("option", { value: tipoDe(m), text: m.titulo.replace(/\s*\(.*\)$/, "") })));
+    if (sel.options.length !== tipos.length) {
+      const grupo = (g, rot) => { const l = tipos.filter((m) => (g === "bloqueio") === (m.grupo === "bloqueio")); return l.length ? el("optgroup", { label: rot }, l.map((m) => el("option", { value: tipoDe(m), text: m.titulo.replace(/\s*\(.*\)$/, "") }))) : null; };
+      sel.replaceChildren(...[grupo("outros", "Entregadores e parceiros"), grupo("bloqueio", "Restrição, encerramento e avisos")].filter(Boolean));
+    }
     if (!M.tipo || !tipos.some((m) => tipoDe(m) === M.tipo)) { M.tipo = tipos[0] ? tipoDe(tipos[0]) : ""; M.opcao = 1; refazer = true; }
     sel.value = M.tipo;
     const cs = $("#fe-msg-cidade"), cids = (F.dados?.cidades || []).map((c) => c.nome);
@@ -209,11 +225,54 @@
     // campos: o nome aparece sempre que o tipo usa nome (mesmo na versão para a cidade, para poder preencher)
     const base = livres.find((m) => tipoDe(m) === M.tipo);
     document.querySelectorAll("[data-msg-campo]").forEach((x) => (x.hidden = !base || !(base.texto.includes("{" + x.dataset.msgCampo + "}") || mod?.texto.includes("{" + x.dataset.msgCampo + "}"))));
-    if (refazer && mod) $("#fe-msg-texto").value = preencher(mod.texto, { nome: nome || "[nome]",
-      estabelecimento: $("#fe-msg-estab").value.trim() || "[estabelecimento]", cidade: cs.value || "[cidade]", meu_nome: primeiroNome(S.me?.nome) });
+    // seletor de bloqueio (só nos modelos de bloqueio, para quem tem o módulo de bloqueios)
+    const ehBloqueio = livres.find((m) => tipoDe(m) === M.tipo)?.grupo === "bloqueio";
+    const caixaBq = $("#fe-msg-bloqueio-box"), selBq = $("#fe-msg-bloqueio");
+    caixaBq.hidden = !ehBloqueio || !S.me?.papel_bloqueios;
+    if (ehBloqueio) carregarBloqueiosAtivos();
+    if (M.bloqueio && !ehBloqueio) { M.bloqueio = null; }
+    const lbq = (M.bloqueios || []);
+    if (selBq.dataset.sig !== String(lbq.length)) {
+      selBq.dataset.sig = String(lbq.length);
+      selBq.replaceChildren(el("option", { value: "", text: M.bloqueios ? (lbq.length ? "Preencher à mão" : "Ninguém com restrição agora") : "Carregando…" }),
+        ...lbq.map((b) => el("option", { value: b.id, text: `${b.nome || "ID " + b.id_app} · ${b.infracao}${b.fim ? " · até " + new Date(b.fim).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) : ""}` })));
+    }
+    selBq.value = M.bloqueio ? String(M.bloqueio.id) : "";
+    // com um bloqueio escolhido, os campos à mão somem e a mensagem sai com os dados dele
+    if (M.bloqueio && ehBloqueio && App.bloqueios?.varsMensagem) {
+      document.querySelectorAll("[data-msg-campo]").forEach((x) => (x.hidden = true));
+      const { v } = App.bloqueios.varsMensagem(M.bloqueio);
+      const mb = livres.find((m) => tipoDe(m) === M.tipo);
+      if (refazer && mb) $("#fe-msg-texto").value = preencher(mb.texto, { meu_nome: primeiroNome(S.me?.nome), leves_limite: D.leves?.limite, leves_janela: D.leves?.janela_dias, ...v });
+      return renderListas(D);
+    }
+    // infrações para os modelos de bloqueio (a leve só mostra as leves, os outros só as normais)
+    const si = $("#fe-msg-infracao"), leve = M.tipo === "leve";
+    const infs = D.infracoes.filter((i) => i.ativa !== false && !!i.leve === leve);
+    if (si.dataset.sig !== String(leve)) { si.dataset.sig = String(leve); si.replaceChildren(el("option", { value: "", text: "Escolha a infração" }), ...infs.map((i) => el("option", { value: i.id, text: i.nome }))); }
+    if (refazer && mod) {
+      const inf = D.infracoes.find((i) => String(i.id) === si.value);
+      const nomeInf = (inf?.nome || "").replace(/\s*\(aviso\)\s*$/i, "");
+      const horas = Number($("#fe-msg-horas").value) || null, oc = Number($("#fe-msg-ocorrencia").value) || 1;
+      const agr = $("#fe-msg-agravante").value.trim();
+      const Bq = App.bloqueios || {};
+      $("#fe-msg-texto").value = preencher(mod.texto, { nome: nome || "[nome]",
+        estabelecimento: $("#fe-msg-estab").value.trim() || "[estabelecimento]", cidade: cs.value || "[cidade]", meu_nome: primeiroNome(S.me?.nome),
+        infracao: inf ? (leve ? nomeInf.charAt(0).toLowerCase() + nomeInf.slice(1) : nomeInf) : "[infração]",
+        regra: inf?.explicacao || "[explique a regra]",
+        ocorrencia: Bq.ord ? Bq.ord(oc) : `${oc}ª`,
+        punicao: horas ? (Bq.horasTxt ? Bq.horasTxt(horas) : `${horas} h`) : "[tempo da restrição]",
+        termino: horas && Bq.termino ? Bq.termino(new Date(Date.now() + horas * 3600000).toISOString()) : "[término]",
+        agravante: agr ? `Foi considerado também: ${agr.charAt(0).toLowerCase() + agr.slice(1)}.\n` : "",
+        reincidencia: M.tipo === "encerramento" && oc > 1 ? `Esta foi a sua ${oc}ª ocorrência desse tipo, e a política prevê o encerramento a partir dela.\n` : "",
+        leves_limite: D.leves?.limite, leves_janela: D.leves?.janela_dias, leves_situacao: "" });
+    }
+    renderListas(D);
+  }
+  function renderListas(D) {
     // lista dos modelos (moderador edita)
     $("#fe-msg-modelos").replaceChildren(el("ul", { class: "lista-modelos" }, D.modelos.map((m) => el("li", {},
-      el("strong", { text: m.titulo }), el("span", { class: "meta", text: (opcaoDe(m) > 1 || D.modelos.some((x) => x !== m && tipoDe(x) === tipoDe(m)) ? ` · opção ${opcaoDe(m)}` : "") + (m.grupo === "bloqueio" ? " · sai pelo bloqueio" : "") }),
+      el("strong", { text: m.titulo }), el("span", { class: "meta", text: (opcaoDe(m) > 1 || D.modelos.some((x) => x !== m && tipoDe(x) === tipoDe(m)) ? ` · opção ${opcaoDe(m)}` : "") + (m.grupo === "bloqueio" ? " · também pelo “Gerar mensagem” do bloqueio" : "") }),
       D.pode_editar ? el("button", { class: "btn link", type: "button", onclick: () => editarModelo(m) }, "Editar") : null))));
     // explicação de cada regra
     $("#fe-msg-regras").replaceChildren(...tabela([["Infração"], ["O que diz a regra"], ["Agravante"], [""]],
