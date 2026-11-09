@@ -59,6 +59,7 @@
       ["Entrar junto", "Nas tarefas de aprovar entregadores e parceiros, quem aceita não fecha para os outros: dá para “Entrar junto”, e as aprovações de todo mundo contam na mesma meta."],
       ["Tira de avisos", "A tira do sino ficou um pouco mais larga."],
       ["Mensagens prontas", "Agora dá para escolher também restrição temporária, encerramento de parceria, liberação antes do prazo e aviso de infração leve, escolhendo o entregador com restrição (tudo já vem preenchido) ou preenchendo à mão."],
+      ["Ficha do entregador automática", "Todo adicional, ajuste de bairro ou cadastro na ativação com o ID e o nome do entregador já cria a ficha dele, se ainda não existe. No próximo lançamento, basta o ID: nome e cidade vêm sozinhos."],
       ["Ativações", "Em Parceiros, a aba Ativações (antes Por cidade) mostra quantos parceiros entraram nesta semana comparado à semana passada, cada cidade e o histórico: “Fulano ativou tal parceiro em tal cidade!”."]] },
     { versao: "009f", tema: "🎉 Parceiros completo e Notícias rápidas", itens: [
       ["Parceiros ativos", "A lista de todos os parceiros ativados, com busca, filtro por cidade e “Só os que eu ativei”."],

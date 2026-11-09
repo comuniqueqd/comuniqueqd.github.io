@@ -48,6 +48,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009d3-painel-metas-reco
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009e-parceiros.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009f-parceiros-completo.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009g-tarefas-compartilhadas.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009h-entregador-pelo-lancamento.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -100,6 +101,8 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
   if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009g"); } catch (_) {} });
+  // o lembrete da passagem de turno (17h30–18h59) cobriria os botões: o relógio do app fica em 10h (o teste dele troca na hora)
+  await c.addInitScript(() => addEventListener("DOMContentLoaded", () => { if (window.App) App.agora_relogio = () => 10 * 60; }));
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
