@@ -1181,6 +1181,11 @@ try {
   ok(await a8.evaluate(() => App.som.ultimo?.nivel === 4), "o botão toca o som do nível escolhido");
   await a8.screenshot({ path: path.join(PRINTS, "o2-teste-sons.png") });
   await a8.click("#janela-teste-som .janela-topo button");
+  await ir(s8, "#equipe/regras");
+  ok(await esperar(s8, "#b-teste-som-todos"), "o suporte também acha o teste de avisos e sons (Regras de equipe)");
+  await s8.click("#b-teste-som-todos");
+  ok(await esperar(s8, "#janela-teste-som"), "e a janela de teste abre para ele");
+  await s8.click("#janela-teste-som .janela-topo button");
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

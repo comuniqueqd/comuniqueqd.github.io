@@ -165,7 +165,7 @@
     d.id = "janela-teste-som";
     atualizar();
   }
-  document.getElementById("b-teste-som")?.addEventListener("click", janelaTeste);
+  document.querySelectorAll("[data-teste-som]").forEach((b) => b.addEventListener("click", janelaTeste));  // Equipe e Regras de equipe (todos)
 
   App.som = { tocar, aviso, conferir, parar, painel, nivelDe, pref, janelaTeste, ultimo: null };
 })();
