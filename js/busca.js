@@ -50,10 +50,15 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009d3";
+  const VERSAO = "009e";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009e", tema: "🏪 Parceiros", itens: [
+      ["Ativar parceiro", "Menu Parceiros (e o botão na tela inicial): registre o estabelecimento que você ativou, com a cidade e uma observação. A lista de todos os parceiros tem busca e filtro por cidade."],
+      ["Aprovar parceiros e entregadores", "As tarefas “Aprovar parceiros” e “Aprovar entregadores” (quantidade e cidade, para você ou para alguém) contam sozinhas cada aprovação que a pessoa faz na cidade. Dá para concluir à mão quando quiser."],
+      ["Contou para…", "Depois de aprovar um entregador ou ativar um parceiro, o aviso mostra em quais tarefas suas a aprovação entrou."],
+      ["Metas de aprovação", "Nas suas metas, os tipos de aprovação contam direto as aprovações do dia ou da semana."]] },
     { versao: "009d3", tema: "📊 Painel das tarefas", itens: [
       ["Painel", "Atividades → Painel: o que está aberto agora, o que foi feito no período, no prazo e em quanto tempo, por tipo, por cidade e por dia e hora. Cada um vê a própria linha; a liderança vê a de todos."],
       ["Suas metas (em teste)", "Crie metas só suas (ex.: 5 tarefas por dia). O progresso conta sozinho com as tarefas que você concluir."],

@@ -97,6 +97,8 @@
         vivo: b ? `${b.equipe_bloqueados_agora ?? b.meus_bloqueados_agora ?? 0} bloqueados agora` : null }) : null,
       S.me.papel_bloqueios ? funcao({ id: "card-entregadores", href: "#entregadores/cadastrar", icone: "🪪", cor: "f-ent", titulo: "Cadastrar entregador",
         texto: "Criar a ficha com ID, nome e cidade, sem ativar nem bloquear." }) : null,
+      funcao({ id: "fn-parceiro", href: "#parceiros/novo", icone: "🏪", cor: "f-par", titulo: "Ativar parceiro",
+        texto: "Registrar um estabelecimento que você ativou." }),
       funcao({ id: "fn-calculadora", href: "#ferramentas/calculadora", icone: "🧮", cor: "f-fer", titulo: "Calculadora de bairro",
         texto: "Bairro cobrado errado? Veja quanto falta pagar ao entregador." }),
       funcao({ id: "fn-adicional", href: "#financeiro/adicional", icone: "💰", cor: "f-fin", titulo: "Registrar adicional",

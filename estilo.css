@@ -604,3 +604,9 @@ tr.eu td { font-weight: 600; }
 .recorrente-form [hidden] { display: none; }
 #pn-meta-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 #pn-meta-form select, #pn-meta-form input { width: auto; margin: 0; }
+
+/* parceiros (009e) */
+.parceiros-lista, .pa-tarefas { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 8px; }
+.parceiro { display: flex; justify-content: space-between; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+.pa-tarefas li { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; display: grid; gap: 4px; }
+a.funcao.f-par { --fcor: #a16207; }

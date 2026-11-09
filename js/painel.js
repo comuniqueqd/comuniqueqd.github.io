@@ -47,7 +47,7 @@
           el("div", { class: "inicio-topo" }, el("b", { text: `${m.icone} ${m.tipo_nome}` }),
             el("button", { class: "btn link", type: "button", "aria-label": "Apagar a meta", onclick: async () => { try { P.metas = await rpc("excluir_meta", { p_id: m.id }); App.render(); } catch (e) { toast(msgErro(e)); } } }, "✕")),
           el("div", { class: "progresso-tarefa" }, el("div", { class: "barra" }, el("span", { style: `width:${p}%` })),
-            el("span", { class: "meta", text: `${m.feitas} de ${m.quantidade} ${m.periodo === "dia" ? "hoje" : "nesta semana"}${m.feitas >= m.quantidade ? " · batida 🎉" : ""}` })));
+            el("span", { class: "meta", text: `${m.feitas} de ${m.quantidade} ${m.conta === "aprovacoes" ? (m.tipo === "ativar_parceiro" ? "parceiros ativados " : "entregadores aprovados ") : ""}${m.periodo === "dia" ? "hoje" : "nesta semana"}${m.feitas >= m.quantidade ? " · batida 🎉" : ""}` })));
       })) : el("p", { class: "meta", text: "Nenhuma meta ainda. Que tal uma? Ex.: 5 tarefas por dia." }),
       el("form", { class: "actions", id: "pn-meta-form", onsubmit: async (e) => {
         e.preventDefault();

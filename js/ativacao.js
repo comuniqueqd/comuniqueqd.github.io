@@ -107,7 +107,9 @@
     try {
       await rpc("decidir", { p_cadastro: c.id, p_acao: acao, p_motivo: motivo, p_detalhe: detalhe });
       delete S.caixa[c.id]; delete S.eventos[c.id];
-      toast({ aprovar: "Cadastro aprovado.", reprovar: "Cadastro reprovado: agora aguarda novo contato.", encerrar: "Cadastro encerrado." }[acao]);
+      // 009e: a aprovação conta nas tarefas "Aprovar entregadores" de quem aprovou, na cidade
+      const contou = acao === "aprovar" ? await rpc("tarefas_que_contam", { p_tipo: "ativar_entregadores", p_cidade: c.cidade }).catch(() => []) : [];
+      toast({ aprovar: "Cadastro aprovado.", reprovar: "Cadastro reprovado: agora aguarda novo contato.", encerrar: "Cadastro encerrado." }[acao] + (App.contouPara?.(contou) || ""));
       await carregar();
     } catch (e) { btn.disabled = false; toast(msgErro(e)); }
   }

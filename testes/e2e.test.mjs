@@ -45,6 +45,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009c2-mensagens-opcoes.
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009d-ajuda-aviso-turno.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009d2-tarefas-cards.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009d3-painel-metas-recorrentes.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009e-parceiros.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -96,7 +97,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009d3"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009e"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -268,7 +269,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Tarefas que se repetem") && await s.isVisible(".faixa-novidades >> text=e mais: 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Ativar parceiro") && await s.isVisible(".faixa-novidades >> text=e mais: 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -283,7 +284,7 @@ try {
   await s.click("#aviso-versao >> text=Depois"); await s.unroute("**/versao.txt*");
   // 008c: funções em destaque na tela inicial
   { const fns = await s.$$eval("#inicio-funcoes a.funcao", (l) => l.map((x) => x.querySelector("b").textContent));
-    ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Novo bloqueio", "Cadastrar entregador", "Calculadora de bairro", "Registrar adicional", "Nova tarefa", "Registros"]), "tela inicial: as 7 funções em destaque: " + fns); }
+    ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Novo bloqueio", "Cadastrar entregador", "Ativar parceiro", "Calculadora de bairro", "Registrar adicional", "Nova tarefa", "Registros"]), "tela inicial: as 8 funções em destaque: " + fns); }
   await s.click("#fn-sugerir");
   ok(await esperar(s, "#v-at-sugeridas:not([hidden])") && await s.waitForFunction(() => document.querySelector("#at-nova-box")?.open && document.activeElement?.id === "at-titulo", null, { timeout: 5000 }).then(() => true, () => false), "Nova tarefa abre a tela com o formulário aberto e o cursor no título");
   await ir(s, "#inicio"); await esperar(s, "#fn-ativacao");
@@ -707,7 +708,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -1063,8 +1064,8 @@ try {
   await s8.check("#at-para label:has-text('Monitor Um') input");
   await s8.screenshot({ path: path.join(PRINTS, "m1-nova-tarefa.png"), fullPage: true });
   await s8.click("#at-enviar");
-  const cardAtiv = "#at-sug-lista .tarefa-card:has-text('Ativar 3 entregador(es) · LAGARTO - SE')";
-  ok(await esperar(s8, cardAtiv) && await s8.isVisible(cardAtiv + " >> text=Ativar entregadores") && await s8.isVisible(cardAtiv + " >> text=0 de 3"), "card com o tipo, o título montado e a meta");
+  const cardAtiv = "#at-sug-lista .tarefa-card:has-text('Aprovar 3 entregador(es) · LAGARTO - SE')";
+  ok(await esperar(s8, cardAtiv) && await s8.isVisible(cardAtiv + " >> text=Aprovar entregadores") && await s8.isVisible(cardAtiv + " >> text=0 de 3"), "card com o tipo, o título montado e a meta");
   await ir(m7, "#atividades/sugeridas"); await m7.reload();
   await esperar(m7, cardAtiv);
   ok(await m7.isVisible("#at-sug-lista .grupo:has-text('Para você') " + cardAtiv.replace("#at-sug-lista ", "")), "quem foi indicado vê em “Para você”");
@@ -1146,6 +1147,31 @@ try {
   await s8.click("#pn-rec-form button[type=submit]");
   ok(await esperar(s8, "#at-recorrentes li >> text=Toda semana (quarta) às 9h") && await s8.isVisible("#at-recorrentes li >> text=checklist com 2"), "tarefa recorrente criada (toda semana, com checklist)");
   await s8.screenshot({ path: path.join(PRINTS, "n2-recorrentes.png"), fullPage: true });
+
+  // 25. 009e · Parceiros: registro direto e a tarefa "Aprovar parceiros" contando sozinha
+  await a8.evaluate(async () => {
+    const sup = App.S.pessoas.find((p) => p.nome === "Suporte Um");
+    await App.u.rpc("criar_tarefa", { p_tipo: "ativar_parceiro", p_campos: { cidade: "LAGARTO - SE", quantidade: 2 }, p_para: [sup.id] });
+  });
+  await ir(s8, "#atividades/sugeridas"); await s8.reload();
+  const cardPar = "#at-sug-lista .tarefa-card:has-text('Aprovar 2 parceiro(s) · LAGARTO - SE')";
+  await esperar(s8, cardPar);
+  await s8.click(cardPar + " >> text=Eu faço");
+  ok(await esperar(s8, cardPar + " >> text=0 de 2") && await s8.isVisible(cardPar + " >> text=parceiros ativados por quem pegou"), "tarefa Aprovar parceiros com a meta, contando sozinha");
+  await ir(s8, "#parceiros/novo"); await s8.reload();
+  ok(await esperar(s8, "#pa-tarefas >> text=Aprovar 2 parceiro(s) · LAGARTO - SE") && await s8.isVisible("#pa-tarefas >> text=0 de 2"), "Ativar parceiro mostra as suas tarefas de aprovação");
+  await s8.fill("#pa-estab", "Padaria Sol"); await s8.fill("#pa-cidade", "LAGARTO - SE"); await s8.fill("#pa-obs", "Abre às 6h");
+  await s8.click("#pa-enviar");
+  ok(await esperar(s8, "#toast:has-text('Contou para: Aprovar 2 parceiro(s) · LAGARTO - SE (1 de 2)')"), "ativar parceiro avisa em qual tarefa contou");
+  ok(await esperar(s8, "#pa-tarefas >> text=1 de 2") && await s8.isVisible("#pa-tarefas li:has-text('Padaria Sol')"), "progresso sobe e o parceiro aparece nos seus últimos");
+  await s8.fill("#pa-estab", "padaria sol"); await s8.fill("#pa-cidade", "LAGARTO - SE");
+  await s8.click("#pa-enviar");
+  ok(await esperar(s8, "#pa-erro:not([hidden]) >> text=já está registrado"), "não repete o mesmo parceiro na cidade");
+  await s8.screenshot({ path: path.join(PRINTS, "o1-ativar-parceiro.png"), fullPage: true });
+  await ir(s8, "#parceiros/lista");
+  ok(await esperar(s8, "#pa-lista .parceiro >> text=Padaria Sol") && (await s8.$$eval("#pa-filtro-cidade option", (l) => l.map((o) => o.textContent))).includes("LAGARTO - SE (1)"), "lista de parceiros com o filtro por cidade");
+  await ir(s8, "#atividades/sugeridas");
+  ok(await esperar(s8, cardPar + " >> text=1 de 2"), "o card da tarefa mostra o progresso");
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });
