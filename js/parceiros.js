@@ -3,13 +3,14 @@
 // conta sozinho nas tarefas "Aprovar parceiros" de quem ativou (na cidade) e nas metas pessoais, e aparece nas
 // Notícias rápidas da tela inicial.
 // Abas: Ativar parceiro (formulário + suas tarefas + seus últimos), Parceiros ativos (lista com busca e cidade;
-// parceiro ativado continua ativo, sem desativação) e Por cidade (resumo de cada cidade).
+// parceiro ativado continua ativo, sem desativação; no topo, quantos e a comparação com a semana anterior) e
+// Ativações (antes "Por cidade": os cartões de cada cidade + o histórico de quem ativou o quê, por dia).
 (() => {
   "use strict";
   const App = window.App;
   const { $, el, dt, toast, vazio, carregandoEl, rpc, msgErro, janela } = App.u;
   const S = App.S;
-  const P = { meus: null, lista: null, tarefas: null, cidades: null, conf: {}, erro: null };
+  const P = { meus: null, lista: null, tarefas: null, cidades: null, historico: null, resumo: null, conf: {}, erro: null };
 
   // aviso depois de aprovar: em quais tarefas a aprovação entrou (também usado na ativação de entregadores)
   App.contouPara = function (tarefas) {
@@ -31,6 +32,7 @@
       await App.carregar();
     } catch (e) { erro.textContent = msgErro(e); erro.hidden = false; } finally { b.disabled = false; }
   });
+  $("#pa-hist-cidade").addEventListener("change", () => App.carregar());
   let busca = null;
   $("#pa-busca").addEventListener("input", () => { clearTimeout(busca); busca = setTimeout(() => App.carregar(), 350); });
   for (const id of ["#pa-filtro-cidade", "#pa-meus"]) $(id).addEventListener("change", () => App.carregar());
@@ -59,6 +61,25 @@
       el("h3", { text: "Os seus últimos" }),
       !P.meus ? carregandoEl() : P.meus.length ? el("ul", { class: "parceiros-lista" }, P.meus.slice(0, 8).map(linha)) : el("p", { class: "meta", text: "Você ainda não ativou nenhum parceiro." }));
   }
+  // quantos ativos e a comparação desta semana com a anterior (semana de terça a segunda, horário de Brasília,
+  // a mesma do Resumo semanal)
+  const diaBr = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(d));
+  const somaDias = (iso, n) => { const t = new Date(iso + "T12:00:00Z"); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+  function resumoSemana(itens, cidade) {
+    const hoje = diaBr(Date.now());
+    const isodow = new Date(hoje + "T12:00:00Z").getUTCDay() || 7;          // segunda = 1 ... domingo = 7
+    const ini = somaDias(hoje, -((isodow + 5) % 7)), iniAnt = somaDias(ini, -7);   // terça desta semana e da anterior
+    const dias = itens.map((p) => diaBr(p.criado_em));
+    return { cidade, total: itens.length, este: dias.filter((d) => d >= ini).length, anterior: dias.filter((d) => d >= iniAnt && d < ini).length };
+  }
+  function linhaResumo(r) {
+    if (!r) return null;
+    const dif = r.este - r.anterior;
+    const comp = dif > 0 ? `${dif} a mais que na semana passada (${r.anterior})` : dif < 0 ? `${-dif} a menos que na semana passada (${r.anterior})` : `o mesmo que na semana passada`;
+    return el("div", { class: "pa-resumo", id: "pa-resumo" },
+      el("b", { text: `${r.total} parceiro${r.total === 1 ? "" : "s"} ativo${r.total === 1 ? "" : "s"}${r.cidade ? " em " + r.cidade : ""}` }),
+      el("span", { class: dif > 0 ? "sobe" : dif < 0 ? "desce" : null, text: ` · ${r.este} ativado${r.este === 1 ? "" : "s"} nesta semana, ${comp}` }));
+  }
   function renderLista() {
     const box = $("#pa-lista");
     if (P.erro) return box.replaceChildren(el("p", { class: "warn-msg", text: P.erro }));
@@ -68,10 +89,32 @@
     sel.replaceChildren(el("option", { value: "", text: "Todas as cidades" }), ...d.por_cidade.map((c) => el("option", { value: c.cidade, text: `${c.cidade} (${c.n})` })));
     if (atual && !d.por_cidade.some((c) => c.cidade === atual)) sel.append(el("option", { value: atual, text: atual }));
     sel.value = atual;
-    box.replaceChildren(el("p", { class: "meta", text: `${d.total} parceiro(s) ativo(s) · você ativou ${d.meus_30d} nos últimos 30 dias` }),
+    box.replaceChildren(linhaResumo(P.resumo), el("p", { class: "meta", text: `Você ativou ${d.meus_30d} nos últimos 30 dias.` }),
       d.itens.length ? el("ul", { class: "parceiros-lista" }, d.itens.map(linha)) : vazio("Nenhum parceiro aqui", "Use “Ativar parceiro” para registrar um."));
   }
+  // histórico das ativações: quem ativou qual parceiro, onde e quando, agrupado por dia
+  function renderHistorico() {
+    const box = $("#pa-historico");
+    const sel = $("#pa-hist-cidade"), atual = sel.value;
+    sel.replaceChildren(el("option", { value: "", text: "Todas as cidades" }), ...(P.cidades || []).map((c) => el("option", { value: c.cidade, text: c.cidade })));
+    sel.value = atual;
+    if (!P.historico) return box.replaceChildren(carregandoEl());
+    if (!P.historico.length) return box.replaceChildren(el("p", { class: "meta", text: "Nenhuma ativação ainda." }));
+    const dias = new Map();
+    for (const p of P.historico) {
+      const d = new Date(p.criado_em).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
+      if (!dias.has(d)) dias.set(d, []);
+      dias.get(d).push(p);
+    }
+    box.replaceChildren(...[...dias].map(([d, l]) => el("div", { class: "pa-hist-dia" },
+      el("h4", {}, d, el("span", { class: "count", text: l.length })),
+      el("ul", { class: "pa-hist" }, l.map((p) => el("li", {},
+        el("span", { class: "meta mono", text: new Date(p.criado_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) }),
+        el("span", {}, "🎉 ", el("b", { text: p.meu ? "Você" : p.criado_por_nome || "—" }), " ativou ", el("b", { text: p.estabelecimento }), ` em ${p.cidade}`,
+          p.observacao ? el("span", { class: "meta", text: ` · ${p.observacao}` }) : null)))))));
+  }
   function renderCidades() {
+    renderHistorico();
     const box = $("#pa-por-cidade");
     if (P.erro) return box.replaceChildren(el("p", { class: "warn-msg", text: P.erro }));
     if (!P.cidades) return box.replaceChildren(carregandoEl());
@@ -92,14 +135,22 @@
     abas: [
       { id: "novo", nome: "Ativar parceiro", secao: "v-pa-novo" },
       { id: "lista", nome: "Parceiros ativos", secao: "v-pa-lista" },
-      { id: "cidades", nome: "Por cidade", secao: "v-pa-cidades" },
+      { id: "cidades", nome: "Ativações", secao: "v-pa-cidades" },
     ],
     padrao: () => "novo",
     async carregar(aba) {
       try {
-        if (aba === "lista") P.lista = await rpc("listar_parceiros", { p_busca: $("#pa-busca").value.trim() || null, p_cidade: $("#pa-filtro-cidade").value || null,
-          p_meus: $("#pa-meus").checked });
-        else if (aba === "cidades") P.cidades = await rpc("parceiros_por_cidade");
+        if (aba === "lista") {
+          const cidade = $("#pa-filtro-cidade").value || null;
+          const [l, todos] = await Promise.all([
+            rpc("listar_parceiros", { p_busca: $("#pa-busca").value.trim() || null, p_cidade: cidade, p_meus: $("#pa-meus").checked }),
+            rpc("listar_parceiros", { p_cidade: cidade, p_limite: 2000 })]);   // para o resumo da semana (sem busca nem "só os meus")
+          P.lista = l; P.resumo = resumoSemana(todos.itens, cidade);
+        }
+        else if (aba === "cidades") {
+          const [c, h] = await Promise.all([rpc("parceiros_por_cidade"), rpc("listar_parceiros", { p_cidade: $("#pa-hist-cidade").value || null, p_limite: 300 })]);
+          P.cidades = c; P.historico = h.itens;
+        }
         else {
           const [l, t] = await Promise.all([rpc("listar_parceiros", { p_meus: true, p_limite: 8 }), rpc("listar_atividades")]);
           P.meus = l.itens;
