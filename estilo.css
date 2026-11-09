@@ -588,3 +588,19 @@ dialog.janela:has(#ag-turno-texto) { width: min(720px, 94vw); }
 .prazos-tipos input { width: 90px; }
 .opcoes-col label, .checklist-tarefa label { display: flex; flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
 .opcoes-col input, .checklist-tarefa input[type=checkbox] { width: auto; margin: 0; flex: 0 0 auto; }
+
+/* painel das tarefas, metas e recorrentes (009d3) */
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.metas-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin: 10px 0; }
+.meta-item { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; display: grid; gap: 4px; }
+.meta-item.batida { border-color: var(--ok); background: var(--ok-soft); }
+#pn-meta-form input[type=number] { width: 80px; }
+tr.eu td { font-weight: 600; }
+.recorrentes-lista { list-style: none; padding: 0; margin: 0 0 10px; display: grid; gap: 10px; }
+.recorrentes-lista li { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 6px; }
+.recorrentes-lista li.pausada { opacity: .6; }
+.recorrente-form { border-top: 1px dashed var(--line); padding-top: 10px; margin-top: 6px; }
+.recorrente-form input[type=number] { width: 72px; }
+.recorrente-form [hidden] { display: none; }
+#pn-meta-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+#pn-meta-form select, #pn-meta-form input { width: auto; margin: 0; }

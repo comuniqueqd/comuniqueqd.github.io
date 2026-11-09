@@ -44,6 +44,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009c-mensagens-agravant
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009c2-mensagens-opcoes.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009d-ajuda-aviso-turno.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009d2-tarefas-cards.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009d3-painel-metas-recorrentes.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -95,7 +96,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009d2"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009d3"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -267,7 +268,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Pegar a próxima") && await s.isVisible(".faixa-novidades >> text=e mais: 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Tarefas que se repetem") && await s.isVisible(".faixa-novidades >> text=e mais: 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -706,7 +707,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -1119,6 +1120,32 @@ try {
   await m7.evaluate(() => App.carregar());
   await m7.click("#at-proxima");
   ok(await esperar(m7, "#toast:has-text('Com você agora: Procurar entregador · ITABAIANA - SE')"), "Pegar a próxima entrega a tarefa aberta");
+
+  // 24. 009d3 · painel das tarefas, metas, placar, revisão de qualidade e recorrentes
+  await ir(a8, "#atividades/painel"); await a8.reload();
+  ok(await esperar(a8, "#pn-conteudo >> text=Suas metas") && await a8.isVisible("#pn-conteudo >> text=em teste"), "Painel: suas metas (em teste)");
+  ok(await a8.isVisible("#pn-conteudo h3:has-text('Pessoas')") && await a8.isVisible("#pn-placar >> text=só você vê"), "moderador vê as pessoas; o administrador vê o placar");
+  await a8.fill("#pn-meta-qtd", "2"); await a8.selectOption("#pn-meta-periodo", "semana");
+  await a8.click("#pn-meta-form button[type=submit]");
+  ok(await esperar(a8, "#pn-conteudo .meta-item >> text=nesta semana"), "meta criada, com o progresso da semana");
+  await a8.click("#pn-sortear");
+  ok(await esperar(a8, "#pn-revisao .card button:has-text('Está ok')"), "revisão de qualidade sorteia tarefas concluídas");
+  await a8.screenshot({ path: path.join(PRINTS, "n1-painel.png"), fullPage: true });
+  await a8.click("#pn-revisao .card button:has-text('Está ok')");
+  ok(await esperar(a8, "#toast:has-text('Revisada: ok')"), "revisada: ok");
+  await ir(m7, "#atividades/painel"); await m7.reload();
+  ok(await esperar(m7, "#pn-conteudo h3:has-text('Você')") && await m7.isHidden("#pn-placar") && await m7.isHidden("#pn-revisao"), "quem não é moderador vê só a própria linha, sem placar e sem revisão");
+  await ir(s8, "#atividades/sugeridas"); await s8.reload();
+  await esperar(s8, "#at-recorrentes summary");
+  await s8.click("#at-recorrentes summary");
+  await s8.click("#pn-rec-nova");
+  await esperar(s8, "#pn-rec-form");
+  await s8.fill("#pn-rec-titulo", "Conferir os adicionais pendentes");
+  await s8.selectOption("#pn-rec-freq", "semanal"); await s8.selectOption("#pn-rec-dia-semana", "3"); await s8.fill("#pn-rec-hora", "9");
+  await s8.fill("#pn-rec-checklist", "Abrir Financeiro\nLançar os pendentes");
+  await s8.click("#pn-rec-form button[type=submit]");
+  ok(await esperar(s8, "#at-recorrentes li >> text=Toda semana (quarta) às 9h") && await s8.isVisible("#at-recorrentes li >> text=checklist com 2"), "tarefa recorrente criada (toda semana, com checklist)");
+  await s8.screenshot({ path: path.join(PRINTS, "n2-recorrentes.png"), fullPage: true });
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

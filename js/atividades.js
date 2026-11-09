@@ -137,28 +137,37 @@
   const tempo = (seg) => { if (seg == null) return "—"; const m = Math.round(seg / 60); return m < 60 ? `${m} min` : m < 1440 ? `${Math.floor(m / 60)} h ${m % 60 ? (m % 60) + " min" : ""}`.trim() : `${Math.round(m / 144) / 10} dias`.replace(".", ","); };
   const tipoDe = (t) => A.tipos?.tipos.find((x) => x.tipo === t);
 
+  // campos do tipo dentro de um elemento (usado na Nova tarefa e nas recorrentes, js/painel.js)
+  function montarCampos(box, tipo) {
+    if (box.dataset.tipo === tipo) return;
+    box.dataset.tipo = tipo;
+    const lista = "at-cidades-" + (box.id || "x");
+    box.replaceChildren(...CAMPOS[tipo].map(([k, rot, tp, obrig]) => {
+      let campo;
+      if (tp === "sim_nao") campo = el("select", { "data-campo": k }, el("option", { value: "", text: "Escolha" }), el("option", { value: "sim", text: "Sim" }), el("option", { value: "nao", text: "Não" }));
+      else if (tp === "lista") campo = el("select", { "data-campo": k }, el("option", { value: "", text: "Escolha o motivo" }), ...A.tipos.motivos_contato.map((m) => el("option", { value: m, text: m })));
+      else campo = el("input", { "data-campo": k, maxlength: 600, inputmode: tp === "numero" || tp === "valor" ? "decimal" : null, list: tp === "cidade" ? lista : null,
+        placeholder: tp === "cidade" ? "CIDADE - UF" : tp === "id" ? "Só letras e números" : null, autocomplete: "off" });
+      return el("label", { class: tp === "texto" && k !== "telefone" ? "largo" : null }, el("span", {}, rot, obrig ? el("span", { class: "req", text: " *" }) : el("span", { class: "hint", text: " Opcional" })), campo);
+    }), el("datalist", { id: lista }, App.u.CIDADES.map((c) => el("option", { value: c }))));
+    // motivo do contato só quando não é tratativa
+    const trat = box.querySelector("[data-campo=tratativa]"), mot = box.querySelector("[data-campo=motivo]");
+    if (tipo === "contato_entregador") { const ver = () => (mot.closest("label").hidden = trat.value !== "nao"); trat.addEventListener("change", ver); ver(); }
+  }
+  const lerCampos = (box) => {
+    const campos = {};
+    for (const c of box.querySelectorAll("[data-campo]")) if (!c.closest("label")?.hidden && c.value.trim()) campos[c.dataset.campo] = c.value.trim();
+    return campos;
+  };
+  App.tarefasCampos = { CAMPOS, montarCampos, lerCampos, tipos: () => A.tipos };
+
   function renderFormTarefa() {
     if (!A.tipos) return;
     const chips = $("#at-tipos");
     if (!chips.childElementCount) chips.replaceChildren(...A.tipos.tipos.map((t) => el("button", { class: "chip tipo-chip", type: "button", "data-tipo": t.tipo,
       onclick: () => { F.tipo = t.tipo; renderFormTarefa(); $("#at-campos input, #at-campos select")?.focus(); } }, `${t.icone || ""} ${t.nome}`)));
     chips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.tipo === F.tipo)));
-    const box = $("#at-campos");
-    if (box.dataset.tipo !== F.tipo) {
-      box.dataset.tipo = F.tipo;
-      const cidades = [...new Set(App.u.CIDADES)];
-      box.replaceChildren(...CAMPOS[F.tipo].map(([k, rot, tp, obrig]) => {
-        let campo;
-        if (tp === "sim_nao") campo = el("select", { "data-campo": k }, el("option", { value: "", text: "Escolha" }), el("option", { value: "sim", text: "Sim" }), el("option", { value: "nao", text: "Não" }));
-        else if (tp === "lista") campo = el("select", { "data-campo": k }, el("option", { value: "", text: "Escolha o motivo" }), ...A.tipos.motivos_contato.map((m) => el("option", { value: m, text: m })));
-        else campo = el("input", { "data-campo": k, maxlength: 600, inputmode: tp === "numero" || tp === "valor" ? "decimal" : null, list: tp === "cidade" ? "at-cidades" : null,
-          placeholder: tp === "cidade" ? "CIDADE - UF" : tp === "id" ? "Só letras e números" : null, autocomplete: "off" });
-        return el("label", { class: tp === "texto" && k !== "telefone" ? "largo" : null }, el("span", {}, rot, obrig ? el("span", { class: "req", text: " *" }) : el("span", { class: "hint", text: " Opcional" })), campo);
-      }), el("datalist", { id: "at-cidades" }, cidades.map((c) => el("option", { value: c }))));
-      // motivo do contato só quando não é tratativa
-      const trat = box.querySelector("[data-campo=tratativa]"), mot = box.querySelector("[data-campo=motivo]");
-      if (F.tipo === "contato_entregador") { const ver = () => (mot.closest("label").hidden = trat.value !== "nao"); trat.addEventListener("change", ver); ver(); }
-    }
+    montarCampos($("#at-campos"), F.tipo);
     $("#at-titulo-box").hidden = F.tipo !== "livre";
     const reg = F.modo === "registro";
     $("#at-modo").querySelectorAll("input").forEach((r) => (r.checked = r.value === F.modo));
@@ -172,8 +181,7 @@
     const erro = $("#at-erro"); erro.hidden = true;
     const titulo = $("#at-titulo").value.trim();
     if (F.tipo === "livre" && !titulo) { erro.textContent = "Escreva o que precisa ser feito."; erro.hidden = false; return; }
-    const campos = {};
-    for (const c of document.querySelectorAll("#at-campos [data-campo]")) if (!c.closest("label")?.hidden && c.value.trim()) campos[c.dataset.campo] = c.value.trim();
+    const campos = lerCampos($("#at-campos"));
     const reg = F.modo === "registro";
     const prazo = !reg && $("#at-prazo").value ? new Date($("#at-prazo").value).toISOString() : null;
     const para = reg ? [] : [...document.querySelectorAll("#at-para input:checked")].map((x) => x.value);
@@ -302,7 +310,8 @@
     return el("article", { class: "card tarefa-card" + (a.opcional_para_mim && a.status === "aberta" ? " opcional" : "") + (a.status === "concluida" ? " tratada" : "") + (atrasada ? " atrasada" : "") + (prevPassou ? " previsao-passou" : "") + (a.aguardando_desde ? " aguardando" : ""), "data-id": a.id, "data-tipo": a.tipo },
       el("div", { class: "head" },
         el("span", { class: "name" }, a.tipo !== "livre" ? el("span", { class: "tag tipo", text: `${a.tipo_icone} ${a.tipo_nome}` }) : null,
-          a.opcional ? el("span", { class: "tag opcional", text: a.opcional_para_mim ? "Opcional" : "Opcional para os outros" }) : null, a.titulo),
+          a.opcional ? el("span", { class: "tag opcional", text: a.opcional_para_mim ? "Opcional" : "Opcional para os outros" }) : null,
+          a.recorrente ? el("span", { class: "tag", title: "Tarefa que se repete", text: "🔁" }) : null, a.titulo),
         a.status === "aberta" ? el("span", { class: "esperando" + (espera.velho ? " velho" : ""), text: `esperando há ${espera.txt}` }) : null),
       resumoCampos(a),
       a.descricao ? el("div", { class: "obs", text: a.descricao }) : null,
@@ -316,6 +325,8 @@
       blocoProgresso(a),
       blocoChecklist(a),
       a.agradecimentos.length ? el("div", { class: "meta agradecimentos", text: "👏 " + a.agradecimentos.join(", ") }) : null,
+      a.revisao ? el("div", { class: "bullet " + (a.revisao.resultado === "ok" ? "concluida" : "atrasada") }, el("span", {},
+        el("b", { text: a.revisao.resultado === "ok" ? "✅ Revisada: tudo certo" : "✏️ Revisada: pediu ajuste" }), ` por ${a.revisao.por_nome}${a.revisao.comentario ? " — " + a.revisao.comentario : ""}`)) : null,
       el("div", { class: "actions" },
         a.pode_aceitar ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Tarefa aceita. Ela está com você.") }, "Eu faço") : null,
         a.status === "aberta" ? el("button", { class: "btn small", type: "button", onclick: () => janelaPedir(a) }, "Pedir para alguém") : null,
@@ -357,6 +368,7 @@
     preencherPessoas();
     renderFormTarefa();
     renderPrazos();
+    App.painel?.renderRecorrentes();
     const box = $("#at-sug-lista"), l = A.atividades;
     if (!l) return box.replaceChildren(carregandoEl());
     const paraMim = (a) => (a.status === "aberta" && a.para_mim) || (a.status === "aceita" && a.aceita_por === S.me.id);
@@ -376,16 +388,20 @@
     abas: [
       { id: "pendencias", nome: "Pendências", secao: "v-at-pendencias", contador: "c-at-pend", alerta: true },
       { id: "sugeridas", nome: "Tarefas", secao: "v-at-sugeridas", contador: "c-at-sug", alerta: true },
+      { id: "painel", nome: "Painel", secao: "v-at-painel" },
       { id: "avisos", nome: "Avisos", secao: "v-at-avisos", contador: "c-at-avisos", alerta: true },
     ],
+    async carregarTipos() { A.tipos = await rpc("tipos_tarefa"); },
     async carregar(aba) {
+      if (aba === "painel") return App.painel.carregar();
       await Promise.all([
+        aba === "sugeridas" ? App.painel.carregarRecorrentes() : null,
         aba === "pendencias" && S.me.papel_bloqueios ? rpc("listar_tarefas", { p_status: "pendente" }).then((d) => (A.tarefas = d)) : null,
         aba !== "avisos" ? rpc("listar_atividades").then((d) => (A.atividades = d)) : App.avisos.carregar(),
         aba === "sugeridas" && !A.tipos ? rpc("tipos_tarefa").then((d) => (A.tipos = d)) : null,
       ]);
     },
-    render(aba) { ({ avisos: () => App.avisos.render(), sugeridas: renderSugeridas, pendencias: renderPendencias })[aba]?.(); },
+    render(aba) { ({ avisos: () => App.avisos.render(), sugeridas: renderSugeridas, pendencias: renderPendencias, painel: () => App.painel.render() })[aba]?.(); },
     contadores() {
       App.contador("c-at-pend", totalPendencias() || 0);
       App.contador("c-at-sug", S.resumo?.atividades?.para_aceitar || 0);

@@ -49,6 +49,7 @@
     }
     return el("div", { class: "calor", role: "img", "aria-label": "Registros por dia da semana e hora" }, cel);
   }
+  App.mapaCalor = mapaCalor;  // também usado no Painel das tarefas (js/painel.js)
   // o que mais aparece no mapa: dia, hora e faixa do dia
   function picos(lista) {
     if (!lista.length) return null;

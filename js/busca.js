@@ -50,10 +50,15 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009d2";
+  const VERSAO = "009d3";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009d3", tema: "📊 Painel das tarefas", itens: [
+      ["Painel", "Atividades → Painel: o que está aberto agora, o que foi feito no período, no prazo e em quanto tempo, por tipo, por cidade e por dia e hora. Cada um vê a própria linha; a liderança vê a de todos."],
+      ["Suas metas (em teste)", "Crie metas só suas (ex.: 5 tarefas por dia). O progresso conta sozinho com as tarefas que você concluir."],
+      ["Tarefas que se repetem", "No fim da aba Tarefas: uma tarefa que aparece sozinha todo dia, toda semana ou todo mês, já com o checklist."],
+      ["Revisão de qualidade", "Os moderadores sorteiam tarefas concluídas para conferir; quem fez recebe o retorno."]] },
     { versao: "009d2", tema: "🗂️ Tarefas em cards", itens: [
       ["Tarefas por tipo", "Em Atividades → Tarefas, “Nova tarefa” tem tipos com os campos certos: Ativar entregadores, Ativar parceiro, Fazer contato, Contato com entregador, Pedido com problema, Pagamento ao entregador, Revisar registro, Criar comunicado, Procurar entregador ou texto livre."],
       ["Pedir ou registrar", "Peça para alguém, para a equipe, ou registre o que você já fez (entra direto nos seus números)."],
