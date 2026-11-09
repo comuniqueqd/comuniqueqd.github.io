@@ -610,3 +610,6 @@ tr.eu td { font-weight: 600; }
 .parceiro { display: flex; justify-content: space-between; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
 .pa-tarefas li { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; display: grid; gap: 4px; }
 a.funcao.f-par { --fcor: #a16207; }
+.teste-sons { list-style: none; padding: 0; margin: 0 0 10px; display: grid; gap: 8px; }
+.teste-sons li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
+@media (max-width: 600px) { .teste-sons li { grid-template-columns: auto 1fr; } .teste-sons li .meta { grid-column: 2; } }

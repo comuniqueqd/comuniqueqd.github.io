@@ -135,5 +135,37 @@
       el("p", { class: "meta", text: "Vale só para este navegador. O som toca com o Comunique aberto (pode ser em outra aba)." }));
   }
 
-  App.som = { tocar, aviso, conferir, parar, painel, nivelDe, pref, ultimo: null };
+  // janela de teste (botão na tela Equipe): ouvir cada nível e testar a notificação do sistema
+  function janelaTeste() {
+    const { el, toast } = App.u;
+    const p = pref();
+    const perm = () => (!("Notification" in window) ? "este navegador não tem notificações" : Notification.permission === "granted" ? "permitida"
+      : Notification.permission === "denied" ? "bloqueada (libere nas configurações do site)" : "ainda não pedida");
+    const status = el("p", { class: "meta", id: "teste-som-status" });
+    const atualizar = () => { status.textContent = `Som: ${audio()?.state === "running" ? "pronto" : "toque em qualquer botão para liberar"} · Notificação do sistema: ${perm()} · ligada nas preferências: ${pref().sistema ? "sim" : "não"}`; };
+    const notificar = async (atraso) => {
+      if (!("Notification" in window)) return toast("Este navegador não mostra notificações do sistema.");
+      if (Notification.permission === "default") await Notification.requestPermission().catch(() => {});
+      atualizar();
+      if (Notification.permission !== "granted") return toast("O navegador não deixou mostrar notificações. Libere nas configurações do site.");
+      const mostrar = () => { tocar(3, true); try { new Notification("Comunique: teste", { body: "Se você está vendo isto, as notificações do sistema funcionam.", tag: "comunique-teste" }); } catch (_) { toast("Não consegui mostrar a notificação."); } };
+      if (atraso) { toast("Troque de aba ou minimize: a notificação chega em 5 segundos."); setTimeout(mostrar, 5000); } else mostrar();
+    };
+    const d = App.u.janela("Testar avisos e sons",
+      el("p", { class: "meta", style: "margin-top:0", text: "Só neste navegador: nada é enviado para a equipe." }),
+      el("ul", { class: "teste-sons" }, NIVEIS.map(([n, t]) => el("li", {},
+        el("button", { class: "btn small", type: "button", "data-teste-nivel": n, onclick: () => { tocar(n, true); atualizar(); } }, `▶ Nível ${n}`),
+        el("span", { text: t }), el("span", { class: "meta", text: p["n" + n] ? "ligado" : "desligado nas suas preferências" })))),
+      el("div", { class: "actions" },
+        el("button", { class: "btn small", type: "button", onclick: () => notificar(false) }, "Notificação do sistema agora"),
+        el("button", { class: "btn small", type: "button", onclick: () => notificar(true) }, "Notificação em 5 s (troque de aba)"),
+        el("button", { class: "btn small", type: "button", onclick: () => toast("Este é o aviso na tela (o toast).") }, "Aviso na tela")),
+      status,
+      el("p", { class: "meta" }, "Para ligar ou desligar cada som e a notificação do sistema: ", el("a", { href: "#atividades/avisos", onclick: () => d.close() }, "Atividades → Avisos"), "."));
+    d.id = "janela-teste-som";
+    atualizar();
+  }
+  document.getElementById("b-teste-som")?.addEventListener("click", janelaTeste);
+
+  App.som = { tocar, aviso, conferir, parar, painel, nivelDe, pref, janelaTeste, ultimo: null };
 })();

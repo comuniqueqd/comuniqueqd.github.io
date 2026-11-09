@@ -1173,6 +1173,15 @@ try {
   await ir(s8, "#atividades/sugeridas");
   ok(await esperar(s8, cardPar + " >> text=1 de 2"), "o card da tarefa mostra o progresso");
 
+  // 009e2 · botão de teste de avisos e sons na tela Equipe
+  await ir(a8, "#equipe"); await esperar(a8, "#b-teste-som");
+  await a8.click("#b-teste-som");
+  ok(await esperar(a8, "#janela-teste-som") && (await a8.$$("#janela-teste-som [data-teste-nivel]")).length === 4, "Equipe: testar avisos e sons mostra os 4 níveis");
+  await a8.click("#janela-teste-som [data-teste-nivel='4']");
+  ok(await a8.evaluate(() => App.som.ultimo?.nivel === 4), "o botão toca o som do nível escolhido");
+  await a8.screenshot({ path: path.join(PRINTS, "o2-teste-sons.png") });
+  await a8.click("#janela-teste-som .janela-topo button");
+
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });
   ok(await esperar(g, "#g-google:not([hidden]) #botao-google-falso"), "com GOOGLE_CLIENT_ID, aparece o botão do Google");
