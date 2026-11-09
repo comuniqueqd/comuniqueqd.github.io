@@ -8,6 +8,8 @@ import http from "node:http";
 import pg from "pg";
 import { createHash } from "node:crypto";
 
+// lista de objetos (jsonb) vai como JSON; listas simples (text[]/uuid[]) ficam como array do Postgres
+const jsonDeObjetos = (v) => (Array.isArray(v) && v.some((x) => x && typeof x === "object")) || (v && typeof v === "object" && !Array.isArray(v)) ? JSON.stringify(v) : v;
 export function iniciarSupabaseFalso({ porta = 54321, databaseUrl }) {
   const pool = new pg.Pool({ connectionString: databaseUrl, max: 4 });
   const claimsDe = (req) => {
@@ -56,7 +58,7 @@ export function iniciarSupabaseFalso({ porta = 54321, databaseUrl }) {
       await cli.query("begin");
       await cli.query(`set local role ${claims ? "authenticated" : "anon"}`);
       await cli.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify(claims || { role: "anon" })]);
-      const { rows } = await cli.query(`select public.${m[1]}(${nomes.map((n, i) => `${n} => $${i + 1}`).join(", ")}) as r`, nomes.map((n) => args[n]));
+      const { rows } = await cli.query(`select public.${m[1]}(${nomes.map((n, i) => `${n} => $${i + 1}`).join(", ")}) as r`, nomes.map((n) => jsonDeObjetos(args[n])));
       await cli.query("commit");
       responder(res, 200, rows[0].r ?? null);
     } catch (e) {

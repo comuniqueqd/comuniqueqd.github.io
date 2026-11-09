@@ -50,10 +50,17 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009c";
+  const VERSAO = "009d";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009d", tema: "🆘 Acontecendo agora", itens: [
+      ["Pedir ajuda", "Na tela inicial, “🆘 Pedir ajuda”: escolha Monitoramento, Suporte (Crisp) ou Suporte (Blip). Toda a equipe vê, com som, por 10 minutos ou até alguém tocar em “Eu ajudo”. Ninguém pegou? Peça de novo ou mande para os moderadores."],
+      ["Aviso geral", "“📢 Aviso geral” deixa um recado na tela inicial de todos pelo tempo que você escolher (até 12 h). Quem criou ou um moderador encerra antes."],
+      ["Passar o turno", "“🔁 Passar o turno”: o panorama do turno, um recado e, tarefa por tarefa, o que você passa para alguém, deixa aberto ou mantém para continuar quando voltar. Perto das 18h o app lembra."],
+      ["Acontecendo agora", "Os pedidos de ajuda, os avisos gerais, as passagens de turno e as pendências (como “Aguardando prestação de contas”) ficam juntos no topo da tela inicial."],
+      ["Acordos com parceiros", "Em Financeiro → Acordos: estabelecimento, cidade, o que foi acordado e quando vence. No dia do vencimento, um aviso vermelho aparece no topo da tela inicial de todos e só sai quando alguém marcar “Ajuste feito”."],
+      ["Sons", "Avisos novos tocam um som conforme a urgência (4 níveis; o pedido de ajuda é o mais forte). Em Atividades → Avisos você ouve cada um, desliga o que quiser e liga a notificação do sistema."]] },
     { versao: "009c", tema: "✉️ Mensagens prontas e agravante", itens: [
       ["Gerar mensagem", "Depois de registrar um bloqueio ou uma leve (e no Histórico), o botão “Gerar mensagem” traz o texto pronto, já com o nome do entregador, o motivo, a regra explicada e o tempo. É só copiar."],
       ["Restrição temporária", "Nas mensagens ao entregador, o bloqueio temporário aparece como “restrição temporária”."],

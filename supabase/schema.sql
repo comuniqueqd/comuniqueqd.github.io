@@ -22,7 +22,7 @@
 --   Row Level Security: o suporte só enxerga os próprios cadastros.
 -- =====================================================================
 
-drop table if exists public.avisos_rapidos, public.modelos_mensagem, public.lancamentos_financeiros, public.bairros, public.seguindo, public.preferencias_aviso, public.pedidos_cidade, public.parametros_casos, public.casos_comentarios, public.casos, public.checklist_casos, public.versao_dados, public.anexos, public.operadores_logisticos, public.parametros_equipe, public.atividades, public.comentarios_entregador, public.entregadores, public.notificacoes, public.tarefas, public.eventos_bloqueio, public.bloqueios,
+drop table if exists public.acordos, public.passagens_lidas, public.passagens_turno, public.avisos_rapidos, public.modelos_mensagem, public.lancamentos_financeiros, public.bairros, public.seguindo, public.preferencias_aviso, public.pedidos_cidade, public.parametros_casos, public.casos_comentarios, public.casos, public.checklist_casos, public.versao_dados, public.anexos, public.operadores_logisticos, public.parametros_equipe, public.atividades, public.comentarios_entregador, public.entregadores, public.notificacoes, public.tarefas, public.eventos_bloqueio, public.bloqueios,
   public.infracoes, public.cidades, public.parametros_bloqueio,  -- módulos (002 a 008)
   public.eventos, public.cadastros, public.pedidos_acesso, public.membros, public.motivos cascade;
 drop type if exists public.papel, public.status_cadastro cascade;

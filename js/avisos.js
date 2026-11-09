@@ -10,7 +10,7 @@
   const V = { lista: null, mais: false, cidades: [], carregandoMais: false, semResp: null, marcando: false, pref: null, dia: null };
   const FILTROS = [["", "Todos os avisos"], ["pessoal", "Para você (tarefas e decisões)"], ["ativacao", "Ativação"],
     ["bloqueios", "Bloqueios"], ["leves", "Infrações leves (agrupadas)"], ["comentarios", "Comentários e fichas"], ["cidades", "Pedidos de cidade"], ["financeiro", "Financeiro"]];
-  const ROTULO = { ativacao: "ATIVAÇÃO", bloqueios: "BLOQUEIOS", leves: "LEVES", comentarios: "FICHA", cidades: "CIDADE", financeiro: "FINANCEIRO" };
+  const ROTULO = { ativacao: "ATIVAÇÃO", bloqueios: "BLOQUEIOS", leves: "LEVES", comentarios: "FICHA", cidades: "CIDADE", financeiro: "FINANCEIRO", ajuda: "AJUDA", aviso_geral: "AVISO GERAL", turno: "TURNO" };
   const porque = (x) => ({ cidade: `você é responsável por ${x.cidade}`, moderador: "você é moderador", seguindo: `você segue ${x.cidade}`,
     de_olho: "você está de olho neste entregador" })[x.motivo] || null;
   // tipos que dá para silenciar (o que é para você e o "de olho nele" sempre chegam)
@@ -66,7 +66,8 @@
           olhos.length ? el("ul", { class: "meus-pedidos" }, olhos.map((x) => el("li", {},
             el("button", { class: "link-ficha", type: "button", onclick: () => App.abrirFicha(x.alvo) }, x.nome || x.alvo), " ", el("span", { class: "mono meta", text: x.alvo }), " ",
             el("button", { class: "btn link", type: "button", onclick: (e) => alternar("entregador", x.alvo, false, e.currentTarget) }, "Parar"))))
-            : el("p", { class: "meta", text: "Ninguém. Na ficha do entregador, use “Ficar de olho” para receber tudo o que acontecer com ele." })) : null)));
+            : el("p", { class: "meta", text: "Ninguém. Na ficha do entregador, use “Ficar de olho” para receber tudo o que acontecer com ele." })) : null,
+        App.som ? App.som.painel() : null)));
   }
 
   // resumo do dia na tira do sino

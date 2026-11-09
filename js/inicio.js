@@ -51,22 +51,41 @@
         } }, "Marcar como resolvido"),
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
+  // 009d: "Acontecendo agora" = pedidos de ajuda, avisos gerais, passagens de turno (js/agora.js) e as pendências
   function renderRapidos() {
-    const box = $("#inicio-rapidos"), lista = S.resumo?.avisos_rapidos || [];
-    box.hidden = !lista.length;
-    box.replaceChildren(...(lista.length ? [el("h2", { class: "rapidos-titulo" }, "Avisos rápidos ", el("span", { class: "count alert", text: lista.length })),
-      el("div", { class: "rapidos-lista" }, lista.map((a) => el("article", { class: "rapido" },
+    const box = $("#inicio-rapidos"), lista = (S.resumo?.avisos_rapidos || []).filter((a) => a.tipo === "pendencia");
+    const ag = App.agora?.cartoes() || { ajudas: [], avisos: [], passagens: [] };
+    const todos = [...ag.ajudas, ...ag.avisos, ...ag.passagens, ...lista.map(cartaoPendencia)];
+    box.hidden = !todos.length;
+    box.replaceChildren(...(todos.length ? [el("h2", { class: "rapidos-titulo" }, "Acontecendo agora ", el("span", { class: "count alert", text: todos.length })),
+      el("div", { class: "rapidos-lista" }, todos)] : []));
+  }
+  function cartaoPendencia(a) {
+    return el("article", { class: "rapido", "data-tipo": "pendencia" },
         el("div", { class: "rapido-tipo", text: a.titulo }),
         el("div", { class: "rapido-quem" }, App.abrirFicha ? el("button", { class: "link-ficha", type: "button", onclick: () => App.abrirFicha(a.id_app) }, a.nome || "ID " + a.id_app) : (a.nome || "ID " + a.id_app),
           a.nome ? el("span", { class: "mono meta", text: " " + a.id_app }) : null),
         el("div", { class: "meta", text: `${a.cidade ? a.cidade + " · " : ""}há ${App.u.duracao(a.criado_em).txt} · por ${a.criado_por_nome || "—"}` }),
-        el("button", { class: "btn small", type: "button", onclick: () => resolverRapido(a) }, "Marcar como resolvido"))))] : []));
+        el("button", { class: "btn small", type: "button", onclick: () => resolverRapido(a) }, "Marcar como resolvido"));
+  }
+
+  // 009d: acordos com parceiros que venceram: bem chamativo, no topo, até alguém fazer o ajuste
+  function renderAcordos() {
+    const lista = S.resumo?.acordos_vencidos || [];
+    $("#inicio-acordos").replaceChildren(...lista.map((a) => el("div", { class: "acordo-vencido", role: "alert" },
+      el("span", { class: "acordo-icone", "aria-hidden": "true", text: "⚠️" }),
+      el("div", { class: "acordo-corpo" },
+        el("b", { text: a.dias === 0 ? `Acordo vence hoje: fazer o ajuste · ${a.estabelecimento} (${a.cidade})` : `Acordo vencido há ${-a.dias} dia(s): fazer o ajuste · ${a.estabelecimento} (${a.cidade})` }),
+        el("span", { class: "rapido-texto", text: a.acordo })),
+      el("button", { class: "btn", type: "button", onclick: () => App.ajustarAcordo?.(a) }, "Ajuste feito"))));
   }
 
   function render() {
+    renderAcordos();
     renderRapidos();
     const r = S.resumo, a = r?.ativacao, b = r?.bloqueios, at = r?.atividades;
     $("#ola").textContent = `Olá, ${S.me.nome.split(" ")[0]}!`;
+    $("#inicio-acoes").replaceChildren(...(App.agora?.botoes() || []));
 
     // ---------- funções ----------
     const fn = [

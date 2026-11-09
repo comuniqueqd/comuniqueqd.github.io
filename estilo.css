@@ -515,3 +515,49 @@ label.agravante input { width: auto; margin-top: 3px; }
 .rapido-quem { font-weight: 600; }
 .rapido .btn { justify-self: start; margin-top: 4px; }
 .pendencia-pergunta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--warn); border-radius: var(--radius); background: var(--warn-soft); }
+
+/* ---------- 009d: acontecendo agora, pedir ajuda, aviso geral, passagem de turno ---------- */
+.inicio-topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.acoes-agora { display: flex; flex-wrap: wrap; gap: 6px; }
+.acoes-agora .btn.ajuda { border-color: var(--bad); color: var(--bad); font-weight: 600; }
+.acoes-agora .btn.ajuda:hover { background: var(--bad-soft); }
+.rapido.ajuda { border-left-color: var(--bad); background: var(--bad-soft); }
+.rapido.ajuda .rapido-tipo { color: var(--bad); }
+.rapido.ajuda.aceita { border-left-color: var(--ok); background: var(--surface); }
+.rapido.ajuda.aceita .rapido-tipo { color: var(--ok); }
+.rapido.ajuda.expirada { background: var(--surface); }
+.rapido.aviso-geral { border-left-color: var(--accent); }
+.rapido.aviso-geral .rapido-tipo { color: var(--accent); }
+.rapido.passagem { border-left-color: var(--gray); }
+.rapido.passagem .rapido-tipo { color: var(--ink); }
+.rapido-texto { white-space: pre-wrap; overflow-wrap: anywhere; }
+.rapido .actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; }
+.rapido .actions .btn { margin-top: 0; }
+.passagem-itens { margin: 2px 0; padding-left: 18px; font-size: 14px; }
+.opcoes-col { border: 0; padding: 0; margin: 0 0 6px; display: grid; gap: 4px; }
+.opcoes-col legend { font-weight: 600; margin-bottom: 4px; }
+.chips-linha { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+dialog.janela:has(#ag-turno-texto) { width: min(720px, 94vw); }
+.turno-panorama { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
+.turno-itens { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 8px; }
+.turno-item { display: grid; grid-template-columns: 1fr minmax(200px, 260px); gap: 8px; align-items: center; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+@media (max-width: 600px) { .turno-item { grid-template-columns: 1fr; } }
+.lembrete-turno { bottom: 70px; }
+
+/* acordos com parceiros (009d) */
+.acordo-vencido { display: flex; align-items: center; gap: 14px; background: var(--bad); color: #fff; border-radius: var(--radius); padding: 14px 18px; margin: 0 0 12px;
+  box-shadow: 0 0 0 3px var(--bad-soft); animation: acordo-pulso 2s ease-in-out infinite; }
+.acordo-vencido .acordo-icone { font-size: 28px; }
+.acordo-vencido .acordo-corpo { display: grid; gap: 2px; flex: 1; min-width: 0; }
+.acordo-vencido b { font-size: 16px; }
+.acordo-vencido .btn { background: #fff; color: var(--bad); border-color: #fff; font-weight: 700; white-space: nowrap; }
+@keyframes acordo-pulso { 50% { box-shadow: 0 0 0 7px var(--bad-soft); } }
+@media (prefers-reduced-motion: reduce) { .acordo-vencido { animation: none; } }
+@media (max-width: 600px) { .acordo-vencido { flex-wrap: wrap; } }
+.acordos-lista { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.acordo { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 10px 12px; display: grid; gap: 4px; }
+.acordo.vencido { border-left-color: var(--bad); background: var(--bad-soft); }
+.acordo.ajustado { border-left-color: var(--ok); opacity: .85; }
+.acordo-topo { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.acordo-topo .pill { margin-left: auto; }
+.acordo .actions { margin: 2px 0 0; }

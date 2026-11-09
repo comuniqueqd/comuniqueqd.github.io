@@ -480,7 +480,7 @@
           r.checked = B.solucionado === (v === "sim"); return el("label", {}, r, " " + rot); };
         partes.push(el("div", { class: "pendencia-pergunta" },
           el("div", {}, el("b", { text: "Já foi solucionado? " }), el("span", { class: "req", text: "*" }),
-            el("div", { class: "meta", text: `Se não, fica em Avisos rápidos na tela inicial como “${p.pendencia}” até alguém marcar como resolvido.` })),
+            el("div", { class: "meta", text: `Se não, fica em “Acontecendo agora” na tela inicial como “${p.pendencia}” até alguém marcar como resolvido.` })),
           el("div", { class: "opcoes", role: "radiogroup", "aria-label": "Já foi solucionado?" }, op("sim", "Sim"), op("nao", "Não"))));
       }
       // 009c: agravante da política (só aparece na infração que tem)
@@ -531,7 +531,7 @@
       el("div", { class: "grande", text: r.horas == null ? "Encerramento de parceria registrado" : `Aplique ${horasTxt(r.horas)} de bloqueio` }),
       r.fim ? el("div", { text: `Até ${dt(r.fim)}. O sistema retira o bloqueio sozinho nesse horário.` }) : null,
       r.agravante ? el("div", { class: "meta", text: `Com agravante: ${r.agravante}.` }) : null,
-      r.pendencia ? el("div", { class: "meta", text: `Ficou em Avisos rápidos na tela inicial: “${r.pendencia}”, até alguém marcar como resolvido.` }) : null,
+      r.pendencia ? el("div", { class: "meta", text: `Ficou em “Acontecendo agora” na tela inicial: “${r.pendencia}”, até alguém marcar como resolvido.` }) : null,
       el("div", { class: "meta", text: r.tarefa ? `Tratativa enviada para ${r.responsavel}. Você recebe um aviso quando ela for feita.` : "Bloqueio curto: sem tratativa." }),
       el("div", { class: "actions" },
         botaoMensagem({ ...r, situacao: r.horas == null ? "encerramento" : "bloqueado" }),

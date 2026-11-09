@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009c2">
+<link rel="stylesheet" href="estilo.css?v=009d">
 </head>
 <body>
 <header class="top">
@@ -45,9 +45,10 @@
   <!-- ===================== INÍCIO ===================== -->
   <section class="view" id="v-inicio" hidden>
     <h2 id="ola">Olá!</h2>
-    <p class="sub">O que você quer fazer agora?</p>
+    <div class="inicio-topo"><p class="sub">O que você quer fazer agora?</p><div class="acoes-agora" id="inicio-acoes"></div></div>
+    <div id="inicio-acordos"></div>
     <div id="inicio-novidades"></div>
-    <section class="rapidos" id="inicio-rapidos" aria-label="Avisos rápidos" hidden></section>
+    <section class="rapidos" id="inicio-rapidos" aria-label="Acontecendo agora" hidden></section>
     <nav class="funcoes" id="inicio-funcoes" aria-label="Atalhos do dia a dia"></nav>
     <div class="inicio-dados">
       <div class="inicio-dados-topo"><h3>Seus números</h3><a class="btn link" href="#analises/simples">Ver mais nas Análises →</a></div>
@@ -338,6 +339,28 @@
     <div id="fi-pend-lista"></div>
   </section>
 
+  <section class="view" id="v-fi-acordos" hidden>
+    <h2>Acordos fechados</h2>
+    <p class="sub">Acordos com estabelecimentos parceiros. No dia do vencimento, o acordo aparece em destaque na tela inicial de todos até alguém fazer o ajuste.</p>
+    <div class="two" style="align-items:start">
+      <form class="panel" id="fi-ac-form" autocomplete="off" novalidate style="margin:0">
+        <h3>Novo acordo</h3>
+        <label>Estabelecimento parceiro<input id="fi-ac-estab" maxlength="150" placeholder="Ex.: Mercado Bom Preço" required></label>
+        <label>Cidade do estabelecimento<input id="fi-ac-cidade" list="fi-ac-cidades" maxlength="80" placeholder="CIDADE - UF" required></label>
+        <datalist id="fi-ac-cidades"></datalist>
+        <label>O que foi acordado<textarea id="fi-ac-texto" rows="4" maxlength="1500" placeholder="Ex.: taxa de entrega de R$ 3,99 em vez de R$ 5,99 por 30 dias" required></textarea></label>
+        <label>Vence em<input id="fi-ac-vence" type="date" required></label>
+        <p class="warn-msg" id="fi-ac-erro" role="alert" hidden></p>
+        <div class="actions"><button class="btn primary" type="submit" id="fi-ac-enviar">Registrar acordo</button><button class="btn" type="reset">Limpar</button></div>
+      </form>
+      <div class="panel" style="margin:0">
+        <div class="toolbar"><h3 style="margin:0">Acordos</h3>
+          <select id="fi-ac-filtro" aria-label="Quais acordos"><option value="abertos" selected>Em vigor e vencidos</option><option value="ajustados">Ajuste feito</option><option value="">Todos</option></select></div>
+        <div id="fi-ac-lista"></div>
+      </div>
+    </div>
+  </section>
+
   <section class="view" id="v-fi-lancamentos" hidden>
     <h2>Lançamentos</h2>
     <p class="sub">Tudo o que foi pago ao entregador fora da corrida normal: adicionais e ajustes de bairro.</p>
@@ -614,18 +637,20 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/base.js?v=009c2"></script>
-<script src="js/inicio.js?v=009c2"></script>
-<script src="js/ativacao.js?v=009c2"></script>
-<script src="js/bloqueios.js?v=009c2"></script>
-<script src="js/entregadores.js?v=009c2"></script>
-<script src="js/atividades.js?v=009c2"></script>
-<script src="js/avisos.js?v=009c2"></script>
-<script src="js/analises.js?v=009c2"></script>
-<script src="js/registros.js?v=009c2"></script>
-<script src="js/equipe.js?v=009c2"></script>
-<script src="js/ferramentas.js?v=009c2"></script>
-<script src="js/financeiro.js?v=009c2"></script>
-<script src="js/busca.js?v=009c2"></script>
+<script src="js/base.js?v=009d"></script>
+<script src="js/inicio.js?v=009d"></script>
+<script src="js/ativacao.js?v=009d"></script>
+<script src="js/bloqueios.js?v=009d"></script>
+<script src="js/entregadores.js?v=009d"></script>
+<script src="js/atividades.js?v=009d"></script>
+<script src="js/avisos.js?v=009d"></script>
+<script src="js/analises.js?v=009d"></script>
+<script src="js/registros.js?v=009d"></script>
+<script src="js/equipe.js?v=009d"></script>
+<script src="js/ferramentas.js?v=009d"></script>
+<script src="js/financeiro.js?v=009d"></script>
+<script src="js/busca.js?v=009d"></script>
+<script src="js/sons.js?v=009d"></script>
+<script src="js/agora.js?v=009d"></script>
 </body>
 </html>

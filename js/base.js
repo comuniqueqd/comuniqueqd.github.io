@@ -317,7 +317,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009c2";
+  const VERSAO_APP = "009d";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;
@@ -478,7 +478,10 @@
     // O resto chega pelo tique (a cada 30 s pergunta só o número da última mudança): antes, cada mudança em
     // 8 tabelas fazia todo mundo recarregar tudo na hora, por cima do tique.
     try {
-      S.sb.channel("avisos").on("postgres_changes", { event: "INSERT", schema: "public", table: "notificacoes", filter: `para=eq.${S.me.id}` }, agendar).subscribe();
+      S.sb.channel("avisos").on("postgres_changes", { event: "INSERT", schema: "public", table: "notificacoes", filter: `para=eq.${S.me.id}` }, (payload) => {
+        try { App.som?.aviso(payload?.new); } catch (_) {}  // 009d: som conforme a urgência
+        agendar();
+      }).subscribe();
     } catch (_) {}
     setInterval(tique, 30000);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) { ultimoTique = 0; conferirVersao(); tique(); } });

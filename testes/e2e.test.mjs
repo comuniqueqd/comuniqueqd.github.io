@@ -42,6 +42,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/008d-avisos-parte2.sql"
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009b-ferramentas-financeiro.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009c-mensagens-agravante.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009c2-mensagens-opcoes.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009d-ajuda-aviso-turno.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -93,7 +94,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009c"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009d"); } catch (_) {} });
   if (p) {
     const enc = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
     const exp = Math.floor(Date.now() / 1000) + 36000;
@@ -265,7 +266,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Gerar mensagem") && await s.isVisible(".faixa-novidades >> text=e mais: 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Pedir ajuda") && await s.isVisible(".faixa-novidades >> text=e mais: 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -704,7 +705,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -930,7 +931,7 @@ try {
   await a8.screenshot({ path: path.join(PRINTS, "k1-agravante.png"), fullPage: true });
   await a8.click("#bq-enviar");
   ok(await esperar(a8, "#bq-previa >> text=Com agravante: Não respondeu"), "registrado com agravante");
-  ok(await esperar(a8, "#bq-previa >> text=Ficou em Avisos rápidos na tela inicial"), "não solucionado: avisa que ficou em Avisos rápidos");
+  ok(await esperar(a8, "#bq-previa >> text=Ficou em “Acontecendo agora” na tela inicial"), "não solucionado: avisa que ficou em Acontecendo agora");
   await a8.click("#bq-previa button:has-text('Gerar mensagem')");
   ok(await esperar(a8, "dialog.janela textarea.msg-texto"), "Gerar mensagem abre a janela com o texto pronto");
   const msg = await a8.inputValue("dialog.janela textarea.msg-texto");
@@ -939,7 +940,7 @@ try {
   await a8.screenshot({ path: path.join(PRINTS, "k2-gerar-mensagem.png") });
   await a8.click("dialog.janela >> text=Fechar");
   await ir(a8, "#inicio");
-  ok(await esperar(a8, "#inicio-rapidos .rapido >> text=Aguardando prestação de contas") && await a8.isVisible("#inicio-rapidos .rapido >> text=Rita Retida"), "tela inicial: Avisos rápidos com 'Aguardando prestação de contas' e o nome do entregador");
+  ok(await esperar(a8, "#inicio-rapidos .rapido >> text=Aguardando prestação de contas") && await a8.isVisible("#inicio-rapidos .rapido >> text=Rita Retida"), "tela inicial: Acontecendo agora com 'Aguardando prestação de contas' e o nome do entregador");
   await a8.screenshot({ path: path.join(PRINTS, "k4-avisos-rapidos.png") });
   await a8.click("#inicio-rapidos button:has-text('Marcar como resolvido')");
   await a8.fill("dialog.janela input", "Prestou contas na loja");
@@ -961,6 +962,91 @@ try {
   ok((await a8.inputValue("#fe-msg-texto")).startsWith("Ana, tudo certo?") && (await a8.$$("#fe-msg-opcoes button")).length === 3, "três opções de texto para escolher");
   ok(await esperar(a8, "#fe-msg-regras tr:has-text('Retenção de Valores') >> text=até 1 hora") && await a8.isVisible("#fe-msg-modelos >> text=Editar"), "explicação de cada regra e moderador edita os modelos");
   await a8.screenshot({ path: path.join(PRINTS, "k3-mensagens-prontas.png"), fullPage: true });
+
+  // 22. 009d · Acontecendo agora: pedir ajuda, aviso geral, passagem de turno, lembrete das 18h e sons
+  await ir(a8, "#inicio"); await a8.reload();
+  ok(await esperar(a8, "#inicio-acoes #b-pedir-ajuda") && await a8.isVisible("#b-aviso-geral") && await a8.isVisible("#b-passar-turno"), "tela inicial: botões Pedir ajuda, Aviso geral e Passar o turno");
+  ok(await a8.evaluate(() => App.som.nivelDe({ categoria: "ajuda" }) === 4 && App.som.nivelDe({ texto: "Tratativa atrasada há 40 h" }) === 3
+    && App.som.nivelDe({ texto: "Sua decisão" }) === 2 && App.som.nivelDe({ categoria: "bloqueios" }) === 1 && App.som.nivelDe({ categoria: "bloqueios", motivo: "de_olho" }) === 2),
+    "sons: 4 níveis (ajuda 4, atraso/previsão 3, para você 2, o resto 1; de olho sobe um)");
+  await ir(s8, "#inicio"); await s8.reload();
+  await esperar(s8, "#b-pedir-ajuda");
+  await s8.click("#b-pedir-ajuda");
+  await s8.check("#janela-ajuda input[value=suporte_crisp]");
+  await s8.fill("#ag-ajuda-texto", "Fila no Crisp com 12 conversas esperando");
+  await s8.screenshot({ path: path.join(PRINTS, "l1-pedir-ajuda.png") });
+  await s8.click("#janela-ajuda button.primary");
+  ok(await esperar(s8, "#toast:has-text('Pedido enviado')") && await esperar(s8, "#inicio-rapidos .rapido.ajuda >> text=Seu pedido está aberto para a equipe"), "suporte pede ajuda e vê o pedido aberto");
+  await a8.evaluate(() => App.carregar());
+  ok(await esperar(a8, "#inicio-rapidos .rapido.ajuda >> text=Suporte Um precisa de ajuda") && await a8.isVisible("#inicio-rapidos .rapido.ajuda >> text=Fila no Crisp"), "a equipe vê o pedido de ajuda em Acontecendo agora");
+  ok(await a8.evaluate(() => App.som.ultimo?.nivel === 4), "pedido de ajuda novo toca o som de nível 4");
+  await a8.screenshot({ path: path.join(PRINTS, "l2-acontecendo-agora.png"), fullPage: true });
+  await a8.click("#inicio-rapidos .rapido.ajuda button:has-text('Eu ajudo')");
+  ok(await esperar(a8, "#inicio-rapidos .rapido.ajuda >> text=Você está ajudando Suporte Um"), "aceitar: quem ajuda vê com quem está");
+  await s8.evaluate(() => App.carregar());
+  ok(await esperar(s8, "#inicio-rapidos .rapido.ajuda >> text=Mateus Lopes vai te ajudar"), "quem pediu vê quem vai ajudar");
+  await s8.click("#inicio-rapidos .rapido.ajuda button:has-text('Resolvido')");
+  ok(await s8.waitForFunction(() => !document.querySelector("#inicio-rapidos .rapido.ajuda"), null, { timeout: 8000 }).then(() => true, () => false), "resolvido: o pedido sai da tela");
+
+  await a8.click("#b-aviso-geral");
+  await a8.fill("#ag-aviso-texto", "App dos entregadores instável em Lagarto até as 20h");
+  await a8.click("#janela-aviso .chip[data-horas='1']");
+  await a8.click("#janela-aviso button.primary");
+  ok(await esperar(a8, "#inicio-rapidos .rapido.aviso-geral >> text=App dos entregadores instável") && await a8.isVisible("#inicio-rapidos .rapido.aviso-geral button:has-text('Encerrar aviso')"), "aviso geral publicado, quem criou pode encerrar");
+  await s8.evaluate(() => App.carregar());
+  ok(await esperar(s8, "#inicio-rapidos .rapido.aviso-geral >> text=App dos entregadores instável") && await s8.isHidden("#inicio-rapidos .rapido.aviso-geral button:has-text('Encerrar aviso')"), "a equipe vê o aviso geral (sem poder encerrar)");
+  await a8.click("#inicio-rapidos .rapido.aviso-geral button:has-text('Encerrar aviso')");
+  ok(await a8.waitForFunction(() => !document.querySelector("#inicio-rapidos .rapido.aviso-geral"), null, { timeout: 8000 }).then(() => true, () => false), "encerrar tira o aviso geral");
+
+  await a8.click("#b-passar-turno");
+  ok(await esperar(a8, "#janela-turno .turno-panorama >> text=Agora na equipe"), "Passar o turno mostra o panorama do turno");
+  const nItens = (await a8.$$("#janela-turno .turno-item select")).length;
+  await a8.fill("#ag-turno-texto", "Cuidado com a fila do Crisp no fim da tarde");
+  await a8.screenshot({ path: path.join(PRINTS, "l3-passar-turno.png") });
+  await a8.click("#janela-turno button.primary");
+  ok(await esperar(a8, "#toast:has-text('Turno passado')"), `turno passado (${nItens} item(ns) mantidos)`);
+  await s8.evaluate(() => App.carregar());
+  ok(await esperar(s8, "#inicio-rapidos .rapido.passagem >> text=Cuidado com a fila do Crisp"), "quem entra vê a passagem de turno na tela inicial");
+  await s8.click("#inicio-rapidos .rapido.passagem button:has-text('Li')");
+  ok(await s8.waitForFunction(() => !document.querySelector("#inicio-rapidos .rapido.passagem"), null, { timeout: 8000 }).then(() => true, () => false), "“Li” tira a passagem da tela de quem leu");
+
+  await s8.evaluate(() => { App.agora_relogio = () => 17 * 60 + 45; App.render(); });
+  ok(await esperar(s8, "#lembrete-turno >> text=passe o turno"), "17h45 sem passar o turno: aparece o lembrete");
+  await s8.click("#lembrete-turno button:has-text('Depois')");
+  await s8.evaluate(() => App.render());
+  ok(await s8.isHidden("#lembrete-turno"), "“Depois” esconde o lembrete por 30 min");
+  await s8.evaluate(() => { sessionStorage.removeItem("comunique-turno-depois"); App.agora_relogio = () => 10 * 60; App.render(); });
+  ok(await s8.isHidden("#lembrete-turno"), "fora do horário, sem lembrete");
+
+  await ir(s8, "#atividades/avisos");
+  await esperar(s8, "#av-prefs [data-som=n4]");
+  await s8.evaluate(() => document.querySelector("#av-prefs [data-som=n1]").click());
+  ok(await s8.evaluate(() => JSON.parse(localStorage.getItem("comunique-som")).n1 === false) && (await s8.$$("#av-prefs [data-som]")).length >= 4, "Avisos: liga e desliga cada nível de som (guardado no navegador)");
+
+  // acordos fechados com parceiros: no vencimento, destaque na tela inicial de todos até o ajuste
+  await ir(a8, "#financeiro/acordos"); await a8.reload();
+  await esperar(a8, "#fi-ac-form");
+  const hojeBR = await a8.evaluate(() => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date()));
+  await a8.fill("#fi-ac-estab", "Mercado Bom Preço"); await a8.fill("#fi-ac-cidade", "LAGARTO - SE");
+  await a8.fill("#fi-ac-texto", "Taxa de entrega de R$ 3,99 por 30 dias"); await a8.fill("#fi-ac-vence", hojeBR);
+  await a8.click("#fi-ac-enviar");
+  ok(await esperar(a8, "#fi-ac-lista .acordo.vencido >> text=Vence hoje: fazer o ajuste"), "Financeiro → Acordos: acordo registrado, vencendo hoje");
+  await a8.fill("#fi-ac-estab", "Padaria Sol"); await a8.fill("#fi-ac-cidade", "ITABAIANA - SE");
+  await a8.fill("#fi-ac-texto", "Frete grátis acima de R$ 50"); await a8.fill("#fi-ac-vence", "2099-12-31");
+  await a8.click("#fi-ac-enviar");
+  ok(await esperar(a8, "#fi-ac-lista .acordo.vigente >> text=Padaria Sol") && await a8.isVisible("#c-fin-acordos:has-text('1')"), "acordo em vigor na lista e o número de vencidos na aba");
+  await a8.screenshot({ path: path.join(PRINTS, "l4-acordos.png"), fullPage: true });
+  await s8.evaluate(() => { location.hash = "#inicio"; App.carregar(); });
+  ok(await esperar(s8, "#inicio-acordos .acordo-vencido >> text=Mercado Bom Preço") && await s8.isVisible("#inicio-acordos .acordo-vencido >> text=fazer o ajuste"), "tela inicial de todos: aviso chamativo do acordo vencido");
+  ok(!(await s8.isVisible("#inicio-acordos >> text=Padaria Sol")), "acordo em vigor não aparece na tela inicial");
+  await s8.screenshot({ path: path.join(PRINTS, "l5-acordo-vencido.png") });
+  await s8.click("#inicio-acordos .acordo-vencido button:has-text('Ajuste feito')");
+  await s8.fill("#janela-acordo input", "Taxa voltou ao normal");
+  await s8.click("#janela-acordo button.primary");
+  ok(await s8.waitForFunction(() => !document.querySelector("#inicio-acordos .acordo-vencido"), null, { timeout: 8000 }).then(() => true, () => false), "“Ajuste feito” tira o aviso");
+  await a8.evaluate(() => App.carregar());
+  await a8.selectOption("#fi-ac-filtro", "ajustados");
+  ok(await esperar(a8, "#fi-ac-lista .acordo.ajustado >> text=Ajuste feito por Suporte Um"), "o acordo fica no histórico com quem fez o ajuste");
 
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });

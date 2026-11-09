@@ -3,12 +3,13 @@
 // - Adicionais pendentes: o que EU registrei e ainda não foi lançado no sistema (adicionais e ajustes de bairro).
 //   Qualquer pessoa pode marcar como lançado (marcar_lancado).
 // - Lançamentos: lista com filtros + números (resumo_financeiro) e CSV.
+// - Acordos (009d): acordos fechados com parceiros; vencidos ficam na tela inicial de todos até o ajuste (App.ajustarAcordo).
 (() => {
   "use strict";
   const App = window.App;
   const { $, el, dt, toast, vazio, carregandoEl, rpc, msgErro, tabela, barras, baixarCSV } = App.u;
   const S = App.S;
-  const G = { cidades: null, meus: null, pend: null, lista: null, resumo: null, erro: null, confirmar: {} };
+  const G = { acordos: null, cidades: null, meus: null, pend: null, lista: null, resumo: null, erro: null, confirmar: {} };
   const brl = (v) => (v == null ? "—" : "R$ " + Number(v).toFixed(2).replace(".", ","));
   const valor = (s) => { const t = String(s || "").replace(/[^\d,.-]/g, ""); if (!t) return null; const n = Number(t.includes(",") ? t.replace(/\./g, "").replace(",", ".") : t); return Number.isFinite(n) ? n : NaN; };
   const TIPO = { adicional: "Adicional", ajuste_bairro: "Ajuste de bairro" };
@@ -157,17 +158,73 @@
       "Nenhum registro com esse filtro."));
   }
 
+  // ---------- acordos fechados ----------
+  const acForm = $("#fi-ac-form"), acErro = $("#fi-ac-erro");
+  acForm.addEventListener("input", () => (acErro.hidden = true));
+  $("#fi-ac-filtro").addEventListener("change", () => App.carregar());
+  acForm.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const b = $("#fi-ac-enviar"); b.disabled = true;
+    try {
+      await rpc("registrar_acordo", { p_estabelecimento: $("#fi-ac-estab").value.trim(), p_cidade: $("#fi-ac-cidade").value.trim(),
+        p_acordo: $("#fi-ac-texto").value.trim(), p_vence_em: $("#fi-ac-vence").value || null });
+      acForm.reset(); toast("Acordo registrado. No vencimento, ele aparece na tela inicial de todos."); App.carregar();
+    } catch (e) { acErro.textContent = msgErro(e); acErro.hidden = false; } finally { b.disabled = false; }
+  });
+  const diaBR = (d) => d.split("-").reverse().join("/");
+  const situacaoAcordo = (a) => a.situacao === "ajustado" ? el("span", { class: "pill liberado", text: `Ajuste feito por ${a.ajustado_por_nome || "—"}` })
+    : a.situacao === "vencido" ? el("span", { class: "pill bloqueado", text: a.dias === 0 ? "Vence hoje: fazer o ajuste" : `Vencido há ${-a.dias} dia(s): fazer o ajuste` })
+    : el("span", { class: "pill pendente", text: a.dias === 1 ? "Vence amanhã" : `Vence em ${a.dias} dias` });
+  // "Ajuste feito" (tela inicial e lista): qualquer pessoa, com uma nota opcional
+  App.ajustarAcordo = function (a) {
+    const nota = el("input", { maxlength: 500, placeholder: "Ex.: taxa voltou ao valor normal no sistema" });
+    const e2 = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    const d = App.u.janela("Ajuste do acordo",
+      el("p", { style: "margin:0" }, el("b", { text: a.estabelecimento }), ` · ${a.cidade}`),
+      el("p", { class: "rapido-texto", style: "margin:0", text: a.acordo }),
+      el("label", {}, "O que foi feito (opcional)", nota), e2,
+      el("div", { class: "actions" },
+        el("button", { class: "btn primary", type: "button", onclick: async (e) => {
+          e.currentTarget.disabled = true;
+          try { await rpc("ajustar_acordo", { p_id: a.id, p_nota: nota.value.trim() || null }); d.close(); toast("Ajuste registrado. O aviso saiu da tela de todos."); App.carregar(); }
+          catch (err) { e.currentTarget.disabled = false; e2.textContent = msgErro(err); e2.hidden = false; }
+        } }, "Ajuste feito"),
+        el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
+    d.id = "janela-acordo";
+  };
+  function renderAcordos() {
+    $("#fi-ac-cidades").replaceChildren(...[...new Set([...(G.cidades || []), ...App.u.CIDADES])].map((c) => el("option", { value: c })));
+    const box = $("#fi-ac-lista");
+    if (G.erro) return box.replaceChildren(el("p", { class: "warn-msg", text: G.erro }));
+    if (!G.acordos) return box.replaceChildren(carregandoEl());
+    if (!G.acordos.length) return box.replaceChildren(vazio("Nenhum acordo aqui."));
+    const souMod = S.me.papel === "moderador" || S.me.papel_bloqueios === "moderador";
+    box.replaceChildren(el("ul", { class: "acordos-lista" }, G.acordos.map((a) => el("li", { class: "acordo " + a.situacao },
+      el("div", { class: "acordo-topo" }, el("b", { text: a.estabelecimento }), el("span", { class: "meta", text: " · " + a.cidade }), situacaoAcordo(a)),
+      el("div", { class: "rapido-texto", text: a.acordo }),
+      el("div", { class: "meta", text: `vence em ${diaBR(a.vence_em)} · registrado por ${a.criado_por_nome || "—"} em ${dt(a.criado_em)}` +
+        (a.ajustado_em ? ` · ajuste em ${dt(a.ajustado_em)}${a.nota ? ": " + a.nota : ""}` : "") }),
+      el("div", { class: "actions" },
+        a.situacao !== "ajustado" ? el("button", { class: "btn small" + (a.situacao === "vencido" ? " primary" : ""), type: "button", onclick: () => App.ajustarAcordo(a) }, "Ajuste feito") : null,
+        a.meu || souMod ? el("button", { class: "btn small link", type: "button", onclick: async (e) => {
+          if (!G.confirmar["ac" + a.id]) { G.confirmar["ac" + a.id] = true; e.currentTarget.textContent = "Confirmar exclusão"; return; }
+          try { await rpc("excluir_acordo", { p_id: a.id }); toast("Acordo excluído."); App.carregar(); } catch (err) { toast(msgErro(err)); }
+        } }, "Excluir") : null)))));
+  }
+
   App.modulo({
     id: "financeiro", nome: "Financeiro",
     abas: [
       { id: "adicional", nome: "Registrar adicional", secao: "v-fi-adicional" },
       { id: "pendentes", nome: "Adicionais pendentes", secao: "v-fi-pendentes", contador: "c-fin-pend", alerta: true },
+      { id: "acordos", nome: "Acordos", secao: "v-fi-acordos", contador: "c-fin-acordos", alerta: true },
       { id: "lancamentos", nome: "Lançamentos", secao: "v-fi-lancamentos" },
     ],
     async carregar(aba) {
       try {
         if (!G.cidades) G.cidades = (await rpc("tarifas_bairros")).cidades.map((c) => c.nome);
         if (aba === "adicional") G.meus = (await rpc("listar_lancamentos", { p_meus: true, p_dias: 7, p_limite: 8 })).itens;
+        else if (aba === "acordos") G.acordos = await rpc("listar_acordos", { p_situacao: $("#fi-ac-filtro").value || null });
         else if (aba === "pendentes") G.pend = (await rpc("listar_lancamentos", { p_pendentes: true, p_meus: true })).itens;
         else {
           const dias = Number($("#fi-l-dias").value), cidade = $("#fi-l-cidade").value || null;
@@ -179,10 +236,11 @@
         G.erro = null;
       } catch (e) { G.erro = msgErro(e); throw e; }
     },
-    render: (aba) => (aba === "pendentes" ? renderPendentes() : aba === "lancamentos" ? renderLancamentos() : renderAdicional()),
+    render: (aba) => (aba === "acordos" ? renderAcordos() : aba === "pendentes" ? renderPendentes() : aba === "lancamentos" ? renderLancamentos() : renderAdicional()),
     contadores() {
       const n = S.resumo?.financeiro_pendentes || 0;
-      App.contador("c-fin", n); App.contador("c-fin-pend", n);
+      App.contador("c-fin", n + (S.resumo?.acordos_vencidos?.length || 0)); App.contador("c-fin-pend", n);
+      App.contador("c-fin-acordos", S.resumo?.acordos_vencidos?.length || 0);
     },
   });
 })();
