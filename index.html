@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009e3">
+<link rel="stylesheet" href="estilo.css?v=009f">
 </head>
 <body>
 <header class="top">
@@ -50,6 +50,7 @@
     <div id="inicio-acordos"></div>
     <div id="inicio-novidades"></div>
     <section class="rapidos" id="inicio-rapidos" aria-label="Acontecendo agora" hidden></section>
+    <section class="noticias-box" id="inicio-noticias" aria-label="Notícias rápidas" hidden></section>
     <nav class="funcoes" id="inicio-funcoes" aria-label="Atalhos do dia a dia"></nav>
     <div class="inicio-dados">
       <div class="inicio-dados-topo"><h3>Seus números</h3><a class="btn link" href="#analises/simples">Ver mais nas Análises →</a></div>
@@ -166,7 +167,7 @@
             <select id="bq-infracao"><option value="">Escolha a infração</option></select>
           </label>
         </div>
-        <label for="bq-obs">Observação <span class="hint">Opcional: o que aconteceu, número do pedido…</span>
+        <label for="bq-obs">Observação <span class="hint">Opcional: o que aconteceu, código do pedido…</span>
           <textarea id="bq-obs" maxlength="600"></textarea>
         </label>
         <label for="bq-comentario">Comentários adicionais sobre o entregador <span class="hint">Opcional: fica no cadastro do entregador e aparece para quem consultar ou registrar este ID depois.</span>
@@ -231,7 +232,7 @@
             <label for="fe-id"><span>ID do entregador <span class="req">*</span></span><input id="fe-id" class="mono" autocomplete="off" spellcheck="false" maxlength="40"></label>
             <label for="fe-nome">Nome do entregador <span class="hint">Em branco: usa o da ficha.</span><input id="fe-nome" autocomplete="off" maxlength="120"></label>
             <label for="fe-origem"><span>De onde veio o pedido <span class="req">*</span></span><select id="fe-origem"><option value="">Escolha</option><option value="qd">QD</option><option value="outros">Outros</option></select></label>
-            <label for="fe-pedido">Número do pedido <span class="hint">Opcional.</span><input id="fe-pedido" autocomplete="off" maxlength="60"></label>
+            <label for="fe-pedido">Código do pedido (sem os números) <span class="hint">Opcional.</span><input id="fe-pedido" autocomplete="off" maxlength="60"></label>
           </div>
           <label for="fe-motivo">Motivo <select id="fe-motivo"><option value="Cliente informou o bairro errado">Cliente informou o bairro errado</option><option value="Endereço desatualizado no app">Endereço desatualizado no app</option><option value="Outro">Outro</option></select></label>
           <label class="check"><input type="checkbox" id="fe-lancado"> Já lancei no sistema (o entregador vai receber)</label>
@@ -309,7 +310,7 @@
     </div>
   </section>
   <section class="view" id="v-pa-lista" hidden>
-    <h2>Parceiros</h2>
+    <h2>Parceiros ativos</h2>
     <p class="sub">Todos os estabelecimentos ativados, do mais novo para o mais antigo.</p>
     <div class="toolbar protege-foco">
       <input id="pa-busca" type="search" placeholder="Buscar pelo nome ou pela observação" aria-label="Buscar parceiro">
@@ -317,6 +318,11 @@
       <label class="marcar" style="flex:0 0 auto"><input type="checkbox" id="pa-meus"> Só os que eu ativei</label>
     </div>
     <div id="pa-lista"></div>
+  </section>
+  <section class="view" id="v-pa-cidades" hidden>
+    <h2>Parceiros por cidade</h2>
+    <p class="sub">Quantos parceiros ativos cada cidade tem, quantos entraram nos últimos 30 dias e quem mais ativou.</p>
+    <div id="pa-por-cidade"></div>
   </section>
 
   <!-- 009b: Financeiro -->
@@ -330,7 +336,7 @@
           <label for="fi-id"><span>ID do entregador <span class="req">*</span></span><input id="fi-id" class="mono" autocomplete="off" spellcheck="false" maxlength="40"></label>
           <label for="fi-nome">Nome do entregador <span class="hint">Em branco: usa o da ficha.</span><input id="fi-nome" autocomplete="off" maxlength="120"></label>
           <label for="fi-cidade">Cidade <span class="hint">Em branco: usa a da ficha.</span><select id="fi-cidade"></select></label>
-          <label for="fi-pedido">Número do pedido <span class="hint">Opcional.</span><input id="fi-pedido" autocomplete="off" maxlength="60"></label>
+          <label for="fi-pedido">Código do pedido (sem os números) <span class="hint">Opcional.</span><input id="fi-pedido" autocomplete="off" maxlength="60"></label>
         </div>
         <div class="grid2">
           <div class="campo"><span>De onde veio o pedido <span class="req">*</span></span>
@@ -679,22 +685,22 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/base.js?v=009e3"></script>
-<script src="js/inicio.js?v=009e3"></script>
-<script src="js/ativacao.js?v=009e3"></script>
-<script src="js/bloqueios.js?v=009e3"></script>
-<script src="js/entregadores.js?v=009e3"></script>
-<script src="js/atividades.js?v=009e3"></script>
-<script src="js/painel.js?v=009e3"></script>
-<script src="js/avisos.js?v=009e3"></script>
-<script src="js/analises.js?v=009e3"></script>
-<script src="js/registros.js?v=009e3"></script>
-<script src="js/equipe.js?v=009e3"></script>
-<script src="js/ferramentas.js?v=009e3"></script>
-<script src="js/financeiro.js?v=009e3"></script>
-<script src="js/parceiros.js?v=009e3"></script>
-<script src="js/busca.js?v=009e3"></script>
-<script src="js/sons.js?v=009e3"></script>
-<script src="js/agora.js?v=009e3"></script>
+<script src="js/base.js?v=009f"></script>
+<script src="js/inicio.js?v=009f"></script>
+<script src="js/ativacao.js?v=009f"></script>
+<script src="js/bloqueios.js?v=009f"></script>
+<script src="js/entregadores.js?v=009f"></script>
+<script src="js/atividades.js?v=009f"></script>
+<script src="js/painel.js?v=009f"></script>
+<script src="js/avisos.js?v=009f"></script>
+<script src="js/analises.js?v=009f"></script>
+<script src="js/registros.js?v=009f"></script>
+<script src="js/equipe.js?v=009f"></script>
+<script src="js/ferramentas.js?v=009f"></script>
+<script src="js/financeiro.js?v=009f"></script>
+<script src="js/parceiros.js?v=009f"></script>
+<script src="js/busca.js?v=009f"></script>
+<script src="js/sons.js?v=009f"></script>
+<script src="js/agora.js?v=009f"></script>
 </body>
 </html>

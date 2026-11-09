@@ -124,7 +124,7 @@
     ativar_parceiro: [["cidade", "Cidade", "cidade", true], ["quantidade", "Quantos parceiros ativar", "numero", true], ["motivo", "Motivo", "texto", false]],
     fazer_contato: [["contato", "Pessoa ou estabelecimento", "texto", true], ["cidade", "Cidade", "cidade", true], ["telefone", "Número", "texto", false], ["motivo", "Motivo", "texto", true]],
     contato_entregador: [["id_app", "ID do entregador", "id", true], ["tratativa", "É tratativa?", "sim_nao", true], ["motivo", "Motivo", "lista", false], ["detalhe", "Detalhes", "texto", false]],
-    pedido_problema: [["pedido", "Número do pedido", "texto", true], ["cidade", "Cidade", "cidade", true], ["problema", "O que aconteceu", "texto", true]],
+    pedido_problema: [["pedido", "Código do pedido (sem os números)", "texto", true], ["cidade", "Cidade", "cidade", true], ["problema", "O que aconteceu", "texto", true]],
     pagamento_entregador: [["id_app", "ID do entregador", "id", true], ["valor", "Valor (R$)", "valor", true], ["motivo", "Motivo", "texto", true]],
     revisar_registro: [["referencia", "Qual registro (ID, pedido ou link)", "texto", true], ["motivo", "O que revisar", "texto", true]],
     criar_comunicado: [["cidade", "Cidade", "cidade", true], ["motivo", "Sobre o quê", "texto", true]],

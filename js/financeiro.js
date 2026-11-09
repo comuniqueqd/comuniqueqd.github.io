@@ -85,7 +85,7 @@
       el("span", { class: "meta", text: dt(l.criado_em) })),
     el("div", {}, App.abrirFicha ? el("button", { class: "link-ficha", type: "button", onclick: () => App.abrirFicha(l.id_app) }, l.nome_entregador || "sem nome") : l.nome_entregador,
       " ", el("span", { class: "mono meta", text: l.id_app }), el("span", { class: "meta", text: ` · ${l.cidade || "sem cidade"} · ${ORIGEM[l.origem]}` })),
-    el("div", { class: "meta", text: descricao(l) + (l.pedido ? ` · pedido nº ${l.pedido}` : "") + (l.observacao ? ` · ${l.observacao}` : "") }),
+    el("div", { class: "meta", text: descricao(l) + (l.pedido ? ` · código do pedido ${l.pedido}` : "") + (l.observacao ? ` · ${l.observacao}` : "") }),
     l.lancado ? el("div", { class: "meta", text: `Lançado por ${l.lancado_por_nome || "—"} em ${dt(l.lancado_em)}` }) : null,
     acoes ? el("div", { class: "actions" }, botaoLancar(l), botaoApagar(l)) : null);
 

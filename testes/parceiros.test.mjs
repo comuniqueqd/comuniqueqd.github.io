@@ -17,7 +17,8 @@ for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/
   "../supabase/009c2-mensagens-opcoes.sql", "../supabase/009d-ajuda-aviso-turno.sql",
   "../supabase/009d2-tarefas-cards.sql",
   "../supabase/009d3-painel-metas-recorrentes.sql",
-  "../supabase/009e-parceiros.sql", "../supabase/009e-parceiros.sql"]) await db.query(arquivo(f));
+  "../supabase/009e-parceiros.sql", "../supabase/009e-parceiros.sql",
+  "../supabase/009f-parceiros-completo.sql", "../supabase/009f-parceiros-completo.sql"]) await db.query(arquivo(f));
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -114,6 +115,17 @@ await t("metas de aprovação contam as aprovações direto", async () => {
   igual([m[0].conta, m[0].feitas], ["aprovacoes", 4]);
   const n = await rpc(mon, "salvar_meta", { p_tipo: "ativar_entregadores", p_quantidade: 5, p_periodo: "dia" });
   igual(n[0].feitas, 2, "aprovou 3, uma foi desfeita:");
+});
+
+await t("009f: por cidade e notícias rápidas", async () => {
+  await falha(rpc(sup, "criar_tarefa", { p_tipo: "pedido_problema", p_campos: { cidade: "LAGARTO - SE", problema: "x" } }), "o código do pedido");
+  const c = (await rpc(mon, "parceiros_por_cidade")).find((x) => x.cidade === "LAGARTO - SE");
+  igual([c.ativos > 0, c.ultimo.estabelecimento != null, c.quem_mais.n > 0], [true, true, true]);
+  igual(c.ativos, (await rpc(mon, "listar_parceiros", { p_cidade: "LAGARTO - SE" })).itens.length);
+  const n = await rpc(sup2, "noticias_rapidas", { p_limite: 3 });
+  igual([n.length, n[0].tipo, typeof n[0].quem], [3, "parceiro", "string"]);
+  await db.query("update parceiros set criado_em = now() - interval '8 days' where cidade = 'ITABAIANA - SE'");
+  igual((await rpc(sup2, "noticias_rapidas", { p_limite: 20 })).some((x) => x.cidade === "ITABAIANA - SE"), false, "mais de 7 dias sai:");
 });
 
 await t("segurança: tabela fechada e funções internas não expostas", async () => {

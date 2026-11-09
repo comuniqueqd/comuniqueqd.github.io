@@ -613,3 +613,17 @@ a.funcao.f-par { --fcor: #a16207; }
 .teste-sons { list-style: none; padding: 0; margin: 0 0 10px; display: grid; gap: 8px; }
 .teste-sons li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; }
 @media (max-width: 600px) { .teste-sons li { grid-template-columns: auto 1fr; } .teste-sons li .meta { grid-column: 2; } }
+
+/* parceiros completo e notícias rápidas (009f) */
+.parceiro .actions { margin: 0; flex-wrap: nowrap; }
+.pa-cidades { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.pa-cidade { margin: 0; display: grid; gap: 8px; }
+.pa-cidade .tiles { margin: 0; }
+.pa-cidade p { margin: 0; }
+.noticias-box { margin: 4px 0 22px; }
+.noticias { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.noticia { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: linear-gradient(90deg, var(--ok-soft), var(--surface));
+  border: 1px solid var(--line); border-left: 4px solid var(--ok); border-radius: var(--radius); padding: 9px 14px; }
+.noticia-texto { font-weight: 600; }
+.noticia .meta { white-space: nowrap; }
+@media (max-width: 600px) { .noticia { flex-direction: column; align-items: flex-start; } .parceiro { flex-direction: column; align-items: flex-start; } }

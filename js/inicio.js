@@ -82,6 +82,7 @@
 
   function render() {
     renderAcordos();
+    App.noticias?.render();
     renderRapidos();
     const r = S.resumo, a = r?.ativacao, b = r?.bloqueios, at = r?.atividades;
     $("#ola").textContent = `Olá, ${S.me.nome.split(" ")[0]}!`;
@@ -152,6 +153,7 @@
   App.modulo({
     id: "inicio", nome: "Início",
     abas: [{ id: "inicio", nome: "Início", secao: "v-inicio" }],
+    carregar: () => App.noticias?.carregar(),   // 009f: notícias rápidas só quando a tela inicial está aberta
     render,
   });
 })();
