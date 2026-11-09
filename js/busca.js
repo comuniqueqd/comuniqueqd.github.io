@@ -58,7 +58,7 @@
       ["Parceiro novo puxa entregadores", "Ativou um parceiro? Nasce sozinha a tarefa “Aprovar 5 entregadores” na cidade dele, aberta para a equipe. Se já existe uma na cidade, ela só sobe 5."],
       ["Entrar junto", "Nas tarefas de aprovar entregadores e parceiros, quem aceita não fecha para os outros: dá para “Entrar junto”, e as aprovações de todo mundo contam na mesma meta."],
       ["Tira de avisos", "A tira do sino ficou um pouco mais larga."],
-      ["Parceiros", "Em Parceiros ativos, quantos são e quantos entraram nesta semana comparado à anterior. A aba Por cidade virou Ativações, com o histórico de quem ativou cada parceiro."]] },
+      ["Ativações", "Em Parceiros, a aba Ativações (antes Por cidade) mostra quantos parceiros entraram nesta semana comparado à semana passada, cada cidade e o histórico: “Fulano ativou tal parceiro em tal cidade!”."]] },
     { versao: "009f", tema: "🎉 Parceiros completo e Notícias rápidas", itens: [
       ["Parceiros ativos", "A lista de todos os parceiros ativados, com busca, filtro por cidade e “Só os que eu ativei”."],
       ["Por cidade", "Cada cidade com os parceiros ativos, quantos entraram nos últimos 30 dias, o último ativado e quem mais ativou."],

@@ -1176,11 +1176,11 @@ try {
   await ir(s8, "#atividades/sugeridas");
   ok(await esperar(s8, cardPar + " >> text=1 de 2"), "o card da tarefa mostra o progresso");
   // 009f · por cidade e notícias rápidas
-  await ir(s8, "#parceiros/lista"); await s8.reload();
-  ok(await esperar(s8, "#pa-resumo >> text=parceiro ativo") && await s8.isVisible("#pa-resumo >> text=1 ativado nesta semana"), "Parceiros ativos: quantos e a comparação com a semana passada");
-  await ir(s8, "#parceiros/cidades");
+  await ir(s8, "#parceiros/cidades"); await s8.reload();
+  ok(await esperar(s8, "#pa-semana #pa-resumo >> text=1 ativado nesta semana") && await s8.isVisible("#pa-resumo >> text=na semana passada"), "Ativações: esta semana comparada à passada");
   ok(await esperar(s8, "#pa-por-cidade .pa-cidade:has-text('LAGARTO - SE') >> text=ativos") && await s8.isVisible("#pa-por-cidade >> text=Quem mais ativou aqui"), "Ativações: resumo de cada cidade");
-  ok(await esperar(s8, "#pa-historico .pa-hist >> text=ativou") && await s8.isVisible("#pa-historico >> text=Padaria Sol") && await s8.isVisible("nav.tabs a:has-text('Ativações')"), "Ativações: histórico de quem ativou o quê");
+  ok(await esperar(s8, "#pa-historico .pa-hist-frase >> text=Você ativou Padaria Sol em LAGARTO - SE!") && await s8.isVisible("nav.tabs a:has-text('Ativações')"), "Ativações: histórico com a frase de quem ativou o quê");
+  await s8.screenshot({ path: path.join(PRINTS, "o6-ativacoes.png"), fullPage: true });
   await s8.screenshot({ path: path.join(PRINTS, "o3-parceiros-cidade.png"), fullPage: true });
   await ir(a8, "#inicio"); await a8.evaluate(() => App.carregar());
   ok(await esperar(a8, "#inicio-noticias .noticia >> text=Padaria Sol") && await a8.isVisible("#inicio-noticias >> text=Notícias rápidas"), "tela inicial: notícia comemorativa da ativação");
