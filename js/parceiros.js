@@ -94,7 +94,7 @@
       { id: "lista", nome: "Parceiros ativos", secao: "v-pa-lista" },
       { id: "cidades", nome: "Por cidade", secao: "v-pa-cidades" },
     ],
-    padrao: "novo",
+    padrao: () => "novo",
     async carregar(aba) {
       try {
         if (aba === "lista") P.lista = await rpc("listar_parceiros", { p_busca: $("#pa-busca").value.trim() || null, p_cidade: $("#pa-filtro-cidade").value || null,

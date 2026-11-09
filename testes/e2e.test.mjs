@@ -1209,6 +1209,20 @@ try {
   ok(await esperar(s8, "#janela-teste-som"), "e a janela de teste abre para ele");
   await s8.click("#janela-teste-som .janela-topo button");
 
+  // cada item do menu de cima abre uma tela (pelo clique, sem a aba no endereço)
+  { await ir(a8, "#inicio");
+    const itens = await a8.$$eval("nav.modulos a:not([hidden])", (l) => l.map((x) => x.textContent.trim().split(" ")[0]));
+    let falharam = [];
+    for (let i = 0; i < itens.length; i++) {
+      await a8.evaluate(() => { location.hash = "#inicio"; });
+      await a8.waitForTimeout(300);
+      const antes = await a8.evaluate(() => location.hash);
+      await a8.locator("nav.modulos a:not([hidden])").nth(i).click();
+      const abriu = await a8.waitForFunction((a) => location.hash !== a && [...document.querySelectorAll("section.view")].some((s) => !s.hidden && s.id !== "v-inicio"), antes, { timeout: 4000 }).then(() => true, () => false);
+      if (!abriu && itens[i] !== "Início") falharam.push(itens[i]);
+    }
+    ok(!falharam.length, "todos os itens do menu de cima abrem a tela pelo clique" + (falharam.length ? ": falharam " + falharam.join(", ") : "")); }
+
   // 15. login pelo botão oficial do Google (sem passar pelo endereço do Supabase)
   const g = await abrir(null, "", { googleId: "teste.apps.googleusercontent.com" });
   ok(await esperar(g, "#g-google:not([hidden]) #botao-google-falso"), "com GOOGLE_CLIENT_ID, aparece o botão do Google");
