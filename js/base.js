@@ -57,7 +57,7 @@
   const PAPEL = { moderador: "Moderador", monitorador: "Monitorador", suporte: "Suporte" };
   const EVENTO = { enviado: "Enviado", aprovado: "Aprovado", reprovado: "Reprovado", encerrado: "Encerrado", desfeito: "Decisão desfeita", editado: "Dados alterados", revisado: "Dados conferidos" };
   const pill = (s, curto) => el("span", { class: "pill " + s, text: curto && s === "aguardando_contato" ? "Aguardando novo contato" : ST[s] });
-  const titulo = (c) => c.id_app ? "ID " + c.id_app : "CPF " + fmtCPF(c.cpf);
+  const titulo = (c) => c.id_app ? "ID " + c.id_app : "(sem ID)";
   const vazio = (t, d) => el("div", { class: "empty" }, el("strong", { text: t }), d);
   const carregandoEl = () => vazio("Carregando…");
 
@@ -319,7 +319,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009h";
+  const VERSAO_APP = "009i";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;

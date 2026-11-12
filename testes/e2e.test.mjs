@@ -49,6 +49,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009e-parceiros.sql"), "
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009f-parceiros-completo.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009g-tarefas-compartilhadas.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009h-entregador-pelo-lancamento.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009i-sem-cpf.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -158,19 +159,22 @@ try {
   await esperar(s, "#v-novo:not([hidden])");
   const abas = await s.$$eval("nav.tabs a:not([hidden])", (as) => as.map((x) => x.dataset.view));
   ok(JSON.stringify(abas) === JSON.stringify(["novo", "pendentes", "historico"]), "suporte vê só Novo cadastro, Pendentes e Histórico (008c): " + abas);
-  await s.fill("#f-idapp", "1a2b3c4d5e6f"); await s.fill("#f-cpf", "52998224725"); await s.fill("#f-cidade", "LAGARTO - SE"); await s.fill("#f-obs", "Documentos pelo WhatsApp");
+  await s.fill("#f-idapp", "1a2b3c4d5e6f"); await s.fill("#f-cidade", "LAGARTO - SE"); await s.fill("#f-obs", "Documentos pelo WhatsApp");
   await s.click("#b-enviar");
   ok(await esperar(s, "#v-pendentes:not([hidden]) .card.destaque"), "após enviar, vai para Pendentes com o cadastro destacado");
   ok((await texto(s, ".card.destaque")).includes("Aguardando análise"), "card mostra a situação Aguardando análise");
   ok((await texto(s, ".card.destaque")).includes("esperando há"), "card mostra há quanto tempo espera");
   await s.screenshot({ path: path.join(PRINTS, "3-suporte-pendentes.png"), fullPage: true });
   await ir(s, "#novo");
-  await s.fill("#f-idapp", "outro1234"); await s.fill("#f-cpf", "529.982.247-25"); await s.fill("#f-cidade", "RECIFE - PE");
+  ok(!(await s.$("#f-cpf")), "009i: o Novo cadastro não pede CPF");
   await s.click("#b-enviar");
-  ok(await esperar(s, "#form-erro:not([hidden])"), "CPF repetido é bloqueado: " + (await texto(s, "#form-erro")));
-  // casos (008) guardados: CPF repetido com outro ID volta a ser só a recusa, sem janela de caso
-  ok((await texto(s, "#form-erro")).includes("já está cadastrado") && !(await s.isVisible("dialog.janela")), "casos guardados: CPF repetido com outro ID só é recusado");
-  await s.fill("#f-idapp", "abc12345"); await s.fill("#f-cpf", ""); await s.click("#b-enviar");
+  ok(await esperar(s, "#e-idapp:has-text('Preencha o ID')"), "009i: sem ID não envia");
+  await s.fill("#f-idapp", "1A2B3C4D5E6F"); await s.fill("#f-cidade", "RECIFE - PE");
+  await s.click("#b-enviar");
+  ok(await esperar(s, "#form-erro:not([hidden])"), "ID repetido é bloqueado: " + (await texto(s, "#form-erro")));
+  // casos (008) guardados: repetido volta a ser só a recusa, sem janela de caso
+  ok((await texto(s, "#form-erro")).includes("já está cadastrado") && !(await s.isVisible("dialog.janela")) && !(await texto(s, "#form-erro")).includes("CPF"), "casos guardados: ID repetido só é recusado (sem falar de CPF)");
+  await s.fill("#f-idapp", "abc12345"); await s.click("#b-enviar");
   await esperar(s, "#v-pendentes:not([hidden]) .card.destaque");
   await s.fill("#f-idapp", "x").catch(() => {});
   await ir(s, "#novo"); await s.fill("#f-idapp", "zzz99881"); await s.fill("#f-cidade", "ITABAIANA - SE"); await s.click("#b-enviar");
@@ -241,7 +245,7 @@ try {
   ok(!(await a.isVisible("#t-hist >> text=abc12345")), "moderador exclui");
   const [dl] = await Promise.all([a.waitForEvent("download"), a.click("#b-export")]);
   const csv = fs.readFileSync(await dl.path(), "utf8");
-  ok(csv.includes("id_entregador;cpf;nome;cidade") && csv.includes("1a2b3c4d5e6f;529.982.247-25;;LAGARTO - SE"), "CSV baixado");
+  ok(csv.includes("id_entregador;nome;cidade") && csv.includes("1a2b3c4d5e6f;;LAGARTO - SE") && !/cpf/i.test(csv.split("\n")[0]), "CSV baixado");
   await a.screenshot({ path: path.join(PRINTS, "7-historico.png"), fullPage: true });
 
   // 8. novata já liberada entra; sair volta ao login
@@ -782,11 +786,11 @@ try {
   await m7.click("#t-hist tr:has-text('rev00002') button.revisar-cad");
   await m7.click("dialog.janela >> text=Os dados estão certos");
   ok(await esperar(m7, "#toast:has-text('Marcado como revisado')"), "monitorador marca 'Os dados estão certos'");
-  // cadastro novo só com CPF: já nasce com tarefa (a janela não oferece outra)
+  // cadastro novo sem nome: já nasce com tarefa (a janela não oferece outra)
   await ir(n7, "#ativacao/novo"); await esperar(n7, "#form");
-  await n7.fill("#f-cpf", "11144477735"); await n7.fill("#f-cidade", "LAGARTO - SE"); await n7.click("#b-enviar");
-  await esperar(n7, "#queue .card:has-text('111.444.777-35')");
-  await n7.click("#queue .card:has-text('111.444.777-35') button.revisar-cad");
+  await n7.fill("#f-idapp", "semnm7788"); await n7.fill("#f-cidade", "LAGARTO - SE"); await n7.click("#b-enviar");
+  await esperar(n7, "#queue .card:has-text('semnm7788')");
+  await n7.click("#queue .card:has-text('semnm7788') button.revisar-cad");
   ok(await esperar(n7, "dialog.janela >> text=Já existe uma tarefa aberta"), "cadastro novo incompleto já tem tarefa (não oferece outra)");
   await n7.click("dialog.janela >> text=Cancelar");
   { const t7 = await texto(n7, "main"); ok(!t7.includes("null"), "telas da 007 sem textos vazios (null)" + perto(t7, "null")); }

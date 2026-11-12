@@ -1,9 +1,9 @@
-// Busca rápida no topo (ID, CPF ou nome → ficha do entregador ou cadastro da ativação) e a
+// Busca rápida no topo (ID ou nome → ficha do entregador ou cadastro da ativação) e a
 // janela "O que há de novo", que aparece uma vez por pessoa a cada versão publicada.
 (() => {
   "use strict";
   const App = window.App;
-  const { $, el, dt, fmtCPF, rpc, msgErro, janela } = App.u;
+  const { $, el, dt, rpc, msgErro, janela } = App.u;
   const S = App.S;
 
   // ---------- busca rápida ----------
@@ -27,8 +27,8 @@
         el("span", { class: "meta mono", text: `${x.id_app} · ${x.cidade || "sem cidade"} · ${x.bloqueios} bloqueio(s)` }))));
     if (r.cadastros.length) linhas.push(el("h4", { text: "Cadastros da ativação" }), ...r.cadastros.map((x) =>
       el("button", { type: "button", onclick: () => ir(() => App.abrirCadastro(x.id)) },
-        el("span", { text: x.nome || (x.id_app ? "ID " + x.id_app : "CPF " + fmtCPF(x.cpf)) }),
-        el("span", { class: "meta mono", text: [x.id_app, x.cpf && fmtCPF(x.cpf), x.cidade, x.situacao].filter(Boolean).join(" · ") }))));
+        el("span", { text: x.nome || (x.id_app ? "ID " + x.id_app : "(sem ID)") }),
+        el("span", { class: "meta mono", text: [x.id_app, x.cidade, x.situacao].filter(Boolean).join(" · ") }))));
     // lupa: comentários sobre entregadores e os seus avisos
     const corta = (t, n = 90) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
     if (r.comentarios?.length) linhas.push(el("h4", { text: "Comentários" }), ...r.comentarios.map((x) =>
@@ -59,6 +59,7 @@
       ["Entrar junto", "Nas tarefas de aprovar entregadores e parceiros, quem aceita não fecha para os outros: dá para “Entrar junto”, e as aprovações de todo mundo contam na mesma meta."],
       ["Tira de avisos", "A tira do sino ficou um pouco mais larga."],
       ["Mensagens prontas", "Agora dá para escolher também restrição temporária, encerramento de parceria, liberação antes do prazo e aviso de infração leve, escolhendo o entregador com restrição (tudo já vem preenchido) ou preenchendo à mão."],
+      ["Sem CPF", "O Comunique não pede nem guarda mais CPF: o Novo cadastro pede só o ID do entregador (agora obrigatório), o nome e a cidade. Os CPFs que estavam gravados foram apagados."],
       ["Ficha do entregador automática", "Todo adicional, ajuste de bairro ou cadastro na ativação com o ID e o nome do entregador já cria a ficha dele, se ainda não existe. No próximo lançamento, basta o ID: nome e cidade vêm sozinhos."],
       ["Ativações", "Em Parceiros, a aba Ativações (antes Por cidade) mostra quantos parceiros entraram nesta semana comparado à semana passada, cada cidade e o histórico: “Fulano ativou tal parceiro em tal cidade!”."]] },
     { versao: "009f", tema: "🎉 Parceiros completo e Notícias rápidas", itens: [

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009h">
+<link rel="stylesheet" href="estilo.css?v=009i">
 </head>
 <body>
 <header class="top">
@@ -16,7 +16,7 @@
       <h1><a href="#inicio" style="color:inherit;text-decoration:none">Comunique</a></h1>
       <div class="who">
         <form class="busca-topo" id="busca-topo" role="search" hidden>
-          <input id="q-topo" type="search" placeholder="Buscar ID, CPF ou nome" aria-label="Busca rápida: ID, CPF ou nome" autocomplete="off">
+          <input id="q-topo" type="search" placeholder="Buscar ID ou nome" aria-label="Busca rápida: ID ou nome" autocomplete="off">
           <div class="busca-res" id="busca-res" hidden></div>
         </form>
         <span id="who"></span><span class="role" id="papel" hidden></span>
@@ -64,7 +64,7 @@
     <h2 id="pend-titulo">Cadastros em andamento</h2>
     <p class="sub" id="pend-sub">Do que espera há mais tempo para o mais recente.</p>
     <div class="toolbar">
-      <input id="q-pend" type="search" placeholder="Buscar por nome, ID, CPF ou cidade" aria-label="Buscar pendentes">
+      <input id="q-pend" type="search" placeholder="Buscar por nome, ID ou cidade" aria-label="Buscar pendentes">
       <select id="f-pend-status" aria-label="Filtrar por situação">
         <option value="">Todas as situações</option>
         <option value="aguardando_analise">Aguardando análise</option>
@@ -80,15 +80,11 @@
     <h2>Novo cadastro</h2>
     <p class="sub">Depois de enviar, você vai para Pendentes e acompanha a análise.</p>
     <form class="cad" id="form" novalidate>
-      <p class="sub" style="margin:0">Obrigatório: <strong>cidade</strong> e pelo menos um entre <strong>ID do entregador</strong> e <strong>CPF</strong>. CPF e ID não podem se repetir. Com <strong>ID e nome</strong>, a ficha do entregador nasce na aprovação.</p>
+      <p class="sub" style="margin:0">Obrigatório: <strong>ID do entregador</strong> e <strong>cidade</strong>. O ID não pode se repetir. Com <strong>ID e nome</strong>, a ficha do entregador nasce na aprovação.</p>
       <div class="grid2">
-        <label for="f-idapp">ID do entregador <span class="hint">Letras e números</span>
+        <label for="f-idapp"><span>ID do entregador <span class="req">*</span></span> <span class="hint">Letras e números</span>
           <input id="f-idapp" class="mono" autocomplete="off" spellcheck="false" maxlength="40" placeholder="ID no aplicativo de entregas">
           <span class="err" id="e-idapp"></span>
-        </label>
-        <label for="f-cpf">CPF <span class="hint">Opcional se tiver o ID</span>
-          <input id="f-cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" class="mono">
-          <span class="err" id="e-cpf"></span>
         </label>
       </div>
       <div id="f-historico" aria-live="polite"></div>
@@ -117,7 +113,7 @@
     <p class="sub" id="hist-sub">Todos os cadastros recebidos. Clique numa linha para ver o histórico de cada um.</p>
     <div class="tiles" id="hist-tiles"></div>
     <div class="toolbar">
-      <input id="q-hist" type="search" placeholder="Buscar por nome, ID, CPF, cidade ou pessoa" aria-label="Buscar no histórico">
+      <input id="q-hist" type="search" placeholder="Buscar por nome, ID, cidade ou pessoa" aria-label="Buscar no histórico">
       <select id="f-hist-status" aria-label="Filtrar por situação"></select>
       <select id="f-hist-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
       <label class="check" id="f-hist-meus-box" hidden><input type="checkbox" id="f-hist-meus"> Só os que eu enviei</label>
@@ -618,7 +614,7 @@
     <h2>Registros</h2>
     <p class="sub">Tudo o que a equipe fez nos módulos, do mais recente para o mais antigo.</p>
     <div class="toolbar">
-      <input id="rg-q" type="search" placeholder="Buscar por nome, ID, CPF, cidade ou ação" aria-label="Buscar nos registros">
+      <input id="rg-q" type="search" placeholder="Buscar por nome, ID, cidade ou ação" aria-label="Buscar nos registros">
       <select id="rg-modulo" aria-label="Módulo"><option value="">Todos os módulos</option><option value="ativacao">Ativação</option><option value="bloqueios">Bloqueios</option></select>
       <select id="rg-pessoa" aria-label="Pessoa"><option value="">Qualquer pessoa</option></select>
     </div>
@@ -694,22 +690,22 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
-<script src="js/base.js?v=009h"></script>
-<script src="js/inicio.js?v=009h"></script>
-<script src="js/ativacao.js?v=009h"></script>
-<script src="js/bloqueios.js?v=009h"></script>
-<script src="js/entregadores.js?v=009h"></script>
-<script src="js/atividades.js?v=009h"></script>
-<script src="js/painel.js?v=009h"></script>
-<script src="js/avisos.js?v=009h"></script>
-<script src="js/analises.js?v=009h"></script>
-<script src="js/registros.js?v=009h"></script>
-<script src="js/equipe.js?v=009h"></script>
-<script src="js/ferramentas.js?v=009h"></script>
-<script src="js/financeiro.js?v=009h"></script>
-<script src="js/parceiros.js?v=009h"></script>
-<script src="js/busca.js?v=009h"></script>
-<script src="js/sons.js?v=009h"></script>
-<script src="js/agora.js?v=009h"></script>
+<script src="js/base.js?v=009i"></script>
+<script src="js/inicio.js?v=009i"></script>
+<script src="js/ativacao.js?v=009i"></script>
+<script src="js/bloqueios.js?v=009i"></script>
+<script src="js/entregadores.js?v=009i"></script>
+<script src="js/atividades.js?v=009i"></script>
+<script src="js/painel.js?v=009i"></script>
+<script src="js/avisos.js?v=009i"></script>
+<script src="js/analises.js?v=009i"></script>
+<script src="js/registros.js?v=009i"></script>
+<script src="js/equipe.js?v=009i"></script>
+<script src="js/ferramentas.js?v=009i"></script>
+<script src="js/financeiro.js?v=009i"></script>
+<script src="js/parceiros.js?v=009i"></script>
+<script src="js/busca.js?v=009i"></script>
+<script src="js/sons.js?v=009i"></script>
+<script src="js/agora.js?v=009i"></script>
 </body>
 </html>
