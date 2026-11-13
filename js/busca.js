@@ -51,10 +51,15 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009o";
+  const VERSAO = "009p";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009p", tema: "🏘️ Bairros sem repetição", itens: [
+      ["Bairro com nome parecido", "Cadastrou um bairro com o nome quase igual a outro (Aldemar e Ademar, Várzea e VARZEA)? O Comunique entende que é o mesmo: o nome novo vira outro nome dele, com o mesmo valor. Se a dúvida for maior, ele pergunta antes."],
+      ["Calculadora mais esperta", "Na Calculadora de bairro, um erro pequeno de digitação no nome do bairro não atrapalha mais: ela mostra qual bairro entendeu."],
+      ["Juntar bairros repetidos", "Em Tarifas dos bairros, quem edita vê os pares com nome parecido que já existem e pode juntar (fica o valor escolhido) ou marcar que são diferentes."],
+    ] },
     { versao: "009o", tema: "🧹 Tudo no lugar", itens: [
       ["Avisos arrumados", "A tela de Avisos ficou mais organizada: as duas caixas de configuração lado a lado e os filtros juntos num painel. “Só os não lidos” voltou a ficar ao lado da caixinha."],
       ["Listas sem buracos", "Avisos, Registros e as listas de cartões não deixam mais um espaço em branco no fim enquanto você rola."],

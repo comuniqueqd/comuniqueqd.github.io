@@ -15,12 +15,49 @@
   App.brl = brl;
 
   const bairrosDa = (cidade, inativos = false) => (F.dados?.bairros || []).filter((b) => b.cidade === cidade && (inativos || b.ativo));
-  // acha pelo nome ou apelido, sem acento e sem diferenciar maiúsculas
+  // 009p: nomes parecidos (as mesmas regras de grau_bairro() no banco): "igual" (só acento/maiúscula/espaço),
+  // "quase" (uma letra, nomes com 5+ letras), "parecido" (duas letras, ou um nome dentro do outro sem os prefixos).
+  // Números e algarismos romanos diferentes nunca são parecidos ("Conjunto 1" × "Conjunto 2").
+  const normB = (t) => norm(t).toUpperCase().replace(/[^A-Z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+  const numerosB = (t) => normB(t).split(" ").filter((p) => /^\d+$/.test(p) || /^(I|II|III|IV|V|VI|VII|VIII|IX|X|XI|XII)$/.test(p)).sort().join(" ");
+  const nucleoB = (t) => (" " + normB(t) + " ").replace(/ (BAIRRO|POVOADO|POV|CONJUNTO|CONJ|RESIDENCIAL|RES|LOTEAMENTO|LOT|PARQUE|JARDIM|JD|VILA|SITIO|FAZENDA|CONDOMINIO|COND|DE|DA|DO|DAS|DOS)(?= )/g, "").trim();
+  function distancia(a, b) {
+    if (a === b) return 0;
+    let ant = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+      const at = [i];
+      for (let j = 1; j <= b.length; j++) at[j] = Math.min(at[j - 1] + 1, ant[j] + 1, ant[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      ant = at;
+    }
+    return ant[b.length];
+  }
+  function grauBairro(a, b) {
+    const na = normB(a), nb = normB(b);
+    if (!na || !nb) return null;
+    if (na === nb) return "igual";
+    if (numerosB(a) !== numerosB(b)) return null;
+    const m = Math.min(na.length, nb.length);
+    if (Math.abs(na.length - nb.length) <= 2) {
+      const d = distancia(na.replace(/ /g, ""), nb.replace(/ /g, ""));
+      if (d === 0) return "igual";
+      if (d === 1 && m >= 5) return "quase";
+      if (d === 2 && m >= 7) return "parecido";
+    }
+    const ca = nucleoB(a), cb = nucleoB(b);
+    if (ca.length >= 4 && cb.length >= 4 && (ca === cb || (Math.min(ca.length, cb.length) >= 5 && (` ${ca} `.includes(` ${cb} `) || ` ${cb} `.includes(` ${ca} `))))) return "parecido";
+    return null;
+  }
+  // acha pelo nome ou apelido, sem acento e sem diferenciar maiúsculas; se não achar, um praticamente igual
+  // (um erro de digitação, como "Aldemar" para ADEMAR) e marca o que a pessoa digitou
   function achar(cidade, txt) {
     const q = norm(txt);
     if (!q) return null;
     const lista = bairrosDa(cidade);
-    return lista.find((b) => norm(b.nome) === q) || lista.find((b) => b.apelidos.some((a) => norm(a) === q)) || null;
+    const exato = lista.find((b) => norm(b.nome) === q) || lista.find((b) => b.apelidos.some((a) => norm(a) === q));
+    if (exato) return exato;
+    if (q.length < 4) return null;
+    const perto = lista.find((b) => [b.nome, ...b.apelidos].some((x) => ["igual", "quase"].includes(grauBairro(txt, x))));
+    return perto ? { ...perto, digitado: txt.trim() } : null;
   }
 
   // ---------- calculadora ----------
@@ -79,7 +116,8 @@
     const { c, bi, br, dif } = calc();
     if (!c) { reg.hidden = true; return box.replaceChildren(); }
     const lado = (rot, b, txt) => el("div", { class: "fe-lado" + (b ? "" : " vazio") }, el("div", { class: "meta", text: rot }),
-      b ? [el("strong", { text: b.nome }), el("div", { class: "meta", text: `Valor ${brl(b.valor)} − taxa do log ${brl(b.taxa_log)}` }),
+      b ? [el("strong", { text: b.nome }), b.digitado ? el("div", { class: "meta entendido", text: `Você digitou “${b.digitado}”: é o mesmo bairro.` }) : null,
+           el("div", { class: "meta", text: `Valor ${brl(b.valor)} − taxa do log ${brl(b.taxa_log)}` }),
            el("div", { class: "fe-recebe", text: `${brl(b.recebe)} para o entregador` })]
         : el("div", { class: "meta", text: txt ? "Bairro não encontrado nesta cidade" : "Escolha o bairro" }));
     const iguais = bi && br && bi.id === br.id;
@@ -118,6 +156,23 @@
         el("td", {}, D.pode_editar ? el("button", { class: "btn quiet small", type: "button", onclick: () => editar(b) }, "Editar") : null))),
       F.tCidade ? "Nenhum bairro com esse filtro." : "Nenhuma cidade com bairros cadastrados."));
   }
+  // 009p: bairros já cadastrados com nome parecido: juntar (fica o valor do escolhido) ou marcar que são diferentes
+  function renderParecidos() {
+    const box = $("#fe-parecidos"), l = F.parecidos || [];
+    App.contador("c-fe-parecidos", l.length);
+    if (!l.length) return box.replaceChildren();
+    const acao = async (bt, fn, args, msg) => { bt.disabled = true; try { await rpc(fn, args); toast(msg); App.carregar(); } catch (e) { bt.disabled = false; toast(msgErro(e)); } };
+    const lado = (x) => el("span", {}, el("b", { text: x.nome }), el("span", { class: "meta", text: ` ${brl(x.recebe)} para o entregador` }));
+    box.replaceChildren(el("div", { class: "parecidos" },
+      el("h4", { text: `Bairros com nome parecido (${l.length})` }),
+      el("p", { class: "meta", text: "Podem ser o mesmo bairro escrito de dois jeitos. Juntar deixa um nome só, com o valor do bairro escolhido; o outro nome continua funcionando como apelido." }),
+      el("ul", { class: "lista-parecidos" }, l.map((p) => el("li", {},
+        el("div", { class: "par" }, lado(p.a), el("span", { class: "meta", text: " × " }), lado(p.b), el("span", { class: "tag", text: p.cidade })),
+        el("div", { class: "actions" },
+          el("button", { class: "btn small", type: "button", onclick: (e) => acao(e.currentTarget, "juntar_bairros", { p_manter: p.a.id, p_juntar: p.b.id }, `Juntado: ficou ${p.a.nome}, com o valor dele.`) }, `Juntar em ${p.a.nome}`),
+          el("button", { class: "btn small", type: "button", onclick: (e) => acao(e.currentTarget, "juntar_bairros", { p_manter: p.b.id, p_juntar: p.a.id }, `Juntado: ficou ${p.b.nome}, com o valor dele.`) }, `Juntar em ${p.b.nome}`),
+          el("button", { class: "btn link", type: "button", onclick: (e) => acao(e.currentTarget, "bairros_sao_diferentes", { p_a: p.a.id, p_b: p.b.id }, "Certo: são bairros diferentes.") }, "São diferentes")))))));
+  }
   function editar(b) {
     const campo = (rot, v, extra = {}) => { const i = el("input", { value: v ?? "", ...extra }); return [el("label", {}, rot, i), i]; };
     const cidade = el("select", {}, ...(F.dados.cidades.map((c) => el("option", { value: c.nome, text: c.nome }))));
@@ -135,13 +190,35 @@
       el("div", { class: "actions" },
         el("button", { class: "btn primary", type: "button", onclick: async (e) => {
           const bt = e.currentTarget; bt.disabled = true; erroJ.hidden = true;
-          try {
-            await rpc("salvar_bairro", { p_id: b?.id ?? null, p_cidade: cidade.value, p_nome: nome.value, p_valor: n(valor), p_taxa_log: n(taxa),
-              p_apelidos: apel.value.split(",").map((x) => x.trim()).filter(Boolean), p_ativo: ativo.checked });
-            d.close(); toast(b ? "Bairro atualizado." : "Bairro criado."); F.tCidade = cidade.value; App.carregar();
-          } catch (err) { bt.disabled = false; erroJ.textContent = msgErro(err); erroJ.hidden = false; }
+          await salvar(bt);
         } }, "Salvar"),
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
+    // 009p: o banco confere se já existe um bairro com nome parecido na cidade. Praticamente igual = junta
+    // sozinho (o nome novo vira outro nome dele, com o valor dele); parecido = pergunta aqui antes.
+    const conferir = el("div", { class: "pergunta-bairro", hidden: true });
+    d.querySelector(".actions").before(conferir);
+    async function salvar(bt, decisao, com) {
+      try {
+        const r = await rpc("salvar_bairro", { p_id: b?.id ?? null, p_cidade: cidade.value, p_nome: nome.value, p_valor: n(valor), p_taxa_log: n(taxa),
+          p_apelidos: apel.value.split(",").map((x) => x.trim()).filter(Boolean), p_ativo: ativo.checked,
+          ...(decisao ? { p_decisao: decisao, p_juntar_com: com } : {}) });
+        if (r?.precisa_confirmar) {
+          const p = r.parecido;
+          bt.disabled = false;
+          conferir.hidden = false;
+          return conferir.replaceChildren(
+            el("p", { style: "margin:0" }, "Já existe ", el("b", { text: p.nome }), ` nesta cidade (o entregador recebe ${brl(p.recebe)}). É o mesmo bairro?`),
+            el("div", { class: "actions" },
+              el("button", { class: "btn primary small", type: "button", onclick: (ev) => { ev.currentTarget.disabled = true; salvar(bt, "juntar", p.id); } },
+                `É o mesmo: usar o valor de ${p.nome}`),
+              el("button", { class: "btn small", type: "button", onclick: (ev) => { ev.currentTarget.disabled = true; salvar(bt, "separado", p.id); } }, "Não, é outro bairro")));
+        }
+        d.close();
+        toast(r?.juntado_com ? `“${nome.value.trim()}” é o mesmo bairro que ${r.juntado_com}: virou outro nome dele, com o mesmo valor (${brl(r.recebe)} para o entregador).`
+          : b ? "Bairro atualizado." : "Bairro criado.");
+        F.tCidade = cidade.value; App.carregar();
+      } catch (err) { bt.disabled = false; erroJ.textContent = msgErro(err); erroJ.hidden = false; }
+    }
   }
 
   // ---------- mensagens prontas (009c) ----------
@@ -330,7 +407,9 @@
     ],
     async carregar(aba) {
       try { F.dados = await rpc("tarifas_bairros"); if (aba === "mensagens") await carregarMensagens(true); F.erro = null; } catch (e) { F.erro = msgErro(e); throw e; }
+      // 009p: pares de bairros com nome parecido (só para quem edita; sem a migração no banco, fica sem a lista)
+      if (aba !== "mensagens" && F.dados?.pode_editar) F.parecidos = await rpc("bairros_parecidos").catch(() => null);
     },
-    render(aba) { App.atalhoPendentes(); if (aba === "mensagens") renderMensagens(); else { renderCalc(); renderTarifas(); } },  // 009k: as tarifas ficam na calculadora
+    render(aba) { App.atalhoPendentes(); if (aba === "mensagens") renderMensagens(); else { renderCalc(); renderTarifas(); renderParecidos(); } },  // 009k: as tarifas ficam na calculadora
   });
 })();

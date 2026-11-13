@@ -907,3 +907,12 @@ label:has(> input[type="checkbox"]) > input, label:has(> input[type="radio"]) > 
 /* a coluna da grade do cartão nunca passa da largura disponível (sem isto, o conteúdo mais largo esticava o cartão) */
 .card, .queue, .rapido, .acordo, .meta-item { grid-template-columns: minmax(0, 1fr); }
 .card .btn { white-space: normal; }
+
+/* 009p: bairros com nome parecido */
+.parecidos { border: 1px dashed var(--warn); background: var(--warn-soft); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 12px; }
+.parecidos h4 { margin: 0 0 4px; }
+.lista-parecidos { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.lista-parecidos li { background: var(--surface); border-radius: 10px; padding: 8px 10px; display: grid; gap: 6px; }
+.lista-parecidos .par { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+.pergunta-bairro { border: 1px solid var(--warn); background: var(--warn-soft); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; }
+.meta.entendido { color: var(--accent); }

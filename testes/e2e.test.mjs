@@ -49,6 +49,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009e-parceiros.sql"), "
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009f-parceiros-completo.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009g-tarefas-compartilhadas.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009h-entregador-pelo-lancamento.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009p-bairros-parecidos.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -102,12 +103,12 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   const c = await b.newContext({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: Number(process.env.ESCALA || 1), acceptDownloads: true });  // ESCALA=2: prints nítidos para material de divulgação
   await c.route("**/supabase-config.js", (r) => r.fulfill({ contentType: "text/javascript", body: `window.SUPABASE_URL=${JSON.stringify(API)};window.SUPABASE_ANON_KEY="chave-anon-de-teste";window.GOOGLE_CLIENT_ID=${JSON.stringify(googleId || "COLE_AQUI")};` }));
   await c.route("https://accounts.google.com/**", (r) => r.fulfill({ contentType: "text/javascript", body: googleId ? GIS_FALSO : "" }));
-  // 009i: o index.html confere a integridade (SRI) do supabase-js; com crossorigin, a resposta precisa do cabeçalho CORS
+  // 009p: o index.html confere a integridade (SRI) do supabase-js; com crossorigin, a resposta precisa do cabeçalho CORS
   // (o jsDelivr manda). Se o hash do index.html não bater com o arquivo do pacote, o script é bloqueado e o app não abre.
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009o"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009p"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -288,7 +289,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Avisos arrumados") && await s.isVisible(".faixa-novidades >> text=e mais: 009n e 009m e 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Bairro com nome parecido") && await s.isVisible(".faixa-novidades >> text=e mais: 009o e 009n e 009m e 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -826,7 +827,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009o", "009n", "009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009p", "009o", "009n", "009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
@@ -1012,6 +1013,8 @@ try {
   ok(await esperar(a8, "#fe-resultado .fe-total strong:has-text('R$ 11,50')") && (await texto(a8, "#fe-resultado")).includes("R$ 4,50 para o entregador"), "calculadora: ajuste = recebe(real) − recebe(informado) = R$ 11,50");
   await a8.fill("#fe-informado", "Aldemar de Carvalho");
   ok(await esperar(a8, "#fe-resultado >> text=ADEMAR DE CARVALHO"), "calculadora acha o bairro pelo outro nome (apelido)");
+  await a8.fill("#fe-informado", "Centri");
+  ok(await esperar(a8, "#fe-resultado .entendido >> text=Você digitou “Centri”") && await a8.isVisible("#fe-resultado >> text=CENTRO"), "009p: calculadora entende o nome com um erro pequeno (Centri → CENTRO)");
   await a8.fill("#fe-informado", "Centro");
   await a8.fill("#fe-id", "fin00001"); await a8.fill("#fe-nome", "Zé das Entregas"); await a8.selectOption("#fe-origem", "qd");
   await a8.screenshot({ path: path.join(PRINTS, "j1-calculadora.png"), fullPage: true });
@@ -1057,6 +1060,17 @@ try {
   await a8.fill("dialog.janela input >> nth=1", "17,99");
   await a8.click("dialog.janela .actions button.primary");
   ok(await esperar(a8, "#fe-t-tabela tr:has-text('BREJO') >> text=R$ 17,00"), "editar a tarifa de um bairro");
+  // 009p: bairro novo quase igual a um que já existe vira outro nome dele (mesmo valor); parecido pergunta antes
+  await a8.click("#fe-t-novo");
+  await a8.fill("dialog.janela input >> nth=0", "Brejjo"); await a8.fill("dialog.janela input >> nth=1", "30"); await a8.fill("dialog.janela input >> nth=2", "1");
+  await a8.click("dialog.janela .actions button.primary");
+  ok(await esperar(a8, "#toast:has-text('é o mesmo bairro que BREJO')") && await esperar(a8, "#fe-t-tabela tr:has-text('BREJO') >> text=Também: BREJJO"), "009p: “Brejjo” vira outro nome do BREJO, com o valor dele");
+  await a8.click("#fe-t-novo");
+  await a8.fill("dialog.janela input >> nth=0", "Brejo Novo Sul"); await a8.fill("dialog.janela input >> nth=1", "9"); await a8.fill("dialog.janela input >> nth=2", "1");
+  await a8.click("dialog.janela .actions button.primary");
+  ok(await esperar(a8, "dialog.janela .pergunta-bairro >> text=É o mesmo bairro?"), "009p: nome parecido mas duvidoso: a janela pergunta antes");
+  await a8.click("dialog.janela .pergunta-bairro >> text=Não, é outro bairro");
+  ok(await esperar(a8, "#toast:has-text('Bairro criado')") && await esperar(a8, "#fe-t-tabela tr:has-text('BREJO NOVO SUL')"), "009p: “é outro bairro” cria o bairro com o próprio valor");
   await s8.reload(); await esperar(s8, "section.view:not([hidden])"); await ir(s8, "#ferramentas/tarifas");  // 009k: o link antigo vira #ferramentas/calculadora; recarregar depois fecharia as tarifas
   ok(await esperar(s8, "#fe-t-tabela tr:has-text('CENTRO')") && !(await s8.isVisible("#fe-t-tabela >> text=Editar")) && !(await s8.isVisible("#fe-t-novo")), "suporte consulta as tarifas sem editar");
 
