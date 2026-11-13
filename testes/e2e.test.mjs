@@ -107,7 +107,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009n"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009o"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -288,7 +288,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Instalar como app") && await s.isVisible(".faixa-novidades >> text=e mais: 009m e 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Avisos arrumados") && await s.isVisible(".faixa-novidades >> text=e mais: 009n e 009m e 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -826,7 +826,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009n", "009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009o", "009n", "009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
@@ -1399,6 +1399,49 @@ try {
   await g.evaluate(() => { window.__gisEmail = "mateuslopesmb@gmail.com"; window.__gis.nonce = "0".repeat(64); });
   await g.click("#botao-google-falso");
   ok(await esperar(g, "#gate-erro:not([hidden])"), "token com nonce errado é recusado: " + (await texto(g, "#gate-erro")));
+
+  // 009o: varredura visual de todas as telas (administrador), no computador e no celular. Aponta página que rola
+  // para o lado, elemento que vaza da tela (fora de áreas com rolagem própria) e caixinha empilhada em cima do texto.
+  { const v = await abrir(admin, "#inicio"); await esperar(v, "#v-inicio:not([hidden])");
+    fs.mkdirSync(path.join(PRINTS, "varredura"), { recursive: true });
+    const rotas = await v.evaluate(() => App.ordem.filter((id) => { const m = App.modulos[id]; return !m.acesso || m.acesso(); })
+      .flatMap((id) => App.modulos[id].abas.filter((a) => !a.pode || a.pode()).map((a) => `#${id}/${a.id}`)));
+    const problemas = [];
+    for (const [nome, w, h] of [["pc", 1200, 900], ["celular", 390, 844]]) {
+      await v.setViewportSize({ width: w, height: h });
+      for (const r of rotas) {
+        await v.evaluate((x) => { location.hash = x; }, r);
+        await v.waitForTimeout(900);
+        const achou = await v.evaluate(() => {
+          const sec = [...document.querySelectorAll("section.view")].find((s) => !s.hidden);
+          const W = document.documentElement.clientWidth, lista = [];
+          if (document.documentElement.scrollWidth > W + 1) {
+            // quem estica a página: o elemento mais à direita fora de áreas com rolagem própria, em qualquer lugar
+            let pior = null;
+            for (const n of document.body.querySelectorAll("*")) { const rc = n.getBoundingClientRect(), dir = rc.right + scrollX; if (rc.width && dir > W + 1 && (!pior || dir > pior[1])) pior = [n, dir]; }
+            const d = pior && `<${pior[0].tagName.toLowerCase()}${pior[0].id ? "#" + pior[0].id : ""}.${String(pior[0].className || "").trim().split(/\s+/).join(".")}> dentro de <${pior[0].parentElement?.tagName.toLowerCase()}.${String(pior[0].parentElement?.className || "")}>`;
+            lista.push(`página rola para o lado (${document.documentElement.scrollWidth}px) por causa de ${d}`);
+          }
+          const rola = (n) => { for (let p = n.parentElement; p && p !== document.body; p = p.parentElement) { const o = getComputedStyle(p); if (/(auto|scroll|hidden|clip)/.test(o.overflowX)) return true; } return false; };
+          for (const n of [...(sec?.querySelectorAll("*") || []), ...document.querySelectorAll("header.top *")]) {
+            const rc = n.getBoundingClientRect();
+            if (!rc.width || rc.right <= W + 1 || rola(n)) continue;
+            lista.push(`vaza: <${n.tagName.toLowerCase()}${n.id ? "#" + n.id : ""}${n.className && typeof n.className === "string" ? "." + n.className.trim().split(/\s+/).join(".") : ""}> até ${Math.round(rc.right)}px`);
+            if (lista.length > 6) break;
+          }
+          for (const l of sec?.querySelectorAll(".toolbar label") || []) if (l.offsetParent && l.scrollWidth > l.clientWidth + 2) lista.push("rótulo cortado: " + l.textContent.trim().slice(0, 40));
+          for (const l of sec?.querySelectorAll("label") || []) {
+            const cb = l.querySelector(":scope > input[type=checkbox], :scope > input[type=radio]");
+            if (cb && l.offsetParent && cb.getBoundingClientRect().bottom <= l.getBoundingClientRect().top + 4 + cb.getBoundingClientRect().height && getComputedStyle(l).display === "grid") lista.push("caixinha empilhada: " + l.textContent.trim().slice(0, 40));
+          }
+          return lista;
+        });
+        await v.screenshot({ path: path.join(PRINTS, "varredura", `${nome}-${r.slice(1).replace("/", "-")}.png`), fullPage: true });
+        for (const x of achou) problemas.push(`${nome} ${r}: ${x}`);
+      }
+    }
+    problemas.forEach((x) => console.log("VARREDURA", x));
+    ok(!problemas.length, `009o: varredura visual de ${rotas.length} telas no computador e no celular` + (problemas.length ? `: ${problemas.length} problema(s)` : " sem problemas")); }
 } finally {
   await b.close(); site.close(); await api.fechar();
 }

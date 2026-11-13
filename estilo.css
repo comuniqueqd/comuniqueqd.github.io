@@ -306,7 +306,7 @@ button.chip { cursor: pointer; font: inherit; font-size: 13px; }
 .gestao { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
 .gestao.operador { background: var(--accent-soft); color: var(--accent); }
 .gestao.quero { background: var(--ok-soft); color: var(--ok); }
-.contato { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.contato:not(.card) { font-size: 12px; color: var(--muted); white-space: nowrap; }  /* 009o: o cartão "aguardando contato" também tem a classe contato: não pode herdar isto */
 
 /* migração 007: revisar do cadastro, histórico do ID, tarefa opcional, busca rápida, novidades */
 button.revisar-cad { border: 1px solid transparent; cursor: pointer; font: inherit; font-size: 12px; color: var(--warn); background: var(--warn-soft); border-radius: 6px; padding: 2px 8px; text-align: left; }
@@ -705,13 +705,8 @@ dialog.janela::backdrop { transition-property: background-color, display, overla
 @media (prefers-reduced-motion: no-preference) { .esq-linha { animation: esq-brilho 1.2s ease-in-out infinite; } }
 @keyframes esq-brilho { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 
-/* listas longas: o que está abaixo da dobra só é desenhado quando chega perto da tela (defer-rendering-heavy-content).
-   Só a partir do 10º item (os primeiros estão na tela ao abrir), sempre com um tamanho reservado */
-.feed li:nth-child(n+10), .lista-avisos.pagina li:nth-child(n+10), .queue > .card:nth-child(n+6),
-#bq-t-hist tbody tr:nth-child(n+15), .pa-hist li:nth-child(n+15), .acordos-lista > li:nth-child(n+8) {
-  content-visibility: auto; contain-intrinsic-size: auto none auto 72px;
-}
-.queue > .card:nth-child(n+6) { contain-intrinsic-size: auto none auto 180px; }
+/* 009o: o content-visibility das listas paginadas (avisos, registros, cartões, históricos) saiu: deixava buracos em branco
+   no fim da lista até a pessoa rolar perto. Continua só nas linhas de Lançamentos (até 5000), mais abaixo. */
 
 /* fonte estável: enquanto a IBM Plex carrega, a fonte reserva fica do mesmo tamanho visual (visually-stable-font-fallbacks) */
 body { font-size-adjust: from-font; }
@@ -886,3 +881,29 @@ a.btn { text-decoration: none; }  /* link com cara de botão não leva sublinhad
   border-left: 1px solid var(--lilas); border-top: 1px solid var(--lilas); transform: rotate(45deg); }
 /* 009n: Lançamentos podem ter até 5000 linhas: as de baixo só são desenhadas quando chegam perto (defer-rendering-heavy-content) */
 #fi-l-tabela tbody tr:nth-child(n+20) { content-visibility: auto; contain-intrinsic-size: auto none auto 64px; }
+
+/* ---------- 009o: arrumação visual ---------- */
+/* rótulo com caixinha/bolinha dentro: sempre numa linha (o label padrão é grade e empilhava a caixinha em cima do texto) */
+label:has(> input[type="checkbox"]), label:has(> input[type="radio"]) { display: inline-flex; flex-direction: row; align-items: center; gap: 8px; font-weight: 400; }
+label:has(> input[type="checkbox"]) > input, label:has(> input[type="radio"]) > input { inline-size: auto; flex: 0 0 auto; margin: 0; }
+/* barra de filtros: a busca ganha mais espaço que as listas */
+.toolbar input[type="search"] { flex: 2 1 260px; }
+.toolbar select { flex: 1 1 170px; }
+.toolbar > label:has(> input[type="checkbox"]) { flex: 0 0 auto; white-space: nowrap; font-size: 14px; }
+/* Avisos: filtros num painel, as duas caixas de configuração lado a lado */
+.avisos-config { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 12px; margin-bottom: 14px; align-items: start; }
+.avisos-config > * > .panel, .avisos-config > * > details { margin: 0; }
+.avisos-filtros { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; margin-bottom: 12px; }
+.avisos-filtros.toolbar { margin-bottom: 12px; }
+/* cartões em lista nunca ficam mais largos que a tela (item de grade/flex não encolhia por causa de um texto comprido) */
+.queue > *, .card, .card .head, .card .name, .fields, .fields > div { min-width: 0; }
+.card .name, .card .head { overflow-wrap: anywhere; }
+.card .actions { min-width: 0; }
+/* celular: rótulos de caixinha nas barras de filtro podem quebrar e ocupar a linha (não cortam na borda) */
+@media (max-width: 600px) {
+  .toolbar > label:has(> input[type="checkbox"]), .toolbar label.check { white-space: normal; flex: 1 1 100%; }
+  .toolbar select { flex: 1 1 140px; }
+}
+/* a coluna da grade do cartão nunca passa da largura disponível (sem isto, o conteúdo mais largo esticava o cartão) */
+.card, .queue, .rapido, .acordo, .meta-item { grid-template-columns: minmax(0, 1fr); }
+.card .btn { white-space: normal; }

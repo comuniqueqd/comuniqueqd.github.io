@@ -51,10 +51,15 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009n";
+  const VERSAO = "009o";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009o", tema: "🧹 Tudo no lugar", itens: [
+      ["Avisos arrumados", "A tela de Avisos ficou mais organizada: as duas caixas de configuração lado a lado e os filtros juntos num painel. “Só os não lidos” voltou a ficar ao lado da caixinha."],
+      ["Listas sem buracos", "Avisos, Registros e as listas de cartões não deixam mais um espaço em branco no fim enquanto você rola."],
+      ["Celular", "Os cartões de Pendentes e os filtros dos Históricos não passam mais da borda da tela no celular."],
+    ] },
     { versao: "009n", tema: "📲 Comunique no seu computador", itens: [
       ["Instalar como app", "Quando o navegador permitir, aparece o botão 📲 Instalar no topo: o Comunique ganha ícone próprio e abre numa janela só dele, como um programa."],
       ["Tour das novidades", "Depois desta janela, uns balõezinhos mostram onde ficou o que mudou. Aparecem uma vez só."],
