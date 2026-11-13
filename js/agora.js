@@ -8,7 +8,7 @@
   const S = App.S;
   const CATEGORIAS = [["monitoramento", "Operação – Monitoramento"], ["suporte_crisp", "Operação – Suporte (Crisp)"], ["suporte_blip", "Operação – Suporte (Blip)"]];
   const DURACOES = [[0.5, "30 min"], [1, "1 h"], [2, "2 h"], [4, "4 h"], [8, "8 h"], [12, "12 h"]];
-  const hora = (iso) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  const hora = (iso) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: App.u.FUSO });
   const minutosAte = (iso) => Math.max(0, Math.ceil((new Date(iso) - Date.now()) / 60000));
   const souModerador = () => S.me?.papel === "moderador" || S.me?.papel_bloqueios === "moderador";
   const erroEl = () => el("p", { class: "warn-msg", role: "alert", hidden: true });

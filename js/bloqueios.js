@@ -34,7 +34,7 @@
   const termino = (iso) => {
     if (!iso) return "";
     const d = new Date(new Date(iso).getTime() + 30 * 60000);
-    return `${d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}, por volta das ${d.getHours()}h`;
+    return `${d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: App.u.FUSO })}, por volta das ${Number(d.toLocaleString("en-US", { hour: "numeric", hourCycle: "h23", timeZone: App.u.FUSO }))}h`;
   };
   // gera a mensagem ao entregador (sempre "restrição temporária" no texto); b = bloqueio (json_bloqueio ou o resultado do registro)
   // modelo e marcadores da mensagem de um bloqueio (também usado em Ferramentas → Mensagens prontas)
@@ -97,7 +97,7 @@
   }
   // versão curta para a tabela do Histórico: situação em negrito + quem e quando (a nota vai no histórico aberto)
   function tratativaCurta(b) {
-    const t = b.tarefa, data = (iso) => iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) : "";
+    const t = b.tarefa, data = (iso) => iso ? new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: App.u.FUSO }) : "";
     if (!t) return el("div", { class: "bullet sem trat-curta" }, el("span", {}, el("b", { text: b.leve ? "Leve" : "Sem tratativa" }),
       el("span", { class: "meta", text: b.leve ? "conta para o limite" : "menos de 10 h" })));
     const tipo = t.tipo === "tratativa" ? "" : (TAREFA[t.tipo] || "") + ": ";
@@ -118,7 +118,7 @@
       + (b.tarefa?.atrasada ? " atrasada" : "") + (b.tarefa?.status === "pendente" && b.tarefa.previsao && new Date(b.tarefa.previsao) < Date.now() ? " previsao-passou" : "") + (destacado ? " destaque" : "");
     return el("article", { class: classe, "data-id": b.id },
       el("div", { class: "head" },
-        el("span", { class: "name" }, linkFicha(b), el("span", { class: "mono meta", text: b.id_app }), pillSit(sit), b.leve ? el("span", { class: "tag", text: "LEVE" }) : null, destacado ? el("span", { class: "tag", text: "RECÉM-REGISTRADO" }) : null),
+        el("span", { class: "name" }, linkFicha(b), App.u.copiavel(b.id_app, "ID " + b.id_app), pillSit(sit), b.leve ? el("span", { class: "tag", text: "LEVE" }) : null, destacado ? el("span", { class: "tag", text: "RECÉM-REGISTRADO" }) : null),
         el("span", { class: "espera" + (sit === "bloqueado" ? "" : " velho"), text: sit === "bloqueado" ? `libera em ${falta(b.fim)}` : sit === "encerramento" ? "definitivo" : "" })),
       el("dl", { class: "fields" },
         fld(b.leve ? "Infração leve" : "Infração", b.infracao),
@@ -692,7 +692,7 @@
         const tempo = f.linha_do_tempo || [];
         return el("div", { class: "panel ficha" },
           el("div", { class: "ficha-topo" },
-            el("h3", {}, f.nome || "(sem nome no cadastro)", " ", el("span", { class: "mono meta", text: f.id_app })),
+            el("h3", {}, f.nome || "(sem nome no cadastro)", " ", App.u.copiavel(f.id_app, "ID " + f.id_app)),
             el("div", { class: "actions", style: "margin:0" },
               App.avisos ? App.avisos.botaoOlho(f.id_app) : null,
               staff() ? el("button", { class: "btn small", type: "button", onclick: () => abrirEdicao(f, seus.filter((b) => !b.dados_pendentes).length) }, "Alterar dados") : null)),

@@ -62,7 +62,11 @@ const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; ch
 const site = http.createServer((q, r) => {
   const f = path.join(RAIZ, decodeURIComponent(q.url.split("?")[0]));
   if (!f.startsWith(RAIZ) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404); return r.end(); }
-  r.writeHead(200, { "Content-Type": TIPOS[path.extname(f)] || "application/octet-stream" }); fs.createReadStream(f).pipe(r);
+  // 009j (trusted-types): o site de teste roda com Trusted Types obrigatório. O app monta tudo com textContent
+  // (nunca innerHTML com texto); se alguém usar um innerHTML com texto, o navegador recusa e o e2e quebra.
+  const cab = { "Content-Type": TIPOS[path.extname(f)] || "application/octet-stream" };
+  if (path.extname(f) === ".html") cab["Content-Security-Policy"] = "require-trusted-types-for 'script'";
+  r.writeHead(200, cab); fs.createReadStream(f).pipe(r);
 }).listen(8765, "127.0.0.1");
 
 const UMD = path.join(path.dirname(require.resolve("@supabase/supabase-js/package.json")), "dist/umd");
@@ -102,7 +106,10 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009g"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009j"); } catch (_) {} });
+  // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
+  // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
+  await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
   // o lembrete da passagem de turno (17h30–18h59) cobriria os botões: o relógio do app fica em 10h (o teste dele troca na hora)
   await c.addInitScript(() => addEventListener("DOMContentLoaded", () => { if (window.App) App.agora_relogio = () => 10 * 60; }));
   if (p) {
@@ -123,6 +130,8 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   return pg_;
 }
 const esperar = (p, sel, t = 10000) => p.waitForSelector(sel, { timeout: t }).then(() => true).catch(() => false);
+// 009j: janelas, tira e avisos saem com uma animação curta: esperar sumir em vez de conferir na hora
+const sumir = (p, sel, t = 3000) => p.waitForSelector(sel, { state: "hidden", timeout: t }).then(() => true).catch(() => false);
 const texto = (p, sel) => p.textContent(sel).catch(() => "");
 // trecho em volta de uma palavra (para a mensagem de erro dizer onde apareceu "null"/"undefined")
 const perto = (t, w) => { const i = t.indexOf(w); return i < 0 ? "" : " → …" + t.slice(Math.max(0, i - 90), i + 20); };
@@ -276,7 +285,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Entrar junto") && await s.isVisible(".faixa-novidades >> text=e mais: 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Tema escuro") && await s.isVisible(".faixa-novidades >> text=e mais: 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -307,6 +316,34 @@ try {
   await s.click("dialog.janela >> text=Entendi");
   ok(await esperar(s, "#aviso-versao:popover-open >> text=Saiu uma versão nova"), "fechou a janela: o aviso de versão nova aparece");
   await s.click("#aviso-versao >> text=Depois");
+  // 009j "Leve e veloz"
+  { const r = await s.evaluate(() => {
+      let tt = false; try { document.createElement("div").innerHTML = "<b>x</b>"; } catch (_) { tt = true; }
+      const esq = App.u.vazio("Carregando…"), cel = App.u.tabela([["A"], ["B"]], [], "Carregando…")[1];
+      const ta = document.createElement("textarea"); document.body.append(ta); const fs = getComputedStyle(ta).fieldSizing; ta.remove();
+      return { tt, esq: esq.classList.contains("esqueleto") && esq.textContent === "Carregando…", cel: !!cel.querySelector(".esq-linha"),
+        fs, tw: getComputedStyle(document.querySelector("h2")).textWrapStyle || getComputedStyle(document.querySelector("h2")).textWrap,
+        dt: App.u.dt("2026-11-13T02:30:00Z"), dia: App.u.diaChave("2026-11-13T02:30:00Z") };
+    });
+    ok(r.tt, "Trusted Types ligado no teste: innerHTML com texto é recusado (o app inteiro roda sem precisar dele)");
+    ok(r.esq && r.cel, "carregando vira esqueleto (lista e tabela), com o texto para o leitor de tela");
+    ok(r.fs === "content", "caixas de texto crescem com o conteúdo (field-sizing)");
+    ok(/balance/.test(r.tw || ""), "títulos equilibrados (text-wrap: balance)");
+    ok(r.dt.includes("12/11/2026") && r.dt.includes("23:30") && r.dia === "2026-11-12", "datas no horário de Brasília (02:30 UTC = 23:30 do dia anterior): " + r.dt); }
+  // tema: claro → escuro (guardado) → volta a seguir o sistema (nada guardado)
+  await s.click("#b-tema");
+  ok(await s.evaluate(() => document.documentElement.dataset.theme === "dark" && localStorage.getItem("comunique-tema") === "dark"
+      && getComputedStyle(document.body).backgroundColor === "rgb(16, 21, 29)"), "botão de tema: escuro na hora, e fica guardado");
+  await s.reload(); await esperar(s, "#v-inicio:not([hidden])");
+  ok(await s.evaluate(() => document.documentElement.dataset.theme === "dark" && document.querySelector('meta[name="color-scheme"]').content === "dark"), "recarregou: continua escuro desde o início (sem piscar claro)");
+  await s.click("#b-tema");
+  ok(await s.evaluate(() => !document.documentElement.dataset.theme && localStorage.getItem("comunique-tema") === null), "tocar de novo volta a seguir o sistema (não prende o tema)");
+  // troca de tela: o foco vai para o título da tela nova (o link clicado é recriado)
+  await s.click("nav.modulos a[data-mod=analises]"); await esperar(s, "#v-an-simples:not([hidden])");
+  await s.click("nav.tabs a[data-view=complexas]");
+  ok(await esperar(s, "#v-an-analises:not([hidden])") && await s.waitForFunction(() => document.activeElement?.matches("#v-an-analises h2"), null, { timeout: 3000 }).then(() => true, () => false),
+    "trocou de aba: o foco vai para o título da tela nova (o link da aba é recriado)");
+  await s.click("nav.modulos a[data-mod=inicio]"); await esperar(s, "#v-inicio:not([hidden])");
   { const r = await s.evaluate(() => {
       const visto = []; const orig = Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView = function (o) { visto.push(o?.behavior); };
@@ -413,14 +450,14 @@ try {
   ok((await s.getAttribute("#b-avisos", "popovertarget")) === "tira-avisos" && await s.evaluate(() => document.querySelector("#b-avisos").ariaExpanded) !== "false", "tira do sino é um popover ligado ao sino (009i)");
   await s.screenshot({ path: path.join(PRINTS, "h1-tira-sino.png") });
   await s.keyboard.press("Escape");
-  ok(await s.isHidden("#tira-avisos"), "Esc fecha a tira (do próprio navegador)");
+  ok(await sumir(s, "#tira-avisos"), "Esc fecha a tira (do próprio navegador)");
   await s.click("#b-avisos");
   ok(await esperar(s, "#tira-avisos:popover-open"), "o sino abre a tira de novo");
   await s.mouse.click(5, 600);
-  ok(await s.isHidden("#tira-avisos"), "clicar fora fecha a tira");
+  ok(await sumir(s, "#tira-avisos"), "clicar fora fecha a tira");
   await s.click("#b-avisos"); await esperar(s, "#tira-avisos:popover-open");
   await s.click("#tira-avisos >> text=Ver todos os avisos");
-  ok(await esperar(s, "#at-avisos >> text=Tratativa realizada por Monitor Um") && await s.isHidden("#tira-avisos"), "Ver todos os avisos abre a tela de Avisos e fecha a tira");
+  ok(await esperar(s, "#at-avisos >> text=Tratativa realizada por Monitor Um") && await sumir(s, "#tira-avisos"), "Ver todos os avisos abre a tela de Avisos e fecha a tira");
   await s.waitForTimeout(1500);
   ok((await s.getAttribute("#b-avisos", "data-novas")) === "false", "avisos marcados como lidos");
 
@@ -465,6 +502,12 @@ try {
   await s.click("#bq-consulta >> text=Adicionar comentário");
   ok(await esperar(s, "#bq-consulta .comentarios >> text=Ligou pedindo para ser liberado."), "suporte adiciona comentário na consulta");
   await s.screenshot({ path: path.join(PRINTS, "b6b-consulta.png"), fullPage: true });
+  // 009j (copy-button): botão de copiar ao lado do ID na ficha
+  await s.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: "http://127.0.0.1:8765" });
+  await s.hover("#bq-consulta .ficha-topo .copiavel");
+  await s.click("#bq-consulta .ficha-topo .btn-copiar");
+  ok(await esperar(s, "#bq-consulta .ficha-topo .copia-balao >> text=Copiado") && (await s.evaluate(() => navigator.clipboard.readText())) === "mal00001"
+      && (await s.getAttribute("#bq-consulta .ficha-topo .btn-copiar", "aria-label")) === "Copiar ID mal00001", "copiar o ID da ficha: vai para a área de transferência e avisa “Copiado”");
   // 008b: módulo Entregadores, cadastro avulso (sem ativação e sem bloqueio)
   ok(await s.isVisible("nav.grupo a[data-grupo-mod=entregadores]"), "suporte com bloqueios vê Cadastrar entregador na barra de Entregadores");
   { const topo = await s.$$eval("nav.modulos a:not([hidden])", (as) => as.map((x) => x.textContent.trim()));
@@ -760,7 +803,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);

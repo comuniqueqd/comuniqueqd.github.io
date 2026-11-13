@@ -59,7 +59,7 @@
     const prevPassou = c.previsao && new Date(c.previsao) < Date.now();
     return el("article", { class: "card" + (contato ? " contato" : "") + (prevPassou ? " previsao-passou" : "") + (destacado ? " destaque" : ""), "data-id": c.id },
       el("div", { class: "head" },
-        el("span", { class: "name" }, c.nome ? el("span", { text: c.nome }) : null, el("span", { class: "mono" + (c.nome ? " meta" : ""), text: titulo(c) }), pill(c.status, true),
+        el("span", { class: "name" }, c.nome ? el("span", { text: c.nome }) : null, App.u.copiavel(c.id_app || App.u.fmtCPF(c.cpf), (c.id_app ? "ID " : "CPF ") + (c.id_app || App.u.fmtCPF(c.cpf)), "mono" + (c.nome ? " meta" : ""), titulo(c)), pill(c.status, true),
           destacado ? el("span", { class: "tag", text: "RECÉM-ENVIADO" }) : null, c.revisar ? botaoRevisar(c, true) : null),
         el("span", { class: "espera" + (esp.velho ? " velho" : ""), title: "Desde " + dt(c.status_desde), text: (contato ? "aguardando contato há " : "esperando há ") + esp.txt })),
       el("dl", { class: "fields" },
@@ -224,7 +224,7 @@
     const t = $("#t-hist"), l = S.lista.todos;
     const cols = ["Situação", "Entregador", "Cidade", "Enviado por", "Enviado em", "Última decisão", ""];
     const head = el("thead", {}, el("tr", {}, cols.map((h) => el("th", { text: h }))));
-    if (!l) return t.replaceChildren(head, el("tbody", {}, el("tr", {}, el("td", { colspan: cols.length, class: "meta", text: "Carregando…" }))));
+    if (!l) return t.replaceChildren(head, el("tbody", {}, App.u.linhasEsqueleto(cols.length)));
     opcoesCidade($("#f-hist-cidade"), l);
     // 008c: o Histórico junta o antigo "Meus cadastros" (o suporte já recebe só os dele)
     $("#hist-sub").textContent = staff() ? "Todos os cadastros recebidos. Clique numa linha para ver o histórico de cada um." : "Tudo o que você enviou, com a situação atual. Clique numa linha para ver o histórico.";

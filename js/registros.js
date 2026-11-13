@@ -9,8 +9,8 @@
   const POR_PAGINA = 100;
 
   const filtros = () => ({ p_modulo: $("#rg-modulo").value || null, p_pessoa: $("#rg-pessoa").value || null, p_busca: $("#rg-q").value.trim() || null });
-  const hora = (iso) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  const diaLongo = (iso) => new Date(iso).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+  const hora = (iso) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: App.u.FUSO });
+  const diaLongo = (iso) => new Date(iso).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric", timeZone: App.u.FUSO });
 
   async function buscar(anterior) {
     const f = filtros();
@@ -74,7 +74,7 @@
     const linhas = [];
     let diaAtual = null;
     for (const x of R.itens) {
-      const d = new Date(x.em).toDateString();
+      const d = App.u.diaChave(x.em);
       const li = el("li", {},
         d !== diaAtual ? el("div", { class: "dia", text: diaLongo(x.em) }) : null,
         el("span", { class: "quando" }, hora(x.em), el("br"), el("span", { class: "tag", text: x.modulo === "ativacao" ? "ATIVAÇÃO" : "BLOQUEIOS" })),

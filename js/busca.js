@@ -50,10 +50,19 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009g";
+  const VERSAO = "009j";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009j", tema: "⚡ Leve e veloz", itens: [
+      ["Troca de tela suave", "Mudar de tela ou de aba agora desliza: o destaque do menu acompanha e nada pisca. (Quem pediu menos movimento no computador continua com a troca na hora.)"],
+      ["Tema escuro", "Novo botão 🌙 no topo: deixa o Comunique escuro (ou claro) só para você. Tocar de novo volta a seguir o computador."],
+      ["Copiar o ID", "Ao lado do ID na ficha e nos cartões tem um botãozinho de copiar: um clique e ele está na área de transferência."],
+      ["Tarefas mais enxutas", "Os cartões de tarefa ficaram mais curtos: quem pediu, quando, para quem e o prazo numa linha só; o tempo junto do andamento."],
+      ["Sem tela piscando", "Enquanto carrega, aparece o formato da lista em vez de “Carregando…”; janelas e avisos entram suavemente; os campos de texto crescem com o que você escreve."],
+      ["Avisos sempre à vista", "O aviso de “copiado”, “salvo” etc. aparece por cima das janelas abertas, e a tira do sino fecha com Esc ou clicando fora."],
+      ["Horário de Brasília", "Datas e horas aparecem sempre no horário de Brasília, mesmo num computador com outro fuso."],
+    ] },
     { versao: "009g", tema: "🤝 Tarefas em equipe", itens: [
       ["Parceiro novo puxa entregadores", "Ativou um parceiro? Nasce sozinha a tarefa “Aprovar 5 entregadores” na cidade dele, aberta para a equipe. Se já existe uma na cidade, ela só sobe 5."],
       ["Entrar junto", "Nas tarefas de aprovar entregadores e parceiros, quem aceita não fecha para os outros: dá para “Entrar junto”, e as aprovações de todo mundo contam na mesma meta."],

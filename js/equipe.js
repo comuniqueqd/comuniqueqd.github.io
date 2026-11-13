@@ -33,7 +33,7 @@
       })));
     const t = $("#t-equipe");
     const head = el("thead", {}, el("tr", {}, ["Nome", "E-mail", "Ativação", "Bloqueios", "Situação", ""].map((h) => el("th", { text: h }))));
-    if (!eq) return t.replaceChildren(head, el("tbody", {}, el("tr", {}, el("td", { colspan: "6", class: "meta", text: "Carregando…" }))));
+    if (!eq) return t.replaceChildren(head, el("tbody", {}, App.u.linhasEsqueleto("6")));
     t.replaceChildren(head, el("tbody", {}, eq.membros.map((m) => {
       let pa, pb;
       if (m.admin_final) {

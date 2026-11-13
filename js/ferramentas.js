@@ -235,7 +235,7 @@
     if (selBq.dataset.sig !== String(lbq.length)) {
       selBq.dataset.sig = String(lbq.length);
       selBq.replaceChildren(el("option", { value: "", text: M.bloqueios ? (lbq.length ? "Preencher à mão" : "Ninguém com restrição agora") : "Carregando…" }),
-        ...lbq.map((b) => el("option", { value: b.id, text: `${b.nome || "ID " + b.id_app} · ${b.infracao}${b.fim ? " · até " + new Date(b.fim).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) : ""}` })));
+        ...lbq.map((b) => el("option", { value: b.id, text: `${b.nome || "ID " + b.id_app} · ${b.infracao}${b.fim ? " · até " + new Date(b.fim).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" , timeZone: App.u.FUSO }) : ""}` })));
     }
     selBq.value = M.bloqueio ? String(M.bloqueio.id) : "";
     // com um bloqueio escolhido, os campos à mão somem e a mensagem sai com os dados dele

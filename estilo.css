@@ -650,3 +650,100 @@ p.desce { color: var(--bad); font-weight: 600; }
 .aviso-versao[popover] { inset: auto auto 18px 50%; margin: 0; overflow: visible; color: var(--ink); }
 .aviso-versao.lembrete-turno[popover] { bottom: 70px; }
 .tira-avisos[popover] { inset: auto; margin: 0; padding: 0; color: var(--ink); }
+
+/* ---------- 009j "Leve e veloz" (Modern Web Guidance) ---------- */
+/* troca de tela: fade curto; o destaque do menu e da aba desliza até o item novo (same-document-transitions) */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .16s; }
+nav.modulos a[aria-current="page"] { view-transition-name: modulo-ativo; }
+nav.tabs a[aria-current="page"] { view-transition-name: aba-ativa; }
+::view-transition-group(modulo-ativo), ::view-transition-group(aba-ativa) { animation-duration: .22s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+@media (prefers-reduced-motion: reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; } }
+section.view > h2:focus { outline: none; }  /* o foco vai para o título ao trocar de tela: sem anel em volta */
+
+/* toque com resposta: todo botão "afunda" um pouco ao clicar (natural-interactions) */
+.btn, .chip, .seg button, nav.modulos a, nav.grupo a, nav.tabs a, button.tile.clicavel, .opcoes label { transition: transform .08s ease, background-color .12s ease, border-color .12s ease; }
+.btn:not([disabled]):active, button.chip:active, .seg button:active, button.tile.clicavel:active { transform: scale(.97); }
+nav.modulos a:active, nav.grupo a:active, nav.tabs a:active { transform: scale(.96); }
+.btn.link:not([disabled]):active, .btn.quiet:not([disabled]):active { transform: none; opacity: .7; }
+
+/* janelas, tira do sino e avisos entram com um fade + leve subida; saem com fade (animate-to-from-top-layer).
+   overlay + allow-discrete mantêm na camada de cima durante a saída (onde o navegador tem; nos outros, a saída é na hora) */
+/* (sem CSS aninhado: num navegador antigo, uma regra descartada não pode deixar a janela invisível) */
+dialog.janela, .tira-avisos[popover], .toast[popover], .aviso-versao[popover] {
+  transition-property: opacity, translate, display, overlay;
+  transition-duration: .18s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+dialog.janela:not([open]), .tira-avisos[popover]:not(:popover-open), .toast[popover]:not(:popover-open), .aviso-versao[popover]:not(:popover-open) { opacity: 0; }
+@starting-style {
+  dialog.janela[open], .tira-avisos:popover-open, .toast:popover-open, .aviso-versao:popover-open { opacity: 0; }
+  dialog.janela[open]::backdrop { background-color: rgba(10, 14, 20, 0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tira-avisos[popover]:not(:popover-open), .aviso-versao[popover]:not(:popover-open), dialog.janela:not([open]) { translate: 0 8px; }
+  @starting-style {
+    dialog.janela[open], .tira-avisos:popover-open, .aviso-versao:popover-open { translate: 0 8px; }
+    .toast:popover-open { translate: 0 8px; }
+  }
+}
+dialog.janela::backdrop { transition-property: background-color, display, overlay; transition-duration: .18s; transition-behavior: allow-discrete; }
+@media (prefers-reduced-motion: reduce) { dialog.janela, .tira-avisos[popover], .toast[popover], .aviso-versao[popover] { transition-duration: .1s; } }
+
+/* esqueleto no lugar de "Carregando…" (content-first-noise-reduction: não mexer no conteúdo enquanto se lê) */
+.so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.esqueleto { display: grid; gap: 12px; padding: 18px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.esq-linha { height: 14px; width: var(--w, 80%); border-radius: 6px;
+  background: linear-gradient(90deg, var(--gray-soft) 0%, var(--bg) 50%, var(--gray-soft) 100%) 0 0 / 200% 100%; }
+.esq-tr td { padding: 12px; }
+@media (prefers-reduced-motion: no-preference) { .esq-linha { animation: esq-brilho 1.2s ease-in-out infinite; } }
+@keyframes esq-brilho { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* listas longas: o que está abaixo da dobra só é desenhado quando chega perto da tela (defer-rendering-heavy-content).
+   Só a partir do 10º item (os primeiros estão na tela ao abrir), sempre com um tamanho reservado */
+.feed li:nth-child(n+10), .lista-avisos.pagina li:nth-child(n+10), .queue > .card:nth-child(n+6),
+#bq-t-hist tbody tr:nth-child(n+15), .pa-hist li:nth-child(n+15), .acordos-lista > li:nth-child(n+8) {
+  content-visibility: auto; contain-intrinsic-size: auto none auto 72px;
+}
+.queue > .card:nth-child(n+6) { contain-intrinsic-size: auto none auto 180px; }
+
+/* fonte estável: enquanto a IBM Plex carrega, a fonte reserva fica do mesmo tamanho visual (visually-stable-font-fallbacks) */
+body { font-size-adjust: from-font; }
+
+/* títulos equilibrados e parágrafos sem palavra sozinha na última linha (form-factor-adaptation) */
+h1, h2, h3, h4, .funcao-corpo b, .rapido-quem { text-wrap: balance; }
+.sub, .meta, .obs, .funcao-texto, .rapido-texto, .aviso-texto, .noticia-texto { text-wrap: pretty; }
+
+/* caixas de texto crescem com o que se escreve, entre um mínimo e um máximo (form-fields-automatically-fit-contents) */
+textarea { field-sizing: content; min-height: 70px; max-height: 50vh; }
+
+/* cartões de tarefa enxutos (content-first-noise-reduction): menos linhas e menos espaço entre elas */
+.tarefa-card { gap: 6px; padding: 12px 14px; }
+.tarefa-card .obs { padding: 6px 10px; }
+.tarefa-card.tratada { padding-block: 10px; }
+.tarefa-card.tratada .obs { background: none; padding: 0; color: var(--muted); }
+.tarefa-card .actions { margin-top: 2px; }
+
+/* botão de tema: mostra o que vai virar (lua no claro, sol no escuro); sem JS, segue o sistema */
+.sino.tema { padding: 4px 9px; }
+.tema-sol { display: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .tema-sol { display: inline; } :root:not([data-theme="light"]) .tema-lua { display: none; } }
+:root[data-theme="dark"] .tema-sol { display: inline; } :root[data-theme="dark"] .tema-lua { display: none; }
+
+/* botão de copiar ao lado do ID/CPF (copy-button) */
+.copiavel { display: inline-flex; align-items: center; gap: 2px; }
+.copia { position: relative; display: inline-flex; }
+.btn-copiar { min-inline-size: 24px; min-block-size: 24px; display: inline-grid; place-items: center; border: 1px solid transparent; border-radius: 6px;
+  background: none; color: var(--muted); cursor: pointer; padding: 0; }
+.btn-copiar:hover, .btn-copiar:focus-visible { border-color: var(--line); color: var(--accent); background: var(--surface); }
+.ic-copiar { width: 12px; height: 12px; border: 1.5px solid currentColor; border-radius: 3px; box-shadow: 3px -3px 0 -1.5px var(--surface), 3px -3px 0 0 currentColor; }
+.btn-copiar[data-copiado] { color: var(--ok); }
+.btn-copiar[data-copiado] .ic-copiar { border: 0; box-shadow: none; width: 10px; height: 6px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg) translate(1px, -1px); border-radius: 0; }
+.btn-copiar[data-falhou] { color: var(--bad); }
+.copia-balao { position: absolute; left: 50%; bottom: calc(100% + 4px); translate: -50% 0; white-space: nowrap; font: 600 11px/1.4 var(--font-body);
+  background: var(--ink); color: var(--bg); padding: 2px 7px; border-radius: 6px; opacity: 0; pointer-events: none; transition: opacity .15s; }
+.copia-balao:not(:empty) { opacity: 1; }
+@media (hover: hover) {
+  .copiavel .btn-copiar { opacity: 0; transition: opacity .15s; }
+  .copiavel:hover .btn-copiar, .copiavel:focus-within .btn-copiar, .btn-copiar:focus-visible, .btn-copiar[data-copiado], .btn-copiar[data-falhou] { opacity: 1; }
+}

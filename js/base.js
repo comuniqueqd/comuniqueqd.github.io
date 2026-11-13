@@ -32,8 +32,11 @@
     return true;
   }
   const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-  const dt = (iso) => iso ? new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
-  const dia = (iso) => new Date(iso + (String(iso).length === 10 ? "T12:00:00" : "")).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  // 009j: datas e horas sempre no horário de Brasília (o mesmo do banco), mesmo num computador com outro fuso
+  const FUSO = "America/Sao_Paulo";
+  const diaChave = (d) => new Date(d).toLocaleDateString("en-CA", { timeZone: FUSO });  // AAAA-MM-DD em Brasília
+  const dt = (iso) => iso ? new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: FUSO }) : "";
+  const dia = (iso) => new Date(iso + (String(iso).length === 10 ? "T12:00:00" : "")).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: FUSO });
   function duracao(iso) {
     const min = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
     if (min < 60) return { txt: `${min} min`, velho: false };
@@ -83,8 +86,12 @@
   const EVENTO = { enviado: "Enviado", aprovado: "Aprovado", reprovado: "Reprovado", encerrado: "Encerrado", desfeito: "Decisão desfeita", editado: "Dados alterados", revisado: "Dados conferidos" };
   const pill = (s, curto) => el("span", { class: "pill " + s, text: curto && s === "aguardando_contato" ? "Aguardando novo contato" : ST[s] });
   const titulo = (c) => c.id_app ? "ID " + c.id_app : "CPF " + fmtCPF(c.cpf);
-  const vazio = (t, d) => el("div", { class: "empty" }, el("strong", { text: t }), d);
-  const carregandoEl = () => vazio("Carregando…");
+  // 009j: "Carregando…" vira um esqueleto com o formato da lista (as coisas não pulam quando chegam);
+  // o texto continua lá para o leitor de tela
+  const esqueleto = (linhas = 3) => el("div", { class: "esqueleto", role: "status" }, el("span", { class: "so-leitor", text: "Carregando…" }),
+    Array.from({ length: linhas }, (_, i) => el("div", { class: "esq-linha", style: `--w:${[92, 74, 58, 83][i % 4]}%` })));
+  const vazio = (t, d) => t === "Carregando…" && !d ? esqueleto() : el("div", { class: "empty" }, el("strong", { text: t }), d);
+  const carregandoEl = () => esqueleto();
 
   // ---------- estado comum ----------
   const S = (App.S = {
@@ -104,7 +111,10 @@
   // tabela simples: cols = [[título, numérico?]], linhas = <tr>s
   const tabela = (cols, linhas, vazioTxt) => [
     el("thead", {}, el("tr", {}, cols.map(([t, n]) => el("th", { class: n ? "num" : null, text: t })))),
-    el("tbody", {}, linhas.length ? linhas : el("tr", {}, el("td", { colspan: cols.length, class: "meta", text: vazioTxt })))];
+    el("tbody", {}, linhas.length ? linhas : vazioTxt === "Carregando…" ? linhasEsqueleto(cols.length)
+      : el("tr", {}, el("td", { colspan: cols.length, class: "meta", text: vazioTxt })))];
+  const linhasEsqueleto = (n) => [0, 1, 2].map((i) => el("tr", { class: "esq-tr", "aria-hidden": i ? "true" : null },
+    el("td", { colspan: n }, i ? null : el("span", { class: "so-leitor", text: "Carregando…" }), el("div", { class: "esq-linha", style: `--w:${[88, 70, 80][i]}%` }))));
   // barras horizontais: lista de { rotulo, qtd, extra }
   const barras = (lista, cor, vazioTxt) => {
     const mx = Math.max(1, ...lista.map((x) => x.qtd));
@@ -163,6 +173,30 @@
   }
   const nomesEscolhidos = (estado) => S.pessoas.filter((p) => estado.escolhidos.has(p.id)).map((p) => (p.id === S.me.id ? "você" : p.nome)).join(", ");
 
+  // 009j (copy-button): ID/CPF com um botãozinho de copiar ao lado. O balão "Copiado" é o mesmo para quem vê e
+  // para o leitor de tela (role=status); some com opacidade, e o botão nunca fica desabilitado.
+  const timersCopia = new WeakMap();
+  let ultimaMsgCopia = "";
+  function copiavel(texto, rotulo, classe = "mono meta", mostrar = texto) {
+    const balao = el("span", { class: "copia-balao", role: "status" });
+    const b = el("button", { class: "btn-copiar", type: "button", "aria-label": `Copiar ${rotulo || texto}`, title: "Copiar",
+      onclick: async (e) => {
+        e.stopPropagation();
+        let ok = true;
+        try { await navigator.clipboard.writeText(texto); } catch (_) { ok = false; }
+        clearTimeout(timersCopia.get(b));
+        b.removeAttribute("data-copiado"); b.removeAttribute("data-falhou"); balao.textContent = "";
+        void b.offsetWidth;
+        b.setAttribute(ok ? "data-copiado" : "data-falhou", "");
+        let msg = ok ? "Copiado" : "Não deu para copiar";
+        if (msg === ultimaMsgCopia) msg += "\u00A0";  // o VoiceOver não repete a mesma frase
+        ultimaMsgCopia = msg;
+        requestAnimationFrame(() => (balao.textContent = msg));
+        timersCopia.set(b, setTimeout(() => { b.removeAttribute("data-copiado"); b.removeAttribute("data-falhou"); balao.textContent = ""; }, 1800));
+      } }, el("span", { "aria-hidden": "true", class: "ic-copiar" }));
+    return el("span", { class: "copiavel" }, el("span", { class: classe, text: mostrar }), el("span", { class: "copia" }, b, balao));
+  }
+
   // janela por cima da tela (correções, edição). Fecha com Esc, com o ✕ ou com d.close().
   function janela(titulo, ...conteudo) {
     const d = el("dialog", { class: "janela", "aria-label": titulo },
@@ -182,8 +216,8 @@
     const p = item?.previsao ? new Date(item.previsao) : null;
     const passou = p && p < Date.now();
     if (!p && !pode) return null;
-    const hoje = p && p.toDateString() === new Date().toDateString();
-    const quando = p ? (hoje ? "hoje às " + p.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : dt(p.toISOString())) : null;
+    const hoje = p && diaChave(p) === diaChave(Date.now());
+    const quando = p ? (hoje ? "hoje às " + p.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: FUSO }) : dt(p.toISOString())) : null;
     return el("div", { class: "previsao" + (passou ? " passou" : "") },
       p ? el("span", {}, el("b", { text: passou ? `Previsão passou (${quando})` : `Previsão: até ${quando}` }), item.previsao_por_nome ? ` · por ${item.previsao_por_nome}` : "") : null,
       pode ? el("button", { class: "btn link", type: "button", onclick: (e) => { e.stopPropagation(); abrirPrevisao(item, tipo, id); } }, p ? "Alterar previsão" : "Informar previsão de término") : null);
@@ -212,7 +246,7 @@
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
 
-  App.u = { $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
+  App.u = { FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
             vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas, nomesEscolhidos, papelAtiv, papelBloq };
 
   // ---------- módulos e rotas ----------
@@ -259,8 +293,26 @@
     if (!mod || (mod.acesso && !mod.acesso())) mod = App.modulos.inicio;
     const abas = abasPermitidas(mod);
     let aba = abas.find((x) => x.id === a) || abas.find((x) => x.id === mod.padrao?.()) || abas[0];
+    const antes = App.atual.aba && $("#" + (App.modulos[App.atual.mod]?.abas.find((x) => x.id === App.atual.aba)?.secao));
     App.atual = { mod: mod.id, aba: aba.id };
-    document.querySelectorAll("section.view").forEach((s) => (s.hidden = s.id !== aba.secao));
+    const nova = $("#" + aba.secao);
+    // 009j (same-document-transitions): troca de tela com um fade curto e o destaque do menu/aba deslizando.
+    // Sem o recurso, ou com "reduzir movimento" no sistema, a troca é na hora, como antes.
+    const trocar = () => {
+      document.querySelectorAll("section.view").forEach((s) => (s.hidden = s.id !== aba.secao));
+      montarMenus(mod, aba, abas);
+      App.render();
+      // o link clicado é recriado na troca e o foco se perderia: leva o foco para o título da tela nova
+      if (antes !== nova && (document.activeElement === document.body || !document.activeElement?.isConnected)) {
+        const t = nova?.querySelector("h2");
+        if (t) { t.tabIndex = -1; t.focus({ preventScroll: true }); }
+      }
+    };
+    if (antes && antes !== nova && document.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) document.startViewTransition(trocar);
+    else trocar();
+    App.carregar();
+  }
+  function montarMenus(mod, aba, abas) {
     // menu de módulos (um item de grupo vale para todos os módulos dele)
     const grupo = grupoDe(mod.id);
     if (grupo) ultimoDoGrupo[grupo] = `#${mod.id}/${aba.id}`;
@@ -285,8 +337,8 @@
     nav.setAttribute("aria-label", "Telas de " + mod.nome);
     nav.replaceChildren(...abas.map((x) => el("a", { href: `#${mod.id}/${x.id}`, "data-view": x.id, "aria-current": x.id === aba.id ? "page" : null },
       x.nome, x.contador ? el("span", { class: "count" + (x.alerta ? " alert" : ""), id: x.contador, hidden: true, text: "0" }) : null)));
-    App.render();
-    App.carregar();
+    // contadores voltam a aparecer na hora (os spans das abas foram recriados)
+    for (const [id, n] of Object.entries(App.valores)) App.contador(id, n);
   }
   App.route = route;
   addEventListener("hashchange", route);
@@ -344,7 +396,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009i";
+  const VERSAO_APP = "009j";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;
@@ -515,6 +567,27 @@
     setInterval(tique, 30000);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) { ultimoTique = 0; conferirVersao(); tique(); } });
   }
+  // ---------- tema claro/escuro (009j, dark-mode-toggle) ----------
+  // Dois estados: "como o sistema" (nada guardado) e o contrário do que está na tela, guardado ao pé da letra.
+  // Voltar ao que o sistema já usa apaga a escolha (não prende o tema contra mudanças futuras do sistema).
+  const sistemaEscuro = () => matchMedia("(prefers-color-scheme: dark)").matches;
+  const temaNaTela = () => document.documentElement.dataset.theme || (sistemaEscuro() ? "dark" : "light");
+  function aplicarTema(t) {
+    if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+    const meta = document.querySelector('meta[name="color-scheme"]'); if (meta) meta.content = t === "light" || t === "dark" ? t : "light dark";
+    const b = $("#b-tema"); if (b) b.setAttribute("aria-label", temaNaTela() === "dark" ? "Usar tema claro" : "Usar tema escuro");
+  }
+  function trocarTema() {
+    const alvo = temaNaTela() === "dark" ? "light" : "dark";
+    const guardar = alvo !== (sistemaEscuro() ? "dark" : "light");
+    try { if (guardar) localStorage.setItem("comunique-tema", alvo); else localStorage.removeItem("comunique-tema"); } catch (_) {}
+    aplicarTema(guardar ? alvo : null);
+  }
+  addEventListener("storage", (e) => { if (e.key === "comunique-tema") aplicarTema(e.newValue); });  // outra aba trocou
+  matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => aplicarTema(document.documentElement.dataset.theme || null));
+  App.trocarTema = trocarTema;
+  addEventListener("DOMContentLoaded", () => { $("#b-tema")?.addEventListener("click", trocarTema); aplicarTema(document.documentElement.dataset.theme || null); });
+
   gate("carregando");
   addEventListener("DOMContentLoaded", iniciar);
 })();
