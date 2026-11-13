@@ -6,10 +6,15 @@
 <meta name="color-scheme" content="light dark">
 <script>/* 009j: tema escolhido pela pessoa, aplicado antes de desenhar (sem piscar) */try{var t=localStorage.getItem("comunique-tema");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;document.querySelector('meta[name="color-scheme"]').content=t;}}catch(e){}</script>
 <title>Comunique</title>
+<!-- 009n: app instalável (install-web-app). Ícone próprio do Comunique, sem imagens da marca Quero (pedido do usuário) -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#8a3be0">
+<link rel="icon" href="icones/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009m">
+<link rel="stylesheet" href="estilo.css?v=009n">
 </head>
 <body>
 <header class="top">
@@ -22,6 +27,7 @@
           <div class="busca-res" id="busca-res" hidden></div>
         </form>
         <span id="who"></span><span class="role" id="papel" hidden></span>
+        <button class="sino" id="b-instalar" type="button" hidden title="Instalar o Comunique como um app no computador ou no celular">📲 Instalar</button>
         <button class="sino tema" id="b-tema" type="button" aria-label="Tema escuro" title="Trocar tema claro/escuro"><span aria-hidden="true" class="tema-lua">🌙</span><span aria-hidden="true" class="tema-sol">☀️</span></button>
         <button class="sino" id="b-avisos" type="button" aria-label="Avisos" hidden><span id="c-avisos">🔔</span></button>
         <button class="btn link" id="b-sair" type="button" hidden>Sair</button>
@@ -696,22 +702,22 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="js/base.js?v=009m"></script>
-<script src="js/inicio.js?v=009m"></script>
-<script src="js/ativacao.js?v=009m"></script>
-<script src="js/bloqueios.js?v=009m"></script>
-<script src="js/entregadores.js?v=009m"></script>
-<script src="js/atividades.js?v=009m"></script>
-<script src="js/painel.js?v=009m"></script>
-<script src="js/avisos.js?v=009m"></script>
-<script src="js/analises.js?v=009m"></script>
-<script src="js/registros.js?v=009m"></script>
-<script src="js/equipe.js?v=009m"></script>
-<script src="js/ferramentas.js?v=009m"></script>
-<script src="js/financeiro.js?v=009m"></script>
-<script src="js/parceiros.js?v=009m"></script>
-<script src="js/busca.js?v=009m"></script>
-<script src="js/sons.js?v=009m"></script>
-<script src="js/agora.js?v=009m"></script>
+<script src="js/base.js?v=009n"></script>
+<script src="js/inicio.js?v=009n"></script>
+<script src="js/ativacao.js?v=009n"></script>
+<script src="js/bloqueios.js?v=009n"></script>
+<script src="js/entregadores.js?v=009n"></script>
+<script src="js/atividades.js?v=009n"></script>
+<script src="js/painel.js?v=009n"></script>
+<script src="js/avisos.js?v=009n"></script>
+<script src="js/analises.js?v=009n"></script>
+<script src="js/registros.js?v=009n"></script>
+<script src="js/equipe.js?v=009n"></script>
+<script src="js/ferramentas.js?v=009n"></script>
+<script src="js/financeiro.js?v=009n"></script>
+<script src="js/parceiros.js?v=009n"></script>
+<script src="js/busca.js?v=009n"></script>
+<script src="js/sons.js?v=009n"></script>
+<script src="js/agora.js?v=009n"></script>
 </body>
 </html>

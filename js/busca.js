@@ -51,10 +51,15 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009m";
+  const VERSAO = "009n";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009n", tema: "📲 Comunique no seu computador", itens: [
+      ["Instalar como app", "Quando o navegador permitir, aparece o botão 📲 Instalar no topo: o Comunique ganha ícone próprio e abre numa janela só dele, como um programa."],
+      ["Tour das novidades", "Depois desta janela, uns balõezinhos mostram onde ficou o que mudou. Aparecem uma vez só."],
+      ["Lançamentos mais leves", "Listas com muitos lançamentos ficaram mais leves para rolar."],
+    ] },
     { versao: "009m", tema: "🧭 Tudo mais perto", itens: [
       ["Avisos no menu", "Avisos agora é um item do menu de cima, com duas abas: Para mim (os seus avisos) e Toda a equipe (o que antes ficava em Registros). O sino continua levando para lá."],
       ["Minha fila", "Em Atividades, “Pendências” virou Minha fila: as tarefas para você ou com você aparecem com o cartão completo, dá para aceitar e concluir ali mesmo."],
@@ -170,13 +175,54 @@
   function mostrarNovidades() {
     let visto = null;
     try { visto = localStorage.getItem("comunique-novidades"); } catch (_) {}
-    if (visto === VERSAO) return;
+    if (visto === VERSAO) return setTimeout(iniciarTour, 600);  // 009n: janela já vista: o tour pode aparecer
     const d = janela("O que há de novo",
       ...VERSOES.map((v, i) => el("div", { class: "bloco-versao" + (i ? " antiga" : "") },
         el("h4", {}, el("span", { class: "tag", text: v.versao }), " ", v.tema),
         el("ol", { class: "novidades" }, v.itens.map(([t, x]) => el("li", {}, el("b", { text: t + ": " }), x))))),
       el("div", { class: "actions" }, el("button", { class: "btn primary", type: "button", onclick: () => { marcarVisto(); d.close(); } }, "Entendi")));
     d.addEventListener("close", marcarVisto);  // o ✕ e o Esc também contam como visto
+    d.addEventListener("close", () => setTimeout(iniciarTour, 300));  // 009n: depois da janela, o tour mostra onde fica o que mudou
+  }
+
+  // ---------- 009n: tour das novidades (persistent-app-tours) ----------
+  // Balõezinhos que apontam para o que mudou nesta versão, um de cada vez. popover="manual" (não some com um clique
+  // fora), role="dialog" com título, e o foco vai para dentro do balão. Sem anchor positioning no navegador, a posição
+  // é calculada pelo tamanho do alvo. Aparece uma vez por versão (localStorage "comunique-tour").
+  const TOUR = { versao: "009m", passos: [
+    ['nav.modulos a[data-mod="avisos"]', "Avisos agora fica aqui", "Para mim: os seus avisos. Toda a equipe: o que antes ficava em Registros. O sino continua levando para cá."],
+    ['nav.modulos a[data-mod="atividades"]', "Minha fila", "Em Atividades, a Minha fila junta tudo o que está com você, com os cartões completos das suas tarefas."],
+    ['nav.modulos a[data-mod="analises"]', "O Painel mudou de lugar", "O Painel das tarefas agora fica em Análises → Tarefas."],
+  ] };
+  let tourAtivo = false;
+  function iniciarTour() {
+    let visto = null;
+    try { visto = localStorage.getItem("comunique-tour"); } catch (_) {}
+    if (tourAtivo || visto === TOUR.versao || document.querySelector("dialog:modal") || !App.u.temPopover) return;
+    const passos = TOUR.passos.filter(([sel]) => { const n = document.querySelector(sel); return n && n.offsetParent; });
+    if (!passos.length) return;
+    tourAtivo = true;
+    const acabar = () => { try { localStorage.setItem("comunique-tour", TOUR.versao); } catch (_) {} tourAtivo = false; caixa.remove(); };
+    const titulo = el("h3", { id: "tour-titulo" }), texto = el("p", { class: "meta" }), contagem = el("span", { class: "meta" });
+    const proximo = el("button", { class: "btn primary small", type: "button" }), pular = el("button", { class: "btn link", type: "button", onclick: acabar }, "Pular");
+    const caixa = el("div", { class: "tour-passo", id: "tour-passo", popover: "manual", role: "dialog", "aria-labelledby": "tour-titulo" },
+      el("span", { class: "tour-seta", "aria-hidden": "true" }), titulo, texto, el("div", { class: "actions" }, contagem, el("span", { class: "spacer" }), pular, proximo));
+    document.body.append(caixa);
+    let i = 0;
+    const mostrar = () => {
+      const [sel, t, x] = passos[i], alvo = document.querySelector(sel);
+      if (!alvo) return acabar();
+      titulo.textContent = t; texto.textContent = x; contagem.textContent = `${i + 1} de ${passos.length}`;
+      proximo.textContent = i < passos.length - 1 ? "Próximo" : "Entendi";
+      proximo.onclick = () => { if (++i < passos.length) mostrar(); else acabar(); };
+      if (!caixa.matches(":popover-open")) caixa.showPopover();
+      const r = alvo.getBoundingClientRect(), w = Math.min(320, innerWidth - 24);
+      const left = Math.max(12, Math.min(innerWidth - w - 12, r.left + r.width / 2 - w / 2));
+      Object.assign(caixa.style, { top: `${r.bottom + 12}px`, left: `${left}px`, width: `${w}px` });
+      caixa.style.setProperty("--seta-x", `${r.left + r.width / 2 - left}px`);
+      proximo.focus();  // o foco vai para dentro do balão (teclado e leitor de tela percebem o passo novo)
+    };
+    mostrar();
   }
 
   App.aoEntrar.push(() => { form.hidden = false; }, mostrarNovidades);

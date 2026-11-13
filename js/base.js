@@ -476,7 +476,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009m";
+  const VERSAO_APP = "009n";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;
@@ -667,6 +667,36 @@
   addEventListener("storage", (e) => { if (e.key === "comunique-tema") aplicarTema(e.newValue); });  // outra aba trocou
   matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", () => aplicarTema(document.documentElement.dataset.theme || null));
   App.trocarTema = trocarTema;
+
+  // ---------- instalar como app (009n, install-web-app) ----------
+  // O botão só aparece quando o navegador pode instalar: navigator.install() (quando existir) ou o evento
+  // beforeinstallprompt (Chrome/Edge). O evento serve uma vez só; depois de usado, o botão some até vir outro.
+  const temInstall = typeof Navigator !== "undefined" && typeof Navigator.prototype.install === "function";
+  let pedidoInstalar = null;
+  const botaoInstalar = () => $("#b-instalar");
+  addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); pedidoInstalar = e; if (botaoInstalar()) botaoInstalar().hidden = false; });
+  addEventListener("appinstalled", () => { pedidoInstalar = null; if (botaoInstalar()) botaoInstalar().hidden = true; toast("Comunique instalado. Ele abre numa janela própria."); });
+  async function instalar(e) {
+    const b = e.currentTarget;
+    if (b.getAttribute("aria-disabled") === "true") return;
+    b.setAttribute("aria-disabled", "true");  // aria-disabled (e não disabled) para não perder o foco
+    try {
+      if (temInstall) { await navigator.install(); b.hidden = true; toast("Comunique instalado (ou aberto)."); }
+      else if (pedidoInstalar) {
+        const p = pedidoInstalar; pedidoInstalar = null;
+        await p.prompt();
+        const { outcome } = await p.userChoice;
+        toast(outcome === "accepted" ? "Comunique instalado." : "Instalação cancelada.");
+        if (!pedidoInstalar) b.hidden = true;
+      }
+    } catch (err) {
+      toast(err?.name === "AbortError" ? "Instalação cancelada." : "Não deu para instalar agora.");
+      if (err?.name !== "AbortError") console.error(err);
+    } finally { b.removeAttribute("aria-disabled"); }
+  }
+  addEventListener("DOMContentLoaded", () => { const b = botaoInstalar(); if (!b) return; b.addEventListener("click", instalar);
+    if (matchMedia("(display-mode: standalone)").matches) { b.remove(); return; }  // já está aberto como app
+    if (temInstall) b.hidden = false; });
   addEventListener("DOMContentLoaded", () => { $("#b-tema")?.addEventListener("click", trocarTema); aplicarTema(document.documentElement.dataset.theme || null); });
 
   gate("carregando");

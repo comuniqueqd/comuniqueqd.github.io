@@ -58,7 +58,8 @@ await db.query("select importar_bloqueio('rev00001', 'Nome Errado', 'ITABAIANA -
 await db.end();
 
 const api = await iniciarSupabaseFalso({ porta: 54321, databaseUrl: DB });
-const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8" };
+const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
+  ".webmanifest": "application/manifest+json", ".png": "image/png" };
 const site = http.createServer((q, r) => {
   const f = path.join(RAIZ, decodeURIComponent(q.url.split("?")[0]));
   if (!f.startsWith(RAIZ) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { r.writeHead(404); return r.end(); }
@@ -106,7 +107,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009m"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009n"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -287,7 +288,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Avisos no menu") && await s.isVisible(".faixa-novidades >> text=e mais: 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Instalar como app") && await s.isVisible(".faixa-novidades >> text=e mais: 009m e 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -342,6 +343,15 @@ try {
   ok(await s.evaluate(() => document.documentElement.dataset.theme === "dark" && document.querySelector('meta[name="color-scheme"]').content === "dark"), "recarregou: continua escuro desde o início (sem piscar claro)");
   await s.click("#b-tema");
   ok(await s.evaluate(() => !document.documentElement.dataset.theme && localStorage.getItem("comunique-tema") === null), "tocar de novo volta a seguir o sistema (não prende o tema)");
+  // 009n: app instalável. Manifesto com id e ícones; o botão só aparece quando o navegador oferece instalar
+  { const m = await s.evaluate(async () => { const r = await fetch(document.querySelector('link[rel="manifest"]').href); return { tipo: r.headers.get("content-type"), j: await r.json() }; });
+    const icone = await s.evaluate(async () => (await fetch("icones/icone-512.png")).ok);
+    ok(m.j.id === "/" && m.j.display === "standalone" && m.j.icons.some((x) => x.purpose === "maskable") && icone, "009n: manifesto do app (id, janela própria, ícones)");
+    ok(await s.isHidden("#b-instalar"), "009n: sem convite do navegador, o botão Instalar fica escondido");
+    await s.evaluate(() => { const e = new Event("beforeinstallprompt", { cancelable: true }); e.prompt = async () => {}; e.userChoice = Promise.resolve({ outcome: "accepted" }); dispatchEvent(e); });
+    ok(await esperar(s, "#b-instalar:not([hidden])"), "009n: o navegador oferece instalar: aparece o botão 📲 Instalar");
+    await s.click("#b-instalar");
+    ok(await esperar(s, "#toast:has-text('Comunique instalado')") && await sumir(s, "#b-instalar"), "009n: instalar usa o convite uma vez e o botão some"); }
   // troca de tela: o foco vai para o título da tela nova (o link clicado é recriado)
   await s.click("nav.modulos a[data-mod=analises]"); await esperar(s, "#v-an-simples:not([hidden])");
   await s.click("nav.tabs a[data-view=complexas]");
@@ -816,9 +826,17 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009n", "009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
+  // 009n: depois da janela, o tour aponta para o que mudou
+  ok(await esperar(n7, "#tour-passo:popover-open >> text=Avisos agora fica aqui") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
+      && (await n7.getAttribute("#tour-passo", "role")) === "dialog", "009n: tour das novidades abre no 1º passo, com o foco dentro do balão");
+  await n7.screenshot({ path: path.join(PRINTS, "f1b-tour.png") });
+  await n7.click("#tour-passo >> text=Próximo"); await n7.click("#tour-passo >> text=Próximo");
+  ok(await esperar(n7, "#tour-passo >> text=O Painel mudou de lugar"), "009n: o tour passa pelos passos");
+  await n7.click("#tour-passo >> text=Entendi");
+  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009m"), "009n: “Entendi” fecha o tour e ele não volta");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
   ok(!(await n7.isVisible("dialog.janela")), "e não aparece de novo" + ((await n7.isVisible("dialog.janela")) ? ": " + (await n7.textContent("dialog.janela[open]").catch(() => "?")) : ""));
   // suporte envia sem nome: marca revisar e tarefa para o admin (opcional para os outros)

@@ -874,3 +874,15 @@ th { font-weight: 500; }
 dialog.janela.larga { width: min(920px, calc(100vw - 32px)); }
 dialog.janela.larga .two { margin-bottom: 0; }
 a.btn { text-decoration: none; }  /* link com cara de botão não leva sublinhado */
+
+/* 009n: balão do tour das novidades (persistent-app-tours) */
+.tour-passo[popover] { position: fixed; inset: auto; margin: 0; padding: 14px 16px 12px; border: 1px solid var(--lilas); border-radius: var(--radius);
+  background: var(--surface); color: var(--ink); box-shadow: 0 16px 40px rgb(30 21 48 / .28); display: none; overflow: visible; }
+.tour-passo[popover]:popover-open { display: grid; gap: 6px; }
+.tour-passo h3 { margin: 0; font-size: 16px; }
+.tour-passo p { margin: 0; }
+.tour-passo .actions { margin-top: 4px; }
+.tour-seta { position: absolute; top: -8px; left: calc(var(--seta-x, 50%) - 8px); width: 16px; height: 16px; background: var(--surface);
+  border-left: 1px solid var(--lilas); border-top: 1px solid var(--lilas); transform: rotate(45deg); }
+/* 009n: Lançamentos podem ter até 5000 linhas: as de baixo só são desenhadas quando chegam perto (defer-rendering-heavy-content) */
+#fi-l-tabela tbody tr:nth-child(n+20) { content-visibility: auto; contain-intrinsic-size: auto none auto 64px; }

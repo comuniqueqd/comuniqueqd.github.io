@@ -1,0 +1,17 @@
+{
+  "id": "/",
+  "name": "Comunique",
+  "short_name": "Comunique",
+  "description": "O app da equipe de operação: ativação, bloqueios, tarefas e avisos num lugar só.",
+  "lang": "pt-BR",
+  "start_url": "./#inicio",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f2fa",
+  "theme_color": "#8a3be0",
+  "icons": [
+    { "src": "icones/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icones/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icones/icone-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
