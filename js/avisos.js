@@ -49,7 +49,7 @@
       el("div", { class: "prefs-grid" },
         el("div", {}, el("h4", { text: "Receber avisos de" }),
           ...TIPOS.map(([k, t]) => {
-            const cb = el("input", { type: "checkbox", "data-pref": k }); cb.checked = !sil.has(k);
+            const cb = el("input", { type: "checkbox", switch: true, role: "switch", "data-pref": k }); cb.checked = !sil.has(k);  // 009l: interruptor
             cb.addEventListener("change", async () => {
               const novos = TIPOS.map(([x]) => x).filter((x) => !box.querySelector(`[data-pref="${x}"]`).checked);
               try { V.pref = await rpc("salvar_preferencias", { p_silenciados: novos }); toast("Preferências salvas."); App.render(); } catch (e) { toast(msgErro(e)); }
@@ -174,6 +174,7 @@
       ? "Nada com esses filtros. Tente outra palavra ou limpe os filtros." : "Quando algo acontecer nas suas cidades, ou para você, o aviso aparece aqui."));
     else box.replaceChildren(...[el("ul", { class: "lista-avisos pagina" }, V.lista.map((x) => linhaAviso(x))),
       V.mais ? el("div", { class: "actions" }, el("button", { class: "btn", type: "button", onclick: (e) => maisAvisos(e.currentTarget) }, "Carregar mais avisos")) : null].filter(Boolean));
+    App.u.grifar("busca-tela", box, $("#av-q").value);  // 009l: grifa o termo buscado
     renderPref();
     renderCidades();
     marcarLidos();

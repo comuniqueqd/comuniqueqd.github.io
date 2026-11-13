@@ -1,31 +1,37 @@
 /* Layout: uma coluna central; abas no topo levam às telas. Cores em tokens com tema escuro. */
 :root {
-  --bg: #f3f5f8; --surface: #ffffff; --ink: #17202e; --muted: #5b6678; --line: #dde2ea;
-  --accent: #1f5fbf; --accent-ink: #ffffff; --accent-soft: #e6eefb;
+  /* 009l: cores do Manual de Identidade Visual da Quero Delivery: roxo #9B4DEE (principal), rosa #E0457B e
+     amarelo #F7EA48 (secundárias); tipografia Kanit. Sem imagens da marca (pedido do usuário). Onde há texto branco sobre roxo (cabeçalho, botões) usa-se um
+     roxo um tom abaixo (#8A3BE0), porque o #9B4DEE com texto branco fica em 4,48:1, um fio abaixo do mínimo de leitura (4,5:1). */
+  --roxo: #9B4DEE; --marca: #8A3BE0; --marca-forte: #6C25BE; --marca-ink: #ffffff; --amarelo: #F7EA48; --rosa: #E0457B; --lilas: #A866F0;
+  --bg: #f5f2fa; --surface: #ffffff; --ink: #1e1530; --muted: #625a75; --line: #e4ddf0;
+  --accent: #7a2fd0; --accent-ink: #ffffff; --accent-soft: #f0e6fd;
   --ok: #1b7a46; --ok-soft: #e3f4ea;
   --bad: #b3261e; --bad-soft: #fbe7e5;
   --warn: #8a5a00; --warn-soft: #fff1d6;
-  --gray: #5f6b7a; --gray-soft: #e9edf2;
-  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --gray: #5f6577; --gray-soft: #ece8f3;
+  --font-body: "Kanit", "Segoe UI", system-ui, sans-serif;  /* 009l: a fonte do manual da marca */
   --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-  --radius: 10px;
+  --radius: 14px;
   color-scheme: light;
   accent-color: var(--accent);  /* 009i: caixas de marcar e opções na cor do app (brand-consistent-forms) */
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #10151d; --surface: #18202b; --ink: #e7ecf3; --muted: #9aa6b8; --line: #2a3442;
-    --accent: #6ea2ff; --accent-ink: #0c1420; --accent-soft: #1c2a42;
+    --marca: #2a1d45; --marca-forte: #1f1535; --marca-ink: #eee9f7;
+    --bg: #16111f; --surface: #1e1830; --ink: #eee9f7; --muted: #a99fbf; --line: #322a45;
+    --accent: #c9a6ff; --accent-ink: #16111f; --accent-soft: #2e2347;
     --ok: #5fd08e; --ok-soft: #15301f; --bad: #ff8a80; --bad-soft: #3a1a18; --warn: #f0c060; --warn-soft: #35290f;
-    --gray: #a3adbb; --gray-soft: #252e3a;
+    --gray: #a9a3b8; --gray-soft: #2a2438;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #10151d; --surface: #18202b; --ink: #e7ecf3; --muted: #9aa6b8; --line: #2a3442;
-  --accent: #6ea2ff; --accent-ink: #0c1420; --accent-soft: #1c2a42;
+  --marca: #2a1d45; --marca-forte: #1f1535; --marca-ink: #eee9f7;
+  --bg: #16111f; --surface: #1e1830; --ink: #eee9f7; --muted: #a99fbf; --line: #322a45;
+  --accent: #c9a6ff; --accent-ink: #16111f; --accent-soft: #2e2347;
   --ok: #5fd08e; --ok-soft: #15301f; --bad: #ff8a80; --bad-soft: #3a1a18; --warn: #f0c060; --warn-soft: #35290f;
-  --gray: #a3adbb; --gray-soft: #252e3a;
+  --gray: #a9a3b8; --gray-soft: #2a2438;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -757,3 +763,109 @@ textarea { field-sizing: content; min-height: 70px; max-height: 50vh; }
 .pend-box.vazia { padding: 10px 16px; }
 .pend-box.vazia h3, .pend-box.vazia .sub { display: none; }
 .nada-pend { margin: 0; font-size: 14px; color: var(--ok); font-weight: 600; }
+
+/* ---------- 009l (Modern Web Guidance) ---------- */
+/* barra de progresso nativa (progress): estilo próprio; -webkit- e -moz- em regras separadas, de propósito */
+progress.barra-prog { appearance: none; border: 0 solid; overflow: clip; inline-size: 100%; max-inline-size: 320px; flex: 1 1 160px; block-size: 8px;
+  border-radius: 999px; background: var(--bg); box-shadow: inset 0 0 0 1px var(--line); --barra-cor: var(--ok); }
+progress.barra-prog::-webkit-progress-bar { background: transparent; }
+progress.barra-prog::-webkit-progress-value { background: var(--barra-cor); border-radius: 999px; transition: inline-size .3s; }
+progress.barra-prog::-moz-progress-bar { background: var(--barra-cor); border-radius: 999px; }
+
+/* cabeçalho que ordena (sortable-table): o botão ocupa a célula; a seta vem do aria-sort do <th> */
+th:has(> button.ordena) { padding: 0; }
+button.ordena { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 4px; inline-size: 100%; min-block-size: 24px; padding: 9px 12px; cursor: pointer;
+  font: inherit; color: inherit; text-align: inherit; }
+th.num button.ordena { justify-content: flex-end; }
+button.ordena:hover { color: var(--ink); }
+button.ordena:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.seta-ordem::after { content: "↕"; opacity: .35; font-size: 11px; }
+th[aria-sort="ascending"] .seta-ordem::after { content: "↑"; opacity: 1; }
+th[aria-sort="descending"] .seta-ordem::after { content: "↓"; opacity: 1; }
+th[aria-sort] { color: var(--ink); }
+
+/* tabelas longas: rolagem própria, cabeçalho grudado e sombra embaixo quando há mais (scrollability-affordance-hints) */
+.tablewrap.rolavel { max-block-size: 70vh; overflow: auto; container-type: scroll-state; }
+.tablewrap.rolavel thead th { position: sticky; top: 0; z-index: 2; box-shadow: 0 1px 0 var(--line); }
+.tablewrap.rolavel::after { content: ""; display: block; position: sticky; inset-block-end: 0; block-size: .75rem; margin-block-start: -.75rem; z-index: 3;
+  pointer-events: none; opacity: 0; transition: opacity .2s; background: radial-gradient(farthest-side at 50% 100%, rgb(0 0 0 / .18), transparent); }
+@container scroll-state(scrollable: block-end) { .tablewrap.rolavel::after { opacity: 1; } }
+@supports not (container-type: scroll-state) {
+  .tablewrap.rolavel::after { animation: mostra-sombra linear both reverse; animation-timeline: scroll(); animation-range: calc(100% - 2rem) 100%; }
+}
+@keyframes mostra-sombra { to { opacity: 1; } }
+
+/* interruptor (switch): o navegador desenha onde já sabe; nos outros, um interruptor desenhado aqui, ainda um checkbox */
+input[type="checkbox"][switch] { accent-color: var(--accent); cursor: pointer; }
+@supports not selector(input::thumb) {
+  input[type="checkbox"][switch] { appearance: none; inline-size: 34px; block-size: 20px; border-radius: 999px; background: var(--gray-soft); border: 1px solid var(--line);
+    position: relative; flex: 0 0 auto; margin: 0; padding: 0; transition: background-color .15s; }
+  input[type="checkbox"][switch]::before { content: ""; position: absolute; inset-block-start: 2px; inset-inline-start: 2px; inline-size: 14px; block-size: 14px;
+    border-radius: 50%; background: var(--surface); box-shadow: 0 1px 2px rgb(0 0 0 / .25); transition: translate .15s; }
+  input[type="checkbox"][switch]:checked { background: var(--accent); border-color: var(--accent); }
+  input[type="checkbox"][switch]:checked::before { translate: 14px 0; }
+}
+input[type="checkbox"][switch]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* termo da busca grifado (highlight-text-ranges): fundo amarelo e sublinhado, para não depender só da cor */
+::highlight(busca-topo), ::highlight(busca-tela) { background-color: #fff1a6; color: #1a1400; text-decoration: underline; text-decoration-color: #b08800; }
+
+/* ---------- 009l: cores da Quero Delivery (só cor; fontes, tamanhos e formas continuam os de antes) ---------- */
+/* cabeçalho no roxo da marca, com o destaque do menu em amarelo */
+header.top { background: var(--marca); color: var(--marca-ink); border-bottom: 3px solid var(--amarelo); }
+header.top h1 a { color: var(--marca-ink) !important; }
+header.top .who { color: color-mix(in srgb, var(--marca-ink) 85%, transparent); }
+header.top .role { background: rgb(255 255 255 / .16); color: var(--marca-ink); }
+header.top .sino { background: rgb(255 255 255 / .12); border-color: rgb(255 255 255 / .28); color: var(--marca-ink); }
+header.top .sino[data-novas="true"] { background: var(--amarelo); border-color: var(--amarelo); color: #1e1530; }
+header.top .btn.link { color: var(--marca-ink); }
+header.top .busca-topo input { background: rgb(255 255 255 / .95); border-color: transparent; color: #1e1530; }
+header.top .busca-topo input::placeholder { color: #6d6580; }
+nav.modulos a { color: color-mix(in srgb, var(--marca-ink) 88%, transparent); }
+nav.modulos a:hover { color: var(--marca-ink); border-color: rgb(255 255 255 / .35); }
+nav.modulos a[aria-current="page"] { background: var(--amarelo); color: #1e1530; }
+nav.grupo { border-top-color: rgb(255 255 255 / .2); }
+nav.grupo a { background: rgb(255 255 255 / .1); border-color: rgb(255 255 255 / .25); color: var(--marca-ink); }
+nav.grupo a:hover { color: var(--marca-ink); border-color: rgb(255 255 255 / .6); }
+nav.grupo a[aria-current="page"] { background: var(--surface); color: var(--accent); border-color: var(--surface); }
+nav.tabs a { color: color-mix(in srgb, var(--marca-ink) 80%, transparent); }
+nav.tabs a:hover { color: var(--marca-ink); }
+nav.tabs a[aria-current="page"] { color: var(--marca-ink); border-bottom-color: var(--amarelo); }
+header.top .count { background: rgb(255 255 255 / .9); color: var(--marca-forte); }
+header.top .count.alert { background: var(--rosa); color: #fff; }
+/* botões e destaques na cor da marca */
+.btn.primary { background: var(--marca); border-color: var(--marca); color: #fff; }
+:root[data-theme="dark"] .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); } }
+a.funcao.f-bloq { --fcor: var(--rosa); }
+.faixa-novidades { border-color: var(--lilas); background: var(--accent-soft); }
+.toast { background: var(--marca-forte); color: #fff; }
+/* tela de entrada no roxo da marca */
+.gate { background: var(--roxo); }
+
+/* ---------- 009l: tipografia, cantos e espaçamentos do manual da Quero Delivery (sem imagens da marca) ---------- */
+body { font-size: 15px; line-height: 1.55; }
+h1, h2 { font-weight: 600; letter-spacing: 0; }
+h2 { font-size: 22px; margin-bottom: 6px; }
+h3 { font-weight: 500; font-size: 16px; }
+header.top h1 { font-weight: 700; font-size: 25px; }
+/* faixa no alto como nas capas do manual: rosa à esquerda, amarelo no resto (só cor, sem desenho) */
+header.top { position: relative; border-bottom: 0; }
+header.top::before { content: ""; position: absolute; inset: 0 0 auto 0; block-size: 6px; background: linear-gradient(90deg, var(--rosa) 0 33%, var(--amarelo) 33% 100%); }
+header.top .wrap { padding-top: 22px; }
+nav.modulos { gap: 6px; margin-top: 14px; }
+nav.modulos a { font-weight: 500; font-size: 15px; padding: 7px 14px; }
+nav.tabs a { font-weight: 500; }
+section.view { padding-top: 28px; }
+/* cantos mais arredondados, como o símbolo e as etiquetas da marca */
+.btn { border-radius: 12px; padding: 9px 16px; font-weight: 500; }
+.btn.small { border-radius: 10px; }
+.seg, .opcoes { border-radius: 12px; }
+input, select, textarea { border-radius: 12px; padding: 10px 12px; }
+dialog.janela { border-radius: 18px; padding: 20px; }
+.card, .panel, form.cad, .tile, .rapido, .tablewrap, .empty, .esqueleto { border-radius: var(--radius); }
+a.funcao { border-radius: 20px; }
+.funcao-icone { border-radius: 16px; }
+.tile .v, .numeros b, .destaques b, .fe-total strong, .previa .grande { font-weight: 600; }
+th { font-weight: 500; }
+.pill, .count, .role, .tag, .chip { font-weight: 500; }

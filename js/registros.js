@@ -88,6 +88,7 @@
       R.fim ? el("p", { class: "meta", style: "text-align:center", text: "Fim dos registros." })
         : el("div", { class: "actions", style: "justify-content:center;margin-top:12px" },
             el("button", { class: "btn", type: "button", disabled: R.mais, onclick: (e) => carregarMais(e.currentTarget) }, R.mais ? "Carregando…" : "Carregar mais")));
+    App.u.grifar("busca-tela", box, $("#rg-q").value);  // 009l: grifa o termo buscado
   }
 
   let tBusca = null;

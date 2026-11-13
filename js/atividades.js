@@ -266,9 +266,8 @@
   }
   function blocoProgresso(a) {
     if (!a.meta) return null;
-    const pct = Math.min(100, Math.round((a.progresso / a.meta) * 100));
     return el("div", { class: "progresso-tarefa" },
-      el("div", { class: "barra", role: "progressbar", "aria-valuenow": a.progresso, "aria-valuemax": a.meta }, el("span", { style: `width:${pct}%` })),
+      App.u.progresso(a.progresso, a.meta, `Progresso: ${a.progresso} de ${a.meta}`),  // 009l: <progress> nativo
       el("span", { class: "meta", text: `${a.progresso} de ${a.meta}${a.progresso_automatico ? (a.tipo === "ativar_parceiro" ? " (conta sozinho: parceiros ativados por quem pegou, na cidade)" : " (conta sozinho: entregadores aprovados por quem pegou, na cidade)") : ""}${a.progresso >= a.meta ? " · meta atingida 🎉" : ""}` }),
       !a.progresso_automatico && a.pode_mexer && a.status !== "aberta" ? el("button", { class: "btn small", type: "button", onclick: (e) => acaoAtividade("avancar_tarefa", { p_id: a.id, p_delta: 1 }, e.currentTarget) }, "+1") : null,
       !a.progresso_automatico && a.pode_mexer && a.status !== "aberta" && a.progresso > 0 ? el("button", { class: "btn link", type: "button", onclick: (e) => acaoAtividade("avancar_tarefa", { p_id: a.id, p_delta: -1 }, e.currentTarget) }, "−1") : null);

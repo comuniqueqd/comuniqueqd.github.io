@@ -41,6 +41,7 @@
     if (!linhas.length) linhas.push(el("p", { class: "meta", style: "margin:6px 8px", text: "Nada encontrado." }));
     if (bloq) linhas.push(el("button", { type: "button", onclick: () => ir(() => App.abrirFicha(q)) }, el("span", { class: "meta", text: `Consultar “${q}” na tela Consultar entregador →` })));
     res.replaceChildren(...linhas);
+    App.u.grifar("busca-topo", res, q);  // 009l: grifa o termo nos resultados
     res.hidden = false;
   }
   campo.addEventListener("input", () => { clearTimeout(tempo); tempo = setTimeout(buscar, 300); });
@@ -50,10 +51,17 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009k";
+  const VERSAO = "009l";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009l", tema: "💜 Com as cores da Quero", itens: [
+      ["Cores da Quero Delivery", "O Comunique ganhou as cores da marca: o roxo no topo e nos botões, o amarelo no item do menu em que você está e o rosa nos números de alerta."],
+      ["Ordenar as tabelas", "Em Lançamentos, Tarifas dos bairros, Regras de equipe e Operadores, clique no nome da coluna para ordenar (de novo, inverte). A ordem fica mesmo quando a lista atualiza."],
+      ["Busca grifada", "O que você digitou aparece grifado nos resultados da busca do topo, nos Avisos e nos Registros."],
+      ["Interruptores", "As preferências de avisos e de sons viraram interruptores de liga/desliga."],
+      ["Tabelas longas", "Lançamentos e Tarifas rolam por dentro, com o cabeçalho sempre à vista e uma sombrinha avisando que tem mais embaixo."],
+    ] },
     { versao: "009k", tema: "🧹 Menos telas", itens: [
       ["Menos telas", "As Tarifas dos bairros agora ficam dentro da Calculadora de bairro (é só abrir “Tarifas dos bairros” no fim da tela)."],
       ["Pendentes nos Lançamentos", "Os seus adicionais e ajustes que faltam lançar ficam no topo da aba Lançamentos, com o número na aba. Os links antigos continuam levando para o lugar certo."],

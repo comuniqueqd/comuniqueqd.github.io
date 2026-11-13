@@ -197,6 +197,72 @@
     return el("span", { class: "copiavel" }, el("span", { class: classe, text: mostrar }), el("span", { class: "copia" }, b, balao));
   }
 
+  // ---------- 009l (Modern Web Guidance) ----------
+  // barra de progresso nativa (<progress>): o leitor de tela anuncia "3 de 5" sozinho (progress)
+  const progresso = (valor, max, rotulo) => el("progress", { class: "barra-prog" + (max && valor >= max ? " cheia" : ""), max: String(Math.max(1, max || 1)),
+    value: String(Math.min(Number(valor) || 0, Math.max(1, max || 1))), "aria-label": rotulo });
+
+  // tabela que ordena clicando no cabeçalho (sortable-table): um botão em cada <th> com texto, aria-sort só na coluna
+  // ordenada, e as linhas existentes são movidas (não redesenhadas). A escolha fica guardada por tabela, então o
+  // redesenho a cada 30 s mantém a ordem. Números e datas comparam como número; texto com Intl.Collator.
+  const comparaTexto = new Intl.Collator("pt-BR", { numeric: true, sensitivity: "base" });
+  const ordemTabela = {};
+  const valorCelula = (td, tipo) => {
+    const t = (td?.dataset.valor ?? td?.textContent ?? "").trim();
+    if (tipo === "num") { const n = Number(t.replace(/[^\d,.-]/g, "").replace(/\./g, "").replace(",", ".")); return Number.isFinite(n) ? n : -Infinity; }
+    if (tipo === "data") { const m = t.match(/(\d{2})\/(\d{2})\/(\d{4})(?:\D+(\d{2}):(\d{2}))?/); return m ? Number(m[3] + m[2] + m[1] + (m[4] || "00") + (m[5] || "00")) : -Infinity; }
+    return t;
+  };
+  let avisoOrdem = null;
+  function ordenavel(tabela) {
+    if (!tabela?.id || !tabela.tHead) return;
+    if (!avisoOrdem) document.body.append(avisoOrdem = el("span", { class: "so-leitor", role: "status", id: "aviso-ordem" }));
+    const ths = [...tabela.tHead.rows[0].cells];
+    ths.forEach((th, i) => {
+      const nome = th.textContent.trim();
+      if (!nome || th.querySelector("button")) return;
+      th.dataset.tipo = th.classList.contains("num") ? "num" : /^(data|quando|criad|registrad)/i.test(nome) ? "data" : "texto";
+      th.scope = "col";
+      th.replaceChildren(el("button", { type: "button", class: "ordena", onclick: () => {
+        const ant = ordemTabela[tabela.id];
+        ordemTabela[tabela.id] = { col: i, dir: ant?.col === i && ant.dir === "ascending" ? "descending" : "ascending" };
+        aplicarOrdem(tabela);
+        const o = ordemTabela[tabela.id];
+        avisoOrdem.textContent = `Ordenado por ${nome}, ${o.dir === "ascending" ? "crescente" : "decrescente"}`;
+      } }, nome, el("span", { class: "seta-ordem", "aria-hidden": "true" })));
+    });
+    aplicarOrdem(tabela);
+  }
+  function aplicarOrdem(tabela) {
+    const o = ordemTabela[tabela.id], ths = [...tabela.tHead.rows[0].cells];
+    ths.forEach((th, i) => { if (o && i === o.col) th.setAttribute("aria-sort", o.dir); else th.removeAttribute("aria-sort"); });
+    if (!o || !tabela.tBodies[0]) return;
+    const corpo = tabela.tBodies[0], tipo = ths[o.col]?.dataset.tipo || "texto", f = o.dir === "ascending" ? 1 : -1;
+    // linhas de detalhe (abertas logo abaixo de uma linha) andam junto com a linha delas
+    const grupos = [];
+    for (const tr of corpo.rows) { if (tr.classList.contains("detalhe-hist") && grupos.length) grupos[grupos.length - 1].push(tr); else grupos.push([tr]); }
+    if (grupos.length < 2 || grupos.some((g) => g[0].cells.length < ths.length)) return;  // "nada encontrado"/esqueleto: não ordena
+    const v = new Map(grupos.map((g) => [g, valorCelula(g[0].cells[o.col], tipo)]));
+    grupos.sort((a, b) => f * (tipo === "texto" ? comparaTexto.compare(v.get(a), v.get(b)) : v.get(a) - v.get(b)));
+    for (const g of grupos) for (const tr of g) (corpo.moveBefore ? corpo.moveBefore(tr, null) : corpo.append(tr));
+  }
+
+  // grifa o termo buscado sem mexer no HTML (highlight-text-ranges): só visual; sem o recurso, nada muda.
+  // Ignora acentos e maiúsculas ("joao" grifa "João").
+  function grifar(nome, raiz, termo) {
+    if (!window.CSS?.highlights || typeof Highlight !== "function") return;
+    CSS.highlights.delete(nome);
+    const q = norm(String(termo || "").trim());
+    if (!raiz || q.length < 2) return;
+    const faixas = [], w = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT);
+    for (let n = w.nextNode(); n; n = w.nextNode()) {
+      const t = norm(n.textContent);
+      if (t.length !== n.textContent.length) continue;  // texto já decomposto: os índices não bateriam
+      for (let i = t.indexOf(q); i !== -1; i = t.indexOf(q, i + q.length)) { const r = new Range(); r.setStart(n, i); r.setEnd(n, i + q.length); faixas.push(r); }
+    }
+    if (faixas.length) CSS.highlights.set(nome, new Highlight(...faixas));
+  }
+
   // janela por cima da tela (correções, edição). Fecha com Esc, com o ✕ ou com d.close().
   function janela(titulo, ...conteudo) {
     const d = el("dialog", { class: "janela", "aria-label": titulo },
@@ -246,7 +312,7 @@
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
 
-  App.u = { FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
+  App.u = { progresso, ordenavel, grifar, FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
             vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas, nomesEscolhidos, papelAtiv, papelBloq };
 
   // ---------- módulos e rotas ----------
@@ -401,7 +467,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009k";
+  const VERSAO_APP = "009l";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;
@@ -453,6 +519,7 @@
     $("#b-avisos").dataset.novas = String(nAv > 0);
     $("#b-avisos").setAttribute("aria-label", nAv ? `${nAv} aviso(s) novo(s)` : "Avisos");
     mod.render?.(App.atual.aba);
+    sec?.querySelectorAll("table[data-ordenavel]").forEach(ordenavel);  // 009l: tabelas que ordenam pelo cabeçalho
   };
   document.addEventListener("focusout", () => setTimeout(() => { if (adiado) App.render(); }, 0));
   const carregar = () => App.carregar();

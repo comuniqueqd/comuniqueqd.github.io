@@ -55,7 +55,7 @@
     t.replaceChildren(el("h3", { text: "Suas tarefas de aprovar parceiros" }),
       minhas.length ? el("ul", { class: "pa-tarefas" }, minhas.map((a) => {
         const pct = a.meta ? Math.min(100, Math.round((a.progresso / a.meta) * 100)) : 0;
-        return el("li", {}, el("b", { text: a.titulo }), el("div", { class: "progresso-tarefa" }, el("div", { class: "barra" }, el("span", { style: `width:${pct}%` })),
+        return el("li", {}, el("b", { text: a.titulo }), el("div", { class: "progresso-tarefa" }, App.u.progresso(a.progresso, a.meta, `Progresso: ${a.progresso} de ${a.meta}`),
           el("span", { class: "meta", text: `${a.progresso} de ${a.meta}${a.progresso >= a.meta ? " · meta atingida 🎉" : ""}` })));
       })) : el("p", { class: "meta" }, "Nenhuma em andamento com você. ", el("a", { href: "#atividades/sugeridas" }, "Criar uma tarefa “Aprovar parceiros”"), " para você ou para alguém: cada parceiro ativado na cidade conta sozinho."),
       el("h3", { text: "Os seus últimos" }),

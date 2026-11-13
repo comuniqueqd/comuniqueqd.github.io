@@ -106,10 +106,12 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009k"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009l"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
+  // 009l: sem a transição de tela no teste (os prints saíam no meio do fade); a troca de tela em si continua testada
+  await c.addInitScript(() => { try { delete Document.prototype.startViewTransition; } catch (_) {} });
   // o lembrete da passagem de turno (17h30–18h59) cobriria os botões: o relógio do app fica em 10h (o teste dele troca na hora)
   await c.addInitScript(() => addEventListener("DOMContentLoaded", () => { if (window.App) App.agora_relogio = () => 10 * 60; }));
   if (p) {
@@ -285,7 +287,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Menos telas") && await s.isVisible(".faixa-novidades >> text=e mais: 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Cores da Quero Delivery") && await s.isVisible(".faixa-novidades >> text=e mais: 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -299,6 +301,8 @@ try {
         ob: cs.overscrollBehaviorY, bdOb: bd.overscrollBehaviorY, bdOv: bd.overflowY };
     });
     ok(r.toasts === 1, "um #toast só na página (estava duplicado)");
+    ok(await s.evaluate(() => getComputedStyle(document.querySelector("header.top")).backgroundColor === "rgb(138, 59, 224)"
+        && getComputedStyle(document.querySelector('nav.modulos a[aria-current="page"]')).backgroundColor === "rgb(247, 234, 72)"), "009l: cores da Quero Delivery (cabeçalho roxo, menu ativo amarelo)");
     ok(/^sha384-/.test(r.sri) && r.co === "anonymous" && r.rp === "no-referrer", "supabase-js com integridade (SRI), crossorigin e sem referrer: " + r.sri.slice(0, 16));
     ok(r.esquema === "light dark", "meta color-scheme no head (tema escuro sem piscar claro)");
     ok(r.acento !== "auto" && r.acentoTok, "accent-color na cor do app: " + r.acento);
@@ -333,7 +337,7 @@ try {
   // tema: claro → escuro (guardado) → volta a seguir o sistema (nada guardado)
   await s.click("#b-tema");
   ok(await s.evaluate(() => document.documentElement.dataset.theme === "dark" && localStorage.getItem("comunique-tema") === "dark"
-      && getComputedStyle(document.body).backgroundColor === "rgb(16, 21, 29)"), "botão de tema: escuro na hora, e fica guardado");
+      && getComputedStyle(document.body).backgroundColor === "rgb(22, 17, 31)"), "botão de tema: escuro na hora, e fica guardado");
   await s.reload(); await esperar(s, "#v-inicio:not([hidden])");
   ok(await s.evaluate(() => document.documentElement.dataset.theme === "dark" && document.querySelector('meta[name="color-scheme"]').content === "dark"), "recarregou: continua escuro desde o início (sem piscar claro)");
   await s.click("#b-tema");
@@ -803,7 +807,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -857,6 +861,7 @@ try {
   // busca rápida no topo
   await m7.fill("#q-topo", "Maria Sem");
   ok(await esperar(m7, "#busca-res:not([hidden]) >> text=Cadastros da ativação") && await m7.isVisible("#busca-res >> text=Entregadores"), "busca rápida acha a ficha e o cadastro");
+  ok(await m7.evaluate(() => !CSS.highlights || (CSS.highlights.get("busca-topo")?.size || 0) > 0), "009l: a busca rápida grifa o termo nos resultados");
   await m7.screenshot({ path: path.join(PRINTS, "f4-busca.png") });
   await m7.click("#busca-res button:has-text('Maria Sem Nome') >> nth=0");
   ok(await esperar(m7, "#v-bq-consultar:not([hidden]) >> text=Maria Sem Nome"), "clicar na ficha abre Consultar entregador");
@@ -1005,6 +1010,16 @@ try {
   ok(await esperar(a8, "#fi-pend-lista >> text=Nada pendente") && await a8.waitForFunction(() => document.querySelector("#c-fin")?.hidden, null, { timeout: 8000 }).then(() => true, () => false), "marcar como lançado tira dos pendentes e zera o número do menu");
   await ir(a8, "#financeiro/lancamentos");
   ok(await esperar(a8, "#fi-l-tiles .tile >> text=R$ 16,50") && (await a8.$$("#fi-l-tabela tbody tr")).length === 2, "Lançamentos: total de R$ 16,50 e os 2 registros");
+  // 009l (sortable-table): ordenar pelo cabeçalho move as linhas e marca aria-sort só na coluna
+  { const valores = () => a8.$$eval("#fi-l-tabela tbody tr", (l) => l.map((tr) => tr.querySelector("td.num")?.textContent.trim()));
+    await a8.click("#fi-l-tabela th button.ordena:has-text('Valor')");
+    const asc = await valores();
+    await a8.click("#fi-l-tabela th button.ordena:has-text('Valor')");
+    const desc = await valores();
+    const sorts = await a8.$$eval("#fi-l-tabela th[aria-sort]", (l) => l.map((th) => th.getAttribute("aria-sort")));
+    ok(asc[0] === "R$ 5,00" && desc[0] === "R$ 11,50" && JSON.stringify(sorts) === '["descending"]', "009l: Lançamentos ordenam pelo Valor (crescente e decrescente): " + asc + " / " + desc);
+    await a8.evaluate(() => App.carregar()); await a8.waitForTimeout(800);
+    ok((await valores())[0] === "R$ 11,50", "009l: a ordem escolhida continua depois de atualizar a lista"); }
   ok(!(await texto(a8, "#v-fi-lancamentos")).includes("null") && !(await texto(a8, "#v-fi-lancamentos")).includes("undefined"), "Lançamentos sem textos vazios (null)");
   await a8.screenshot({ path: path.join(PRINTS, "j3-lancamentos.png"), fullPage: true });
   await ir(a8, "#ferramentas/tarifas");
@@ -1141,6 +1156,7 @@ try {
   await esperar(s8, "#av-prefs [data-som=n4]");
   await s8.evaluate(() => document.querySelector("#av-prefs [data-som=n1]").click());
   ok(await s8.evaluate(() => JSON.parse(localStorage.getItem("comunique-som")).n1 === false) && (await s8.$$("#av-prefs [data-som]")).length >= 4, "Avisos: liga e desliga cada nível de som (guardado no navegador)");
+  ok(await s8.evaluate(() => [...document.querySelectorAll("#av-prefs [data-som], #av-prefs [data-pref]")].every((x) => x.hasAttribute("switch") && x.getAttribute("role") === "switch")), "009l: preferências de avisos e sons viraram interruptores");
 
   // acordos fechados com parceiros: no vencimento, destaque na tela inicial de todos até o ajuste
   await ir(a8, "#financeiro/acordos"); await a8.reload();
@@ -1187,6 +1203,7 @@ try {
   ok(await m7.isVisible("#at-sug-lista .grupo:has-text('Para você') " + cardAtiv.replace("#at-sug-lista ", "")), "quem foi indicado vê em “Para você”");
   await m7.click(cardAtiv + " >> text=Eu faço");
   ok(await esperar(m7, cardAtiv + " >> text=Em andamento") && await m7.isVisible(cardAtiv + " >> text=Esperou"), "Eu faço: em andamento, com o tempo de espera");
+  ok(await m7.evaluate(() => { const p = document.querySelector("progress.barra-prog"); return !p || (p.max >= 1 && p.hasAttribute("aria-label")); }), "009l: barras de progresso nativas, com rótulo");
   await m7.click(cardAtiv + " .checklist-tarefa summary");
   await m7.fill(cardAtiv + " .checklist-tarefa input[aria-label='Novo item do checklist']", "Ligar para os indicados");
   await m7.click(cardAtiv + " .checklist-tarefa button:has-text('Incluir')");

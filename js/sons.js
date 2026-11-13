@@ -117,7 +117,7 @@
     const { el } = App.u;
     const p = pref();
     const caixa = (k, texto, extra) => {
-      const cb = el("input", { type: "checkbox", "data-som": k }); cb.checked = !!p[k];
+      const cb = el("input", { type: "checkbox", switch: true, role: "switch", "data-som": k }); cb.checked = !!p[k];  // 009l: interruptor
       cb.addEventListener("change", async () => {
         const q = pref(); q[k] = cb.checked;
         if (k === "sistema" && cb.checked && "Notification" in window && Notification.permission !== "granted") {
