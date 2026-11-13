@@ -51,10 +51,15 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009p";
+  const VERSAO = "009q";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009q", tema: "🦖 Cara nova: o Dino", itens: [
+      ["Identidade própria", "O Comunique ganhou a identidade dele: verde-floresta no topo, jade nos destaques, âmbar no que pede atenção e areia no fundo. Saem as cores da Quero Delivery."],
+      ["O símbolo", "A cabeça de dino com duas plaquinhas âmbar aparece no topo, na tela de entrada e no ícone do app instalado (se você já instalou, o ícone novo chega na próxima atualização do navegador)."],
+      ["Letras mais fáceis de ler", "Títulos e números grandes em Manrope, o resto em Inter, feita para telas: números e tabelas mais legíveis."],
+    ] },
     { versao: "009p", tema: "🏘️ Bairros sem repetição", itens: [
       ["Bairro com nome parecido", "Cadastrou um bairro com o nome quase igual a outro (Aldemar e Ademar, Várzea e VARZEA)? O Comunique entende que é o mesmo: o nome novo vira outro nome dele, com o mesmo valor. Se a dúvida for maior, ele pergunta antes."],
       ["Calculadora mais esperta", "Na Calculadora de bairro, um erro pequeno de digitação no nome do bairro não atrapalha mais: ela mostra qual bairro entendeu."],

@@ -108,7 +108,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009p"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009q"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -289,7 +289,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Bairro com nome parecido") && await s.isVisible(".faixa-novidades >> text=e mais: 009o e 009n e 009m e 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Identidade própria") && await s.isVisible(".faixa-novidades >> text=e mais: 009p e 009o e 009n e 009m e 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009q, 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -303,8 +303,12 @@ try {
         ob: cs.overscrollBehaviorY, bdOb: bd.overscrollBehaviorY, bdOv: bd.overflowY };
     });
     ok(r.toasts === 1, "um #toast só na página (estava duplicado)");
-    ok(await s.evaluate(() => getComputedStyle(document.querySelector("header.top")).backgroundColor === "rgb(138, 59, 224)"
-        && getComputedStyle(document.querySelector('nav.modulos a[aria-current="page"]')).backgroundColor === "rgb(247, 234, 72)"), "009l: cores da Quero Delivery (cabeçalho roxo, menu ativo amarelo)");
+    ok(await s.evaluate(() => getComputedStyle(document.querySelector("header.top")).backgroundColor === "rgb(20, 53, 43)"
+        && getComputedStyle(document.querySelector('nav.modulos a[aria-current="page"]')).backgroundColor === "rgb(244, 239, 230)"
+        && !!document.querySelector("header.top h1 svg.simbolo") && document.querySelector("header.top h1").textContent.trim() === "Comunique"
+        && /Inter/.test(getComputedStyle(document.body).fontFamily) && /Manrope/.test(getComputedStyle(document.querySelector("h2")).fontFamily)
+        && document.querySelector('meta[name="theme-color"]').content === "#14352B"),
+      "009q: identidade Dino sério (topo floresta, menu ativo areia, símbolo do dino, Manrope nos títulos e Inter no texto)");
     ok(/^sha384-/.test(r.sri) && r.co === "anonymous" && r.rp === "no-referrer", "supabase-js com integridade (SRI), crossorigin e sem referrer: " + r.sri.slice(0, 16));
     ok(r.esquema === "light dark", "meta color-scheme no head (tema escuro sem piscar claro)");
     ok(r.acento !== "auto" && r.acentoTok, "accent-color na cor do app: " + r.acento);
@@ -339,7 +343,7 @@ try {
   // tema: claro → escuro (guardado) → volta a seguir o sistema (nada guardado)
   await s.click("#b-tema");
   ok(await s.evaluate(() => document.documentElement.dataset.theme === "dark" && localStorage.getItem("comunique-tema") === "dark"
-      && getComputedStyle(document.body).backgroundColor === "rgb(22, 17, 31)"), "botão de tema: escuro na hora, e fica guardado");
+      && getComputedStyle(document.body).backgroundColor === "rgb(15, 28, 23)"), "botão de tema: escuro na hora, e fica guardado");
   await s.reload(); await esperar(s, "#v-inicio:not([hidden])");
   ok(await s.evaluate(() => document.documentElement.dataset.theme === "dark" && document.querySelector('meta[name="color-scheme"]').content === "dark"), "recarregou: continua escuro desde o início (sem piscar claro)");
   await s.click("#b-tema");
@@ -827,7 +831,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009p", "009o", "009n", "009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009q", "009p", "009o", "009n", "009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009q, 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou

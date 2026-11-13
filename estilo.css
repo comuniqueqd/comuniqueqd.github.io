@@ -1,16 +1,18 @@
 /* Layout: uma coluna central; abas no topo levam às telas. Cores em tokens com tema escuro. */
 :root {
-  /* 009l: cores do Manual de Identidade Visual da Quero Delivery: roxo #9B4DEE (principal), rosa #E0457B e
-     amarelo #F7EA48 (secundárias); tipografia Kanit. Sem imagens da marca (pedido do usuário). Onde há texto branco sobre roxo (cabeçalho, botões) usa-se um
-     roxo um tom abaixo (#8A3BE0), porque o #9B4DEE com texto branco fica em 4,48:1, um fio abaixo do mínimo de leitura (4,5:1). */
-  --roxo: #9B4DEE; --marca: #8A3BE0; --marca-forte: #6C25BE; --marca-ink: #ffffff; --amarelo: #F7EA48; --rosa: #E0457B; --lilas: #A866F0;
-  --bg: #f5f2fa; --surface: #ffffff; --ink: #1e1530; --muted: #625a75; --line: #e4ddf0;
-  --accent: #7a2fd0; --accent-ink: #ffffff; --accent-soft: #f0e6fd;
+  /* 009q: identidade "Dino sério" (quadro de identidade visual, escolhida pelo usuário): Floresta #14352B, Jade #1F8A5B, Âmbar #E8A33D,
+     Areia #F4EFE6; Manrope nos títulos e Inter no texto. Saem as cores da Quero Delivery (009l). O jade puro com texto branco fica em 4,33:1,
+     por isso textos, links e botões usam o jade um tom abaixo (--accent #18774E, 5,5:1); o jade puro fica para o símbolo e enfeites. */
+  --floresta: #14352B; --jade: #1F8A5B; --ambar: #E8A33D; --areia: #F4EFE6;
+  --marca: #14352B; --marca-forte: #0E2820; --marca-ink: #F4EFE6;
+  --bg: #FAF7F1; --surface: #ffffff; --ink: #14352B; --muted: #4B5B54; --line: #E5DED1;
+  --accent: #18774E; --accent-ink: #ffffff; --accent-soft: #E3F1E9;
   --ok: #1b7a46; --ok-soft: #e3f4ea;
   --bad: #b3261e; --bad-soft: #fbe7e5;
-  --warn: #8a5a00; --warn-soft: #fff1d6;
-  --gray: #5f6577; --gray-soft: #ece8f3;
-  --font-body: "Kanit", "Segoe UI", system-ui, sans-serif;  /* 009l: a fonte do manual da marca */
+  --warn: #8A5300; --warn-soft: #FBEFD9;
+  --gray: #5B6660; --gray-soft: #EEE9DF;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-titulo: "Manrope", "Inter", "Segoe UI", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   --radius: 14px;
   color-scheme: light;
@@ -18,20 +20,20 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --marca: #2a1d45; --marca-forte: #1f1535; --marca-ink: #eee9f7;
-    --bg: #16111f; --surface: #1e1830; --ink: #eee9f7; --muted: #a99fbf; --line: #322a45;
-    --accent: #c9a6ff; --accent-ink: #16111f; --accent-soft: #2e2347;
+    --marca: #0B1813; --marca-forte: #08120E; --marca-ink: #F4EFE6;
+    --bg: #0F1C17; --surface: #16261F; --ink: #EDE7DB; --muted: #A7B4AC; --line: #273A31;
+    --accent: #6CCB9A; --accent-ink: #0F1C17; --accent-soft: #19352A;
     --ok: #5fd08e; --ok-soft: #15301f; --bad: #ff8a80; --bad-soft: #3a1a18; --warn: #f0c060; --warn-soft: #35290f;
-    --gray: #a9a3b8; --gray-soft: #2a2438;
+    --gray: #A3ADA7; --gray-soft: #22322B;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --marca: #2a1d45; --marca-forte: #1f1535; --marca-ink: #eee9f7;
-  --bg: #16111f; --surface: #1e1830; --ink: #eee9f7; --muted: #a99fbf; --line: #322a45;
-  --accent: #c9a6ff; --accent-ink: #16111f; --accent-soft: #2e2347;
+  --marca: #0B1813; --marca-forte: #08120E; --marca-ink: #F4EFE6;
+  --bg: #0F1C17; --surface: #16261F; --ink: #EDE7DB; --muted: #A7B4AC; --line: #273A31;
+  --accent: #6CCB9A; --accent-ink: #0F1C17; --accent-soft: #19352A;
   --ok: #5fd08e; --ok-soft: #15301f; --bad: #ff8a80; --bad-soft: #3a1a18; --warn: #f0c060; --warn-soft: #35290f;
-  --gray: #a9a3b8; --gray-soft: #2a2438;
+  --gray: #A3ADA7; --gray-soft: #22322B;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -805,65 +807,73 @@ input[type="checkbox"][switch]:focus-visible { outline: 2px solid var(--accent);
 /* termo da busca grifado (highlight-text-ranges): fundo amarelo e sublinhado, para não depender só da cor */
 ::highlight(busca-topo), ::highlight(busca-tela) { background-color: #fff1a6; color: #1a1400; text-decoration: underline; text-decoration-color: #b08800; }
 
-/* ---------- 009l: cores da Quero Delivery (só cor; fontes, tamanhos e formas continuam os de antes) ---------- */
-/* cabeçalho no roxo da marca, com o destaque do menu em amarelo */
-header.top { background: var(--marca); color: var(--marca-ink); border-bottom: 3px solid var(--amarelo); }
-header.top h1 a { color: var(--marca-ink) !important; }
+/* ---------- 009q: identidade "Dino sério" ---------- */
+/* cabeçalho em verde-floresta com texto areia; item do menu em que você está = areia com texto floresta (como no quadro);
+   o âmbar (as plaquinhas do dino) marca a aba atual e os números de alerta */
+header.top { background: var(--marca); color: var(--marca-ink); border-bottom: 0; }
+header.top h1 a { color: var(--marca-ink) !important; display: inline-flex; align-items: center; gap: 10px; }
 header.top .who { color: color-mix(in srgb, var(--marca-ink) 85%, transparent); }
-header.top .role { background: rgb(255 255 255 / .16); color: var(--marca-ink); }
-header.top .sino { background: rgb(255 255 255 / .12); border-color: rgb(255 255 255 / .28); color: var(--marca-ink); }
-header.top .sino[data-novas="true"] { background: var(--amarelo); border-color: var(--amarelo); color: #1e1530; }
+header.top .role { background: rgb(255 255 255 / .12); color: var(--marca-ink); }
+header.top .sino { background: rgb(255 255 255 / .08); border-color: rgb(255 255 255 / .22); color: var(--marca-ink); }
+header.top .sino[data-novas="true"] { background: var(--ambar); border-color: var(--ambar); color: var(--floresta); }
 header.top .btn.link { color: var(--marca-ink); }
-header.top .busca-topo input { background: rgb(255 255 255 / .95); border-color: transparent; color: #1e1530; }
-header.top .busca-topo input::placeholder { color: #6d6580; }
-nav.modulos a { color: color-mix(in srgb, var(--marca-ink) 88%, transparent); }
-nav.modulos a:hover { color: var(--marca-ink); border-color: rgb(255 255 255 / .35); }
-nav.modulos a[aria-current="page"] { background: var(--amarelo); color: #1e1530; }
-nav.grupo { border-top-color: rgb(255 255 255 / .2); }
-nav.grupo a { background: rgb(255 255 255 / .1); border-color: rgb(255 255 255 / .25); color: var(--marca-ink); }
-nav.grupo a:hover { color: var(--marca-ink); border-color: rgb(255 255 255 / .6); }
+header.top .busca-topo input { background: rgb(255 255 255 / .96); border-color: transparent; color: #14352B; }
+header.top .busca-topo input::placeholder { color: #5f6d66; }
+nav.modulos a { color: color-mix(in srgb, var(--marca-ink) 86%, transparent); }
+nav.modulos a:hover { color: var(--marca-ink); border-color: rgb(255 255 255 / .3); }
+nav.modulos a[aria-current="page"] { background: var(--areia); color: var(--floresta); }
+nav.grupo { border-top-color: rgb(255 255 255 / .16); }
+nav.grupo a { background: rgb(255 255 255 / .07); border-color: rgb(255 255 255 / .2); color: var(--marca-ink); }
+nav.grupo a:hover { color: var(--marca-ink); border-color: rgb(255 255 255 / .5); }
 nav.grupo a[aria-current="page"] { background: var(--surface); color: var(--accent); border-color: var(--surface); }
-nav.tabs a { color: color-mix(in srgb, var(--marca-ink) 80%, transparent); }
+nav.tabs a { color: color-mix(in srgb, var(--marca-ink) 78%, transparent); }
 nav.tabs a:hover { color: var(--marca-ink); }
-nav.tabs a[aria-current="page"] { color: var(--marca-ink); border-bottom-color: var(--amarelo); }
-header.top .count { background: rgb(255 255 255 / .9); color: var(--marca-forte); }
-header.top .count.alert { background: var(--rosa); color: #fff; }
-/* botões e destaques na cor da marca */
-.btn.primary { background: var(--marca); border-color: var(--marca); color: #fff; }
+nav.tabs a[aria-current="page"] { color: var(--marca-ink); border-bottom-color: var(--ambar); }
+header.top .count { background: rgb(255 255 255 / .9); color: var(--floresta); }
+header.top .count.alert { background: var(--ambar); color: var(--floresta); }
+/* o símbolo: cabeça de dino geométrica com duas plaquinhas âmbar */
+.simbolo { inline-size: 34px; block-size: 34px; flex: 0 0 auto; display: block; }
+.gate .simbolo { inline-size: 56px; block-size: 56px; }
+.gate .marca-gate { display: flex; align-items: center; gap: 12px; }
+/* botões principais em floresta (sério), o jade fica nos links, foco e destaques; no escuro, o jade claro */
+.btn.primary { background: var(--floresta); border-color: var(--floresta); color: var(--areia); }
+.btn.primary:hover { background: #1c4639; border-color: #1c4639; }
 :root[data-theme="dark"] .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); } }
-a.funcao.f-bloq { --fcor: var(--rosa); }
-.faixa-novidades { border-color: var(--lilas); background: var(--accent-soft); }
-.toast { background: var(--marca-forte); color: #fff; }
-/* tela de entrada no roxo da marca */
-.gate { background: var(--roxo); }
+.faixa-novidades { border-color: var(--jade); background: var(--accent-soft); }
+.toast { background: var(--floresta); color: var(--areia); }
+/* tela de entrada na areia, com o símbolo */
+.gate { background: var(--areia); }
+:root[data-theme="dark"] .gate { background: var(--bg); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .gate { background: var(--bg); } }
+/* cores dos atalhos da tela inicial dentro da paleta */
+a.funcao.f-ent { --fcor: var(--jade); }
+a.funcao.f-ativ { --fcor: var(--accent); }
+a.funcao.f-par { --fcor: #a16207; }
 
-/* ---------- 009l: tipografia, cantos e espaçamentos do manual da Quero Delivery (sem imagens da marca) ---------- */
-body { font-size: 15px; line-height: 1.55; }
-h1, h2 { font-weight: 600; letter-spacing: 0; }
+/* ---------- 009q: tipografia (Manrope nos títulos e números grandes, Inter no texto), cantos e espaçamentos ---------- */
+body { font-size: 15px; line-height: 1.55; font-feature-settings: "cv11", "ss01"; }
+h1, h2, h3, h4, .funcao-corpo b, .tile .v, .numeros b, .destaques b, .fe-total strong, .previa .grande, dialog.janela h2 { font-family: var(--font-titulo); }
+h1, h2 { font-weight: 700; letter-spacing: -0.015em; }
 h2 { font-size: 22px; margin-bottom: 6px; }
-h3 { font-weight: 500; font-size: 16px; }
-header.top h1 { font-weight: 700; font-size: 25px; }
-/* faixa no alto como nas capas do manual: rosa à esquerda, amarelo no resto (só cor, sem desenho) */
-header.top { position: relative; border-bottom: 0; }
-header.top::before { content: ""; position: absolute; inset: 0 0 auto 0; block-size: 6px; background: linear-gradient(90deg, var(--rosa) 0 33%, var(--amarelo) 33% 100%); }
-header.top .wrap { padding-top: 22px; }
+h3 { font-weight: 700; font-size: 16px; letter-spacing: -0.005em; }
+header.top h1 { font-weight: 800; font-size: 22px; letter-spacing: -0.03em; }
+header.top .wrap { padding-top: 16px; }
 nav.modulos { gap: 6px; margin-top: 14px; }
-nav.modulos a { font-weight: 500; font-size: 15px; padding: 7px 14px; }
+nav.modulos a { font-weight: 500; font-size: 15px; padding: 7px 14px; border-radius: 10px; }
 nav.tabs a { font-weight: 500; }
 section.view { padding-top: 28px; }
-/* cantos mais arredondados, como o símbolo e as etiquetas da marca */
-.btn { border-radius: 12px; padding: 9px 16px; font-weight: 500; }
+.btn { border-radius: 12px; padding: 9px 16px; font-weight: 600; }
 .btn.small { border-radius: 10px; }
 .seg, .opcoes { border-radius: 12px; }
 input, select, textarea { border-radius: 12px; padding: 10px 12px; }
-dialog.janela { border-radius: 18px; padding: 20px; }
+dialog.janela { border-radius: 20px; padding: 20px; }
 .card, .panel, form.cad, .tile, .rapido, .tablewrap, .empty, .esqueleto { border-radius: var(--radius); }
 a.funcao { border-radius: 20px; }
 .funcao-icone { border-radius: 16px; }
-.tile .v, .numeros b, .destaques b, .fe-total strong, .previa .grande { font-weight: 600; }
-th { font-weight: 500; }
-.pill, .count, .role, .tag, .chip { font-weight: 500; }
+.tile .v, .numeros b, .destaques b, .fe-total strong, .previa .grande { font-weight: 700; font-variant-numeric: tabular-nums; }
+th { font-weight: 600; }
+.pill, .count, .role, .tag, .chip { font-weight: 600; }
 
 /* 009m: janelas maiores (Cadastrar entregador com a lista ao lado) */
 dialog.janela.larga { width: min(920px, calc(100vw - 32px)); }
@@ -871,14 +881,14 @@ dialog.janela.larga .two { margin-bottom: 0; }
 a.btn { text-decoration: none; }  /* link com cara de botão não leva sublinhado */
 
 /* 009n: balão do tour das novidades (persistent-app-tours) */
-.tour-passo[popover] { position: fixed; inset: auto; margin: 0; padding: 14px 16px 12px; border: 1px solid var(--lilas); border-radius: var(--radius);
-  background: var(--surface); color: var(--ink); box-shadow: 0 16px 40px rgb(30 21 48 / .28); display: none; overflow: visible; }
+.tour-passo[popover] { position: fixed; inset: auto; margin: 0; padding: 14px 16px 12px; border: 1px solid var(--jade); border-radius: var(--radius);
+  background: var(--surface); color: var(--ink); box-shadow: 0 16px 40px rgb(20 53 43 / .24); display: none; overflow: visible; }
 .tour-passo[popover]:popover-open { display: grid; gap: 6px; }
 .tour-passo h3 { margin: 0; font-size: 16px; }
 .tour-passo p { margin: 0; }
 .tour-passo .actions { margin-top: 4px; }
 .tour-seta { position: absolute; top: -8px; left: calc(var(--seta-x, 50%) - 8px); width: 16px; height: 16px; background: var(--surface);
-  border-left: 1px solid var(--lilas); border-top: 1px solid var(--lilas); transform: rotate(45deg); }
+  border-left: 1px solid var(--jade); border-top: 1px solid var(--jade); transform: rotate(45deg); }
 /* 009n: Lançamentos podem ter até 5000 linhas: as de baixo só são desenhadas quando chegam perto (defer-rendering-heavy-content) */
 #fi-l-tabela tbody tr:nth-child(n+20) { content-visibility: auto; contain-intrinsic-size: auto none auto 64px; }
 
