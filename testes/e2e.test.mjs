@@ -106,7 +106,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009j"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009k"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -285,7 +285,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Tema escuro") && await s.isVisible(".faixa-novidades >> text=e mais: 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Menos telas") && await s.isVisible(".faixa-novidades >> text=e mais: 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -803,7 +803,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -984,7 +984,7 @@ try {
   await a8.fill("#fe-id", "fin00001"); await a8.fill("#fe-nome", "Zé das Entregas"); await a8.selectOption("#fe-origem", "qd");
   await a8.screenshot({ path: path.join(PRINTS, "j1-calculadora.png"), fullPage: true });
   await a8.click("#fe-enviar");
-  ok(await esperar(a8, "#toast:has-text('Ficou em Adicionais pendentes')"), "registrar o ajuste sem lançar: vai para os pendentes");
+  ok(await esperar(a8, "#toast:has-text('Ficou nos pendentes')"), "registrar o ajuste sem lançar: vai para os pendentes");
   ok(await esperar(a8, "#c-fin:not([hidden]):has-text('1')"), "menu Financeiro mostra 1 pendente");
   ok(await esperar(a8, "#v-fe-calc a.fin-pend"), "a calculadora mostra o atalho para os pendentes");
   await ir(a8, "#financeiro/adicional");
@@ -999,6 +999,8 @@ try {
   ok(await esperar(a8, "#fi-meus .fin-card >> text=Fulano de Tal Souza"), "o nome veio da ficha do entregador");
   await ir(a8, "#financeiro/pendentes");
   ok(await esperar(a8, "#fi-pend-lista .fin-card >> text=CENTRO → BREJO"), "Adicionais pendentes mostra o ajuste não lançado");
+  ok(await a8.evaluate(() => location.hash) === "#financeiro/lancamentos" && (await a8.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).join() === "adicional,acordos,lancamentos"
+      && await a8.isVisible("nav.tabs a[data-view=lancamentos] #c-fin-pend"), "009k: o link antigo dos pendentes abre os Lançamentos (pendentes no topo, número na aba)");
   await a8.click("#fi-pend-lista button:has-text('Marcar como lançado')");
   ok(await esperar(a8, "#fi-pend-lista >> text=Nada pendente") && await a8.waitForFunction(() => document.querySelector("#c-fin")?.hidden, null, { timeout: 8000 }).then(() => true, () => false), "marcar como lançado tira dos pendentes e zera o número do menu");
   await ir(a8, "#financeiro/lancamentos");
@@ -1006,12 +1008,14 @@ try {
   ok(!(await texto(a8, "#v-fi-lancamentos")).includes("null") && !(await texto(a8, "#v-fi-lancamentos")).includes("undefined"), "Lançamentos sem textos vazios (null)");
   await a8.screenshot({ path: path.join(PRINTS, "j3-lancamentos.png"), fullPage: true });
   await ir(a8, "#ferramentas/tarifas");
+  ok(await esperar(a8, "#fe-tarifas-box[open]") && await a8.evaluate(() => location.hash) === "#ferramentas/calculadora"
+      && (await a8.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).join() === "calculadora,mensagens", "009k: o link antigo das tarifas abre a Calculadora com as Tarifas abertas");
   ok(await esperar(a8, "#fe-t-tabela tr:has-text('BREJO') >> text=R$ 16,00") && await a8.isVisible("#fe-t-novo"), "Tarifas: moderador vê o que o entregador recebe e pode editar");
   await a8.click("#fe-t-tabela tr:has-text('BREJO') >> text=Editar");
   await a8.fill("dialog.janela input >> nth=1", "17,99");
   await a8.click("dialog.janela .actions button.primary");
   ok(await esperar(a8, "#fe-t-tabela tr:has-text('BREJO') >> text=R$ 17,00"), "editar a tarifa de um bairro");
-  await ir(s8, "#ferramentas/tarifas"); await s8.reload();
+  await s8.reload(); await esperar(s8, "section.view:not([hidden])"); await ir(s8, "#ferramentas/tarifas");  // 009k: o link antigo vira #ferramentas/calculadora; recarregar depois fecharia as tarifas
   ok(await esperar(s8, "#fe-t-tabela tr:has-text('CENTRO')") && !(await s8.isVisible("#fe-t-tabela >> text=Editar")) && !(await s8.isVisible("#fe-t-novo")), "suporte consulta as tarifas sem editar");
 
   // 21. 009c · agravante no Novo bloqueio e mensagens prontas ("restrição temporária", nunca "bloqueio")

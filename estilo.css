@@ -747,3 +747,13 @@ textarea { field-sizing: content; min-height: 70px; max-height: 50vh; }
   .copiavel .btn-copiar { opacity: 0; transition: opacity .15s; }
   .copiavel:hover .btn-copiar, .copiavel:focus-within .btn-copiar, .btn-copiar:focus-visible, .btn-copiar[data-copiado], .btn-copiar[data-falhou] { opacity: 1; }
 }
+
+/* 009k: telas que viraram parte de outra (Tarifas na Calculadora, Pendentes nos Lançamentos) */
+.tarifas-box { margin-top: 18px; }
+.tarifas-box > summary { cursor: pointer; padding: 2px 0; }
+.tarifas-box[open] > summary { margin-bottom: 12px; }
+.pend-box h3 { margin-bottom: 2px; }
+.pend-box .sub { margin-bottom: 10px; }
+.pend-box.vazia { padding: 10px 16px; }
+.pend-box.vazia h3, .pend-box.vazia .sub { display: none; }
+.nada-pend { margin: 0; font-size: 14px; color: var(--ok); font-weight: 600; }

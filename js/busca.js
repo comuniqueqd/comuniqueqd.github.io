@@ -50,10 +50,14 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009j";
+  const VERSAO = "009k";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009k", tema: "🧹 Menos telas", itens: [
+      ["Menos telas", "As Tarifas dos bairros agora ficam dentro da Calculadora de bairro (é só abrir “Tarifas dos bairros” no fim da tela)."],
+      ["Pendentes nos Lançamentos", "Os seus adicionais e ajustes que faltam lançar ficam no topo da aba Lançamentos, com o número na aba. Os links antigos continuam levando para o lugar certo."],
+    ] },
     { versao: "009j", tema: "⚡ Leve e veloz", itens: [
       ["Troca de tela suave", "Mudar de tela ou de aba agora desliza: o destaque do menu acompanha e nada pisca. (Quem pediu menos movimento no computador continua com a troca na hora.)"],
       ["Tema escuro", "Novo botão 🌙 no topo: deixa o Comunique escuro (ou claro) só para você. Tocar de novo volta a seguir o computador."],

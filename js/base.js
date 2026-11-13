@@ -254,7 +254,9 @@
   App.modulo = (def) => { App.modulos[def.id] = def; App.ordem.push(def.id); };
   const ANTIGAS = { pendentes: 1, novo: 1, meus: 1, painel: 1, historico: 1 };
   const APELIDOS = { "ativacao/meus": "ativacao/historico", "ativacao/painel": "analises/simples",
-                     "bloqueios/meus": "bloqueios/historico", "bloqueios/painel": "analises/simples" };
+                     "bloqueios/meus": "bloqueios/historico", "bloqueios/painel": "analises/simples",
+                     // 009k: telas que viraram parte de outra; o 3º pedaço é o [data-alvo] que abre/rola até a parte certa
+                     "ferramentas/tarifas": "ferramentas/calculadora/tarifas", "financeiro/pendentes": "financeiro/lancamentos/pendentes" };
   const abasPermitidas = (m) => m.abas.filter((a) => !a.pode || a.pode());
   App.atual = { mod: null, aba: null };
   // Grupos: módulos que aparecem juntos sob um item só do menu, com uma segunda barra para escolher entre eles.
@@ -288,7 +290,8 @@
     }
     // 008c: telas que foram juntadas a outras continuam abrindo (links antigos, favoritos)
     const ap = APELIDOS[`${m}/${a}`];
-    if (ap) { history.replaceState(null, "", "#" + ap); [m, a] = ap.split("/"); }
+    let alvo = null;
+    if (ap) { [m, a, alvo] = ap.split("/"); history.replaceState(null, "", `#${m}/${a}`); }
     let mod = App.modulos[m];
     if (!mod || (mod.acesso && !mod.acesso())) mod = App.modulos.inicio;
     const abas = abasPermitidas(mod);
@@ -308,6 +311,8 @@
         if (t) { t.tabIndex = -1; t.focus({ preventScroll: true }); }
       }
     };
+    // parte da tela pedida por um link antigo: abre (details) e rola até ela, depois de desenhar
+    if (alvo) setTimeout(() => { const n = nova?.querySelector(`[data-alvo="${alvo}"]`); if (!n) return; if (n.tagName === "DETAILS") n.open = true; rolar(n, { block: "start" }); }, 0);
     if (antes && antes !== nova && document.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) document.startViewTransition(trocar);
     else trocar();
     App.carregar();
@@ -396,7 +401,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009j";
+  const VERSAO_APP = "009k";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;

@@ -1,6 +1,6 @@
 // Módulo "Financeiro" (009b, prévia da 011): o que é pago ao entregador fora da corrida normal.
 // - Registrar adicional (registrar_adicional): adicional = valor combinado (total) − valor da entrega.
-// - Adicionais pendentes: o que EU registrei e ainda não foi lançado no sistema (adicionais e ajustes de bairro).
+// - Pendentes (009k: no topo de Lançamentos): o que EU registrei e ainda não foi lançado no sistema (adicionais e ajustes de bairro).
 //   Qualquer pessoa pode marcar como lançado (marcar_lancado).
 // - Lançamentos: lista com filtros + números (resumo_financeiro) e CSV.
 // - Acordos (009d): acordos fechados com parceiros; vencidos ficam na tela inicial de todos até o ajuste (App.ajustarAcordo).
@@ -55,7 +55,7 @@
         p_origem: radio("fi-origem"), p_mercado: radio("fi-mercado") === "sim", p_motivo: $("#fi-motivo").value,
         p_valor_entrega: e, p_valor_pedido: p, p_valor_combinado: c, p_lancado: $("#fi-lancado").checked,
         p_pedido: $("#fi-pedido").value.trim() || null, p_observacao: $("#fi-obs").value.trim() || null });
-      toast(r.lancado ? `Adicional de ${brl(r.valor)} registrado.` : `Adicional de ${brl(r.valor)} registrado. Ficou em Adicionais pendentes até ser lançado.`);
+      toast(r.lancado ? `Adicional de ${brl(r.valor)} registrado.` : `Adicional de ${brl(r.valor)} registrado. Ficou nos pendentes (em Lançamentos) até ser lançado.`);
       form.reset();
       App.carregar();
     } catch (err) { falha(msgErro(err)); } finally { btn.disabled = false; }
@@ -108,7 +108,8 @@
     const total = G.pend.reduce((s, l) => s + Number(l.valor), 0);
     box.replaceChildren(...(G.pend.length
       ? [el("p", { class: "meta", text: `${G.pend.length} pendente(s), ${brl(total)} no total.` }), ...G.pend.map((l) => cartao(l))]
-      : [vazio("Nada pendente", "Tudo o que você registrou já foi lançado no sistema.")]));
+      : [el("p", { class: "nada-pend", text: "✅ Nada pendente: tudo o que você registrou já foi lançado no sistema." })]));
+    $("#fi-pend-box")?.classList.toggle("vazia", !G.pend.length);  // 009k: sem pendentes, a caixa fica numa linha só
   }
   // ---------- lançamentos e números ----------
   ["#fi-l-dias", "#fi-l-cidade", "#fi-l-tipo"].forEach((s) => $(s).addEventListener("change", () => { G.lista = null; G.resumo = null; App.render(); App.carregar(); }));
@@ -216,27 +217,26 @@
     id: "financeiro", nome: "Financeiro",
     abas: [
       { id: "adicional", nome: "Registrar adicional", secao: "v-fi-adicional" },
-      { id: "pendentes", nome: "Adicionais pendentes", secao: "v-fi-pendentes", contador: "c-fin-pend", alerta: true },
       { id: "acordos", nome: "Acordos", secao: "v-fi-acordos", contador: "c-fin-acordos", alerta: true },
-      { id: "lancamentos", nome: "Lançamentos", secao: "v-fi-lancamentos" },
+      { id: "lancamentos", nome: "Lançamentos", secao: "v-fi-lancamentos", contador: "c-fin-pend", alerta: true },  // 009k: com os pendentes no topo
     ],
     async carregar(aba) {
       try {
         if (!G.cidades) G.cidades = (await rpc("tarifas_bairros")).cidades.map((c) => c.nome);
         if (aba === "adicional") G.meus = (await rpc("listar_lancamentos", { p_meus: true, p_dias: 7, p_limite: 8 })).itens;
         else if (aba === "acordos") G.acordos = await rpc("listar_acordos", { p_situacao: $("#fi-ac-filtro").value || null });
-        else if (aba === "pendentes") G.pend = (await rpc("listar_lancamentos", { p_pendentes: true, p_meus: true })).itens;
         else {
           const dias = Number($("#fi-l-dias").value), cidade = $("#fi-l-cidade").value || null;
-          const [l, r] = await Promise.all([
+          const [l, r, p] = await Promise.all([
             rpc("listar_lancamentos", { p_tipo: $("#fi-l-tipo").value || null, p_cidade: cidade, p_dias: dias, p_limite: 5000 }),
-            rpc("resumo_financeiro", { p_dias: dias, p_cidade: cidade })]);
-          G.lista = l.itens; G.resumo = r;
+            rpc("resumo_financeiro", { p_dias: dias, p_cidade: cidade }),
+            rpc("listar_lancamentos", { p_pendentes: true, p_meus: true })]);
+          G.lista = l.itens; G.resumo = r; G.pend = p.itens;
         }
         G.erro = null;
       } catch (e) { G.erro = msgErro(e); throw e; }
     },
-    render: (aba) => (aba === "acordos" ? renderAcordos() : aba === "pendentes" ? renderPendentes() : aba === "lancamentos" ? renderLancamentos() : renderAdicional()),
+    render: (aba) => (aba === "acordos" ? renderAcordos() : aba === "lancamentos" ? (renderPendentes(), renderLancamentos()) : renderAdicional()),
     contadores() {
       const n = S.resumo?.financeiro_pendentes || 0;
       App.contador("c-fin", n + (S.resumo?.acordos_vencidos?.length || 0)); App.contador("c-fin-pend", n);

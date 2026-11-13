@@ -49,7 +49,7 @@
       const r = await rpc("registrar_ajuste_bairro", { p_cidade: c, p_informado: bi.nome, p_real: br.nome, p_id_app: $("#fe-id").value.trim(),
         p_nome: $("#fe-nome").value.trim() || null, p_origem: $("#fe-origem").value, p_lancado: $("#fe-lancado").checked,
         p_pedido: $("#fe-pedido").value.trim() || null, p_motivo: $("#fe-motivo").value || null });
-      toast(r.lancado ? `Ajuste de ${brl(r.valor)} registrado.` : `Ajuste de ${brl(r.valor)} registrado. Ficou em Adicionais pendentes até ser lançado.`);
+      toast(r.lancado ? `Ajuste de ${brl(r.valor)} registrado.` : `Ajuste de ${brl(r.valor)} registrado. Ficou nos pendentes (em Lançamentos) até ser lançado.`);
       form.reset();
       App.carregar();
     } catch (e) { falha(msgErro(e)); } finally { btn.disabled = false; }
@@ -326,12 +326,11 @@
     id: "ferramentas", nome: "Ferramentas",
     abas: [
       { id: "calculadora", nome: "Calculadora de bairro", secao: "v-fe-calc" },
-      { id: "tarifas", nome: "Tarifas dos bairros", secao: "v-fe-tarifas" },
       { id: "mensagens", nome: "Mensagens prontas", secao: "v-fe-mensagens" },
     ],
     async carregar(aba) {
       try { F.dados = await rpc("tarifas_bairros"); if (aba === "mensagens") await carregarMensagens(true); F.erro = null; } catch (e) { F.erro = msgErro(e); throw e; }
     },
-    render(aba) { App.atalhoPendentes(); if (aba === "tarifas") renderTarifas(); else if (aba === "mensagens") renderMensagens(); else renderCalc(); },
+    render(aba) { App.atalhoPendentes(); if (aba === "mensagens") renderMensagens(); else { renderCalc(); renderTarifas(); } },  // 009k: as tarifas ficam na calculadora
   });
 })();
