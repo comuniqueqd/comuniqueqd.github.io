@@ -22,7 +22,7 @@
       if (!box) return;
       box.open = true;
       $("#at-titulo")?.focus();
-      box.scrollIntoView({ block: "start", behavior: "smooth" });
+      App.u.rolar(box, { block: "start" });
     }, 60);
   }
 

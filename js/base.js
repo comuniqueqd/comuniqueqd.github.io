@@ -44,7 +44,32 @@
   }
   const num = (v) => (v == null ? "—" : String(v));
   const horas = (h) => h == null ? "—" : h < 1 ? Math.round(h * 60) + " min" : String(h).replace(".", ",") + " h";
-  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => (t.hidden = true), 4000); }
+  // 009i (Modern Web Guidance): avisos flutuantes em popover="manual", na camada de cima da página. Assim o
+  // aviso aparece por cima de uma janela aberta (antes ficava atrás do fundo escuro). Sem popover no
+  // navegador, continua como antes (hidden).
+  const temPopover = Object.hasOwn(HTMLElement.prototype, "popover");
+  function flutuar(n, mostrar = true) {
+    if (!temPopover) { n.hidden = !mostrar; return; }
+    if (!n.hasAttribute("popover")) n.setAttribute("popover", "manual");
+    n.hidden = false;
+    if (n.matches(":popover-open")) n.hidePopover();  // fechar e abrir de novo põe o aviso por cima do que abriu depois
+    if (mostrar && n.isConnected) n.showPopover();
+  }
+  // aviso com botões (versão nova, lembrete do turno): com uma janela aberta, a página atrás fica inerte e os
+  // botões não responderiam; então espera a janela fechar para aparecer
+  function flutuarLivre(n) {
+    const janelaAberta = document.querySelector("dialog:modal");
+    if (janelaAberta) { n.hidden = true; janelaAberta.addEventListener("close", () => setTimeout(() => flutuarLivre(n), 0), { once: true }); return; }
+    flutuar(n);
+  }
+  function toast(msg) {
+    const t = $("#toast"); t.textContent = msg;
+    // leitor de tela: ariaNotify lê o texto mesmo com uma janela aberta; sem ele, o role="status" do elemento
+    if (typeof document.ariaNotify === "function") { t.removeAttribute("role"); try { document.ariaNotify(msg); } catch (_) {} }
+    flutuar(t); clearTimeout(toast._t); toast._t = setTimeout(() => flutuar(t, false), 4000);
+  }
+  // rolagem suave só para quem não pediu "reduzir movimento" no sistema (o CSS não alcança o scrollIntoView)
+  const rolar = (n, opc = {}) => n?.scrollIntoView({ ...opc, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   function notice(msg) { const n = $("#notice"); n.textContent = msg || ""; n.hidden = !msg; }
 
   const CIDADES = ["ITABAIANA - SE","LAGARTO - SE","SERRINHA - BA","PAULO AFONSO - BA","TOBIAS BARRETO - SE","SALGADO - SE","SIMÃO DIAS - SE","CÍCERO DANTAS - BA","ITABERABA - BA","ALAGOINHAS - BA","ARCOVERDE - PE","CARPINA - PE","SANTA CRUZ DO CAPIBARIBE - PE","POJUCA - BA","CANDEIAS - BA","ESCADA - PE","BELO JARDIM - PE","VITÓRIA DE SANTO ANTÃO - PE","GRAVATÁ - PE","RECIFE - PE","RIACHÃO DO DANTAS - SE","SÃO LOURENÇO DA MATA - PE","PAULISTA - PE","RIBEIRA DO POMBAL - BA","POÇO VERDE - SE","PALMEIRA DOS ÍNDIOS - AL","ESTÂNCIA - SE","CABO DE SANTO AGOSTINHO - PE","BUÍQUE - PE","CAPELA - SE"];
@@ -187,7 +212,7 @@
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
 
-  App.u = { $, el, janela, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
+  App.u = { $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
             vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas, nomesEscolhidos, papelAtiv, papelBloq };
 
   // ---------- módulos e rotas ----------
@@ -319,7 +344,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009h";
+  const VERSAO_APP = "009i";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;
@@ -328,10 +353,12 @@
       const r = await fetch("versao.txt?t=" + Date.now(), { cache: "no-store" });
       const v = r.ok ? (await r.text()).trim() : "";
       if (v && v !== VERSAO_APP && !document.getElementById("aviso-versao")) {
-        document.body.append(el("div", { class: "aviso-versao", id: "aviso-versao", role: "status" },
+        const aviso = el("div", { class: "aviso-versao", id: "aviso-versao", role: "status" },
           el("span", { text: "Saiu uma versão nova do Comunique." }),
           el("button", { class: "btn primary small", type: "button", onclick: () => location.reload() }, "Atualizar agora"),
-          el("button", { class: "btn link", type: "button", onclick: (e) => e.currentTarget.parentElement.remove() }, "Depois")));
+          el("button", { class: "btn link", type: "button", onclick: (e) => e.currentTarget.parentElement.remove() }, "Depois"));
+        document.body.append(aviso);
+        flutuarLivre(aviso);
       }
     } catch (_) {}
   }

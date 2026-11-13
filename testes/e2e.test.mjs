@@ -97,7 +97,9 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   const c = await b.newContext({ viewport: { width: 1200, height: 900 }, deviceScaleFactor: Number(process.env.ESCALA || 1), acceptDownloads: true });  // ESCALA=2: prints nítidos para material de divulgação
   await c.route("**/supabase-config.js", (r) => r.fulfill({ contentType: "text/javascript", body: `window.SUPABASE_URL=${JSON.stringify(API)};window.SUPABASE_ANON_KEY="chave-anon-de-teste";window.GOOGLE_CLIENT_ID=${JSON.stringify(googleId || "COLE_AQUI")};` }));
   await c.route("https://accounts.google.com/**", (r) => r.fulfill({ contentType: "text/javascript", body: googleId ? GIS_FALSO : "" }));
-  await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
+  // 009i: o index.html confere a integridade (SRI) do supabase-js; com crossorigin, a resposta precisa do cabeçalho CORS
+  // (o jsDelivr manda). Se o hash do index.html não bater com o arquivo do pacote, o script é bloqueado e o app não abre.
+  await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
   if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009g"); } catch (_) {} });
@@ -278,7 +280,44 @@ try {
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
+  // 009i (Modern Web Guidance)
+  { const r = await s.evaluate(() => {
+      const sc = document.querySelector('script[src*="cdn.jsdelivr.net"]');
+      const d = document.querySelector("dialog.janela"), cs = getComputedStyle(d), bd = getComputedStyle(d, "::backdrop");
+      return { toasts: document.querySelectorAll("#toast").length, sri: sc.integrity, co: sc.crossOrigin, rp: sc.referrerPolicy,
+        esquema: document.querySelector('meta[name="color-scheme"]')?.content,
+        acento: getComputedStyle(document.documentElement).accentColor, acentoTok: getComputedStyle(document.documentElement).getPropertyValue("--accent").trim(),
+        ob: cs.overscrollBehaviorY, bdOb: bd.overscrollBehaviorY, bdOv: bd.overflowY };
+    });
+    ok(r.toasts === 1, "um #toast só na página (estava duplicado)");
+    ok(/^sha384-/.test(r.sri) && r.co === "anonymous" && r.rp === "no-referrer", "supabase-js com integridade (SRI), crossorigin e sem referrer: " + r.sri.slice(0, 16));
+    ok(r.esquema === "light dark", "meta color-scheme no head (tema escuro sem piscar claro)");
+    ok(r.acento !== "auto" && r.acentoTok, "accent-color na cor do app: " + r.acento);
+    ok(r.ob === "contain" && r.bdOb === "contain" && r.bdOv === "hidden", "janela aberta não rola a página atrás (overscroll-behavior)"); }
+  await s.evaluate(() => App.u.toast("Aviso por cima da janela"));
+  // a camada de cima empilha na ordem em que abre: o toast aberto com a janela já aberta fica por cima dela
+  // (com a janela aberta ele fica inerte, então o elementFromPoint não o enxerga; por isso confere o estado e tira um print)
+  ok(await esperar(s, "#toast:popover-open >> text=Aviso por cima da janela") && await s.evaluate(() => !!document.querySelector("dialog.janela:modal")),
+    "o aviso (toast) abre na camada de cima, por cima da janela aberta");
+  await s.screenshot({ path: path.join(PRINTS, "a0b-toast-por-cima-da-janela.png") });
+  await s.route("**/versao.txt*", (r) => r.fulfill({ contentType: "text/plain", body: "999-nova\n" }));
+  await s.evaluate(() => App.conferirVersao(true)); await s.waitForTimeout(400);
+  ok((await s.$("#aviso-versao")) && !(await s.isVisible("#aviso-versao")), "aviso de versão nova com uma janela aberta: espera a janela fechar");
+  await s.unroute("**/versao.txt*");
   await s.click("dialog.janela >> text=Entendi");
+  ok(await esperar(s, "#aviso-versao:popover-open >> text=Saiu uma versão nova"), "fechou a janela: o aviso de versão nova aparece");
+  await s.click("#aviso-versao >> text=Depois");
+  { const r = await s.evaluate(() => {
+      const visto = []; const orig = Element.prototype.scrollIntoView;
+      Element.prototype.scrollIntoView = function (o) { visto.push(o?.behavior); };
+      App.u.rolar(document.body); Element.prototype.scrollIntoView = orig; return visto[0]; });
+    await s.emulateMedia({ reducedMotion: "reduce" });
+    const r2 = await s.evaluate(() => {
+      const visto = []; const orig = Element.prototype.scrollIntoView;
+      Element.prototype.scrollIntoView = function (o) { visto.push(o?.behavior); };
+      App.u.rolar(document.body); Element.prototype.scrollIntoView = orig; return visto[0]; });
+    await s.emulateMedia({ reducedMotion: null });
+    ok(r === "smooth" && r2 === "auto", "rolagem suave só sem “reduzir movimento” no sistema"); }
   await s.screenshot({ path: path.join(PRINTS, "b0-inicio.png"), fullPage: true });
   // versão nova publicada: o app avisa quem está com a antiga aberta
   await s.evaluate(() => App.conferirVersao(true)); await s.waitForTimeout(400);
@@ -370,8 +409,16 @@ try {
   await s.click("#bq-t-hist tr:has-text('Fulano de Tal') >> text=Ocultar histórico");
   await s.screenshot({ path: path.join(PRINTS, "b4-meus-registros.png"), fullPage: true });
   await s.click("#b-avisos");
-  ok(await esperar(s, "#tira-avisos:not([hidden]) >> text=Tratativa realizada por Monitor Um"), "sino abre a tira com o aviso: tratativa realizada");
+  ok(await esperar(s, "#tira-avisos:popover-open >> text=Tratativa realizada por Monitor Um"), "sino abre a tira com o aviso: tratativa realizada");
+  ok((await s.getAttribute("#b-avisos", "popovertarget")) === "tira-avisos" && await s.evaluate(() => document.querySelector("#b-avisos").ariaExpanded) !== "false", "tira do sino é um popover ligado ao sino (009i)");
   await s.screenshot({ path: path.join(PRINTS, "h1-tira-sino.png") });
+  await s.keyboard.press("Escape");
+  ok(await s.isHidden("#tira-avisos"), "Esc fecha a tira (do próprio navegador)");
+  await s.click("#b-avisos");
+  ok(await esperar(s, "#tira-avisos:popover-open"), "o sino abre a tira de novo");
+  await s.mouse.click(5, 600);
+  ok(await s.isHidden("#tira-avisos"), "clicar fora fecha a tira");
+  await s.click("#b-avisos"); await esperar(s, "#tira-avisos:popover-open");
   await s.click("#tira-avisos >> text=Ver todos os avisos");
   ok(await esperar(s, "#at-avisos >> text=Tratativa realizada por Monitor Um") && await s.isHidden("#tira-avisos"), "Ver todos os avisos abre a tela de Avisos e fecha a tira");
   await s.waitForTimeout(1500);

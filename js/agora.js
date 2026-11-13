@@ -200,13 +200,15 @@
     const atual = $("#lembrete-turno");
     if (!mostrar) { atual?.remove(); return; }
     if (atual) return;
-    document.body.append(el("div", { class: "aviso-versao lembrete-turno", id: "lembrete-turno", role: "status" },
+    const aviso = el("div", { class: "aviso-versao lembrete-turno", id: "lembrete-turno", role: "status" },
       el("span", { text: "🔁 Chegando as 18h: antes de sair, passe o turno para quem entra." }),
       el("button", { class: "btn primary small", type: "button", onclick: () => passarTurno() }, "Passar o turno agora"),
       el("button", { class: "btn link", type: "button", onclick: (e) => {
         try { sessionStorage.setItem("comunique-turno-depois", String(Date.now() + 30 * 60000)); } catch (_) {}
         e.currentTarget.parentElement.remove();
-      } }, "Depois")));
+      } }, "Depois"));
+    document.body.append(aviso);
+    App.u.flutuarLivre(aviso);  // 009i: por cima de tudo; com uma janela aberta, espera ela fechar
   }
 
   // depois de cada desenho: lembrete e o som do pedido de ajuda (quando o tempo real não chegou)

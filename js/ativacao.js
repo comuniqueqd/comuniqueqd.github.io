@@ -47,7 +47,7 @@
       el("div", { class: "queue" }, l.map(card)))));
     if (S.destaque) {
       const n = box.querySelector(`[data-id="${S.destaque}"]`);
-      if (n) { n.scrollIntoView({ block: "center", behavior: "smooth" }); setTimeout(() => { S.destaque = null; render(); }, 8000); S.destaque = "_mostrado_" + S.destaque; }
+      if (n) { App.u.rolar(n, { block: "center" }); setTimeout(() => { S.destaque = null; render(); }, 8000); S.destaque = "_mostrado_" + S.destaque; }
     }
   }
 

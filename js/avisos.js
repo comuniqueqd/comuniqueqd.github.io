@@ -96,12 +96,23 @@
   }
 
   // ---------- tira do sino ----------
-  const tira = el("div", { class: "tira-avisos", id: "tira-avisos", hidden: true, role: "dialog", "aria-label": "Avisos recentes" });
+  // 009i (Modern Web Guidance): a tira é um popover="auto" ligado ao sino por popovertarget. O navegador
+  // fecha com Esc e com clique fora, marca o aria-expanded do sino e põe a tira na camada de cima.
+  // Sem popover no navegador, vale o jeito antigo (hidden + cliques e Esc tratados aqui).
+  const temPopover = App.u.temPopover;
+  const sino = $("#b-avisos");
+  const tira = el("div", { class: "tira-avisos", id: "tira-avisos", role: "dialog", "aria-label": "Avisos recentes" });
   document.body.append(tira);
-  function fecharTira() { tira.hidden = true; $("#b-avisos").setAttribute("aria-expanded", "false"); }
-  function abrirTira() {
+  if (temPopover) { tira.setAttribute("popover", "auto"); sino.setAttribute("popovertarget", "tira-avisos"); }
+  else { tira.hidden = true; sino.setAttribute("aria-expanded", "false"); }
+  const tiraAberta = () => (temPopover ? tira.matches(":popover-open") : !tira.hidden);
+  function fecharTira() {
+    if (!tiraAberta()) return;
+    if (temPopover) tira.hidePopover(); else { tira.hidden = true; sino.setAttribute("aria-expanded", "false"); }
+  }
+  function preencherTira() {
     const n = S.notif, itens = n?.itens || [];
-    const b = $("#b-avisos").getBoundingClientRect();
+    const b = sino.getBoundingClientRect();
     tira.style.top = `${b.bottom + scrollY + 6}px`;
     tira.style.right = `${Math.max(8, document.documentElement.clientWidth - b.right)}px`;
     tira.replaceChildren(
@@ -111,14 +122,20 @@
       itens.length ? el("ul", { class: "lista-avisos" }, itens.slice(0, 12).map((x) => linhaAviso(x, () => fecharTira())))
         : el("p", { class: "meta", style: "padding:12px", text: "Nenhum aviso ainda." }),
       el("div", { class: "tira-pe" }, el("a", { class: "btn small", href: "#atividades/avisos", onclick: fecharTira }, "Ver todos os avisos")));
-    tira.hidden = false;
-    $("#b-avisos").setAttribute("aria-expanded", "true");
     rpc("resumo_do_dia").then((d) => { V.dia = d; const velha = tira.querySelector(".resumo-dia"); if (velha) velha.replaceWith(linhaDia()); }).catch(() => {});
     marcarLidos();
   }
-  $("#b-avisos").addEventListener("click", (e) => { e.stopPropagation(); tira.hidden ? abrirTira() : fecharTira(); });
-  document.addEventListener("click", (e) => { if (!tira.hidden && !tira.contains(e.target)) fecharTira(); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !tira.hidden) fecharTira(); });
+  function abrirTira() {
+    if (tiraAberta()) return;
+    if (temPopover) tira.showPopover({ source: sino }); else { preencherTira(); tira.hidden = false; sino.setAttribute("aria-expanded", "true"); }
+  }
+  if (temPopover) {
+    tira.addEventListener("beforetoggle", (e) => { if (e.newState === "open") preencherTira(); });
+  } else {
+    sino.addEventListener("click", (e) => { e.stopPropagation(); tira.hidden ? abrirTira() : fecharTira(); });
+    document.addEventListener("click", (e) => { if (!tira.hidden && !tira.contains(e.target)) fecharTira(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !tira.hidden) fecharTira(); });
+  }
   addEventListener("hashchange", fecharTira);
 
   // ---------- tela de Avisos ----------

@@ -10,6 +10,7 @@
   --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   --radius: 10px;
   color-scheme: light;
+  accent-color: var(--accent);  /* 009i: caixas de marcar e opções na cor do app (brand-consistent-forms) */
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -219,6 +220,10 @@ dialog.janela { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 
   background: var(--surface); color: var(--ink); padding: 16px; display: grid; gap: 12px; }
 dialog.janela:not([open]) { display: none; }
 dialog.janela::backdrop { background: rgba(10, 14, 20, .55); }
+/* 009i (prevent-page-scroll-under-modal-dialog): rolar dentro da janela ou sobre o fundo escuro não rola a página
+   atrás. Só CSS: nada de overflow: hidden no body (tiraria a barra de rolagem e a página pularia). */
+dialog:modal { overscroll-behavior: contain; }
+dialog::backdrop { overflow: hidden; overscroll-behavior: contain; }
 .janela-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .janela-topo h3 { margin: 0; font-size: 17px; }
 .janela label { display: grid; gap: 4px; font-size: 14px; }
@@ -638,3 +643,10 @@ a.funcao.f-par { --fcor: #a16207; }
 .pa-resumo p { margin: 0; }
 p.sobe { color: var(--ok); font-weight: 600; }
 p.desce { color: var(--bad); font-weight: 600; }
+
+/* 009i (Modern Web Guidance): avisos e tira do sino em popover, na camada de cima. O popover vem do navegador
+   centralizado (inset: 0; margin: auto), com borda e fundo próprios: aqui volta cada um para o seu lugar. */
+.toast[popover] { inset: auto auto 20px 50%; margin: 0; border: 0; overflow: visible; }
+.aviso-versao[popover] { inset: auto auto 18px 50%; margin: 0; overflow: visible; color: var(--ink); }
+.aviso-versao.lembrete-turno[popover] { bottom: 70px; }
+.tira-avisos[popover] { inset: auto; margin: 0; padding: 0; color: var(--ink); }
