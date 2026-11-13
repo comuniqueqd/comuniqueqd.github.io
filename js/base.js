@@ -322,7 +322,10 @@
   const APELIDOS = { "ativacao/meus": "ativacao/historico", "ativacao/painel": "analises/simples",
                      "bloqueios/meus": "bloqueios/historico", "bloqueios/painel": "analises/simples",
                      // 009k: telas que viraram parte de outra; o 3º pedaço é o [data-alvo] que abre/rola até a parte certa
-                     "ferramentas/tarifas": "ferramentas/calculadora/tarifas", "financeiro/pendentes": "financeiro/lancamentos/pendentes" };
+                     "ferramentas/tarifas": "ferramentas/calculadora/tarifas", "financeiro/pendentes": "financeiro/lancamentos/pendentes",
+                     // 009m: Avisos virou item do menu (Para mim + Toda a equipe = os Registros); o Painel das tarefas foi para as Análises
+                     "atividades/avisos": "avisos/para-mim", "registros": "avisos/equipe", "registros/feed": "avisos/equipe",
+                     "atividades/painel": "analises/tarefas" };
   const abasPermitidas = (m) => m.abas.filter((a) => !a.pode || a.pode());
   App.atual = { mod: null, aba: null };
   // Grupos: módulos que aparecem juntos sob um item só do menu, com uma segunda barra para escolher entre eles.
@@ -330,8 +333,7 @@
   App.grupos = {
     entregadores: { nome: "Entregadores", membros: [
       { mod: "ativacao", nome: "Ativação", contador: "c-pend" },
-      { mod: "bloqueios", nome: "Bloqueios", contador: "c-trat", alerta: true },
-      { mod: "entregadores", nome: "Cadastrar entregador" }],
+      { mod: "bloqueios", nome: "Bloqueios", contador: "c-trat", alerta: true }],  // 009m: Cadastrar entregador virou janela
       // número no item do menu de cima: o que está esperando pela pessoa dentro do grupo
       aviso: () => App.valores["c-trat"] || 0 },
   };
@@ -346,6 +348,13 @@
   function route() {
     if (!S.me) return;
     let { m, a } = lerRota();
+    // 009m: Cadastrar entregador virou janela: #entregadores/cadastrar abre a janela por cima do Consultar entregador
+    if (m === "entregadores") {
+      history.replaceState(null, "", "#bloqueios/consultar");
+      route();
+      App.cadastrarEntregador?.();
+      return;
+    }
     // links dos avisos: #ficha/<ID> abre a ficha; #cadastro/<id> abre o cadastro por cima da tela atual
     if ((m === "ficha" || m === "cadastro") && a) {
       const alvo = decodeURIComponent(a);
@@ -355,7 +364,7 @@
       return;
     }
     // 008c: telas que foram juntadas a outras continuam abrindo (links antigos, favoritos)
-    const ap = APELIDOS[`${m}/${a}`];
+    const ap = APELIDOS[`${m}/${a}`] ?? (a ? null : APELIDOS[m]);
     let alvo = null;
     if (ap) { [m, a, alvo] = ap.split("/"); history.replaceState(null, "", `#${m}/${a}`); }
     let mod = App.modulos[m];
@@ -467,7 +476,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009l";
+  const VERSAO_APP = "009m";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;

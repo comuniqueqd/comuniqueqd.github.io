@@ -354,9 +354,10 @@
       { id: "simples", nome: "Análises simples", secao: "v-an-simples" },
       { id: "complexas", nome: "Análises complexas", secao: "v-an-analises" },
       { id: "resumo", nome: "Resumo semanal", secao: "v-an-resumo" },
+      { id: "tarefas", nome: "Tarefas", secao: "v-at-painel" },  // 009m: o Painel das tarefas (antes em Atividades)
     ],
     padrao: () => "simples",
-    carregar: (aba) => (aba === "resumo" ? carregarResumo() : carregarAnalises(aba === "complexas" ? "complexas" : "simples")),
-    render: (aba) => (aba === "resumo" ? renderResumo() : aba === "complexas" ? renderComplexas() : renderSimples()),
+    carregar: (aba) => (aba === "tarefas" ? App.painel.carregar() : aba === "resumo" ? carregarResumo() : carregarAnalises(aba === "complexas" ? "complexas" : "simples")),
+    render: (aba) => (aba === "tarefas" ? App.painel.render() : aba === "resumo" ? renderResumo() : aba === "complexas" ? renderComplexas() : renderSimples()),
   });
 })();

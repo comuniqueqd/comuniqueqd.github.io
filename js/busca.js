@@ -36,7 +36,7 @@
         el("span", { text: corta(x.texto) }),
         el("span", { class: "meta", text: `${x.nome || x.id_app} · ${x.por_nome || "—"} · ${dt(x.em)}` }))));
     if (r.avisos?.length) linhas.push(el("h4", { text: "Seus avisos" }), ...r.avisos.map((x) =>
-      el("button", { type: "button", onclick: () => ir(() => (location.hash = x.link || "#atividades/avisos")) },
+      el("button", { type: "button", onclick: () => ir(() => (location.hash = x.link || "#avisos/para-mim")) },
         el("span", { text: corta(x.texto) }), el("span", { class: "meta", text: dt(x.criada_em) }))));
     if (!linhas.length) linhas.push(el("p", { class: "meta", style: "margin:6px 8px", text: "Nada encontrado." }));
     if (bloq) linhas.push(el("button", { type: "button", onclick: () => ir(() => App.abrirFicha(q)) }, el("span", { class: "meta", text: `Consultar “${q}” na tela Consultar entregador →` })));
@@ -51,10 +51,16 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009l";
+  const VERSAO = "009m";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009m", tema: "🧭 Tudo mais perto", itens: [
+      ["Avisos no menu", "Avisos agora é um item do menu de cima, com duas abas: Para mim (os seus avisos) e Toda a equipe (o que antes ficava em Registros). O sino continua levando para lá."],
+      ["Minha fila", "Em Atividades, “Pendências” virou Minha fila: as tarefas para você ou com você aparecem com o cartão completo, dá para aceitar e concluir ali mesmo."],
+      ["Painel nas Análises", "O Painel das tarefas mudou para Análises → Tarefas, junto com os outros números."],
+      ["Cadastrar entregador em janela", "Cadastrar entregador abre numa janela por cima da tela, pelo botão da tela inicial, pelo Consultar entregador ou pela busca. Saiu da barra de Entregadores."],
+    ] },
     { versao: "009l", tema: "💜 Com as cores da Quero", itens: [
       ["Cores da Quero Delivery", "O Comunique ganhou as cores da marca: o roxo no topo e nos botões, o amarelo no item do menu em que você está e o rosa nos números de alerta."],
       ["Ordenar as tabelas", "Em Lançamentos, Tarifas dos bairros, Regras de equipe e Operadores, clique no nome da coluna para ordenar (de novo, inverte). A ordem fica mesmo quando a lista atualiza."],

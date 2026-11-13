@@ -89,7 +89,7 @@
   const etiqueta = (x) => el("span", { class: "tag", text: ROTULO[x.categoria] || "PARA VOCÊ" });
   function linhaAviso(x, aoAbrir) {
     return el("li", { class: "aviso" + (x.lida ? "" : " novo") },
-      el("a", { href: x.link || "#atividades/avisos", onclick: aoAbrir },
+      el("a", { href: x.link || "#avisos/para-mim", onclick: aoAbrir },
         el("div", { class: "aviso-topo" }, etiqueta(x), el("span", { class: "meta", text: dt(x.criada_em) })),
         el("div", { class: "aviso-texto", text: x.texto }),
         porque(x) ? el("div", { class: "meta", text: "Você recebeu porque " + porque(x) + "." }) : null));
@@ -121,7 +121,7 @@
       linhaDia(),
       itens.length ? el("ul", { class: "lista-avisos" }, itens.slice(0, 12).map((x) => linhaAviso(x, () => fecharTira())))
         : el("p", { class: "meta", style: "padding:12px", text: "Nenhum aviso ainda." }),
-      el("div", { class: "tira-pe" }, el("a", { class: "btn small", href: "#atividades/avisos", onclick: fecharTira }, "Ver todos os avisos")));
+      el("div", { class: "tira-pe" }, el("a", { class: "btn small", href: "#avisos/para-mim", onclick: fecharTira }, "Ver todos os avisos")));
     rpc("resumo_do_dia").then((d) => { V.dia = d; const velha = tira.querySelector(".resumo-dia"); if (velha) velha.replaceWith(linhaDia()); }).catch(() => {});
     marcarLidos();
   }
@@ -242,4 +242,17 @@
 
   App.aoEntrar.push(() => { carregarPref().catch(() => {}); });
   App.avisos = { carregar, render, cartoesPedidos, abrirTira, fecharTira, botaoOlho, carregarPref };
+
+  // 009m: Avisos é um item do menu de cima, com os avisos da pessoa e o que toda a equipe fez (os antigos Registros)
+  App.modulo({
+    id: "avisos", nome: "Avisos",
+    abas: [
+      { id: "para-mim", nome: "Para mim", secao: "v-at-avisos", contador: "c-at-avisos", alerta: true },
+      { id: "equipe", nome: "Toda a equipe", secao: "v-registros" },
+    ],
+    padrao: () => "para-mim",
+    carregar: (aba) => (aba === "equipe" ? App.modulos.registros.carregar() : carregar()),
+    render: (aba) => (aba === "equipe" ? App.modulos.registros.render() : render()),
+    contadores() { const n = S.notif?.nao_lidas || 0; App.contador("c-at-avisos", n); App.contador("c-av-menu", n); },
+  });
 })();

@@ -97,6 +97,7 @@
 
   App.modulo({
     id: "registros", nome: "Registros",
+    acesso: () => false,  // 009m: a tela virou a aba "Toda a equipe" de Avisos (o módulo Avisos usa este carregar/render)
     abas: [{ id: "feed", nome: "Registros", secao: "v-registros" }],
     carregar, render,
   });

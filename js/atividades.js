@@ -47,14 +47,10 @@
       opcionais.push(item({ modulo: "BLOQUEIOS", opcional: true, titulo: `Revisar registros da planilha: faltam ${nRev}`,
         detalhe: "Bloqueios com a marca “revisar” (dados conflitantes da importação). Cada um corrigido ou conferido sai da conta.",
         acoes: [el("button", { class: "btn small", type: "button", onclick: () => App.bloqueios?.abrirRevisar?.() }, "Abrir os registros para revisar")] }));
-    // Atividades sugeridas: para aceitar e as que você aceitou
-    for (const a of A.atividades.filter((x) => (x.status === "aberta" && x.pode_aceitar && !x.opcional_para_mim && x.criada_por !== S.me.id) || (x.status === "aceita" && x.sou_participante)))
-      itens.push(item({ modulo: "ATIVIDADE", titulo: a.titulo, estado: a.status === "aceita" ? "concluida" : "pendente",
-        detalhe: a.status === "aceita" ? `${a.participantes?.length > 1 ? "Com " + a.participantes.join(", ") + " · " : ""}Você está nela; aceita há ${duracao(a.aceita_em).txt}${a.prazo ? " · prazo " + dt(a.prazo) : ""}.`
-          : `Sugerida por ${a.criada_por_nome} há ${duracao(a.criada_em).txt}${a.para_mim ? " para você" : ""}, esperando alguém aceitar.`,
-        acoes: [el("a", { class: "btn small", href: "#atividades/sugeridas" }, a.status === "aceita" ? "Concluir" : "Ver e aceitar"),
-          a.cadastro_id ? el("button", { class: "btn link", type: "button", onclick: () => App.abrirCadastro(a.cadastro_id) }, "Completar o cadastro") : null].filter(Boolean),
-        extra: a.status === "aceita" ? App.u.previsao(a, "atividade", a.id, a.pode_prever) : null }));
+    // 009m (Minha fila): as tarefas para você ou com você aparecem com o cartão completo (dá para aceitar, concluir,
+    // comentar sem trocar de tela); as abertas para a equipe continuam na aba Tarefas
+    const minhas = A.atividades.filter((x) => (x.status === "aberta" && x.pode_aceitar && !x.opcional_para_mim && x.criada_por !== S.me.id && x.para_mim) || (x.status === "aceita" && x.sou_participante))
+      .sort((x, y) => String(x.prazo || "9").localeCompare(String(y.prazo || "9")));
     // Pedidos para ser responsável de cidade (moderadores, 008b)
     itens.push(...App.avisos.cartoesPedidos(item));
     // Ativação
@@ -98,9 +94,11 @@
           acoes: [el("a", { class: "btn small", href: "#bloqueios/historico" }, "Ver no Histórico")] }));
       }
     }
-    if (!itens.length && !opcionais.length) return box.replaceChildren(vazio("Tudo em dia", "Nenhuma pendência para você agora. Novas tarefas aparecem aqui assim que forem criadas."));
+    if (!itens.length && !opcionais.length && !minhas.length) return box.replaceChildren(vazio("Tudo em dia", "Nenhuma pendência para você agora. Novas tarefas aparecem aqui assim que forem criadas."));
     box.replaceChildren(...[
-      itens.length ? el("ul", { class: "queue", style: "padding:0;margin:0" }, itens) : vazio("Tudo em dia", "Nenhuma pendência só sua agora."),
+      minhas.length ? el("div", { class: "grupo" }, el("h3", {}, "Tarefas com você", el("span", { class: "count", text: minhas.length })),
+        el("div", { class: "queue" }, minhas.map(cartaoAtividade))) : null,
+      itens.length ? el("ul", { class: "queue", style: "padding:0;margin:0" }, itens) : minhas.length ? null : vazio("Tudo em dia", "Nenhuma pendência só sua agora."),
       opcionais.length ? el("div", { class: "grupo" }, el("h3", {}, "Opcionais: quem puder, pega", el("span", { class: "count", text: opcionais.length })),
         el("ul", { class: "queue", style: "padding:0;margin:0" }, opcionais)) : null].filter(Boolean));
   }
@@ -391,26 +389,23 @@
   App.modulo({
     id: "atividades", nome: "Atividades",
     abas: [
-      { id: "pendencias", nome: "Pendências", secao: "v-at-pendencias", contador: "c-at-pend", alerta: true },
+      { id: "pendencias", nome: "Minha fila", secao: "v-at-pendencias", contador: "c-at-pend", alerta: true },  // 009m: antes "Pendências"
       { id: "sugeridas", nome: "Tarefas", secao: "v-at-sugeridas", contador: "c-at-sug", alerta: true },
-      { id: "painel", nome: "Painel", secao: "v-at-painel" },
-      { id: "avisos", nome: "Avisos", secao: "v-at-avisos", contador: "c-at-avisos", alerta: true },
+      // 009m: o Painel foi para as Análises (aba "Tarefas") e os Avisos viraram item do menu de cima
     ],
     async carregarTipos() { A.tipos = await rpc("tipos_tarefa"); },
     async carregar(aba) {
-      if (aba === "painel") return App.painel.carregar();
       await Promise.all([
         aba === "sugeridas" ? App.painel.carregarRecorrentes() : null,
         aba === "pendencias" && S.me.papel_bloqueios ? rpc("listar_tarefas", { p_status: "pendente" }).then((d) => (A.tarefas = d)) : null,
-        aba !== "avisos" ? rpc("listar_atividades").then((d) => (A.atividades = d)) : App.avisos.carregar(),
+        rpc("listar_atividades").then((d) => (A.atividades = d)),
         aba === "sugeridas" && !A.tipos ? rpc("tipos_tarefa").then((d) => (A.tipos = d)) : null,
       ]);
     },
-    render(aba) { ({ avisos: () => App.avisos.render(), sugeridas: renderSugeridas, pendencias: renderPendencias, painel: () => App.painel.render() })[aba]?.(); },
+    render(aba) { ({ sugeridas: renderSugeridas, pendencias: renderPendencias })[aba]?.(); },
     contadores() {
       App.contador("c-at-pend", totalPendencias() || 0);
       App.contador("c-at-sug", S.resumo?.atividades?.para_aceitar || 0);
-      App.contador("c-at-avisos", S.notif?.nao_lidas || 0);
     },
     totalPendencias,
   });

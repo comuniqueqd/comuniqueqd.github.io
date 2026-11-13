@@ -869,3 +869,8 @@ a.funcao { border-radius: 20px; }
 .tile .v, .numeros b, .destaques b, .fe-total strong, .previa .grande { font-weight: 600; }
 th { font-weight: 500; }
 .pill, .count, .role, .tag, .chip { font-weight: 500; }
+
+/* 009m: janelas maiores (Cadastrar entregador com a lista ao lado) */
+dialog.janela.larga { width: min(920px, calc(100vw - 32px)); }
+dialog.janela.larga .two { margin-bottom: 0; }
+a.btn { text-decoration: none; }  /* link com cara de botão não leva sublinhado */

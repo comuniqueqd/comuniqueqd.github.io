@@ -106,7 +106,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009l"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009m"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -287,7 +287,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Cores da Quero Delivery") && await s.isVisible(".faixa-novidades >> text=e mais: 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Avisos no menu") && await s.isVisible(".faixa-novidades >> text=e mais: 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -462,6 +462,8 @@ try {
   await s.click("#b-avisos"); await esperar(s, "#tira-avisos:popover-open");
   await s.click("#tira-avisos >> text=Ver todos os avisos");
   ok(await esperar(s, "#at-avisos >> text=Tratativa realizada por Monitor Um") && await sumir(s, "#tira-avisos"), "Ver todos os avisos abre a tela de Avisos e fecha a tira");
+  ok(await s.evaluate(() => location.hash) === "#avisos/para-mim" && (await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).join() === "para-mim,equipe"
+      && await s.getAttribute("nav.modulos a[data-mod=avisos]", "aria-current") === "page", "009m: Avisos é item do menu de cima, com Para mim e Toda a equipe");
   await s.waitForTimeout(1500);
   ok((await s.getAttribute("#b-avisos", "data-novas")) === "false", "avisos marcados como lidos");
 
@@ -513,17 +515,17 @@ try {
   ok(await esperar(s, "#bq-consulta .ficha-topo .copia-balao >> text=Copiado") && (await s.evaluate(() => navigator.clipboard.readText())) === "mal00001"
       && (await s.getAttribute("#bq-consulta .ficha-topo .btn-copiar", "aria-label")) === "Copiar ID mal00001", "copiar o ID da ficha: vai para a área de transferência e avisa “Copiado”");
   // 008b: módulo Entregadores, cadastro avulso (sem ativação e sem bloqueio)
-  ok(await s.isVisible("nav.grupo a[data-grupo-mod=entregadores]"), "suporte com bloqueios vê Cadastrar entregador na barra de Entregadores");
+  ok(!(await s.isVisible("nav.grupo a[data-grupo-mod=entregadores]")), "009m: Cadastrar entregador saiu da barra de Entregadores (virou janela)");
   { const topo = await s.$$eval("nav.modulos a:not([hidden])", (as) => as.map((x) => x.textContent.trim()));
     ok(topo.some((t) => t.startsWith("Entregadores")) && !topo.some((t) => /Ativação|Bloqueios|Casos/.test(t)), "menu de cima: Ativação e Bloqueios ficam dentro de Entregadores, e Casos não aparece: " + topo.join(", "));
     const grupo = await s.$$eval("nav.grupo a", (as) => as.map((x) => x.dataset.grupoMod));
-    ok(JSON.stringify(grupo) === JSON.stringify(["ativacao", "bloqueios", "entregadores"]), "barra de Entregadores: Ativação, Bloqueios e Cadastrar entregador (Casos guardados): " + grupo);
+    ok(JSON.stringify(grupo) === JSON.stringify(["ativacao", "bloqueios"]), "barra de Entregadores: Ativação e Bloqueios (Cadastrar entregador é uma janela; Casos guardados): " + grupo);
     ok(await s.getAttribute("nav.modulos a[data-grupo=entregadores]", "aria-current") === "page", "Entregadores fica marcado no menu dentro dos Bloqueios"); }
   await s.screenshot({ path: path.join(PRINTS, "a1-menu-entregadores.png") });
   await s.fill("#bq-q-consulta", "avulso01"); await s.click("#bq-f-consulta button[type=submit]");
   ok(await esperar(s, "#bq-consulta >> text=Cadastrar este entregador"), "consulta sem resultado oferece cadastrar o entregador");
   await s.click("#bq-consulta >> text=Cadastrar este entregador");
-  ok(await esperar(s, "#v-en-cadastrar:not([hidden])"), "o botão leva à tela Cadastrar entregador");
+  ok(await esperar(s, "#janela-cad-ent[open] #en-form"), "009m: o botão abre a janela Cadastrar entregador");
   await s.waitForTimeout(200);
   ok(await s.inputValue("#en-id") === "avulso01", "a tela já vem com o ID buscado");
   await s.click("#en-enviar");
@@ -541,7 +543,11 @@ try {
   await s.fill("#en-id", "avulso01"); await s.fill("#en-nome", "Outro Nome"); await s.click("#en-enviar");
   ok(await esperar(s, "#en-erro:has-text('já tem cadastro')"), "ID que já tem ficha: avisa e oferece abrir a ficha");
   await s.click("#en-erro >> text=Abrir a ficha");
-  ok(await esperar(s, "#bq-consulta h3:has-text('Avulso da Silva')") && await s.isVisible("#bq-consulta .comentarios >> text=Cadastrado pela tela nova."), "'Abrir a ficha' leva à ficha, com o comentário");
+  ok(await esperar(s, "#bq-consulta h3:has-text('Avulso da Silva')") && await s.isVisible("#bq-consulta .comentarios >> text=Cadastrado pela tela nova.") && !(await s.$("#janela-cad-ent")), "'Abrir a ficha' fecha a janela e leva à ficha, com o comentário");
+  await ir(s, "#entregadores/cadastrar");
+  ok(await esperar(s, "#janela-cad-ent[open] #en-form") && await s.evaluate(() => location.hash) === "#bloqueios/consultar", "009m: o link antigo #entregadores/cadastrar abre a janela por cima do Consultar");
+  await ir(s, "#inicio");
+  ok(await sumir(s, "#janela-cad-ent"), "009m: trocar de tela fecha a janela");
   // moderador altera o cadastro e aplica aos bloqueios
   await ir(a, "#bloqueios/consultar");
   await a.fill("#bq-q-consulta", "mal00001"); await a.click("#bq-f-consulta button[type=submit]");
@@ -669,6 +675,8 @@ try {
   await s.screenshot({ path: path.join(PRINTS, "c2-sugeridas.png"), fullPage: true });
   await ir(m, "#atividades/pendencias"); await m.reload();
   ok(await esperar(m, "#at-lista >> text=Ligar para o restaurante Sabor"), "pessoa sugerida vê a atividade nas pendências");
+  ok((await m.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).join() === "pendencias,sugeridas" && (await texto(m, "nav.tabs a[data-view=pendencias]")).startsWith("Minha fila")
+      && await m.isVisible("#at-lista .tarefa-card:has-text('Ligar para o restaurante Sabor') >> text=Eu faço"), "009m: Atividades = Minha fila (com o cartão completo da tarefa) e Tarefas");
   await ir(m, "#atividades/sugeridas");
   await m.click("#at-sug-lista .card:has-text('Sabor') >> text=Eu faço");
   ok(await esperar(m, "#at-sug-lista .card:has-text('Sabor') >> text=Em andamento"), "monitorador aceita");
@@ -679,6 +687,7 @@ try {
   // registros: feed geral também para o suporte; nome abre a ficha
   await ir(s, "#registros");
   ok(await esperar(s, "#rg-lista .feed >> text=registrou bloqueio") && await s.isVisible("#rg-lista .feed >> text=Monitor Um"), "suporte vê os registros de todos");
+  ok(await s.evaluate(() => location.hash) === "#avisos/equipe" && !(await s.isVisible("nav.modulos a[data-mod=registros]")), "009m: o link antigo dos Registros abre Avisos → Toda a equipe");
   ok(await s.isVisible("#rg-lista >> text=reverteu o encerramento"), "registros mostram a reversão do encerramento");
   await s.screenshot({ path: path.join(PRINTS, "c3-registros.png"), fullPage: true });
   await s.fill("#rg-q", "Atrasildo"); await s.waitForTimeout(1200);
@@ -807,7 +816,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
@@ -1257,6 +1266,7 @@ try {
 
   // 24. 009d3 · painel das tarefas, metas, placar, revisão de qualidade e recorrentes
   await ir(a8, "#atividades/painel"); await a8.reload();
+  ok(await a8.evaluate(() => location.hash) === "#analises/tarefas" && await esperar(a8, "#v-at-painel:not([hidden])"), "009m: o Painel das tarefas abre nas Análises (aba Tarefas)");
   ok(await esperar(a8, "#pn-conteudo >> text=Suas metas") && await a8.isVisible("#pn-conteudo >> text=em teste"), "Painel: suas metas (em teste)");
   ok(await a8.isVisible("#pn-conteudo h3:has-text('Pessoas')") && await a8.isVisible("#pn-placar >> text=só você vê"), "moderador vê as pessoas; o administrador vê o placar");
   await a8.fill("#pn-meta-qtd", "2"); await a8.selectOption("#pn-meta-periodo", "semana");

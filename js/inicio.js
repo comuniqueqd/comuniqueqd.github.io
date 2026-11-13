@@ -108,7 +108,7 @@
       funcao({ id: "fn-sugerir", href: "#atividades/sugeridas", icone: "💡", cor: "f-sug", titulo: "Nova tarefa", onclick: abrirSugerir,
         texto: "Pedir algo para alguém ou registrar o que você já fez.",
         vivo: at ? `${at.equipe_abertas} abertas na equipe` : null }),
-      funcao({ id: "card-registros", href: "#registros", icone: "🗂️", cor: "f-reg", titulo: "Registros",
+      funcao({ id: "card-registros", href: "#avisos/equipe", icone: "🗂️", cor: "f-reg", titulo: "Registros",
         texto: "Tudo o que a equipe fez, em ordem: quem, o quê e quando." }),
     ].filter(Boolean);
     $("#inicio-funcoes").replaceChildren(...fn);

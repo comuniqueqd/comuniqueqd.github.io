@@ -161,7 +161,7 @@
         el("button", { class: "btn small", type: "button", onclick: () => notificar(true) }, "Notificação em 5 s (troque de aba)"),
         el("button", { class: "btn small", type: "button", onclick: () => toast("Este é o aviso na tela (o toast).") }, "Aviso na tela")),
       status,
-      el("p", { class: "meta" }, "Para ligar ou desligar cada som e a notificação do sistema: ", el("a", { href: "#atividades/avisos", onclick: () => d.close() }, "Atividades → Avisos"), "."));
+      el("p", { class: "meta" }, "Para ligar ou desligar cada som e a notificação do sistema: ", el("a", { href: "#avisos/para-mim", onclick: () => d.close() }, "Atividades → Avisos"), "."));
     d.id = "janela-teste-som";
     atualizar();
   }
