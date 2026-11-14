@@ -68,8 +68,10 @@ As imagens são geradas por `testes/prints-extensao.mjs`, só com dados fictíci
 
 - **Dados coletados:**
   - *Informações de identificação pessoal:* sim. É o e-mail da conta Google no login e o ID, o nome e a cidade do entregador, lidos só quando a pessoa clica num botão.
-  - *Autenticação:* sim (sessão de login).
-- **Não coleta:** saúde, financeiro do usuário, localização, histórico de navegação, atividade do usuário, conteúdo de sites (além do ID, nome e cidade citados).
+  - *Informações de autenticação:* sim (sessão de login guardada no navegador).
+  - *Conteúdo do site:* sim (só o texto do ID, do nome e da cidade do entregador nas telas do Quero Log e do Crisp).
+  - *Informações financeiras e de pagamento:* marcar a partir da 1.1, se o botão Adicional passar a gravar valores direto pela extensão.
+- **Não coleta:** saúde, comunicações pessoais (as conversas do Crisp não são lidas), localização, histórico da Web, atividade do usuário.
 - **Certificações:** os dados não são vendidos a terceiros; não são usados nem transferidos para fins não relacionados à finalidade única; não são usados para avaliar crédito ou conceder empréstimos.
 - **Política de privacidade:** https://comuniqueqd.github.io/privacidade.html (seção 3, "Extensão do Comunique para o Chrome").
 
