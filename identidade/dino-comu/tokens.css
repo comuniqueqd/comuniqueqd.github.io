@@ -1,0 +1,34 @@
+/* Dino Comu: tokens de cor e tipo. Copie para o projeto e use as variáveis.
+   Fontes (Google Fonts):
+   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"> */
+:root {
+  /* marca */
+  --floresta: #14352B;   /* topo, botões principais, texto */
+  --jade: #1F8A5B;       /* símbolo e enfeites (não usar para texto pequeno: 4,33:1 com branco) */
+  --jade-texto: #18774E; /* links, foco e botões com texto branco (5,5:1) */
+  --ambar: #E8A33D;      /* atenção: aba atual, alertas; sempre com texto floresta */
+  --areia: #F4EFE6;      /* fundo de destaque, item ativo, tela de entrada */
+  /* tema claro */
+  --bg: #FAF7F1; --surface: #FFFFFF; --ink: #14352B; --muted: #4B5B54; --line: #E5DED1;
+  --accent: var(--jade-texto); --accent-soft: #E3F1E9;
+  --ok: #1B7A46; --warn: #8A5300; --bad: #B3261E;
+  /* tipo e forma */
+  --font-titulo: "Manrope", "Inter", system-ui, sans-serif;
+  --font-texto: "Inter", system-ui, sans-serif;
+  --radius: 14px; --radius-botao: 12px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1C17; --surface: #16261F; --ink: #EDE7DB; --muted: #A7B4AC; --line: #273A31;
+    --accent: #6CCB9A; --accent-soft: #19352A; --ok: #5FD08E; --warn: #F0C060; --bad: #FF8A80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1C17; --surface: #16261F; --ink: #EDE7DB; --muted: #A7B4AC; --line: #273A31;
+  --accent: #6CCB9A; --accent-soft: #19352A; --ok: #5FD08E; --warn: #F0C060; --bad: #FF8A80;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font-texto); }
+h1, h2, h3, h4 { font-family: var(--font-titulo); font-weight: 700; letter-spacing: -0.015em; }
