@@ -18,7 +18,7 @@ const erro = (sel, msg) => { const p = $(sel); p.textContent = msg || ""; p.hidd
 
 async function mostrar() {
   const logado = !!(await Api.sessao());
-  $("#v-entrar").hidden = logado; $("#v-app").hidden = !logado; $("#b-sair").hidden = !logado;
+  $("#v-entrar").hidden = logado; $("#v-app").hidden = !logado; $("#v-form").hidden = true; $("#b-sair").hidden = !logado;
   if (logado) { telaAtual(); await atualizar(); }
 }
 
@@ -29,7 +29,45 @@ $("#b-entrar").addEventListener("click", async (e) => {
   finally { e.currentTarget.disabled = false; }
 });
 $("#b-sair").addEventListener("click", async () => { await Api.sair(); await chrome.runtime.sendMessage({ tipo: "conferir" }); await mostrar(); });
-document.querySelectorAll(".atalhos button").forEach((b) => b.addEventListener("click", () => abrir(b.dataset.hash)));
+// os botões de registrar: leem a página aberta e mostram o formulário aqui mesmo
+const TITULOS = { bloqueio: "Novo bloqueio", cadastro: "Nova ativação", adicional: "Registrar adicional", entregador: "Cadastrar entregador",
+  calculadora: "Calculadora de bairro", ajuda: "Pedir ajuda" };
+// a aba lida é a aba ativa da janela do painel (?aba=<id> só nos testes, onde o painel abre numa aba)
+const ABA_TESTE = Number(new URLSearchParams(location.search).get("aba")) || null;
+async function lerPagina() {
+  try {
+    const id = ABA_TESTE ?? (await chrome.tabs.query({ active: true, currentWindow: true }))[0]?.id;
+    if (id != null) return await chrome.tabs.sendMessage(id, { tipo: "tela" });
+  } catch (_) {}
+  return null;
+}
+function mostrarApp() { $("#v-form").hidden = true; $("#v-app").hidden = false; }
+async function abrirForm(acao) {
+  $("#feito").hidden = true;
+  const r = acao === "ajuda" ? null : await lerPagina();
+  const dados = { ...(r?.entregador || {}) };
+  // o ID já tem ficha com outro nome? (avisa antes de gravar)
+  if (dados.id && acao !== "calculadora") {
+    try {
+      const b = await Api.rpc("busca_rapida", { p_q: dados.id });
+      const f = (b?.entregadores || []).find((x) => String(x.id_app).toLowerCase() === dados.id.toLowerCase());
+      if (f && dados.nome && f.nome && norm(f.nome) !== norm(dados.nome)) dados.aviso = `No Comunique este ID está como “${f.nome}”. Confira antes de gravar.`;
+      if (f && acao === "entregador") dados.aviso = `Este ID já tem ficha no Comunique (${f.nome || "sem nome"}).`;
+    } catch (_) {}
+  }
+  const form = await globalThis.ComuniqueForms.montar(acao, dados, {
+    rpc: (fn, args) => Api.rpc(fn, args), abrir,
+    pronto: async (msg) => { mostrarApp(); const p = $("#feito"); p.textContent = "✓ " + msg; p.hidden = false; await chrome.runtime.sendMessage({ tipo: "conferir" }); atualizar(); },
+  });
+  $("#t-form").textContent = TITULOS[acao];
+  $("#caixa-form").replaceChildren(form);
+  $("#v-app").hidden = true; $("#v-form").hidden = false;
+  form.focar();
+}
+const norm = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+document.querySelectorAll(".atalhos button").forEach((b) => b.addEventListener("click", () => abrirForm(b.dataset.acao)));
+$("#b-voltar").addEventListener("click", mostrarApp);
+$("#b-abrir").addEventListener("click", () => abrir("#inicio"));
 
 // busca: ID ou nome (mesma busca do topo do Comunique)
 let espera = null, ultima = "";
@@ -58,17 +96,12 @@ async function buscar(forcar) {
 // 1.1: o que a aba aberta tem (só nas telas do Quero Log e do Crisp, onde o leitor roda)
 async function telaAtual() {
   const box = $("#tela");
-  let r = null;
-  try {
-    const [aba] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-    if (aba?.id != null) r = await chrome.tabs.sendMessage(aba.id, { tipo: "tela" });
-  } catch (_) { r = null; }   // aba sem o leitor (outro site): não mostra nada
+  const r = await lerPagina();   // aba sem o leitor (outro site): não mostra nada
   if (!r) return box.replaceChildren();
   if (!r.entregador) return box.replaceChildren(el("div", { class: "tela vazia", text: "Não encontrei ID de entregador nesta tela." }));
   const e = r.entregador;
   box.replaceChildren(el("div", { class: "tela" }, el("span", { class: "grupo", text: "Nesta tela" }), el("b", { text: e.nome || "Nome não encontrado" }),
     el("span", { class: "sub meta", text: [e.id, e.cidade].filter(Boolean).join(" · ") }),
-    el("span", { class: "meta", text: "Use os botões do cartão no canto da página para cadastrar, bloquear ou registrar adicional." }),
     el("button", { class: "btn", type: "button", onclick: () => abrir("#ficha/" + encodeURIComponent(e.id)) }, "🔎 Ver ficha no Comunique")));
 }
 chrome.tabs.onActivated.addListener(() => telaAtual());
@@ -84,7 +117,12 @@ async function atualizar() {
     el("b", { text: "🆘 " + (a.meu ? "Seu pedido de ajuda" : `${a.criado_por_nome || "Alguém"} pediu ajuda`) }),
     el("span", { text: a.titulo || a.texto || "" }),
     el("span", { class: "sub meta", text: a.aceito_por_nome ? `Com ${a.aceito_por_nome}` : "Ninguém pegou ainda" }),
-    el("button", { class: "btn", type: "button", onclick: () => abrir("#inicio") }, "Abrir no Comunique"))));
+    // aceitar o pedido aqui mesmo (o seu próprio pedido só aparece, sem botão)
+    !a.meu && !a.aceito_por_nome ? el("button", { class: "btn primario", type: "button", onclick: async (ev) => {
+      ev.currentTarget.disabled = true;
+      try { await Api.rpc("aceitar_ajuda", { p_id: a.id }); await atualizar(); const p = $("#feito"); p.textContent = "✓ Você aceitou ajudar. Combine com quem pediu."; p.hidden = false; }
+      catch (x) { erro("#e-app", x.message); ev.currentTarget.disabled = false; }
+    } }, "🙋 Eu ajudo") : null)));
   const n = r.notif?.nao_lidas || 0, c = $("#c-avisos");
   c.textContent = n; c.hidden = !n; $("#b-lidos").hidden = !n;
   const itens = (r.notif?.itens || []).slice(0, 15);

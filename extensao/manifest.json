@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Comunique",
   "short_name": "Comunique",
-  "version": "1.1.0",
-  "description": "Avisos do Comunique no ícone, busca de entregadores, atalhos e botões de cadastro, bloqueio e adicional no Quero Log e no Crisp.",
+  "version": "1.2.0",
+  "description": "Avisos do Comunique no ícone e, no painel lateral, bloqueio, ativação, adicional e ajuste de bairro com os dados da tela aberta.",
   "icons": {
     "16": "icones/icone-16.png",
     "32": "icones/icone-32.png",
@@ -45,17 +45,6 @@
         "telas/leitor.js"
       ],
       "run_at": "document_idle"
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "icones/simbolo.svg"
-      ],
-      "matches": [
-        "https://admin.querolog.io/*",
-        "https://app.crisp.chat/*"
-      ]
     }
   ]
 }

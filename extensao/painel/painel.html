@@ -22,6 +22,11 @@
     <p class="erro" id="e-entrar" role="alert" hidden></p>
   </section>
 
+  <section id="v-form" hidden>
+    <div class="titulo-form"><button class="link" type="button" id="b-voltar">← Voltar</button><h2 id="t-form"></h2></div>
+    <div id="caixa-form"></div>
+  </section>
+
   <section id="v-app" hidden>
     <div id="tela" aria-live="polite"></div>
     <form id="busca" role="search" autocomplete="off">
@@ -30,15 +35,17 @@
     </form>
     <div id="resultados" aria-live="polite"></div>
 
-    <h2>Atalhos</h2>
-    <nav class="atalhos" aria-label="Atalhos">
-      <button type="button" data-hash="#ativacao/novo">📝 Nova ativação</button>
-      <button type="button" data-hash="#bloqueios/novo">⛔ Novo bloqueio</button>
-      <button type="button" data-hash="#financeiro/adicional">💰 Registrar adicional</button>
-      <button type="button" data-hash="#ferramentas/calculadora">🧮 Calculadora de bairro</button>
-      <button type="button" data-hash="#preencher/ajuda" class="ajuda">🆘 Pedir ajuda</button>
-      <button type="button" data-hash="#inicio">↗ Abrir o Comunique</button>
+    <h2>Registrar</h2>
+    <p class="meta">Lê o ID, o nome e a cidade da página aberta (Quero Log ou Crisp) e preenche aqui. Você confere e registra.</p>
+    <nav class="atalhos" aria-label="Registrar">
+      <button type="button" data-acao="bloqueio">⛔ Novo bloqueio</button>
+      <button type="button" data-acao="cadastro">📝 Nova ativação</button>
+      <button type="button" data-acao="adicional">💰 Registrar adicional</button>
+      <button type="button" data-acao="entregador">🪪 Cadastrar entregador</button>
+      <button type="button" data-acao="calculadora">🧮 Calculadora de bairro</button>
+      <button type="button" data-acao="ajuda" class="ajuda">🆘 Pedir ajuda</button>
     </nav>
+    <p class="ok" id="feito" role="status" hidden></p>
 
     <div id="agora"></div>
 
@@ -48,10 +55,12 @@
     </div>
     <ul class="avisos" id="avisos"></ul>
     <p class="erro" id="e-app" role="alert" hidden></p>
+    <button class="link" type="button" id="b-abrir">↗ Abrir o Comunique</button>
   </section>
 </main>
 <script src="../config.js"></script>
 <script src="../api.js"></script>
+<script src="../formularios.js"></script>
 <script src="painel.js"></script>
 </body>
 </html>

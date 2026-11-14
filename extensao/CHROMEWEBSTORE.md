@@ -1,7 +1,7 @@
 # Chrome Web Store: Comunique
 
 Tudo o que o painel do desenvolvedor da Chrome Web Store pede, pronto para copiar.
-Última atualização: 14/11/2026 · versão 1.1.0
+Última atualização: 14/11/2026 · versão 1.2.0
 
 ## Antes de enviar (uma vez só)
 
@@ -16,7 +16,7 @@ Tudo o que o painel do desenvolvedor da Chrome Web Store pede, pronto para copia
 ## Ficha da loja
 
 - **Nome:** Comunique
-- **Resumo (até 132 caracteres):** Avisos do Comunique no ícone, busca de entregadores, atalhos e botões de cadastro, bloqueio e adicional no Quero Log e no Crisp.
+- **Resumo (até 132 caracteres):** Avisos do Comunique no ícone e, no painel lateral, bloqueio, ativação, adicional e ajuste de bairro com os dados da tela aberta.
 - **Categoria:** Ferramentas de trabalho (Workflow & Planning)
 - **Idioma:** Português (Brasil)
 
@@ -24,21 +24,20 @@ Tudo o que o painel do desenvolvedor da Chrome Web Store pede, pronto para copia
 
 > Extensão de uso interno da equipe de operação que usa o Comunique.
 >
-> • Avisos no ícone: mostra quantos avisos novos você tem no Comunique e manda uma notificação quando chega algo para você ou quando alguém da equipe pede ajuda.
-> • Painel lateral: abre o Comunique ao lado da tela em que você está trabalhando, com seus avisos, os pedidos de ajuda abertos e a busca de entregadores por ID ou nome.
-> • Atalhos: Nova ativação, Novo bloqueio, Registrar adicional, Calculadora de bairro e Pedir ajuda, a um clique.
-> • Ver no Comunique: selecione o ID de um entregador em qualquer página, clique com o botão direito e abra a ficha dele.
-> • Botões nas telas do entregador: no painel Quero Log e no Crisp, um cartão mostra os botões Cadastrar, Nova ativação, Bloquear e Adicional. Cada um abre um formulário curto no próprio cartão, já com o ID, o nome e a cidade do entregador: no bloqueio você escolhe a infração e vê a punição antes de confirmar; no adicional informa os valores. Nada é gravado sem você conferir e confirmar, e o botão "Abrir no Comunique" leva tudo para o sistema se preferir completar lá.
-> • Aviso de conferência: se o ID da tela já está no Comunique com outro nome, o cartão avisa antes de gravar.
+> • Registrar sem trocar de tela: com a tela de um entregador aberta no painel Quero Log ou no Crisp, o painel lateral da extensão lê o ID, o nome e a cidade e preenche o formulário ali mesmo. Novo bloqueio (escolha o motivo e veja a punição antes de confirmar), Nova ativação, Registrar adicional, Cadastrar entregador e Calculadora de bairro (mostra o ajuste e registra; falta só o código do pedido). Você confere, muda o que precisar e registra.
+> • Pedir ajuda e ajudar: peça ajuda à equipe pelo painel e aceite os pedidos dos colegas com "Eu ajudo".
+> • Avisos no ícone: mostra quantos avisos novos você tem e manda notificação quando chega algo para você ou quando alguém pede ajuda.
+> • Busca de entregadores por ID ou nome e "Ver no Comunique" ao selecionar um ID em qualquer página (botão direito).
+> • Conferência: se o ID da tela já está no Comunique com outro nome, o formulário avisa antes de gravar; se a tela não tem ID de entregador, o formulário abre vazio para digitar.
 >
-> A extensão lê somente o ID, o nome e a cidade do entregador nessas telas. Celular, e-mail, CPF, endereço e o resto da página não são lidos. Entre com a mesma conta Google do Comunique.
+> A extensão lê somente o ID, o nome e a cidade do entregador nessas telas, e só quando você abre um formulário ou o painel. Celular, e-mail, CPF, endereço e o resto da página não são lidos, e a página não é alterada. Nada é gravado sem você confirmar. Entre com a mesma conta Google do Comunique.
 
 ## Imagens
 
 | Arquivo | Uso |
 |---|---|
 | `icones/icone-128.png` | Ícone da loja (128×128) |
-| `loja/print-1-botoes-no-painel.png` | Captura de tela 1 (1280×800): o cartão com os botões numa tela de entregador (dados fictícios) |
+| `loja/print-1-bloqueio-no-painel.png` | Captura de tela 1 (1280×800): o Novo bloqueio no painel lateral, preenchido com os dados da tela ao lado (dados fictícios) |
 | `loja/print-2-painel-lateral.png` | Captura de tela 2 (1280×800): o painel lateral com avisos e pedido de ajuda (dados fictícios) |
 | `loja/bloco-promocional-440x280.png` | Bloco promocional pequeno (440×280) |
 
@@ -60,8 +59,8 @@ As imagens são geradas por `testes/prints-extensao.mjs`, só com dados fictíci
 | `identity` | Entrar com a conta Google da pessoa, a mesma usada no Comunique. |
 | Host `nhgmkbfaqonojhaggwui.supabase.co` | O banco de dados do Comunique: login, avisos, busca de entregadores. |
 | Host `comuniqueqd.github.io` | O próprio Comunique: reaproveitar a aba já aberta em vez de abrir outra a cada clique. |
-| Conteúdo em `admin.querolog.io` | Ler o ID, o nome e a cidade na tela de um entregador e mostrar os botões do Comunique. |
-| Conteúdo em `app.crisp.chat` | Ler o ID (dado personalizado `entregador_id`), o nome e a cidade do contato e mostrar os botões do Comunique. |
+| Conteúdo em `admin.querolog.io` | Ler o ID, o nome e a cidade na tela de um entregador quando a pessoa abre um formulário no painel lateral. A página não é alterada. |
+| Conteúdo em `app.crisp.chat` | Ler o ID (dado personalizado `entregador_id`), o nome e a cidade do contato quando a pessoa abre um formulário no painel lateral. A página não é alterada. |
 
 **Código remoto:** não. Todo o código está no pacote; a extensão só troca dados (JSON) com o banco do Comunique.
 
@@ -86,6 +85,7 @@ As imagens são geradas por `testes/prints-extensao.mjs`, só com dados fictíci
 
 | Versão | Data | O que mudou |
 |---|---|---|
+| 1.2.0 | 14/11/2026 | Tudo no painel lateral: os botões leem a tela aberta e registram ali mesmo (bloqueio com motivo e prévia, ativação, adicional, cadastrar, calculadora de bairro com registro do ajuste, pedir ajuda); "Eu ajudo" aceita pedidos da equipe; o cartão na página saiu; nome lido do caminho "Lista / Nome" mesmo com outros "Lista" na tela. |
 | 1.1.0 | 14/11/2026 | Os botões do cartão gravam direto (com conferência): ficha, ativação, bloqueio com prévia e adicional com valores; aviso de ID com outro nome no Comunique; o painel lateral diz "não encontrei ID de entregador nesta tela". |
 | 1.0.0 | 14/11/2026 | Primeira versão: avisos no ícone, notificações (avisos e pedidos de ajuda), painel lateral com busca e atalhos, "Ver no Comunique" no botão direito, cartão com botões no Quero Log e no Crisp. |
 
