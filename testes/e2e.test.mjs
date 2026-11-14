@@ -50,6 +50,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009f-parceiros-completo
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009g-tarefas-compartilhadas.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009h-entregador-pelo-lancamento.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009p-bairros-parecidos.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009s-sem-cpf.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -108,7 +109,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009r"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009s"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -173,19 +174,20 @@ try {
   await esperar(s, "#v-novo:not([hidden])");
   const abas = await s.$$eval("nav.tabs a:not([hidden])", (as) => as.map((x) => x.dataset.view));
   ok(JSON.stringify(abas) === JSON.stringify(["novo", "pendentes", "historico"]), "suporte vê só Novo cadastro, Pendentes e Histórico (008c): " + abas);
-  await s.fill("#f-idapp", "1a2b3c4d5e6f"); await s.fill("#f-cpf", "52998224725"); await s.fill("#f-cidade", "LAGARTO - SE"); await s.fill("#f-obs", "Documentos pelo WhatsApp");
+  await s.fill("#f-idapp", "1a2b3c4d5e6f"); await s.fill("#f-cidade", "LAGARTO - SE"); await s.fill("#f-obs", "Documentos pelo WhatsApp");
   await s.click("#b-enviar");
   ok(await esperar(s, "#v-pendentes:not([hidden]) .card.destaque"), "após enviar, vai para Pendentes com o cadastro destacado");
   ok((await texto(s, ".card.destaque")).includes("Aguardando análise"), "card mostra a situação Aguardando análise");
   ok((await texto(s, ".card.destaque")).includes("esperando há"), "card mostra há quanto tempo espera");
   await s.screenshot({ path: path.join(PRINTS, "3-suporte-pendentes.png"), fullPage: true });
   await ir(s, "#novo");
-  await s.fill("#f-idapp", "outro1234"); await s.fill("#f-cpf", "529.982.247-25"); await s.fill("#f-cidade", "RECIFE - PE");
-  await s.click("#b-enviar");
-  ok(await esperar(s, "#form-erro:not([hidden])"), "CPF repetido é bloqueado: " + (await texto(s, "#form-erro")));
-  // casos (008) guardados: CPF repetido com outro ID volta a ser só a recusa, sem janela de caso
-  ok((await texto(s, "#form-erro")).includes("já está cadastrado") && !(await s.isVisible("dialog.janela")), "casos guardados: CPF repetido com outro ID só é recusado");
-  await s.fill("#f-idapp", "abc12345"); await s.fill("#f-cpf", ""); await s.click("#b-enviar");
+  ok(!(await s.$("#f-cpf")) && (await texto(s, "#form")).includes("não guarda CPF"), "009s: o Novo cadastro não pede CPF");
+  await s.fill("#f-idapp", ""); await s.fill("#f-cidade", "RECIFE - PE"); await s.click("#b-enviar");
+  ok((await texto(s, "#e-idapp")).includes("Preencha o ID do entregador"), "009s: sem ID o cadastro não sai");
+  await s.fill("#f-idapp", "1A2B3C4D5E6F"); await s.click("#b-enviar");
+  ok(await esperar(s, "#form-erro:not([hidden])"), "ID repetido é bloqueado: " + (await texto(s, "#form-erro")));
+  ok((await texto(s, "#form-erro")).includes("já está cadastrado") && !(await texto(s, "#form-erro")).includes("CPF") && !(await s.isVisible("dialog.janela")), "009s: ID repetido só é recusado, sem citar CPF");
+  await s.fill("#f-idapp", "abc12345"); await s.click("#b-enviar");
   await esperar(s, "#v-pendentes:not([hidden]) .card.destaque");
   await s.fill("#f-idapp", "x").catch(() => {});
   await ir(s, "#novo"); await s.fill("#f-idapp", "zzz99881"); await s.fill("#f-cidade", "ITABAIANA - SE"); await s.click("#b-enviar");
@@ -256,7 +258,7 @@ try {
   ok(!(await a.isVisible("#t-hist >> text=abc12345")), "moderador exclui");
   const [dl] = await Promise.all([a.waitForEvent("download"), a.click("#b-export")]);
   const csv = fs.readFileSync(await dl.path(), "utf8");
-  ok(csv.includes("id_entregador;cpf;nome;cidade") && csv.includes("1a2b3c4d5e6f;529.982.247-25;;LAGARTO - SE"), "CSV baixado");
+  ok(csv.includes("id_entregador;nome;cidade") && !/cpf/i.test(csv.split("\n")[0]) && csv.includes("1a2b3c4d5e6f;;LAGARTO - SE"), "CSV baixado");
   await a.screenshot({ path: path.join(PRINTS, "7-historico.png"), fullPage: true });
 
   // 8. novata já liberada entra; sair volta ao login
@@ -289,7 +291,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Sem roxo sobrando") && await s.isVisible(".faixa-novidades >> text=e mais: 009q e 009p e 009o e 009n e 009m e 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009r, 009q, 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=CPF fora do Comunique") && await s.isVisible(".faixa-novidades >> text=e mais: 009r e 009q e 009p e 009o e 009n e 009m e 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009s, 009r, 009q, 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -831,7 +833,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009r", "009q", "009p", "009o", "009n", "009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009r, 009q, 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009s", "009r", "009q", "009p", "009o", "009n", "009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009s, 009r, 009q, 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
@@ -909,11 +911,11 @@ try {
   await m7.click("#t-hist tr:has-text('rev00002') button.revisar-cad");
   await m7.click("dialog.janela >> text=Os dados estão certos");
   ok(await esperar(m7, "#toast:has-text('Marcado como revisado')"), "monitorador marca 'Os dados estão certos'");
-  // cadastro novo só com CPF: já nasce com tarefa (a janela não oferece outra)
+  // cadastro novo sem nome: já nasce com tarefa (a janela não oferece outra)
   await ir(n7, "#ativacao/novo"); await esperar(n7, "#form");
-  await n7.fill("#f-cpf", "11144477735"); await n7.fill("#f-cidade", "LAGARTO - SE"); await n7.click("#b-enviar");
-  await esperar(n7, "#queue .card:has-text('111.444.777-35')");
-  await n7.click("#queue .card:has-text('111.444.777-35') button.revisar-cad");
+  await n7.fill("#f-idapp", "semnome99"); await n7.fill("#f-cidade", "LAGARTO - SE"); await n7.click("#b-enviar");
+  await esperar(n7, "#queue .card:has-text('semnome99')");
+  await n7.click("#queue .card:has-text('semnome99') button.revisar-cad");
   ok(await esperar(n7, "dialog.janela >> text=Já existe uma tarefa aberta"), "cadastro novo incompleto já tem tarefa (não oferece outra)");
   await n7.click("dialog.janela >> text=Cancelar");
   { const t7 = await texto(n7, "main"); ok(!t7.includes("null"), "telas da 007 sem textos vazios (null)" + perto(t7, "null")); }
@@ -1458,6 +1460,7 @@ try {
           for (let t; (t = tw.nextNode());) {
             const p = t.parentElement;
             if (!p || !p.getClientRects().length || p.closest("script, style, template, [hidden]")) continue;
+            if (/[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{2}/.test(t.data)) lista.push(`CPF na tela "${t.data.trim().slice(0, 50)}" em <${p.tagName.toLowerCase()}>`);
             if (/\b(null|undefined|NaN)\b|\[object Object\]/.test(t.data)) lista.push(`texto quebrado "${t.data.trim().slice(0, 50)}" em <${p.tagName.toLowerCase()}${p.id ? "#" + p.id : ""}>`);
           }
           return lista;

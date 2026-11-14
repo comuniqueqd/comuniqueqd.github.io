@@ -1,4 +1,4 @@
-// Busca rápida no topo (ID, CPF ou nome → ficha do entregador ou cadastro da ativação) e a
+// Busca rápida no topo (ID ou nome → ficha do entregador ou cadastro da ativação) e a
 // janela "O que há de novo", que aparece uma vez por pessoa a cada versão publicada.
 (() => {
   "use strict";
@@ -27,8 +27,8 @@
         el("span", { class: "meta mono", text: `${x.id_app} · ${x.cidade || "sem cidade"} · ${x.bloqueios} bloqueio(s)` }))));
     if (r.cadastros.length) linhas.push(el("h4", { text: "Cadastros da ativação" }), ...r.cadastros.map((x) =>
       el("button", { type: "button", onclick: () => ir(() => App.abrirCadastro(x.id)) },
-        el("span", { text: x.nome || (x.id_app ? "ID " + x.id_app : "CPF " + fmtCPF(x.cpf)) }),
-        el("span", { class: "meta mono", text: [x.id_app, x.cpf && fmtCPF(x.cpf), x.cidade, x.situacao].filter(Boolean).join(" · ") }))));
+        el("span", { text: x.nome || (x.id_app ? "ID " + x.id_app : "Sem ID") }),
+        el("span", { class: "meta mono", text: [x.id_app, x.cidade, x.situacao].filter(Boolean).join(" · ") }))));
     // lupa: comentários sobre entregadores e os seus avisos
     const corta = (t, n = 90) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
     if (r.comentarios?.length) linhas.push(el("h4", { text: "Comentários" }), ...r.comentarios.map((x) =>
@@ -51,10 +51,14 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009r";
+  const VERSAO = "009s";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009s", tema: "🔒 Sem CPF", itens: [
+      ["CPF fora do Comunique", "Para proteger os dados dos entregadores (LGPD), o Comunique não guarda mais CPF: o campo saiu do Novo cadastro, nenhuma tela mostra CPF e os que estavam guardados foram apagados."],
+      ["ID obrigatório", "Todo cadastro novo precisa do ID do entregador. É o ID que evita cadastro repetido."],
+    ] },
     { versao: "009r", tema: "🦖 O Dino em tudo", itens: [
       ["Sem roxo sobrando", "Os últimos pedaços da cor antiga sumiram: o atalho Cadastrar entregador, o gráfico de adicionais do Financeiro, as sombras e a página de Privacidade agora estão nas cores do Dino."],
       ["Sem texto quebrado", "A Calculadora de bairro e o Painel das tarefas mostravam uma palavra solta, sem sentido, em alguns casos. Corrigido."],

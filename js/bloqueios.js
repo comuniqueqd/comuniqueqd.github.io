@@ -671,7 +671,7 @@
   const MOD_TXT = { ativacao: "ATIVAÇÃO", bloqueios: "BLOQUEIOS" };
   function renderConsulta() {
     const box = $("#bq-consulta"), c = B.consulta;
-    if (!c) return box.replaceChildren(el("p", { class: "meta", text: "Busque pelo ID do entregador (completo), por parte do nome ou pelo CPF do cadastro. Em qualquer tela, clicar no nome de um entregador abre esta consulta." }));
+    if (!c) return box.replaceChildren(el("p", { class: "meta", text: "Busque pelo ID do entregador (completo), ou por parte do nome. Em qualquer tela, clicar no nome de um entregador abre esta consulta." }));
     if (c.carregando) return box.replaceChildren(carregandoEl());
     if (c.erro) return box.replaceChildren(el("p", { class: "err", text: c.erro }));
     const fichas = c.entregadores || [], bl = c.bloqueios || [];
@@ -679,7 +679,7 @@
       el("div", { class: "actions" }, el("button", { class: "btn primary", type: "button", onclick: () => App.cadastrarEntregador(/^[A-Za-z0-9]{4,40}$/.test(c.q || "") ? c.q : "") }, "Cadastrar este entregador")));
     const cadDe = (id) => c.cadastros.filter((x) => (x.id_app || "").toLowerCase() === id);
     const soltos = c.cadastros.filter((x) => !fichas.some((f) => f.id_app === (x.id_app || "").toLowerCase()));
-    const linhaCadastro = (x) => el("li", { text: `${x.situacao} · ${x.cidade}${x.cpf ? " · CPF " + fmtCPF(x.cpf) : ""} · enviado por ${x.enviado_por_nome} em ${dt(x.enviado_em)}${x.decidido_em ? " · decidido em " + dt(x.decidido_em) : ""}${x.motivo ? " · " + x.motivo : ""}` });
+    const linhaCadastro = (x) => el("li", { text: `${x.situacao} · ${x.cidade} · enviado por ${x.enviado_por_nome} em ${dt(x.enviado_em)}${x.decidido_em ? " · decidido em " + dt(x.decidido_em) : ""}${x.motivo ? " · " + x.motivo : ""}` });
     box.replaceChildren(...[
       fichas.length > 1 ? el("p", { class: "meta", text: `${fichas.length} IDs encontrados.` }) : null,
       ...fichas.map((f) => {
@@ -721,7 +721,7 @@
       }),
       soltos.length ? el("div", { class: "panel" },
         el("h3", { text: "Cadastros na ativação sem bloqueios" }),
-        el("ul", {}, soltos.map((x) => el("li", { text: `${x.id_app || "(sem ID)"} · ${x.situacao} · ${x.cidade}${x.cpf ? " · CPF " + fmtCPF(x.cpf) : ""} · enviado em ${dt(x.enviado_em)}${x.motivo ? " · " + x.motivo : ""}` })))) : null,
+        el("ul", {}, soltos.map((x) => el("li", { text: `${x.id_app || "(sem ID)"} · ${x.situacao} · ${x.cidade} · enviado em ${dt(x.enviado_em)}${x.motivo ? " · " + x.motivo : ""}` })))) : null,
     ].filter(Boolean));
   }
 

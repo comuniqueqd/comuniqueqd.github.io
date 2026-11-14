@@ -85,7 +85,7 @@
   const PAPEL = { moderador: "Moderador", monitorador: "Monitorador", suporte: "Suporte" };
   const EVENTO = { enviado: "Enviado", aprovado: "Aprovado", reprovado: "Reprovado", encerrado: "Encerrado", desfeito: "Decisão desfeita", editado: "Dados alterados", revisado: "Dados conferidos" };
   const pill = (s, curto) => el("span", { class: "pill " + s, text: curto && s === "aguardando_contato" ? "Aguardando novo contato" : ST[s] });
-  const titulo = (c) => c.id_app ? "ID " + c.id_app : "CPF " + fmtCPF(c.cpf);
+  const titulo = (c) => c.id_app ? "ID " + c.id_app : (c.nome || "Sem ID");
   // 009j: "Carregando…" vira um esqueleto com o formato da lista (as coisas não pulam quando chegam);
   // o texto continua lá para o leitor de tela
   const esqueleto = (linhas = 3) => el("div", { class: "esqueleto", role: "status" }, el("span", { class: "so-leitor", text: "Carregando…" }),
@@ -476,7 +476,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009r";
+  const VERSAO_APP = "009s";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;

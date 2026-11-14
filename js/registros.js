@@ -56,7 +56,6 @@
     const partes = [];
     if (x.nome) partes.push(x.nome);
     if (x.id_app) partes.push("ID " + x.id_app);
-    if (x.cpf) partes.push("CPF " + fmtCPF(x.cpf));
     if (x.cidade) partes.push(x.cidade);
     const txt = partes.join(" · ");
     if (x.id_app && S.me.papel_bloqueios && App.abrirFicha)

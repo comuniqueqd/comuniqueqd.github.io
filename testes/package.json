@@ -24,7 +24,8 @@
     "test:painel": "node painel.test.mjs",
     "test:parceiros": "node parceiros.test.mjs",
     "test:ficha": "node ficha.test.mjs",
-    "test:bairros": "node bairros.test.mjs"
+    "test:bairros": "node bairros.test.mjs",
+    "test:semcpf": "node semcpf.test.mjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "2.117.3",
