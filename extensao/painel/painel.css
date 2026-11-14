@@ -1,0 +1,45 @@
+/* Painel lateral do Comunique, identidade Dino Comu (identidade/dino-comu/tokens.css) */
+:root {
+  --floresta: #14352B; --jade: #1F8A5B; --ambar: #E8A33D; --areia: #F4EFE6;
+  --bg: #FAF7F1; --surface: #FFFFFF; --ink: #14352B; --muted: #4B5B54; --line: #E5DED1;
+  --accent: #18774E; --accent-soft: #E3F1E9; --bad: #B3261E;
+  --font: "Inter", "Segoe UI", system-ui, sans-serif; --titulo: "Manrope", "Inter", "Segoe UI", system-ui, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0F1C17; --surface: #16261F; --ink: #EDE7DB; --muted: #A7B4AC; --line: #273A31; --accent: #6CCB9A; --accent-soft: #19352A; --bad: #FF8A80; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 var(--font); }
+.topo { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--floresta); color: var(--areia); }
+.topo .simbolo { inline-size: 28px; block-size: 28px; }
+.topo h1 { font: 800 18px/1 var(--titulo); letter-spacing: -0.02em; margin: 0; flex: 1; }
+.topo .link { color: var(--areia); }
+main { padding: 14px 16px 24px; display: grid; gap: 12px; }
+main section { display: grid; gap: 12px; }
+h2 { font: 700 15px/1.3 var(--titulo); margin: 6px 0 0; display: flex; align-items: center; gap: 8px; }
+.meta { color: var(--muted); margin: 0; font-size: 13px; }
+.erro { color: var(--bad); margin: 0; font-size: 13px; }
+.so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+button { font: inherit; color: inherit; cursor: pointer; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 14px; font-weight: 600; }
+.btn.primario { background: var(--floresta); border-color: var(--floresta); color: var(--areia); }
+.link { border: 0; background: none; color: var(--accent); padding: 2px 4px; font-weight: 600; font-size: 13px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type="search"] { inline-size: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; }
+.atalhos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.atalhos button { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px; font-weight: 600; font-size: 13px; }
+.atalhos button:hover { border-color: var(--accent); }
+.atalhos .ajuda { border-color: var(--bad); color: var(--bad); }
+#resultados:empty { display: none; }
+#resultados, .avisos { display: grid; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.item { display: grid; gap: 2px; text-align: left; inline-size: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 8px 10px; }
+.item:hover { border-color: var(--accent); }
+.item .sub { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.item.novo { border-inline-start: 4px solid var(--ambar); }
+.conta { background: var(--ambar); color: var(--floresta); border-radius: 999px; padding: 0 8px; font: 700 12px/1.6 var(--font); }
+.titulo-avisos { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.agora { border: 1px solid var(--bad); border-radius: 12px; padding: 10px; display: grid; gap: 6px; background: var(--surface); }
+.agora b { color: var(--bad); }
+.grupo { font: 700 12px/1.3 var(--font); color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 4px 0 0; }

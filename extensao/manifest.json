@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "Comunique",
+  "short_name": "Comunique",
+  "version": "1.0.0",
+  "description": "Avisos do Comunique no ícone, busca de entregadores, atalhos e botões de cadastro, bloqueio e adicional no Quero Log e no Crisp.",
+  "icons": {
+    "16": "icones/icone-16.png",
+    "32": "icones/icone-32.png",
+    "48": "icones/icone-48.png",
+    "128": "icones/icone-128.png"
+  },
+  "action": {
+    "default_title": "Comunique",
+    "default_icon": {
+      "16": "icones/icone-16.png",
+      "32": "icones/icone-32.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "painel/painel.html"
+  },
+  "background": {
+    "service_worker": "sw.js"
+  },
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications",
+    "contextMenus",
+    "sidePanel",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://nhgmkbfaqonojhaggwui.supabase.co/*",
+    "https://comuniqueqd.github.io/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://admin.querolog.io/*",
+        "https://app.crisp.chat/*"
+      ],
+      "js": [
+        "telas/leitor.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icones/simbolo.svg"
+      ],
+      "matches": [
+        "https://admin.querolog.io/*",
+        "https://app.crisp.chat/*"
+      ]
+    }
+  ]
+}

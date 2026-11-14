@@ -30,7 +30,7 @@ a { color: var(--accent); }
 <main>
 <article>
   <h1><svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><rect width="120" height="120" rx="28" fill="#1F8A5B"/><polygon points="40,40 46,28 52,40" fill="#E8A33D"/><polygon points="54,38 60,26 66,38" fill="#E8A33D"/><path d="M30 80 L30 58 Q30 40 50 40 L80 40 Q96 40 96 56 L96 64 L76 64 L76 72 L58 72 L58 88 L40 88 Q30 88 30 80 Z" fill="#F4EFE6"/><circle cx="80" cy="50" r="5" fill="#1F8A5B"/></svg>Política de Privacidade — Cadastro de Entregadores</h1>
-  <p class="meta">Última atualização: 2 de novembro de 2026</p>
+  <p class="meta">Última atualização: 14 de novembro de 2026</p>
 
   <p>O <strong>Cadastro de Entregadores</strong> é uma ferramenta interna, de uso restrito a pessoas autorizadas, para registrar e analisar cadastros de entregadores. Esta página explica quais dados são tratados e como.</p>
 
@@ -38,21 +38,31 @@ a { color: var(--accent); }
   <p>Ao entrar com a conta Google, recebemos apenas o <strong>nome</strong> e o <strong>endereço de e-mail</strong> da conta. Eles servem para identificar a pessoa, conferir se ela tem acesso e registrar quem fez cada ação (envio, aprovação, reprovação ou encerramento). Não acessamos contatos, arquivos, e-mails nem qualquer outro dado da conta Google.</p>
 
   <h2>2. Dados dos entregadores</h2>
-  <p>A equipe autorizada registra, para cada entregador: ID no aplicativo de entregas, CPF, cidade e observações. Esses dados são usados exclusivamente para a análise e o acompanhamento do cadastro.</p>
+  <p>A equipe autorizada registra, para cada entregador: ID no aplicativo de entregas, nome, cidade e observações sobre a operação (ativação, restrições, valores pagos fora da corrida). Esses dados são usados exclusivamente para a análise e o acompanhamento da operação. <strong>O Comunique não guarda CPF.</strong></p>
 
-  <h2>3. Onde os dados ficam</h2>
+  <h2>3. Extensão do Comunique para o Chrome</h2>
+  <p>A extensão do Comunique é usada só pela equipe autorizada, com a mesma conta Google do sistema. Ela:</p>
+  <ul>
+    <li>mostra no ícone o número de avisos e as notificações do Comunique, consultando o mesmo banco de dados;</li>
+    <li>nas telas de entregador do painel Quero Log (admin.querolog.io) e do Crisp (app.crisp.chat), lê <strong>somente o ID, o nome e a cidade do entregador</strong> para abrir o formulário do Comunique já preenchido. Celular, e-mail, CPF, endereço e qualquer outro dado da tela não são lidos;</li>
+    <li>não envia nada sozinha: os dados só são gravados quando a pessoa confere o formulário e confirma;</li>
+    <li>guarda no próprio navegador apenas a sessão de login e quais avisos já foram mostrados.</li>
+  </ul>
+  <p>A extensão não lê nenhum outro site, não acompanha a navegação e não usa os dados para publicidade.</p>
+
+  <h2>4. Onde os dados ficam</h2>
   <p>Os dados são armazenados num banco de dados do <a href="https://supabase.com/privacy">Supabase</a>, com acesso controlado: cada pessoa só vê o que o seu nível de acesso permite. O login é feito pelo Google e pelo Supabase.</p>
 
-  <h2>4. Compartilhamento</h2>
+  <h2>5. Compartilhamento</h2>
   <p>Os dados não são vendidos nem compartilhados com terceiros, exceto os provedores de infraestrutura citados acima, que os processam apenas para o funcionamento do sistema.</p>
 
-  <h2>5. Por quanto tempo</h2>
+  <h2>6. Por quanto tempo</h2>
   <p>Os dados ficam guardados enquanto forem necessários para a operação. O acesso de uma pessoa ao sistema pode ser removido a qualquer momento pelos responsáveis.</p>
 
-  <h2>6. Seus direitos</h2>
+  <h2>7. Seus direitos</h2>
   <p>Conforme a Lei Geral de Proteção de Dados (LGPD), você pode pedir acesso, correção ou exclusão dos seus dados pelo contato abaixo.</p>
 
-  <h2>7. Contato</h2>
+  <h2>8. Contato</h2>
   <p>Responsável: Mateus Lopes — <a href="mailto:mateuslopesmb@gmail.com">mateuslopesmb@gmail.com</a></p>
 
   <p class="meta" style="margin-top:24px"><a href="./">Voltar ao sistema</a></p>

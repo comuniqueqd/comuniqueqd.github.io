@@ -345,6 +345,51 @@
     if (ANTIGAS[m] && !a) { a = m; m = "ativacao"; }
     return { m: m || "inicio", a };
   }
+  // 009t: a extensão do Comunique (e qualquer link) abre um formulário com o ID e o nome já preenchidos.
+  // Só preenche: nada é salvo sem a pessoa conferir e clicar no botão do formulário.
+  const PREENCHER = {
+    cadastro: { rota: "#ativacao/novo", campos: { id: "#f-idapp", nome: "#f-nome", cidade: "#f-cidade" }, foco: "#f-obs" },
+    bloqueio: { rota: "#bloqueios/novo", campos: { id: "#bq-id", nome: "#bq-nome", cidade: "#bq-cidade" }, foco: "#bq-infracao" },
+    entregador: { rota: "#bloqueios/consultar", janela: (id) => App.cadastrarEntregador?.(id), campos: { id: "#en-id", nome: "#en-nome", cidade: "#en-cidade" }, foco: "#en-comentario" },
+    adicional: { rota: "#financeiro/adicional", campos: { id: "#fi-id", nome: "#fi-nome", cidade: "#fi-cidade" }, foco: "#fi-entrega" },
+  };
+  function preencher(a) {
+    const [acao, qs] = a.split("?");
+    const p = new URLSearchParams(qs || "");
+    const id = (p.get("id") || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 40), nome = (p.get("nome") || "").trim().slice(0, 120);
+    // cidade no formato do Comunique: "SERRINHA - BA" (o painel escreve "Serrinha - BA" ou "Serrinha/BA")
+    const cidade = (p.get("cidade") || "").trim().toUpperCase().replace(/\s*[-/]\s*([A-Z]{2})$/, " - $1").slice(0, 80);
+    if (acao === "ajuda") { history.replaceState(null, "", "#inicio"); route(); App.agora?.pedirAjuda(); return; }
+    const alvo = PREENCHER[acao];
+    history.replaceState(null, "", alvo ? alvo.rota : "#inicio");
+    route();
+    if (!alvo) return;
+    alvo.janela?.(id);
+    const val = { id, nome, cidade };
+    // as listas de cidades chegam do banco um pouco depois: tenta de novo por até ~3 s
+    const encher = (tentativa = 0) => {
+      let falta = false;
+      for (const [k, sel] of Object.entries(alvo.campos)) {
+        const c = $(sel);
+        if (!c || !val[k] || c.dataset.preenchido === val[k]) continue;
+        if (c.tagName === "SELECT") {
+          const op = [...c.options].find((o) => o.value.toUpperCase() === val[k] || o.textContent.trim().toUpperCase() === val[k]);
+          if (!op) { falta = true; continue; }
+          c.value = op.value;
+        } else c.value = val[k];
+        c.dataset.preenchido = val[k];
+        c.dispatchEvent(new Event("input", { bubbles: true }));
+        c.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      if (falta && tentativa < 10) return setTimeout(() => encher(tentativa + 1), 300);
+      Object.values(alvo.campos).forEach((sel) => { const c = $(sel); if (c) delete c.dataset.preenchido; });
+    };
+    setTimeout(() => {
+      encher();
+      if (id || nome || cidade) toast("Dados trazidos da tela do painel: confira e complete antes de salvar.");
+      $(alvo.foco || Object.values(alvo.campos)[0])?.focus();
+    }, alvo.janela ? 80 : 0);
+  }
   function route() {
     if (!S.me) return;
     let { m, a } = lerRota();
@@ -355,6 +400,8 @@
       App.cadastrarEntregador?.();
       return;
     }
+    // 009t (extensão): #preencher/<ação>?id=…&nome=… abre o formulário já preenchido; quem confirma é a pessoa
+    if (m === "preencher" && a) { preencher(a); return; }
     // links dos avisos: #ficha/<ID> abre a ficha; #cadastro/<id> abre o cadastro por cima da tela atual
     if ((m === "ficha" || m === "cadastro") && a) {
       const alvo = decodeURIComponent(a);
@@ -476,7 +523,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009s";
+  const VERSAO_APP = "009t";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;

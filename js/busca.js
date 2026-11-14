@@ -51,10 +51,14 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009s";
+  const VERSAO = "009t";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009t", tema: "🧩 Extensão do Comunique", itens: [
+      ["Comunique no Chrome", "Saiu a extensão do Comunique: o número de avisos no ícone, notificação de pedido de ajuda, o Comunique no painel lateral e atalhos para as telas mais usadas."],
+      ["Um clique do painel para o Comunique", "Na tela do entregador no Quero Log e no Crisp, a extensão mostra os botões Cadastrar, Nova ativação, Bloquear e Adicional, que abrem o formulário já com o ID, o nome e a cidade. Você confere e salva."],
+    ] },
     { versao: "009s", tema: "🔒 Sem CPF", itens: [
       ["CPF fora do Comunique", "Para proteger os dados dos entregadores (LGPD), o Comunique não guarda mais CPF: o campo saiu do Novo cadastro, nenhuma tela mostra CPF e os que estavam guardados foram apagados."],
       ["ID obrigatório", "Todo cadastro novo precisa do ID do entregador. É o ID que evita cadastro repetido."],

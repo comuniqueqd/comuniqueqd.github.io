@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Comunique</title>
+<link rel="stylesheet" href="painel.css">
+</head>
+<body>
+<header class="topo">
+  <img class="simbolo" src="../icones/simbolo.svg" alt="">
+  <h1>Comunique</h1>
+  <button class="link" type="button" id="b-sair" hidden>Sair</button>
+</header>
+
+<main>
+  <section id="v-entrar" hidden>
+    <h2>Entre para começar</h2>
+    <p class="meta">Use a mesma conta Google do Comunique. A extensão mostra seus avisos, busca entregadores e abre as telas mais usadas.</p>
+    <button class="btn primario" type="button" id="b-entrar">Entrar com Google</button>
+    <p class="erro" id="e-entrar" role="alert" hidden></p>
+  </section>
+
+  <section id="v-app" hidden>
+    <form id="busca" role="search" autocomplete="off">
+      <label for="q" class="so-leitor">Buscar entregador</label>
+      <input id="q" type="search" placeholder="Buscar ID ou nome" spellcheck="false">
+    </form>
+    <div id="resultados" aria-live="polite"></div>
+
+    <h2>Atalhos</h2>
+    <nav class="atalhos" aria-label="Atalhos">
+      <button type="button" data-hash="#ativacao/novo">📝 Nova ativação</button>
+      <button type="button" data-hash="#bloqueios/novo">⛔ Novo bloqueio</button>
+      <button type="button" data-hash="#financeiro/adicional">💰 Registrar adicional</button>
+      <button type="button" data-hash="#ferramentas/calculadora">🧮 Calculadora de bairro</button>
+      <button type="button" data-hash="#preencher/ajuda" class="ajuda">🆘 Pedir ajuda</button>
+      <button type="button" data-hash="#inicio">↗ Abrir o Comunique</button>
+    </nav>
+
+    <div id="agora"></div>
+
+    <div class="titulo-avisos">
+      <h2>Avisos <span class="conta" id="c-avisos" hidden></span></h2>
+      <button class="link" type="button" id="b-lidos" hidden>Marcar como lidos</button>
+    </div>
+    <ul class="avisos" id="avisos"></ul>
+    <p class="erro" id="e-app" role="alert" hidden></p>
+  </section>
+</main>
+<script src="../config.js"></script>
+<script src="../api.js"></script>
+<script src="painel.js"></script>
+</body>
+</html>

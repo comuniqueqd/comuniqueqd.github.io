@@ -109,7 +109,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009s"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009t"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -291,7 +291,7 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=CPF fora do Comunique") && await s.isVisible(".faixa-novidades >> text=e mais: 009r e 009q e 009p e 009o e 009n e 009m e 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009s, 009r, 009q, 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
+  ok(await s.isVisible(".faixa-novidades >> text=Comunique no Chrome") && await s.isVisible(".faixa-novidades >> text=e mais: 009s e 009r e 009q e 009p e 009o e 009n e 009m e 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009t, 009s, 009r, 009q, 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
   await s.click(".faixa-novidades button");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -833,7 +833,7 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009s", "009r", "009q", "009p", "009o", "009n", "009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009s, 009r, 009q, 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009t", "009s", "009r", "009q", "009p", "009o", "009n", "009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009t, 009s, 009r, 009q, 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
@@ -1421,6 +1421,27 @@ try {
   await g.click("#botao-google-falso");
   ok(await esperar(g, "#gate-erro:not([hidden])"), "token com nonce errado é recusado: " + (await texto(g, "#gate-erro")));
 
+  // 009t: a extensão abre o formulário já preenchido (#preencher/<ação>?id=&nome=&cidade=); nada é salvo sozinho
+  { const x = await abrir(admin, "#preencher/bloqueio?id=ext12345&nome=Fulano+Extensao&cidade=Lagarto+-+SE");
+    await esperar(x, "#v-bq-novo:not([hidden]), #bq-id");
+    await x.waitForFunction(() => document.querySelector("#bq-cidade")?.value === "LAGARTO - SE", null, { timeout: 5000 }).catch(() => {});
+    const v = await x.evaluate(() => ({ h: location.hash, id: document.querySelector("#bq-id").value, nome: document.querySelector("#bq-nome").value, cid: document.querySelector("#bq-cidade").value }));
+    ok(v.h === "#bloqueios/novo" && v.id === "ext12345" && v.nome === "Fulano Extensao" && v.cid === "LAGARTO - SE", "009t: a extensão abre o Novo bloqueio com ID, nome e cidade: " + JSON.stringify(v));
+    ok(await esperar(x, "#toast:has-text('confira e complete')"), "009t: avisa para conferir antes de salvar");
+    await x.evaluate(() => { location.hash = "#preencher/cadastro?id=ext99887&nome=Ciclano+Ext&cidade=Lagarto+-+SE"; });
+    await x.waitForFunction(() => document.querySelector("#f-idapp")?.value === "ext99887", null, { timeout: 5000 }).catch(() => {});
+    const c = await x.evaluate(() => ({ h: location.hash, id: document.querySelector("#f-idapp").value, nome: document.querySelector("#f-nome").value, cid: document.querySelector("#f-cidade").value }));
+    ok(c.h === "#ativacao/novo" && c.id === "ext99887" && c.nome === "Ciclano Ext" && c.cid === "LAGARTO - SE", "009t: e o Novo cadastro da ativação também: " + JSON.stringify(c));
+    await x.evaluate(() => { location.hash = "#preencher/adicional?id=ext99887&nome=Ciclano+Ext"; });
+    await x.waitForFunction(() => document.querySelector("#fi-id")?.value === "ext99887", null, { timeout: 5000 }).catch(() => {});
+    ok(await x.evaluate(() => location.hash === "#financeiro/adicional" && document.querySelector("#fi-nome").value === "Ciclano Ext"), "009t: e o Registrar adicional");
+    await x.evaluate(() => { location.hash = "#preencher/entregador?id=ext55555&nome=Novo+Ext&cidade=Lagarto+-+SE"; });
+    await x.waitForFunction(() => document.querySelector("#en-nome")?.value === "Novo Ext", null, { timeout: 5000 }).catch(() => {});
+    await x.waitForFunction(() => document.querySelector("#en-cidade")?.value === "LAGARTO - SE", null, { timeout: 5000 }).catch(() => {});
+    { const e = await x.evaluate(() => ({ aberta: !!document.querySelector("#janela-cad-ent[open]"), id: document.querySelector("#en-id").value, nome: document.querySelector("#en-nome").value,
+        cid: document.querySelector("#en-cidade").value, ops: [...document.querySelector("#en-cidade").options].map((o) => o.value).slice(0, 4) }));
+      ok(e.aberta && e.id === "ext55555" && e.nome === "Novo Ext" && e.cid === "LAGARTO - SE", "009t: e a janela Cadastrar entregador, com a cidade escolhida: " + JSON.stringify(e)); }
+    await x.close(); }
   // 009o: varredura visual de todas as telas (administrador), no computador e no celular. Aponta página que rola
   // para o lado, elemento que vaza da tela (fora de áreas com rolagem própria) e caixinha empilhada em cima do texto.
   { const v = await abrir(admin, "#inicio"); await esperar(v, "#v-inicio:not([hidden])");

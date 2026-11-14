@@ -89,7 +89,7 @@
     renderCadastrar();
   };
   // trocar de tela fecha a janela (menos quando o próprio endereço pede para abri-la)
-  addEventListener("hashchange", (e) => { if (!/#entregadores/.test(e.newURL)) document.getElementById("janela-cad-ent")?.close(); });
+  addEventListener("hashchange", (e) => { if (!/#entregadores|#preencher\/entregador/.test(e.newURL)) document.getElementById("janela-cad-ent")?.close(); });
 
   App.modulo({
     id: "entregadores", nome: "Entregadores",
