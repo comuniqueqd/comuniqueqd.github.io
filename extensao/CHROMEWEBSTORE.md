@@ -92,6 +92,27 @@ As imagens são geradas por `testes/prints-extensao.mjs`, só com dados fictíci
 | 1.1.0 | 14/11/2026 | Os botões do cartão gravam direto (com conferência): ficha, ativação, bloqueio com prévia e adicional com valores; aviso de ID com outro nome no Comunique; o painel lateral diz "não encontrei ID de entregador nesta tela". |
 | 1.0.0 | 14/11/2026 | Primeira versão: avisos no ícone, notificações (avisos e pedidos de ajuda), painel lateral com busca e atalhos, "Ver no Comunique" no botão direito, cartão com botões no Quero Log e no Crisp. |
 
+## Conferência antes de enviar (lista da skill chrome-extensions, 14/11/2026, 1.2.1)
+
+- [x] Manifest V3, versão maior que a última enviada (1.0.0), nome "Comunique", descrição com 128 de 132 caracteres
+- [x] Pacote só com os arquivos da extensão (sem testes, loja, este arquivo, .git)
+- [x] Ícones 16/32/48/128 existem no tamanho certo; a notificação usa `icones/icone-128.png`
+- [x] Painel lateral abre pelo ícone (`openPanelOnActionClick`), sem popup junto
+- [x] Sem `activeTab`: o painel lê a aba com `scripting` + host do Quero Log e do Crisp; sem `<all_urls>`
+- [x] Toda permissão em uso e justificada (tabela acima); nenhuma sobrando
+- [x] Service worker sem estado em variáveis (sessão em `chrome.storage.local`, regras em `chrome.storage.session`); `onMessage` com `return true`
+- [x] Sem `eval`, sem `innerHTML`, sem script inline, sem código remoto, sem ofuscação
+- [x] Menu "Ver no Comunique" dá retorno (abre a ficha numa aba)
+- [x] 2 capturas 1280×800 e bloco 440×280 atuais (1.2.1), com dados fictícios
+- [ ] Política de privacidade no ar (abrir https://comuniqueqd.github.io/privacidade.html antes de enviar)
+- [ ] E-mail de contato verificado no painel do desenvolvedor
+- [ ] Formulário de dados igual à seção "Privacidade" acima (marcar também "Informações financeiras")
+- [ ] Opcional: campo `key` no manifesto (ver abaixo)
+
+**ID igual no teste e na loja (`key`):** a extensão carregada sem compactação tem um ID diferente da loja, e cada ID precisa da sua Redirect URL no Supabase. Copiando a **chave pública** do item (painel do desenvolvedor → item → Pacote → "Chave pública") para o campo `"key"` do `manifest.json`, o teste passa a ter o mesmo ID da loja, e basta uma Redirect URL.
+
+**Nomes de outras empresas:** a descrição cita "Quero Log" e "Crisp" só para dizer em que telas a extensão funciona, sem logos nem imagens deles. As capturas usam telas genéricas com dados fictícios.
+
 ## Observações para a revisão
 
 - Uso interno de uma equipe de operação logística; o login exige uma conta autorizada no Comunique.
