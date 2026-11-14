@@ -1,0 +1,203 @@
+<title>Três caminhos do Comunique</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Página de comparação: três telas de exemplo lado a lado, cada uma numa direção; a página em si fica quieta. */
+:root {
+  --bg: #FAF7F1; --fg: #14352B; --muted: #5B6B64; --line: #E5DED1; --surface: #FFFFFF; --accent: #18774E; --ambar: #E8A33D;
+  --font-titulo: "Manrope", "Segoe UI", system-ui, sans-serif; --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0F1C17; --fg: #E8EFE9; --muted: #9DB0A6; --line: #24362E; --surface: #15251F; --accent: #6CCB9A; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #0F1C17; --fg: #E8EFE9; --muted: #9DB0A6; --line: #24362E; --surface: #15251F; --accent: #6CCB9A; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--font-body); }
+.pagina { max-width: 1240px; margin: 0 auto; padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--font-titulo); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(26px, 4vw, 36px); font-weight: 800; letter-spacing: -0.01em; }
+.intro { max-width: 68ch; color: var(--muted); margin: 8px 0 32px; }
+.caminho { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; align-items: start; padding-block: 28px; border-top: 1px solid var(--line); }
+@media (max-width: 860px) { .caminho { grid-template-columns: minmax(0, 1fr); } }
+.caminho h2 { font-size: 22px; font-weight: 800; }
+.caminho .frase { color: var(--muted); margin: 4px 0 14px; max-width: 52ch; }
+.caminho ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.caminho li::marker { color: var(--accent); }
+.selo-rec { display: inline-block; font-size: 12px; font-weight: 600; color: var(--fg); background: color-mix(in srgb, var(--ambar) 30%, transparent); border-radius: 999px; padding: 2px 10px; margin-left: 8px; vertical-align: middle; }
+.nota { color: var(--muted); font-size: 13px; margin-top: 12px; }
+svg.i { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- moldura comum das telas de exemplo (cores próprias, fixas: são retratos do app) ---------- */
+.tela { border-radius: 14px; overflow: hidden; border: 1px solid var(--line); min-width: 0; }
+.tela .topo { display: flex; align-items: center; gap: 10px; padding: 10px 14px; }
+.tela .marca { display: flex; align-items: center; gap: 8px; font: 800 15px var(--font-titulo); }
+.tela .marca svg { width: 22px; height: 22px; }
+.tela .menu { display: flex; gap: 4px; margin-left: 8px; flex-wrap: wrap; }
+.tela .menu span { font-size: 12.5px; padding: 4px 9px; border-radius: 8px; }
+.tela .sino { margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- 1. Mesa de Operação: lista densa, linhas, cor só para situação ---------- */
+.mesa { background: #FAF7F1; color: #14352B; }
+.mesa .topo { background: #14352B; color: #F4EFE6; }
+.mesa .menu span { color: #C9D6CF; } .mesa .menu span.at { background: #F4EFE6; color: #14352B; font-weight: 600; }
+.mesa .sino b { background: #E8A33D; color: #14352B; border-radius: 999px; padding: 0 7px; font-size: 12px; }
+.mesa .corpo { padding: 16px; display: grid; gap: 14px; }
+.mesa h3 { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.mesa h3 .cont { font: 600 12px var(--font-body); background: #E8A33D; color: #14352B; border-radius: 999px; padding: 1px 8px; }
+.mesa .lista { background: #fff; border: 1px solid #E5DED1; border-radius: 10px; }
+.mesa .linha { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 12px; border-top: 1px solid #EFE9DE; font-size: 13.5px; }
+.mesa .linha:first-child { border-top: 0; }
+.mesa .linha .t { font-weight: 600; } .mesa .linha .s { color: #5B6B64; font-size: 12.5px; }
+.mesa .estado { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.mesa .estado::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.mesa .ruim { color: #B42318; } .mesa .atencao { color: #8A5A00; } .mesa .ok { color: #18774E; }
+.mesa .btn { font: 600 12.5px var(--font-body); background: #14352B; color: #F4EFE6; border: 0; border-radius: 8px; padding: 7px 12px; }
+.mesa .btn.sec { background: transparent; color: #14352B; border: 1px solid #D8D0C2; }
+.mesa .acoes { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- 2. Caderno de Campo: papel, respiro, registro do dia como diário ---------- */
+.caderno { background: #F4EFE6; color: #1E2B25; }
+.caderno .topo { background: #F4EFE6; border-bottom: 1px solid #E2D9C8; }
+.caderno .marca { color: #14352B; }
+.caderno .menu span { color: #5B6B64; } .caderno .menu span.at { color: #14352B; font-weight: 600; text-decoration: underline 2px #1F8A5B; text-underline-offset: 6px; }
+.caderno .sino { color: #14352B; } .caderno .sino b { color: #8A5A00; }
+.caderno .corpo { padding: 22px 20px; display: grid; gap: 18px; }
+.caderno .dia { font: 800 22px var(--font-titulo); color: #14352B; }
+.caderno .dia small { display: block; font: 400 13px var(--font-body); color: #5B6B64; margin-top: 2px; }
+.caderno .nota-pend { background: #FFFDF8; border: 1px solid #E2D9C8; border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; }
+.caderno .nota-pend .t { font: 700 15px var(--font-titulo); color: #14352B; }
+.caderno .nota-pend .s { font-size: 13.5px; color: #4A5A53; }
+.caderno .nota-pend .rodape { display: flex; gap: 10px; align-items: center; margin-top: 6px; flex-wrap: wrap; }
+.caderno .marca-atraso { font-size: 12.5px; color: #8A5A00; display: inline-flex; gap: 5px; align-items: center; }
+.caderno .btn { font: 600 13px var(--font-body); background: #1F8A5B; color: #fff; border: 0; border-radius: 999px; padding: 7px 14px; }
+.caderno .diario { display: grid; gap: 0; }
+.caderno .entrada { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-top: 1px dashed #D9CFBC; font-size: 13.5px; }
+.caderno .entrada .h { font-variant-numeric: tabular-nums; color: #7A6F5C; font-size: 12.5px; padding-top: 1px; }
+.caderno .entrada b { color: #14352B; }
+
+/* ---------- 3. Torre de Controle: o agora em destaque, painel escuro, urgência em primeiro ---------- */
+.torre { background: #0F1C17; color: #E8EFE9; }
+.torre .topo { background: #0B1511; border-bottom: 1px solid #1E2F28; }
+.torre .marca { color: #E8EFE9; }
+.torre .menu span { color: #8FA49A; } .torre .menu span.at { color: #0F1C17; background: #6CCB9A; font-weight: 600; }
+.torre .sino b { background: #E8A33D; color: #0F1C17; border-radius: 6px; padding: 0 6px; }
+.torre .corpo { padding: 16px; display: grid; gap: 14px; }
+.torre .placar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.torre .q { background: #15251F; border: 1px solid #22362D; border-radius: 10px; padding: 10px 12px; }
+.torre .q .n { font: 800 28px/1.1 var(--font-titulo); font-variant-numeric: tabular-nums; }
+.torre .q .r { font-size: 12px; color: #9DB0A6; }
+.torre .q.alerta { border-color: #E8A33D; } .torre .q.alerta .n { color: #E8A33D; }
+.torre .fila { display: grid; gap: 8px; }
+.torre .item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; background: #15251F; border: 1px solid #22362D; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; }
+.torre .item .t { font-weight: 600; } .torre .item .s { color: #9DB0A6; font-size: 12.5px; }
+.torre .tempo { font: 700 13px var(--font-titulo); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.torre .urgente .tempo { color: #F59F8B; } .torre .medio .tempo { color: #E8A33D; }
+.torre .btn { font: 600 12.5px var(--font-body); background: #6CCB9A; color: #0F1C17; border: 0; border-radius: 8px; padding: 7px 12px; }
+@media (max-width: 460px) { .tela .menu { display: none; } .torre .q .n { font-size: 22px; } }
+</style>
+
+<div class="pagina">
+  <h1>Três caminhos para o Comunique</h1>
+  <p class="intro">A mesma tela inicial, com os mesmos dados de exemplo, desenhada em cada direção. As três mantêm a identidade do Dino (verde-floresta, jade, âmbar e areia) e nenhuma usa emoji; o que muda é o jeito de organizar a informação e o tom. Os nomes e números são fictícios.</p>
+
+  <!-- 1. Mesa de Operação -->
+  <section class="caminho" aria-labelledby="c1">
+    <div class="tela mesa" role="img" aria-label="Tela de exemplo na direção Mesa de Operação">
+      <div class="topo">
+        <span class="marca"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#1F8A5B"/><path d="M8 20c0-5 3.5-9 9-9h3l4 4v3h-3v4H11a3 3 0 0 1-3-2Z" fill="#F4EFE6"/><rect x="12" y="7" width="3" height="4" rx="1" fill="#E8A33D"/><rect x="17" y="6" width="3" height="5" rx="1" fill="#E8A33D"/></svg>Comunique</span>
+        <span class="menu"><span class="at">Início</span><span>Entregadores</span><span>Atividades</span><span>Análises</span></span>
+        <span class="sino"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><b class="num">3</b></span>
+      </div>
+      <div class="corpo">
+        <h3>Precisa de você <span class="cont num">3</span></h3>
+        <div class="lista">
+          <div class="linha"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><div class="t">Tratativa de Maria Exemplo</div><div class="s">Atraso na coleta, 2ª ocorrência, LAGARTO - SE</div></div><span class="estado ruim">Atrasada 34 h</span></div>
+          <div class="linha"><svg class="i" viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><div><div class="t">Ana pediu ajuda</div><div class="s">Suporte Crisp, há 3 min</div></div><span class="estado atencao">Aberto</span></div>
+          <div class="linha"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg><div><div class="t">Adicional de R$ <span class="num">12,00</span> para lançar</div><div class="s">João Teste, ITABAIANA - SE</div></div><span class="estado atencao">Pendente</span></div>
+        </div>
+        <div class="acoes"><button class="btn" type="button">Novo bloqueio</button><button class="btn sec" type="button">Nova ativação</button><button class="btn sec" type="button">Registrar adicional</button></div>
+      </div>
+    </div>
+    <div>
+      <h2 id="c1">Mesa de Operação <span class="selo-rec">recomendado</span></h2>
+      <p class="frase">A mesa de despacho da equipe: calma, precisa, a informação primeiro. Lembra um painel de controle de entregas.</p>
+      <ul>
+        <li>Listas em linhas, não em cartões soltos; mais coisa cabe na tela sem apertar.</li>
+        <li>Cor só para situação, sempre com texto ao lado (bolinha + "Atrasada 34 h").</li>
+        <li>O âmbar aparece em um só papel: o número do que precisa de você.</li>
+        <li>Ícones de linha pequenos, botões retos e discretos, números alinhados.</li>
+      </ul>
+      <p class="nota">Melhor para: uso o dia inteiro, telas cheias (histórico, tratativas, financeiro). É o estilo que o UI UX Pro Max recomenda para logística.</p>
+    </div>
+  </section>
+
+  <!-- 2. Caderno de Campo -->
+  <section class="caminho" aria-labelledby="c2">
+    <div class="tela caderno" role="img" aria-label="Tela de exemplo na direção Caderno de Campo">
+      <div class="topo">
+        <span class="marca"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#1F8A5B"/><path d="M8 20c0-5 3.5-9 9-9h3l4 4v3h-3v4H11a3 3 0 0 1-3-2Z" fill="#F4EFE6"/><rect x="12" y="7" width="3" height="4" rx="1" fill="#E8A33D"/><rect x="17" y="6" width="3" height="5" rx="1" fill="#E8A33D"/></svg>Comunique</span>
+        <span class="menu"><span class="at">Hoje</span><span>Entregadores</span><span>Atividades</span><span>Análises</span></span>
+        <span class="sino"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><b class="num">3 novos</b></span>
+      </div>
+      <div class="corpo">
+        <div class="dia">Sábado, 14 de novembro<small>3 coisas esperam por você e 12 registros entraram hoje.</small></div>
+        <div class="nota-pend">
+          <span class="t">Falar com Maria Exemplo sobre o atraso na coleta</span>
+          <span class="s">É a 2ª ocorrência em LAGARTO - SE. A restrição termina na segunda às 14h.</span>
+          <span class="rodape"><span class="marca-atraso"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>passou do prazo há 2 h</span><button class="btn" type="button">Abrir tratativa</button></span>
+        </div>
+        <div class="diario">
+          <div class="entrada"><span class="h num">14:32</span><span><b>Ana</b> pediu ajuda no Suporte Crisp.</span></div>
+          <div class="entrada"><span class="h num">14:10</span><span><b>Bruno</b> aprovou o cadastro de Carla Exemplo em TOBIAS BARRETO - SE.</span></div>
+          <div class="entrada"><span class="h num">13:55</span><span><b>Você</b> registrou um adicional de R$ <span class="num">12,00</span> para João Teste. Falta lançar.</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h2 id="c2">Caderno de Campo</h2>
+      <p class="frase">O diário da equipe: cada coisa vira uma anotação com hora e nome, num papel areia com mais respiro.</p>
+      <ul>
+        <li>A tela abre pelo dia ("Sábado, 14 de novembro") e por uma frase que resume.</li>
+        <li>Pendências escritas como tarefa ("Falar com Maria sobre…"), não como rótulo.</li>
+        <li>O que aconteceu aparece como um diário com hora à esquerda.</li>
+        <li>Mais espaço e títulos maiores; voz mais humana e próxima.</li>
+      </ul>
+      <p class="nota">Melhor para: acompanhar o dia e a passagem de turno. Cabe menos coisa por tela; listas longas ficam mais compridas.</p>
+    </div>
+  </section>
+
+  <!-- 3. Torre de Controle -->
+  <section class="caminho" aria-labelledby="c3">
+    <div class="tela torre" role="img" aria-label="Tela de exemplo na direção Torre de Controle">
+      <div class="topo">
+        <span class="marca"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#1F8A5B"/><path d="M8 20c0-5 3.5-9 9-9h3l4 4v3h-3v4H11a3 3 0 0 1-3-2Z" fill="#F4EFE6"/><rect x="12" y="7" width="3" height="4" rx="1" fill="#E8A33D"/><rect x="17" y="6" width="3" height="5" rx="1" fill="#E8A33D"/></svg>Comunique</span>
+        <span class="menu"><span class="at">Agora</span><span>Entregadores</span><span>Atividades</span><span>Análises</span></span>
+        <span class="sino"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><b class="num">3</b></span>
+      </div>
+      <div class="corpo">
+        <div class="placar">
+          <div class="q alerta"><div class="n">1</div><div class="r">atrasada</div></div>
+          <div class="q"><div class="n">7</div><div class="r">bloqueados agora</div></div>
+          <div class="q"><div class="n">2</div><div class="r">saem hoje</div></div>
+        </div>
+        <div class="fila">
+          <div class="item urgente"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div><div class="t">Tratativa de Maria Exemplo</div><div class="s">Atraso na coleta, LAGARTO - SE</div></div><span class="tempo">+34 h</span></div>
+          <div class="item medio"><svg class="i" viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><div><div class="t">Pedido de ajuda de Ana</div><div class="s">Suporte Crisp</div></div><button class="btn" type="button">Eu ajudo</button></div>
+          <div class="item"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg><div><div class="t">Adicional para lançar</div><div class="s">João Teste, R$ <span class="num">12,00</span></div></div><span class="tempo">3 h</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h2 id="c3">Torre de Controle</h2>
+      <p class="frase">O radar do turno: o que está acontecendo agora e o que está mais urgente vem em cima, num painel escuro.</p>
+      <ul>
+        <li>Abre com 3 números grandes do momento; o que está fora do prazo acende em âmbar.</li>
+        <li>A fila é ordenada por urgência, com o tempo de atraso à direita.</li>
+        <li>Fundo escuro por padrão (o tema claro continua existindo).</li>
+        <li>Ações rápidas direto na fila ("Eu ajudo").</li>
+      </ul>
+      <p class="nota">Melhor para: monitoramento em tela grande, pico de operação. Cansa mais em uso longo e chama atenção o tempo todo.</p>
+    </div>
+  </section>
+</div>
