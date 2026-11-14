@@ -51,10 +51,13 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009r";
+  const VERSAO = "009s";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009s", tema: "🪪 Cadastro só com o ID", itens: [
+      ["Sem CPF no Novo cadastro", "O Novo cadastro da Ativação não pede mais o CPF: agora é o ID do entregador (obrigatório), o nome e a cidade. Os cadastros antigos que já têm CPF continuam mostrando o número."],
+    ] },
     { versao: "009r", tema: "🦖 O Dino em tudo", itens: [
       ["Sem roxo sobrando", "Os últimos pedaços da cor antiga sumiram: o atalho Cadastrar entregador, o gráfico de adicionais do Financeiro, as sombras e a página de Privacidade agora estão nas cores do Dino."],
       ["Sem texto quebrado", "A Calculadora de bairro e o Painel das tarefas mostravam uma palavra solta, sem sentido, em alguns casos. Corrigido."],

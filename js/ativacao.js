@@ -203,7 +203,7 @@
     const d = App.u.janela(c.revisar ? "Revisar cadastro" : "Editar dados do cadastro",
       el("p", { class: "meta", style: "margin:0", text: `${c.situacao} · enviado por ${c.enviado_por_nome} em ${dt(c.enviado_em)}. Qualquer pessoa da equipe pode completar ou corrigir; o histórico guarda o antes e o depois.` }),
       c.revisar ? el("p", { class: "quadrinho", style: "margin:0" }, el("b", { text: "Revisar: " }), c.revisar) : null,
-      lNome, el("div", { class: "grid2" }, lId, lCpf), lCid, el("label", {}, "Observação", iObs), lMot,
+      lNome, c.cpf ? el("div", { class: "grid2" }, lId, lCpf) : lId, lCid, el("label", {}, "Observação", iObs), lMot,
       erro,
       el("div", { class: "actions" },
         el("button", { class: "btn primary", type: "button", onclick: (e) => salvar(e.currentTarget) }, "Salvar"),
@@ -274,7 +274,6 @@
 
   // ---------- novo cadastro ----------
   const form = $("#form");
-  $("#f-cpf").addEventListener("input", (e) => (e.target.value = fmtCPF(e.target.value)));
   $("#f-idapp").addEventListener("input", (e) => (e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, "")));
   $("#f-cidade").addEventListener("blur", (e) => (e.target.value = e.target.value.trim().replace(/\s+/g, " ").toUpperCase()));
   // sugestões de cidade: a lista de cidades do sistema (aba Regras dos bloqueios); a fixa fica de reserva
@@ -287,32 +286,30 @@
     rpc("listar_cidades").then((l) => { if (l?.length) sugerirCidades(l); }).catch(() => { cidadesEm = 0; });
   }
   form.addEventListener("input", () => ($("#form-erro").hidden = true));
-  form.addEventListener("reset", () => setTimeout(() => { ["idapp", "cpf", "cidade"].forEach((k) => ($("#e-" + k).textContent = "")); $("#form-erro").hidden = true; $("#f-historico").replaceChildren(); histChave = ""; }));
-  // ao digitar o ID ou o CPF: o que o sistema já sabe (só informa, não impede o envio)
+  form.addEventListener("reset", () => setTimeout(() => { ["idapp", "cidade"].forEach((k) => ($("#e-" + k).textContent = "")); $("#form-erro").hidden = true; $("#f-historico").replaceChildren(); histChave = ""; }));
+  // ao digitar o ID: o que o sistema já sabe (só informa, não impede o envio). O CPF saiu do Novo cadastro na 009s.
   let histT = null, histChave = "";
   async function verHistorico() {
-    const id = $("#f-idapp").value.trim(), cpf = onlyDigits($("#f-cpf").value);
-    const chave = (id.length >= 4 ? id.toLowerCase() : "") + "|" + (cpf.length === 11 ? cpf : "");
+    const id = $("#f-idapp").value.trim();
+    const chave = id.length >= 4 ? id.toLowerCase() : "";
     if (chave === histChave) return;
     histChave = chave;
     const box = $("#f-historico");
-    if (chave === "|") return box.replaceChildren();
+    if (!chave) return box.replaceChildren();
     let r;
-    try { r = await rpc("historico_id", { p_id_app: id.length >= 4 ? id : null, p_cpf: cpf.length === 11 ? cpf : null }); } catch (_) { return; }
+    try { r = await rpc("historico_id", { p_id_app: id, p_cpf: null }); } catch (_) { return; }
     if (chave !== histChave) return;
     box.replaceChildren(...[
       r.cadastro ? el("div", { class: "quadrinho" }, el("b", { text: `Este ${r.cadastro.por_id ? "ID" : "CPF"} já tem cadastro na ativação: ` }),
         `${r.cadastro.situacao}${r.cadastro.nome ? " · " + r.cadastro.nome : ""}, enviado em ${dt(r.cadastro.enviado_em)}.`) : null,
       r.historico ? resumoHistorico(r.historico, id) : null].filter(Boolean));
   }
-  ["#f-idapp", "#f-cpf"].forEach((s) => $(s).addEventListener("input", () => { clearTimeout(histT); histT = setTimeout(verHistorico, 500); }));
+  $("#f-idapp").addEventListener("input", () => { clearTimeout(histT); histT = setTimeout(verHistorico, 500); });
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    const v = { idApp: $("#f-idapp").value.trim(), nome: $("#f-nome").value.trim(), cpf: $("#f-cpf").value, cidade: $("#f-cidade").value.trim().replace(/\s+/g, " ").toUpperCase(), obs: $("#f-obs").value.trim() };
-    const temId = !!v.idApp, temCpf = !!onlyDigits(v.cpf);
+    const v = { idApp: $("#f-idapp").value.trim(), nome: $("#f-nome").value.trim(), cidade: $("#f-cidade").value.trim().replace(/\s+/g, " ").toUpperCase(), obs: $("#f-obs").value.trim() };
     const errs = {
-      idapp: !temId && !temCpf ? "Preencha o ID do entregador ou o CPF." : temId && v.idApp.length < 4 ? "ID muito curto. Confira." : "",
-      cpf: temCpf && !cpfValido(v.cpf) ? "CPF inválido. Confira os 11 números ou deixe em branco." : "",
+      idapp: !v.idApp ? "Preencha o ID do entregador." : v.idApp.length < 4 ? "ID muito curto. Confira." : "",
       cidade: !/^.+ - [A-Z]{2}$/.test(v.cidade) ? "Use o formato CIDADE - UF, ex.: LAGARTO - SE." : "",
     };
     for (const k in errs) $("#e-" + k).textContent = errs[k];
@@ -320,7 +317,7 @@
     if (first) return $("#f-" + first).focus();
     const btn = $("#b-enviar"); btn.disabled = true;
     try {
-      const r = await rpc("enviar_cadastro", { p_id_app: v.idApp || null, p_cpf: temCpf ? v.cpf : null, p_cidade: v.cidade, p_observacao: v.obs || null, p_nome: v.nome || null });
+      const r = await rpc("enviar_cadastro", { p_id_app: v.idApp, p_cpf: null, p_cidade: v.cidade, p_observacao: v.obs || null, p_nome: v.nome || null });
       // sem id: o cadastro não foi criado (a resposta traz o motivo)
       if (!r.id) {
         const erro = $("#form-erro"); erro.textContent = r.erro; erro.hidden = false;
