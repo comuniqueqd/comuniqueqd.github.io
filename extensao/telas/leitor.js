@@ -7,6 +7,12 @@
   if (window.__comuniqueLeitor) return;
   window.__comuniqueLeitor = true;
 
+  // o cartão da 1.1 pode ter ficado na aba aberta antes da atualização (o script velho continua rodando
+  // até a página recarregar): o leitor novo tira ele da tela
+  for (const d of document.querySelectorAll("body > div")) {
+    if (d.style.position === "fixed" && /Comunique/.test(d.shadowRoot?.querySelector(".t")?.textContent || "")) d.remove();
+  }
+
   const limpo = (t) => String(t || "").replace(/\s+/g, " ").trim();
   // o texto que vem logo depois de um rótulo ("Id", "Franquia", "entregador_id", "cidade") na mesma linha da tabela
   function depoisDoRotulo(rotulo) {

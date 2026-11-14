@@ -9,8 +9,17 @@ chrome.runtime.onInstalled.addListener(async () => {
     chrome.contextMenus.create({ id: "ver-id", title: "Ver “%s” no Comunique", contexts: ["selection"] });
   });
   await chrome.alarms.create("conferir", { periodInMinutes: 1 });
+  await leitorNasAbasAbertas();
   await conferir();
 });
+// ao instalar ou atualizar, as abas do Quero Log e do Crisp que já estavam abertas ficam sem o leitor novo
+// (e com o cartão da 1.1, se havia): coloca o leitor nelas, sem precisar recarregar a página
+async function leitorNasAbasAbertas() {
+  try {
+    for (const t of await chrome.tabs.query({ url: ["https://admin.querolog.io/*", "https://app.crisp.chat/*"] }))
+      await chrome.scripting.executeScript({ target: { tabId: t.id }, files: ["telas/leitor.js"] }).catch(() => {});
+  } catch (_) {}
+}
 chrome.runtime.onStartup.addListener(async () => { await chrome.alarms.create("conferir", { periodInMinutes: 1 }); await conferir(); });
 // o ícone abre o painel lateral
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});

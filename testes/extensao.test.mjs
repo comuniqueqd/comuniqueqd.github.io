@@ -67,6 +67,8 @@ try {
   // telas falsas, parecidas com as reais: "Lista" no título, no menu e no caminho "Lista / Nome"
   const telaQL = (id, nome, cidade, barraSolta) => `<!doctype html><html><head><meta charset="utf-8"></head><body>
     <header><h1>Lista</h1><span>Mateus Lopes</span></header>
+    <script>{ const d = document.createElement("div"); d.style.position = "fixed"; d.id = "cartao-velho";
+      d.attachShadow({ mode: "open" }).innerHTML = '<div class="c"><div class="t"><span>Comunique</span></div></div>'; document.body.append(d); }</script>
     <aside><ul><li><a>Lista</a></li><li><a>Aprovação</a></li><li><a>Gerenciamento</a></li></ul></aside>
     <main>${barraSolta ? `<div><a>‹</a><a>Lista</a> / <span>${nome}</span></div>` : `<div><a>‹</a><a>Lista</a><span>/</span><span>${nome}</span></div>`}
     <table><tr><td>Id</td><td>${id}</td></tr><tr><td>Celular</td><td>(00) 0 0000-0000</td></tr><tr><td>CPF</td><td>000.000.000-00</td></tr>
@@ -95,7 +97,11 @@ try {
   await ql.goto("https://admin.querolog.io/entregadores/novo1234");
   await ql.waitForTimeout(500);
   ok(!(await ql.evaluate(() => [...document.documentElement.children].some((n) => n.tagName === "DIV" && n.style.position === "fixed"))), "a página não ganha cartão (o cartão está guardado)");
+  ok(!(await ql.locator("#cartao-velho").count()), "o cartão da 1.1 que ficou numa aba aberta antes da atualização é tirado");
   const abaQL = await abaDe("novo1234");
+  // aba aberta antes da atualização: o leitor é colocado de novo pelo painel/service worker sem duplicar a resposta
+  const reinj = await sw.evaluate(async (t) => { await chrome.scripting.executeScript({ target: { tabId: t }, files: ["telas/leitor.js"] }); return (await chrome.tabs.sendMessage(t, { tipo: "tela" }))?.entregador?.id; }, abaQL);
+  ok(reinj === "novo1234", "colocar o leitor de novo numa aba aberta funciona (permissão scripting)");
   const lido = await lerAba(abaQL);
   ok(JSON.stringify(lido?.entregador) === JSON.stringify({ id: "novo1234", nome: "Fulano de Teste", cidade: "Lagarto - SE" }),
     "Quero Log: lê ID, nome (o “Lista” do caminho, não o do título nem o do menu) e cidade: " + JSON.stringify(lido?.entregador));

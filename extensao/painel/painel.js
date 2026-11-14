@@ -35,15 +35,25 @@ const TITULOS = { bloqueio: "Novo bloqueio", cadastro: "Nova ativação", adicio
 // a aba lida é a aba ativa da janela do painel (?aba=<id> só nos testes, onde o painel abre numa aba)
 const ABA_TESTE = Number(new URLSearchParams(location.search).get("aba")) || null;
 async function lerPagina() {
+  let id = null;
   try {
-    const id = ABA_TESTE ?? (await chrome.tabs.query({ active: true, currentWindow: true }))[0]?.id;
+    id = ABA_TESTE ?? (await chrome.tabs.query({ active: true, currentWindow: true }))[0]?.id;
     if (id != null) return await chrome.tabs.sendMessage(id, { tipo: "tela" });
   } catch (_) {}
-  return null;
+  // a aba foi aberta antes de a extensão ser instalada ou atualizada: o leitor ainda não está nela.
+  // Coloca o leitor agora (só funciona no Quero Log e no Crisp) e pergunta de novo
+  if (id == null) return null;
+  try {
+    await chrome.scripting.executeScript({ target: { tabId: id }, files: ["telas/leitor.js"] });
+    return await chrome.tabs.sendMessage(id, { tipo: "tela" });
+  } catch (_) { return null; }
 }
 function mostrarApp() { $("#v-form").hidden = true; $("#v-app").hidden = false; }
+let acaoAberta = null;
 async function abrirForm(acao) {
+  acaoAberta = acao;
   $("#feito").hidden = true;
+  $("#b-reler").hidden = acao === "ajuda";
   const r = acao === "ajuda" ? null : await lerPagina();
   const dados = { ...(r?.entregador || {}) };
   // o ID já tem ficha com outro nome? (avisa antes de gravar)
@@ -67,6 +77,8 @@ async function abrirForm(acao) {
 const norm = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
 document.querySelectorAll(".atalhos button").forEach((b) => b.addEventListener("click", () => abrirForm(b.dataset.acao)));
 $("#b-voltar").addEventListener("click", mostrarApp);
+// trocou de entregador na página com o formulário aberto: lê de novo
+$("#b-reler").addEventListener("click", () => acaoAberta && abrirForm(acaoAberta));
 $("#b-abrir").addEventListener("click", () => abrir("#inicio"));
 
 // busca: ID ou nome (mesma busca do topo do Comunique)

@@ -1,7 +1,7 @@
 # Chrome Web Store: Comunique
 
 Tudo o que o painel do desenvolvedor da Chrome Web Store pede, pronto para copiar.
-Última atualização: 14/11/2026 · versão 1.2.0
+Última atualização: 14/11/2026 · versão 1.2.1
 
 ## Antes de enviar (uma vez só)
 
@@ -56,9 +56,11 @@ As imagens são geradas por `testes/prints-extensao.mjs`, só com dados fictíci
 | `notifications` | Mostrar a notificação de aviso novo e de pedido de ajuda da equipe. |
 | `contextMenus` | O item "Ver no Comunique" ao clicar com o botão direito sobre o ID de um entregador selecionado. |
 | `sidePanel` | Abrir o painel lateral do Comunique ao lado da página. |
+| `scripting` | Colocar o leitor (o mesmo script do pacote, `telas/leitor.js`) nas abas do Quero Log e do Crisp que já estavam abertas quando a extensão foi instalada ou atualizada, sem a pessoa precisar recarregar a página. |
 | `identity` | Entrar com a conta Google da pessoa, a mesma usada no Comunique. |
 | Host `nhgmkbfaqonojhaggwui.supabase.co` | O banco de dados do Comunique: login, avisos, busca de entregadores. |
 | Host `comuniqueqd.github.io` | O próprio Comunique: reaproveitar a aba já aberta em vez de abrir outra a cada clique. |
+| Host `admin.querolog.io` e `app.crisp.chat` | Os mesmos sites do leitor; exigidos pela permissão `scripting` para colocar o leitor numa aba já aberta. |
 | Conteúdo em `admin.querolog.io` | Ler o ID, o nome e a cidade na tela de um entregador quando a pessoa abre um formulário no painel lateral. A página não é alterada. |
 | Conteúdo em `app.crisp.chat` | Ler o ID (dado personalizado `entregador_id`), o nome e a cidade do contato quando a pessoa abre um formulário no painel lateral. A página não é alterada. |
 
@@ -85,6 +87,7 @@ As imagens são geradas por `testes/prints-extensao.mjs`, só com dados fictíci
 
 | Versão | Data | O que mudou |
 |---|---|---|
+| 1.2.1 | 14/11/2026 | Abas abertas antes da atualização: o leitor novo entra sozinho (sem recarregar a página) e tira o cartão antigo; botão "↻ Ler a tela de novo" no formulário. |
 | 1.2.0 | 14/11/2026 | Tudo no painel lateral: os botões leem a tela aberta e registram ali mesmo (bloqueio com motivo e prévia, ativação, adicional, cadastrar, calculadora de bairro com registro do ajuste, pedir ajuda); "Eu ajudo" aceita pedidos da equipe; o cartão na página saiu; nome lido do caminho "Lista / Nome" mesmo com outros "Lista" na tela. |
 | 1.1.0 | 14/11/2026 | Os botões do cartão gravam direto (com conferência): ficha, ativação, bloqueio com prévia e adicional com valores; aviso de ID com outro nome no Comunique; o painel lateral diz "não encontrei ID de entregador nesta tela". |
 | 1.0.0 | 14/11/2026 | Primeira versão: avisos no ícone, notificações (avisos e pedidos de ajuda), painel lateral com busca e atalhos, "Ver no Comunique" no botão direito, cartão com botões no Quero Log e no Crisp. |
@@ -92,8 +95,8 @@ As imagens são geradas por `testes/prints-extensao.mjs`, só com dados fictíci
 ## Observações para a revisão
 
 - Uso interno de uma equipe de operação logística; o login exige uma conta autorizada no Comunique.
-- Para testar sem conta: o cartão aparece em `admin.querolog.io/entregadores/<id>` e no Crisp com o dado personalizado `entregador_id`; os botões só abrem o site do Comunique com os campos preenchidos.
+- Para testar sem conta: em `admin.querolog.io/entregadores/<id>` ou no Crisp com o dado personalizado `entregador_id`, abra o painel lateral e clique num botão de registrar: o formulário abre preenchido com o ID, o nome e a cidade, e nada é gravado sem confirmar.
 
 ### Limitações conhecidas
 
-- Se o painel Quero Log ou o Crisp mudarem o desenho da tela, o cartão pode deixar de achar o ID ou o nome; os botões continuam abrindo o formulário, e a pessoa completa o que faltar.
+- Se o painel Quero Log ou o Crisp mudarem o desenho da tela, o painel pode deixar de achar o ID ou o nome; o formulário abre mesmo assim, e a pessoa completa o que faltar.

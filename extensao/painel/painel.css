@@ -49,6 +49,7 @@ input[type="search"] { inline-size: 100%; padding: 10px 12px; border-radius: 12p
 /* formulários do painel (formularios.js) */
 .titulo-form { display: flex; align-items: center; gap: 8px; }
 .titulo-form h2 { margin: 0; }
+.titulo-form .reler { margin-inline-start: auto; font-size: 12px; }
 .form-cx { display: grid; gap: 10px; }
 .form-cx label { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
 .form-cx label.linha { display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--ink); }
