@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Comunique",
   "short_name": "Comunique",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Avisos do Comunique no ícone, busca de entregadores, atalhos e botões de cadastro, bloqueio e adicional no Quero Log e no Crisp.",
   "icons": {
     "16": "icones/icone-16.png",

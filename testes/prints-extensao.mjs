@@ -7,6 +7,15 @@ const ctx = await chromium.launchPersistentContext(fs.mkdtempSync(path.join(os.t
 let [sw] = ctx.serviceWorkers(); if (!sw) sw = await ctx.waitForEvent("serviceworker");
 const id = sw.url().split("/")[2];
 const simbolo = fs.readFileSync(path.join(EXT, "icones/simbolo.svg"), "utf8");
+// 2) painel lateral logado, com avisos fictícios
+await ctx.route("https://nhgmkbfaqonojhaggwui.supabase.co/**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify(
+  r.request().url().includes("busca_rapida") ? { entregadores: [], cadastros: [] } : {
+  resumo: { avisos_rapidos: [{ id: 1, tipo: "ajuda", criado_por_nome: "Ana", titulo: "Monitoramento: pedido atrasado em Lagarto", aceito_por_nome: null, expirado: false }] },
+  notif: { nao_lidas: 2, itens: [
+    { id: 3, texto: "Seu cadastro de João Exemplo foi aprovado.", link: "#ativacao/historico", criada_em: new Date().toISOString(), lida: false },
+    { id: 2, texto: "Nova tratativa para você em LAGARTO - SE.", link: "#bloqueios/tratativas", criada_em: new Date(Date.now() - 36e5).toISOString(), lida: false },
+    { id: 1, texto: "Adicional de R$ 8,00 registrado em ITABAIANA - SE.", link: "#financeiro/lancamentos", criada_em: new Date(Date.now() - 2 * 36e5).toISOString(), lida: true }] } }) }));
+await sw.evaluate(() => chrome.storage.local.set({ sessao: { access_token: "x", refresh_token: "y", expira: Date.now() + 36e5 } }));
 // 1) tela do painel (fictícia) com o cartão do Comunique
 await ctx.route("https://admin.querolog.io/**", (r) => r.fulfill({ contentType: "text/html", body: `<!doctype html><html><head><meta charset="utf-8"><style>
   body{margin:0;font:15px/1.5 system-ui,sans-serif;color:#333;background:#f6f6f8}header{background:#fff;padding:18px 32px;border-bottom:1px solid #e5e5ea;font-weight:700}
@@ -17,15 +26,6 @@ await ctx.route("https://admin.querolog.io/**", (r) => r.fulfill({ contentType: 
 const p1 = await ctx.newPage(); await p1.setViewportSize({ width: 1280, height: 800 });
 await p1.goto("https://admin.querolog.io/entregadores/exemplo123abc"); await p1.waitForTimeout(1500);
 await p1.screenshot({ path: path.join(OUT, "print-1-botoes-no-painel.png") });
-// 2) painel lateral logado, com avisos fictícios
-await ctx.route("https://nhgmkbfaqonojhaggwui.supabase.co/**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify(
-  r.request().url().includes("busca_rapida") ? { entregadores: [], cadastros: [] } : {
-  resumo: { avisos_rapidos: [{ id: 1, tipo: "ajuda", criado_por_nome: "Ana", titulo: "Monitoramento: pedido atrasado em Lagarto", aceito_por_nome: null, expirado: false }] },
-  notif: { nao_lidas: 2, itens: [
-    { id: 3, texto: "Seu cadastro de João Exemplo foi aprovado.", link: "#ativacao/historico", criada_em: new Date().toISOString(), lida: false },
-    { id: 2, texto: "Nova tratativa para você em LAGARTO - SE.", link: "#bloqueios/tratativas", criada_em: new Date(Date.now() - 36e5).toISOString(), lida: false },
-    { id: 1, texto: "Adicional de R$ 8,00 registrado em ITABAIANA - SE.", link: "#financeiro/lancamentos", criada_em: new Date(Date.now() - 2 * 36e5).toISOString(), lida: true }] } }) }));
-await sw.evaluate(() => chrome.storage.local.set({ sessao: { access_token: "x", refresh_token: "y", expira: Date.now() + 36e5 } }));
 const pp = await ctx.newPage(); await pp.setViewportSize({ width: 400, height: 800 });
 await pp.goto(`chrome-extension://${id}/painel/painel.html`); await pp.waitForSelector("#v-app:not([hidden]) .item"); await pp.waitForTimeout(500);
 const painelPng = (await pp.screenshot()).toString("base64");

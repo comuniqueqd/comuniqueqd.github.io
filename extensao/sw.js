@@ -76,12 +76,30 @@ async function conferir() {
   await chrome.storage.local.set({ vistos: { notif: Math.max(maior, vistos?.notif || 0), ajudas: ajudas.map((a) => a.id) } });
 }
 
-// mensagens do painel lateral
+// 1.1: o cartão das telas grava pelo service worker, e só estas funções (as mesmas que o site usa)
+const PERMITIDAS = new Set(["regras_bloqueio", "previa_bloqueio", "registrar_bloqueio_agravante", "registrar_adicional",
+  "cadastrar_entregador", "enviar_cadastro", "busca_rapida"]);
+async function regras() {
+  const { regras: r, regrasEm = 0 } = await chrome.storage.session.get(["regras", "regrasEm"]);
+  if (r && Date.now() - regrasEm < 300000) return r;
+  const novo = await Api.rpc("regras_bloqueio");
+  await chrome.storage.session.set({ regras: novo, regrasEm: Date.now() });
+  return novo;
+}
+
+// mensagens do painel lateral e do cartão das telas
 chrome.runtime.onMessage.addListener((msg, _sender, responder) => {
   (async () => {
-    if (msg?.tipo === "conferir") await conferir();
-    if (msg?.tipo === "abrir") await abrir(msg.hash);
-    responder({ ok: true });
-  })().catch((e) => responder({ ok: false, erro: e.message }));
+    if (msg?.tipo === "conferir") { await conferir(); return responder({ ok: true }); }
+    if (msg?.tipo === "abrir") { await abrir(msg.hash); return responder({ ok: true }); }
+    if (msg?.tipo === "logado") return responder({ ok: true, logado: !!(await Api.sessao()) });
+    if (msg?.tipo === "rpc") {
+      if (!PERMITIDAS.has(msg.fn)) return responder({ ok: false, erro: "Função não permitida pela extensão." });
+      const dados = msg.fn === "regras_bloqueio" ? await regras() : await Api.rpc(msg.fn, msg.args || {});
+      if (msg.fn !== "regras_bloqueio" && msg.fn !== "previa_bloqueio" && msg.fn !== "busca_rapida") conferir().catch(() => {});
+      return responder({ ok: true, dados });
+    }
+    responder({ ok: false, erro: "Mensagem desconhecida." });
+  })().catch((e) => responder({ ok: false, erro: e.message, semSessao: !!e.semSessao }));
   return true;
 });

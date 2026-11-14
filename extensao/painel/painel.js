@@ -19,7 +19,7 @@ const erro = (sel, msg) => { const p = $(sel); p.textContent = msg || ""; p.hidd
 async function mostrar() {
   const logado = !!(await Api.sessao());
   $("#v-entrar").hidden = logado; $("#v-app").hidden = !logado; $("#b-sair").hidden = !logado;
-  if (logado) await atualizar();
+  if (logado) { telaAtual(); await atualizar(); }
 }
 
 $("#b-entrar").addEventListener("click", async (e) => {
@@ -54,6 +54,25 @@ async function buscar(forcar) {
     /^[A-Za-z0-9]{4,40}$/.test(q) ? el("button", { class: "btn", type: "button", onclick: () => abrir("#preencher/entregador?id=" + encodeURIComponent(q)) }, "Cadastrar este ID") : null);
   box.replaceChildren(...linhas);
 }
+
+// 1.1: o que a aba aberta tem (só nas telas do Quero Log e do Crisp, onde o leitor roda)
+async function telaAtual() {
+  const box = $("#tela");
+  let r = null;
+  try {
+    const [aba] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (aba?.id != null) r = await chrome.tabs.sendMessage(aba.id, { tipo: "tela" });
+  } catch (_) { r = null; }   // aba sem o leitor (outro site): não mostra nada
+  if (!r) return box.replaceChildren();
+  if (!r.entregador) return box.replaceChildren(el("div", { class: "tela vazia", text: "Não encontrei ID de entregador nesta tela." }));
+  const e = r.entregador;
+  box.replaceChildren(el("div", { class: "tela" }, el("span", { class: "grupo", text: "Nesta tela" }), el("b", { text: e.nome || "Nome não encontrado" }),
+    el("span", { class: "sub meta", text: [e.id, e.cidade].filter(Boolean).join(" · ") }),
+    el("span", { class: "meta", text: "Use os botões do cartão no canto da página para cadastrar, bloquear ou registrar adicional." }),
+    el("button", { class: "btn", type: "button", onclick: () => abrir("#ficha/" + encodeURIComponent(e.id)) }, "🔎 Ver ficha no Comunique")));
+}
+chrome.tabs.onActivated.addListener(() => telaAtual());
+chrome.tabs.onUpdated.addListener((_id, mud) => { if (mud.status === "complete") setTimeout(telaAtual, 800); });
 
 // avisos e pedidos de ajuda (o mesmo resumo que o Comunique usa)
 async function atualizar() {
