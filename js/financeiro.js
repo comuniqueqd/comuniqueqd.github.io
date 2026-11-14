@@ -137,7 +137,7 @@
       painel("Por cidade", ...barras(R.por_cidade.map((x) => ({ rotulo: x.cidade, qtd: Number(x.total), extra: `${brl(x.total)} · ${x.n}` })), "var(--accent)", "Nada no período.")),
       painel("Motivos dos adicionais", ...barras(R.por_motivo.map((x) => ({ rotulo: x.motivo || "—", qtd: Number(x.total), extra: `${brl(x.total)} · ${x.n}` })), "var(--warn)", "Nenhum adicional no período.")),
       painel("Por tamanho do pedido (adicionais)", ...barras(R.faixas_pedido.map((x) => ({ rotulo: x.faixa, qtd: Number(x.total),
-        extra: `${brl(x.total)} · ${x.n}${x.pct_pedido != null ? ` · ${String(x.pct_pedido).replace(".", ",")}% do pedido` : ""}` })), "#7a4bd1", "Nenhum adicional no período.")),
+        extra: `${brl(x.total)} · ${x.n}${x.pct_pedido != null ? ` · ${String(x.pct_pedido).replace(".", ",")}% do pedido` : ""}` })), "var(--jade)", "Nenhum adicional no período.")),
       painel("Origem e mercado",
         ...barras(R.por_origem.map((x) => ({ rotulo: ORIGEM[x.origem] || x.origem, qtd: Number(x.total), extra: `${brl(x.total)} · ${x.n}` })), "var(--ok)", "Nada no período."),
         el("p", { class: "meta", text: `Adicionais de mercado: ${brl(R.mercado.sim.total)} (${R.mercado.sim.n}) · fora de mercado: ${brl(R.mercado.nao.total)} (${R.mercado.nao.n})` })),

@@ -227,7 +227,7 @@ button.alerta-revisar:hover, button.alerta-revisar:focus-visible { border-color:
 dialog.janela { width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; border: 1px solid var(--line); border-radius: 12px;
   background: var(--surface); color: var(--ink); padding: 16px; display: grid; gap: 12px; }
 dialog.janela:not([open]) { display: none; }
-dialog.janela::backdrop { background: rgba(10, 14, 20, .55); }
+dialog.janela::backdrop { background: rgb(20 53 43 / .55); }
 /* 009i (prevent-page-scroll-under-modal-dialog): rolar dentro da janela ou sobre o fundo escuro não rola a página
    atrás. Só CSS: nada de overflow: hidden no body (tiraria a barra de rolagem e a página pularia). */
 dialog:modal { overscroll-behavior: contain; }
@@ -359,7 +359,7 @@ nav.grupo[hidden] { display: none; }
 
 /* 008b: tira do sino e tela de Avisos */
 .tira-avisos { position: absolute; z-index: 50; width: min(500px, calc(100vw - 16px)); max-height: min(70vh, 560px); overflow: auto;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 32px rgba(10, 14, 20, .18); }
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 32px rgb(20 53 43 / .18); }
 .tira-avisos[hidden] { display: none; }
 .tira-topo, .tira-pe { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; }
 .tira-topo { border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); }
@@ -382,10 +382,10 @@ nav.grupo[hidden] { display: none; }
 .funcoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 12px; margin: 6px 0 28px; }
 a.funcao { position: relative; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; padding: 18px 14px;
   border-radius: 16px; text-decoration: none; color: var(--ink); border: 1px solid var(--line); background: var(--surface);
-  box-shadow: 0 1px 2px rgba(10, 14, 20, .06); transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; overflow: hidden; }
+  box-shadow: 0 1px 2px rgb(20 53 43 / .06); transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; overflow: hidden; }
 a.funcao::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--fcor, var(--accent)); }
-a.funcao:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(10, 14, 20, .12); border-color: var(--fcor, var(--accent)); }
-a.funcao:active { transform: translateY(0) scale(.98); box-shadow: 0 2px 6px rgba(10, 14, 20, .10); }
+a.funcao:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgb(20 53 43 / .12); border-color: var(--fcor, var(--accent)); }
+a.funcao:active { transform: translateY(0) scale(.98); box-shadow: 0 2px 6px rgb(20 53 43 / .10); }
 a.funcao:focus-visible { outline: 3px solid var(--fcor, var(--accent)); outline-offset: 2px; }
 .funcao-icone { width: 42px; height: 42px; display: grid; place-items: center; font-size: 24px; border-radius: 14px;
   background: color-mix(in srgb, var(--fcor, var(--accent)) 14%, transparent); transition: transform .2s ease; }
@@ -397,7 +397,7 @@ a.funcao:hover .funcao-icone { transform: rotate(-6deg) scale(1.08); }
 .funcao-seta { font-size: 20px; color: var(--muted); transition: transform .15s ease, color .15s ease; }
 a.funcao:hover .funcao-seta { transform: translateX(4px); color: var(--fcor, var(--accent)); }
 a.funcao.f-ativ { --fcor: var(--accent); }
-a.funcao.f-ent { --fcor: #7a4bd1; }
+a.funcao.f-ent { --fcor: var(--jade); }
 a.funcao.f-bloq { --fcor: var(--bad); }
 a.funcao.f-sug { --fcor: var(--ok); }
 a.funcao.f-reg { --fcor: var(--warn); }
@@ -425,7 +425,7 @@ a.funcao .funcao-seta { position: absolute; top: 16px; right: 14px; }
 /* aviso de versão nova publicada */
 .aviso-versao { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 60; display: flex; gap: 10px; align-items: center;
   flex-wrap: wrap; padding: 10px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--accent);
-  box-shadow: 0 10px 28px rgba(10, 14, 20, .18); font-size: 14px; max-width: calc(100vw - 24px); }
+  box-shadow: 0 10px 28px rgb(20 53 43 / .18); font-size: 14px; max-width: calc(100vw - 24px); }
 
 /* 008d: o que acompanho, preferências, resumo do dia, revisar do suporte */
 .prefs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px 22px; }
@@ -505,8 +505,8 @@ a.fin-pend:hover { text-decoration: underline; }
 .fin-card .head .name { display: inline-flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .passos { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
 .lista-num { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
-a.funcao.f-fer { --fcor: #0f7d7a; }
-a.funcao.f-fin { --fcor: #b4570e; }
+a.funcao.f-fer { --fcor: #2F6E57; }
+a.funcao.f-fin { --fcor: #B7791F; }
 
 /* 009c: mensagens prontas e agravante */
 textarea.msg-texto, #fe-msg-texto { font: inherit; line-height: 1.45; width: 100%; }
@@ -686,7 +686,7 @@ dialog.janela, .tira-avisos[popover], .toast[popover], .aviso-versao[popover] {
 dialog.janela:not([open]), .tira-avisos[popover]:not(:popover-open), .toast[popover]:not(:popover-open), .aviso-versao[popover]:not(:popover-open) { opacity: 0; }
 @starting-style {
   dialog.janela[open], .tira-avisos:popover-open, .toast:popover-open, .aviso-versao:popover-open { opacity: 0; }
-  dialog.janela[open]::backdrop { background-color: rgba(10, 14, 20, 0); }
+  dialog.janela[open]::backdrop { background-color: rgb(20 53 43 / 0); }
 }
 @media (prefers-reduced-motion: no-preference) {
   .tira-avisos[popover]:not(:popover-open), .aviso-versao[popover]:not(:popover-open), dialog.janela:not([open]) { translate: 0 8px; }
