@@ -33,7 +33,7 @@ await db.query("insert into cidades (nome) values ('LAGARTO - SE') on conflict d
 await db.query("update cidades set ativa = true where nome = 'LAGARTO - SE'");
 const um = async (sql, p = []) => (await db.query(sql, p)).rows[0];
 
-const PORTA = 54331;
+const PORTA = Number(process.env.PORTA_API) || 54331;
 const api = await iniciarSupabaseFalso({ porta: PORTA, databaseUrl: DB });
 
 // cópia da extensão apontando para o banco de teste

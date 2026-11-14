@@ -16,8 +16,10 @@ const { chromium } = require("playwright");
 const AQUI = path.dirname(fileURLToPath(import.meta.url));
 const RAIZ = path.join(AQUI, "..");
 const DB = process.env.DATABASE_URL || "postgres://postgres@127.0.0.1:54329/teste";
-const SITE = "http://127.0.0.1:8765/index.html";
-const API = "http://127.0.0.1:54321";
+// portas configuráveis para rodar vários testes ao mesmo tempo (um banco e um par de portas por agente)
+const PORTA_SITE = Number(process.env.PORTA_SITE) || 8765, PORTA_API = Number(process.env.PORTA_API) || 54321;
+const SITE = `http://127.0.0.1:${PORTA_SITE}/index.html`;
+const API = `http://127.0.0.1:${PORTA_API}`;
 const PRINTS = path.join(AQUI, "prints");
 fs.mkdirSync(PRINTS, { recursive: true });
 
@@ -59,7 +61,7 @@ for (const d of [200, 150]) await db.query("select importar_bloqueio('atr00001',
 await db.query("select importar_bloqueio('rev00001', 'Nome Errado', 'ITABAIANA - SE', 'Avaria de Produto', now() - interval '100 days', 'Planilha', 'ID usado com 2 nomes diferentes na planilha', '24')");
 await db.end();
 
-const api = await iniciarSupabaseFalso({ porta: 54321, databaseUrl: DB });
+const api = await iniciarSupabaseFalso({ porta: PORTA_API, databaseUrl: DB });
 const TIPOS = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".webmanifest": "application/manifest+json", ".png": "image/png" };
 const site = http.createServer((q, r) => {
@@ -70,7 +72,7 @@ const site = http.createServer((q, r) => {
   const cab = { "Content-Type": TIPOS[path.extname(f)] || "application/octet-stream" };
   if (path.extname(f) === ".html") cab["Content-Security-Policy"] = "require-trusted-types-for 'script'";
   r.writeHead(200, cab); fs.createReadStream(f).pipe(r);
-}).listen(8765, "127.0.0.1");
+}).listen(PORTA_SITE, "127.0.0.1");
 
 const UMD = path.join(path.dirname(require.resolve("@supabase/supabase-js/package.json")), "dist/umd");
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -526,7 +528,7 @@ try {
   ok(await esperar(s, "#bq-consulta .comentarios >> text=Ligou pedindo para ser liberado."), "suporte adiciona comentário na consulta");
   await s.screenshot({ path: path.join(PRINTS, "b6b-consulta.png"), fullPage: true });
   // 009j (copy-button): botão de copiar ao lado do ID na ficha
-  await s.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: "http://127.0.0.1:8765" });
+  await s.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: `http://127.0.0.1:${PORTA_SITE}` });
   await s.hover("#bq-consulta .ficha-topo .copiavel");
   await s.click("#bq-consulta .ficha-topo .btn-copiar");
   ok(await esperar(s, "#bq-consulta .ficha-topo .copia-balao >> text=Copiado") && (await s.evaluate(() => navigator.clipboard.readText())) === "mal00001"
