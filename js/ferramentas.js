@@ -121,14 +121,15 @@
            el("div", { class: "fe-recebe", text: `${brl(b.recebe)} para o entregador` })]
         : el("div", { class: "meta", text: txt ? "Bairro não encontrado nesta cidade" : "Escolha o bairro" }));
     const iguais = bi && br && bi.id === br.id;
-    box.replaceChildren(el("div", { class: "fe-calc" },
+    // revisão 009: o replaceChildren do navegador escreve "null" quando recebe um nulo (o el() pula, ele não): filtrar antes
+    box.replaceChildren(...[el("div", { class: "fe-calc" },
       lado("Informado pelo cliente", bi, $("#fe-informado").value.trim()),
       el("div", { class: "fe-seta", "aria-hidden": "true", text: "→" }),
       lado("Onde a entrega terminou", br, $("#fe-real").value.trim())),
       dif == null ? null : el("div", { class: "fe-total" + (dif < 0 ? " negativo" : "") },
         el("span", { text: iguais ? "Os dois bairros são iguais: não há ajuste." : "Ajuste para o entregador" }),
         iguais ? null : el("strong", { text: brl(Math.max(dif, 0)) }),
-        dif < 0 ? el("p", { class: "warn-msg", text: `O bairro real paga menos (${brl(dif)}). O ajuste fica zero; isso não deveria acontecer, confira os bairros.` }) : null));
+        dif < 0 ? el("p", { class: "warn-msg", text: `O bairro real paga menos (${brl(dif)}). O ajuste fica zero; isso não deveria acontecer, confira os bairros.` }) : null)].filter(Boolean));
     reg.hidden = !(bi && br) || iguais;
   }
 

@@ -91,7 +91,8 @@
     const p = P.painel;
     if (!p) return box.replaceChildren(carregandoEl());
     document.querySelectorAll("[data-pn-dias]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.pnDias) === P.dias)));
-    box.replaceChildren(
+    // revisão 009: blocoRevisao() e o placar podem ser nulos, e o replaceChildren do navegador escreveria "null": filtrar
+    box.replaceChildren(...[
       blocoMetas(),
       el("section", { class: "panel" }, el("h3", { text: "Agora" }),
         el("div", { class: "tiles" }, quadro(p.agora.sem_dono, "sem ninguém", true), quadro(p.agora.em_andamento, "em andamento"),
@@ -125,7 +126,7 @@
           P.placar.map((x, i) => el("tr", {}, el("td", { class: "num", text: i + 1 }), el("td", { text: x.nome }), el("td", { class: "num", text: x.pontos }),
             el("td", { class: "num", text: x.pegou }), el("td", { class: "num", text: x.concluidas }), el("td", { class: "num", text: x.registros }),
             el("td", { class: "num", text: pct(x.no_prazo) }), el("td", { class: "num", text: min(x.pegar_min) }), el("td", { class: "num", text: x.agradecimentos }),
-            el("td", { class: "num", text: x.ajudas }), el("td", { class: "num", text: `${x.revisoes_ok}/${x.revisoes_ajustar}` }))), "Ninguém no período.")) : null);
+            el("td", { class: "num", text: x.ajudas }), el("td", { class: "num", text: `${x.revisoes_ok}/${x.revisoes_ajustar}` }))), "Ninguém no período.")) : null].filter(Boolean));
   }
   document.querySelectorAll("[data-pn-dias]").forEach((b) => b.addEventListener("click", () => { P.dias = Number(b.dataset.pnDias); P.painel = null; App.render(); App.carregar(); }));
 

@@ -1315,6 +1315,7 @@ try {
   ok(await esperar(a8, "#toast:has-text('Revisada: ok')"), "revisada: ok");
   await ir(m7, "#atividades/painel"); await m7.reload();
   ok(await esperar(m7, "#pn-conteudo h3:has-text('Você')") && await m7.isHidden("#pn-placar") && await m7.isHidden("#pn-revisao"), "quem não é moderador vê só a própria linha, sem placar e sem revisão");
+  ok(await m7.evaluate(() => !/\bnull\b/.test(document.querySelector("#pn-conteudo").textContent)), "revisão 009: sem placar e sem revisão, o painel não mostra um “null” solto no lugar deles");
   await ir(s8, "#atividades/sugeridas"); await s8.reload();
   await esperar(s8, "#at-recorrentes summary");
   await s8.click("#at-recorrentes summary");
@@ -1451,6 +1452,13 @@ try {
           for (const l of sec?.querySelectorAll("label") || []) {
             const cb = l.querySelector(":scope > input[type=checkbox], :scope > input[type=radio]");
             if (cb && l.offsetParent && cb.getBoundingClientRect().bottom <= l.getBoundingClientRect().top + 4 + cb.getBoundingClientRect().height && getComputedStyle(l).display === "grid") lista.push("caixinha empilhada: " + l.textContent.trim().slice(0, 40));
+          }
+          // revisão 009: texto solto "null", "undefined", "NaN" ou "[object Object]" (ex.: replaceChildren(..., null) vira o texto "null")
+          const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+          for (let t; (t = tw.nextNode());) {
+            const p = t.parentElement;
+            if (!p || !p.getClientRects().length || p.closest("script, style, template, [hidden]")) continue;
+            if (/\b(null|undefined|NaN)\b|\[object Object\]/.test(t.data)) lista.push(`texto quebrado "${t.data.trim().slice(0, 50)}" em <${p.tagName.toLowerCase()}${p.id ? "#" + p.id : ""}>`);
           }
           return lista;
         });
