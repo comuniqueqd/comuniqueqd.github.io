@@ -79,7 +79,7 @@ async function conferir() {
     for (const x of itens.filter((x) => !x.lida && x.id > vistos.notif).slice(0, 3).reverse())
       await avisar("n" + x.id, "Comunique", x.texto, x.link);
     for (const a of ajudas.filter((a) => !vistos.ajudas.includes(a.id)))
-      await avisar("a" + a.id, "🆘 Pedido de ajuda", `${a.criado_por_nome || "Alguém da equipe"}: ${a.titulo || a.texto || "precisa de ajuda agora"}`, "#inicio");
+      await avisar("a" + a.id, "Pedido de ajuda", `${a.criado_por_nome || "Alguém da equipe"}: ${a.titulo || a.texto || "precisa de ajuda agora"}`, "#inicio");
   }
   // na primeira vez só guarda o que já existia (não notifica o passado)
   await chrome.storage.local.set({ vistos: { notif: Math.max(maior, vistos?.notif || 0), ajudas: ajudas.map((a) => a.id) } });

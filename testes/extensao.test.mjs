@@ -57,6 +57,7 @@ try {
   ok(!man.host_permissions.some((h) => h.includes("<all_urls>") || h.startsWith("*")), "permissões só para o Supabase e o site do Comunique");
   ok(Object.values(man.icons).every((f) => fs.existsSync(path.join(RAIZ, "extensao", f))), "os ícones do manifesto existem");
   ok(man.description.length <= 132, "descrição do manifesto cabe em 132 caracteres");
+  ok(fs.readFileSync(path.join(RAIZ, "extensao/icones.js"), "utf8") === fs.readFileSync(path.join(RAIZ, "js/icones.js"), "utf8"), "009u: os ícones da extensão são os mesmos do site (extensao/icones.js = js/icones.js)");
 
   // painel sem login
   const painel = await ctx.newPage();
@@ -122,7 +123,7 @@ try {
   const abrirForm = async (rot) => { await p.locator(".atalhos button", { hasText: rot }).click(); await p.waitForSelector("#v-form:not([hidden]) form"); };
   const campos = () => p.locator("#caixa-form form").evaluate((f) => [...f.querySelectorAll("label > input")].slice(0, 3).map((i) => i.value));
   const feito = (trecho) => p.locator("#feito", { hasText: trecho }).waitFor({ timeout: 5000 }).then(() => true).catch(() => false);
-  const semNull = async () => !/\b(null|undefined|NaN)\b/.test(await p.locator("main").innerText());
+  const semNull = async () => { const t = await p.locator("main").innerText(); return !/\b(null|undefined|NaN)\b/.test(t) && !/\p{Extended_Pictographic}/u.test(t); };   // 009u: sem emoji também
 
   // login na extensão (sessão do banco de teste)
   const eu = { sub: randomUUID(), email: "mateuslopesmb@gmail.com" };

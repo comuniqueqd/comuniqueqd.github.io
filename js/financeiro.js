@@ -108,7 +108,7 @@
     const total = G.pend.reduce((s, l) => s + Number(l.valor), 0);
     box.replaceChildren(...(G.pend.length
       ? [el("p", { class: "meta", text: `${G.pend.length} pendente(s), ${brl(total)} no total.` }), ...G.pend.map((l) => cartao(l))]
-      : [el("p", { class: "nada-pend", text: "✅ Nada pendente: tudo o que você registrou já foi lançado no sistema." })]));
+      : [el("p", { class: "nada-pend", icone: "ok" }, "Nada pendente: tudo o que você registrou já foi lançado no sistema.")]));
     $("#fi-pend-box")?.classList.toggle("vazia", !G.pend.length);  // 009k: sem pendentes, a caixa fica numa linha só
   }
   // ---------- lançamentos e números ----------

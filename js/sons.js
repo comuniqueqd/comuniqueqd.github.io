@@ -130,7 +130,7 @@
     };
     return el("div", {}, el("h4", { text: "Sons neste navegador" }),
       ...NIVEIS.map(([n, t]) => caixa("n" + n, t, el("button", { class: "btn link", type: "button", "aria-label": "Ouvir o som do nível " + n,
-        onclick: () => tocar(n, true) }, "▶ ouvir"))),
+        onclick: () => tocar(n, true) }, [App.ic("tocar"), "ouvir"]))),
       "Notification" in window ? caixa("sistema", "Notificação do sistema quando a aba está escondida (ajuda, atraso e previsão)") : null,
       el("p", { class: "meta", text: "Vale só para este navegador. O som toca com o Comunique aberto (pode ser em outra aba)." }));
   }
@@ -154,7 +154,7 @@
     const d = App.u.janela("Testar avisos e sons",
       el("p", { class: "meta", style: "margin-top:0", text: "Só neste navegador: nada é enviado para a equipe." }),
       el("ul", { class: "teste-sons" }, NIVEIS.map(([n, t]) => el("li", {},
-        el("button", { class: "btn small", type: "button", "data-teste-nivel": n, onclick: () => { tocar(n, true); atualizar(); } }, `▶ Nível ${n}`),
+        el("button", { class: "btn small", type: "button", "data-teste-nivel": n, onclick: () => { tocar(n, true); atualizar(); } }, [App.ic("tocar"), `Nível ${n}`]),
         el("span", { text: t }), el("span", { class: "meta", text: p["n" + n] ? "ligado" : "desligado nas suas preferências" })))),
       el("div", { class: "actions" },
         el("button", { class: "btn small", type: "button", onclick: () => notificar(false) }, "Notificação do sistema agora"),

@@ -38,12 +38,12 @@
     <h2>Registrar</h2>
     <p class="meta">Lê o ID, o nome e a cidade da página aberta (Quero Log ou Crisp) e preenche aqui. Você confere e registra.</p>
     <nav class="atalhos" aria-label="Registrar">
-      <button type="button" data-acao="bloqueio">⛔ Novo bloqueio</button>
-      <button type="button" data-acao="cadastro">📝 Nova ativação</button>
-      <button type="button" data-acao="adicional">💰 Registrar adicional</button>
-      <button type="button" data-acao="entregador">🪪 Cadastrar entregador</button>
-      <button type="button" data-acao="calculadora">🧮 Calculadora de bairro</button>
-      <button type="button" data-acao="ajuda" class="ajuda">🆘 Pedir ajuda</button>
+      <button type="button" data-acao="bloqueio"><span data-icone="bloqueio"></span>Novo bloqueio</button>
+      <button type="button" data-acao="cadastro"><span data-icone="ativacao"></span>Nova ativação</button>
+      <button type="button" data-acao="adicional"><span data-icone="adicional"></span>Registrar adicional</button>
+      <button type="button" data-acao="entregador"><span data-icone="entregador"></span>Cadastrar entregador</button>
+      <button type="button" data-acao="calculadora"><span data-icone="calculadora"></span>Calculadora de bairro</button>
+      <button type="button" data-acao="ajuda" class="ajuda"><span data-icone="ajuda"></span>Pedir ajuda</button>
     </nav>
     <p class="ok" id="feito" role="status" hidden></p>
 
@@ -55,11 +55,12 @@
     </div>
     <ul class="avisos" id="avisos"></ul>
     <p class="erro" id="e-app" role="alert" hidden></p>
-    <button class="link" type="button" id="b-abrir">↗ Abrir o Comunique</button>
+    <button class="link" type="button" id="b-abrir">Abrir o Comunique</button>
   </section>
 </main>
 <script src="../config.js"></script>
 <script src="../api.js"></script>
+<script src="../icones.js"></script>
 <script src="../formularios.js"></script>
 <script src="painel.js"></script>
 </body>

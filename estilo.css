@@ -926,3 +926,14 @@ label:has(> input[type="checkbox"]) > input, label:has(> input[type="radio"]) > 
 .lista-parecidos .par { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
 .pergunta-bairro { border: 1px solid var(--warn); background: var(--warn-soft); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; }
 .meta.entendido { color: var(--accent); }
+
+/* ---------- 009u: ícones próprios (js/icones.js), no lugar dos emojis ---------- */
+svg.ic { width: 1.15em; height: 1.15em; flex: none; vertical-align: -0.2em; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.btn svg.ic, .sino svg.ic, .rapido-tipo svg.ic, b > svg.ic, .tag svg.ic, .meta svg.ic, p > svg.ic, span > svg.ic { margin-right: .35em; }
+.btn.link.fechar svg.ic, button[aria-label="Fechar"] svg.ic { margin: 0; }
+.sino svg.ic { width: 18px; height: 18px; vertical-align: -0.25em; }
+#c-avisos { display: inline-flex; align-items: center; gap: 2px; }
+#c-avisos svg.ic { margin-right: 0; }
+.tema svg.ic { margin: 0; }
+.funcao-icone svg.ic { width: 24px; height: 24px; margin: 0; color: var(--fcor, var(--accent)); }
+.acordo-icone svg.ic { width: 28px; height: 28px; margin: 0; }

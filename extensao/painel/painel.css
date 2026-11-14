@@ -65,3 +65,6 @@ input[type="search"] { inline-size: 100%; padding: 10px 12px; border-radius: 12p
 .form-cx .acoes { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .alerta { margin: 0; padding: 8px 10px; border-radius: 10px; background: #FBEFD9; color: #8A5300; font-size: 13px; }
 .ok { margin: 0; padding: 8px 10px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+
+/* 009u: ícones próprios no lugar dos emojis */
+svg.ic { width: 1.15em; height: 1.15em; flex: none; vertical-align: -0.2em; margin-right: .35em; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }

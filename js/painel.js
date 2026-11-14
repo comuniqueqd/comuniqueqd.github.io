@@ -34,7 +34,7 @@
   function blocoMetas() {
     const tipos = App.tarefasCampos.tipos()?.tipos || [];
     const selTipo = el("select", { id: "pn-meta-tipo", "aria-label": "Tipo de tarefa" }, el("option", { value: "", text: "Qualquer tarefa" }),
-      ...tipos.map((t) => el("option", { value: t.tipo, text: `${t.icone || ""} ${t.nome}` })));
+      ...tipos.map((t) => el("option", { value: t.tipo, text: t.nome })));
     const qtd = el("input", { id: "pn-meta-qtd", type: "number", min: 1, max: 500, value: 5, "aria-label": "Quantas" });
     const per = el("select", { id: "pn-meta-periodo", "aria-label": "Período" }, el("option", { value: "dia", text: "por dia" }), el("option", { value: "semana", text: "por semana (terça a segunda)" }));
     const lista = P.metas || [];
@@ -44,10 +44,10 @@
       lista.length ? el("div", { class: "metas-lista" }, lista.map((m) => {
         const p = Math.min(100, Math.round((m.feitas / m.quantidade) * 100));
         return el("div", { class: "meta-item" + (m.feitas >= m.quantidade ? " batida" : "") },
-          el("div", { class: "inicio-topo" }, el("b", { text: `${m.icone} ${m.tipo_nome}` }),
-            el("button", { class: "btn link", type: "button", "aria-label": "Apagar a meta", onclick: async () => { try { P.metas = await rpc("excluir_meta", { p_id: m.id }); App.render(); } catch (e) { toast(msgErro(e)); } } }, "✕")),
+          el("div", { class: "inicio-topo" }, el("b", {}, App.icTipo(m.tipo), m.tipo_nome),
+            el("button", { class: "btn link", type: "button", "aria-label": "Apagar a meta", onclick: async () => { try { P.metas = await rpc("excluir_meta", { p_id: m.id }); App.render(); } catch (e) { toast(msgErro(e)); } } }, App.ic("fechar"))),
           el("div", { class: "progresso-tarefa" }, App.u.progresso(m.feitas, m.quantidade, `Meta: ${m.feitas} de ${m.quantidade}`),
-            el("span", { class: "meta", text: `${m.feitas} de ${m.quantidade} ${m.conta === "aprovacoes" ? (m.tipo === "ativar_parceiro" ? "parceiros ativados " : "entregadores aprovados ") : ""}${m.periodo === "dia" ? "hoje" : "nesta semana"}${m.feitas >= m.quantidade ? " · batida 🎉" : ""}` })));
+            el("span", { class: "meta", text: `${m.feitas} de ${m.quantidade} ${m.conta === "aprovacoes" ? (m.tipo === "ativar_parceiro" ? "parceiros ativados " : "entregadores aprovados ") : ""}${m.periodo === "dia" ? "hoje" : "nesta semana"}${m.feitas >= m.quantidade ? ", batida" : ""}` })));
       })) : el("p", { class: "meta", text: "Nenhuma meta ainda. Que tal uma? Ex.: 5 tarefas por dia." }),
       el("form", { class: "actions", id: "pn-meta-form", onsubmit: async (e) => {
         e.preventDefault();
@@ -68,11 +68,11 @@
         catch (e) { b.disabled = false; toast(msgErro(e)); }
       };
       return el("li", { class: "card", style: "list-style:none" },
-        el("div", { class: "head" }, el("span", { class: "name" }, el("span", { class: "tag tipo", text: `${a.tipo_icone} ${a.tipo_nome}` }), a.titulo)),
+        el("div", { class: "head" }, el("span", { class: "name" }, el("span", { class: "tag tipo" }, App.icTipo(a.tipo), a.tipo_nome), a.titulo)),
         el("div", { class: "meta", text: `Feita por ${a.aceita_por_nome || a.concluida_por_nome || "—"} · concluída em ${dt(a.concluida_em)}${a.nota ? " · " + a.nota : ""}` }),
         el("div", { class: "actions" }, com,
-          el("button", { class: "btn small approve", type: "button", onclick: (e) => enviar("ok", e.currentTarget) }, "✅ Está ok"),
-          el("button", { class: "btn small", type: "button", onclick: (e) => enviar("ajustar", e.currentTarget) }, "✏️ Ajustar")));
+          el("button", { class: "btn small approve", type: "button", onclick: (e) => enviar("ok", e.currentTarget), icone: "ok" }, "Está ok"),
+          el("button", { class: "btn small", type: "button", onclick: (e) => enviar("ajustar", e.currentTarget), icone: "ajustar" }, "Ajustar")));
     });
     return el("section", { class: "panel", id: "pn-revisao" },
       el("div", { class: "inicio-topo" }, el("h3", { style: "margin:0", text: "Revisão de qualidade" }),
@@ -80,7 +80,7 @@
           const b = e.currentTarget; b.disabled = true;
           try { P.amostra = await rpc("amostra_revisao", { p_qtd: 5 }); if (!P.amostra.length) toast("Nada para revisar: tudo dos últimos 14 dias já foi revisado."); App.render(); }
           catch (err) { toast(msgErro(err)); } finally { b.disabled = false; }
-        } }, "🎲 Sortear 5 para revisar")),
+        } }, [App.ic("sortear"), "Sortear 5 para revisar"])),
       el("p", { class: "meta", text: "Tarefas concluídas nos últimos 14 dias, por outras pessoas, ainda sem revisão. Quem fez recebe o retorno." }),
       cards.length ? el("ul", { class: "queue", style: "padding:0;margin:0" }, cards) : null);
   }
@@ -104,7 +104,7 @@
       el("div", { class: "two", style: "align-items:start" },
         el("section", { class: "panel" }, el("h3", { text: "Por tipo" }),
           tabela([["Tipo"], ["Abertas", 1], ["Concluídas", 1], ["No prazo", 1], ["Tempo médio", 1]],
-            p.por_tipo.map((t) => el("tr", {}, el("td", { text: `${t.icone || ""} ${t.nome}` }), el("td", { class: "num", text: t.abertas }), el("td", { class: "num", text: t.concluidas }),
+            p.por_tipo.map((t) => el("tr", {}, el("td", {}, App.icTipo(t.tipo), t.nome), el("td", { class: "num", text: t.abertas }), el("td", { class: "num", text: t.concluidas }),
               el("td", { class: "num", text: pct(t.no_prazo) }), el("td", { class: "num", text: min(t.execucao_min) }))), "Nenhuma tarefa no período.")),
         el("section", { class: "panel" }, el("h3", { text: "Por cidade" }),
           tabela([["Cidade"], ["Abertas", 1], ["Concluídas", 1], ["No prazo", 1]],
@@ -114,15 +114,15 @@
         p.dia_hora.length && App.mapaCalor ? App.mapaCalor(p.dia_hora) : el("p", { class: "meta", text: "Nenhuma tarefa no período." })),
       el("section", { class: "panel" }, el("h3", { text: p.equipe ? "Pessoas" : "Você" }),
         p.equipe ? null : el("p", { class: "meta", text: "Esta é a sua linha, com os mesmos números que a liderança vê." }),
-        tabela([["Pessoa"], ["Com ela agora", 1], ["Atrasadas", 1], ["Concluídas", 1], ["Registros", 1], ["No prazo", 1], ["👏", 1]],
+        tabela([["Pessoa"], ["Com ela agora", 1], ["Atrasadas", 1], ["Concluídas", 1], ["Registros", 1], ["No prazo", 1], ["Agradecimentos", 1]],
           p.pessoas.map((x) => el("tr", { class: x.eu ? "eu" : null }, el("td", { text: x.eu ? `${x.nome} (você)` : x.nome }), el("td", { class: "num", text: x.com_ela }),
             el("td", { class: "num" + (x.atrasadas ? " err" : ""), text: x.atrasadas }), el("td", { class: "num", text: x.concluidas }),
             el("td", { class: "num", text: x.registros }), el("td", { class: "num", text: pct(x.no_prazo) }), el("td", { class: "num", text: x.agradecimentos }))), "—")),
       blocoRevisao(),
-      P.placar ? el("section", { class: "panel", id: "pn-placar" }, el("div", { class: "inicio-topo" }, el("h3", { style: "margin:0", text: "🏆 Placar" }),
+      P.placar ? el("section", { class: "panel", id: "pn-placar" }, el("div", { class: "inicio-topo" }, el("h3", { style: "margin:0", icone: "placar" }, "Placar"),
           el("span", { class: "tag opcional", text: "só você vê" })),
         el("p", { class: "meta", text: "Para avaliar, não para expor. Pontos só para ordenar: concluída 3, registro 1, no prazo +1, agradecimento 1, ajuda aceita 2." }),
-        tabela([["#", 1], ["Pessoa"], ["Pontos", 1], ["Pegou", 1], ["Concluiu", 1], ["Registros", 1], ["No prazo", 1], ["Até pegar", 1], ["👏", 1], ["🆘", 1], ["Revisões ok/ajustar", 1]],
+        tabela([["#", 1], ["Pessoa"], ["Pontos", 1], ["Pegou", 1], ["Concluiu", 1], ["Registros", 1], ["No prazo", 1], ["Até pegar", 1], ["Agradecimentos", 1], ["Ajudas", 1], ["Revisões ok/ajustar", 1]],
           P.placar.map((x, i) => el("tr", {}, el("td", { class: "num", text: i + 1 }), el("td", { text: x.nome }), el("td", { class: "num", text: x.pontos }),
             el("td", { class: "num", text: x.pegou }), el("td", { class: "num", text: x.concluidas }), el("td", { class: "num", text: x.registros }),
             el("td", { class: "num", text: pct(x.no_prazo) }), el("td", { class: "num", text: min(x.pegar_min) }), el("td", { class: "num", text: x.agradecimentos }),
@@ -135,7 +135,7 @@
   function formRecorrente(r) {
     const C = App.tarefasCampos, tipos = C.tipos()?.tipos || [];
     const camposBox = el("div", { class: "campos-grid", id: "pn-rec-campos" });
-    const tipo = el("select", { id: "pn-rec-tipo", "aria-label": "Tipo de tarefa" }, tipos.map((t) => el("option", { value: t.tipo, text: `${t.icone || ""} ${t.nome}` })));
+    const tipo = el("select", { id: "pn-rec-tipo", "aria-label": "Tipo de tarefa" }, tipos.map((t) => el("option", { value: t.tipo, text: t.nome })));
     tipo.value = r?.tipo || "livre";
     const titulo = el("input", { id: "pn-rec-titulo", maxlength: 150, placeholder: "O que precisa ser feito" });
     titulo.value = r?.titulo || "";
@@ -183,10 +183,10 @@
     if (P.editando && box.contains(ativo) && /^(INPUT|TEXTAREA|SELECT)$/.test(ativo.tagName)) return;
     const l = P.rec || [];
     box.replaceChildren(el("details", { class: "panel", open: box.dataset.aberto === "1" ? true : null, ontoggle: (e) => (box.dataset.aberto = e.target.open ? "1" : "") },
-      el("summary", {}, el("b", { text: "🔁 Tarefas que se repetem" }), el("span", { class: "meta", text: ` · ${l.filter((x) => x.ativa).length} ativa(s)` })),
+      el("summary", {}, el("b", { icone: "recorrente" }, "Tarefas que se repetem"), el("span", { class: "meta", text: ` · ${l.filter((x) => x.ativa).length} ativa(s)` })),
       el("p", { class: "meta", text: "A tarefa aparece sozinha no horário marcado (todo dia, toda semana ou todo mês), com o checklist pronto." }),
       l.length ? el("ul", { class: "recorrentes-lista" }, l.map((r) => el("li", { class: r.ativa ? null : "pausada" },
-        el("div", {}, el("b", { text: `${r.icone || ""} ${r.titulo_exemplo}` }),
+        el("div", {}, el("b", {}, App.icTipo(r.tipo), r.titulo_exemplo),
           el("div", { class: "meta", text: `${quando(r)} · ${r.para_nomes.length ? "para " + r.para_nomes.join(", ") : "para toda a equipe"}${r.checklist.length ? ` · checklist com ${r.checklist.length}` : ""}${r.ativa ? "" : " · pausada"} · criada por ${r.criada_por_nome || "—"}` })),
         r.pode_mexer ? el("div", { class: "actions" },
           el("button", { class: "btn small", type: "button", onclick: () => { P.editando = r.id; App.render(); } }, "Editar"),

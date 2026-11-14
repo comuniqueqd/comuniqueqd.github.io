@@ -2,14 +2,17 @@
 // Tudo montado com textContent (nunca innerHTML).
 const Api = globalThis.ComuniqueApi;
 const $ = (s) => document.querySelector(s);
+const EMOJI = /\p{Extended_Pictographic}\uFE0F?(?:\u200D\p{Extended_Pictographic}\uFE0F?)*[\u{1F3FB}-\u{1F3FF}]?/gu;
+const semEmoji = (t) => String(t).replace(EMOJI, "").replace(/[ \t]{2,}/g, " ").replace(/^[ \t]+/, "");
 function el(tag, attrs = {}, ...filhos) {
   const n = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
     if (v == null || v === false) continue;
-    if (k === "text") n.textContent = v; else if (k === "class") n.className = v;
+    if (k === "icone") { if (window.App?.ic) n.append(window.App.ic(v)); continue; }
+    if (k === "text") n.textContent = semEmoji(v); else if (k === "class") n.className = v;
     else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v === true ? "" : v);
   }
-  n.append(...filhos.flat().filter((f) => f != null && f !== false));
+  n.append(...filhos.flat().filter((f) => f != null && f !== false).map((f) => (f.nodeType ? f : semEmoji(f))));
   return n;
 }
 const quando = (iso) => new Date(iso).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
@@ -67,7 +70,7 @@ async function abrirForm(acao) {
   }
   const form = await globalThis.ComuniqueForms.montar(acao, dados, {
     rpc: (fn, args) => Api.rpc(fn, args), abrir,
-    pronto: async (msg) => { mostrarApp(); const p = $("#feito"); p.textContent = "✓ " + msg; p.hidden = false; await chrome.runtime.sendMessage({ tipo: "conferir" }); atualizar(); },
+    pronto: async (msg) => { mostrarApp(); const p = $("#feito"); p.replaceChildren(window.App.ic("ok"), msg); p.hidden = false; await chrome.runtime.sendMessage({ tipo: "conferir" }); atualizar(); },
   });
   $("#t-form").textContent = TITULOS[acao];
   $("#caixa-form").replaceChildren(form);
@@ -114,7 +117,7 @@ async function telaAtual() {
   const e = r.entregador;
   box.replaceChildren(el("div", { class: "tela" }, el("span", { class: "grupo", text: "Nesta tela" }), el("b", { text: e.nome || "Nome não encontrado" }),
     el("span", { class: "sub meta", text: [e.id, e.cidade].filter(Boolean).join(" · ") }),
-    el("button", { class: "btn", type: "button", onclick: () => abrir("#ficha/" + encodeURIComponent(e.id)) }, "🔎 Ver ficha no Comunique")));
+    el("button", { class: "btn", type: "button", onclick: () => abrir("#ficha/" + encodeURIComponent(e.id)) }, "Ver ficha no Comunique")));
 }
 chrome.tabs.onActivated.addListener(() => telaAtual());
 chrome.tabs.onUpdated.addListener((_id, mud) => { if (mud.status === "complete") setTimeout(telaAtual, 800); });
@@ -126,15 +129,15 @@ async function atualizar() {
   catch (x) { if (x.semSessao) return mostrar(); return erro("#e-app", x.message); }
   const ajudas = (r.resumo?.avisos_rapidos || []).filter((a) => a.tipo === "ajuda" && !a.expirado);
   $("#agora").replaceChildren(...ajudas.map((a) => el("div", { class: "agora" },
-    el("b", { text: "🆘 " + (a.meu ? "Seu pedido de ajuda" : `${a.criado_por_nome || "Alguém"} pediu ajuda`) }),
+    el("b", { icone: "ajuda" }, a.meu ? "Seu pedido de ajuda" : `${a.criado_por_nome || "Alguém"} pediu ajuda`),
     el("span", { text: a.titulo || a.texto || "" }),
     el("span", { class: "sub meta", text: a.aceito_por_nome ? `Com ${a.aceito_por_nome}` : "Ninguém pegou ainda" }),
     // aceitar o pedido aqui mesmo (o seu próprio pedido só aparece, sem botão)
     !a.meu && !a.aceito_por_nome ? el("button", { class: "btn primario", type: "button", onclick: async (ev) => {
       ev.currentTarget.disabled = true;
-      try { await Api.rpc("aceitar_ajuda", { p_id: a.id }); await atualizar(); const p = $("#feito"); p.textContent = "✓ Você aceitou ajudar. Combine com quem pediu."; p.hidden = false; }
+      try { await Api.rpc("aceitar_ajuda", { p_id: a.id }); await atualizar(); const p = $("#feito"); p.replaceChildren(window.App.ic("ok"), "Você aceitou ajudar. Combine com quem pediu."); p.hidden = false; }
       catch (x) { erro("#e-app", x.message); ev.currentTarget.disabled = false; }
-    } }, "🙋 Eu ajudo") : null)));
+    }, icone: "juntos" }, "Eu ajudo") : null)));
   const n = r.notif?.nao_lidas || 0, c = $("#c-avisos");
   c.textContent = n; c.hidden = !n; $("#b-lidos").hidden = !n;
   const itens = (r.notif?.itens || []).slice(0, 15);

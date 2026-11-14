@@ -6,14 +6,17 @@
 //   pronto(mensagem) é chamado depois de gravar.
 (() => {
   const limpo = (t) => String(t ?? "").replace(/\s+/g, " ").trim();
+  const EMOJI = /\p{Extended_Pictographic}\uFE0F?(?:\u200D\p{Extended_Pictographic}\uFE0F?)*[\u{1F3FB}-\u{1F3FF}]?/gu;
+  const semEmoji = (t) => String(t).replace(EMOJI, "").replace(/[ \t]{2,}/g, " ").replace(/^[ \t]+/, "");
   function el(tag, attrs = {}, ...filhos) {
     const n = document.createElement(tag);
     for (const [k, v] of Object.entries(attrs)) {
       if (v == null || v === false) continue;
-      if (k === "text") n.textContent = v; else if (k === "class") n.className = v;
+      if (k === "icone") { if (window.App?.ic) n.append(window.App.ic(v)); continue; }
+      if (k === "text") n.textContent = semEmoji(v); else if (k === "class") n.className = v;
       else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v === true ? "" : v);
     }
-    n.append(...filhos.flat().filter((f) => f != null && f !== false));
+    n.append(...filhos.flat().filter((f) => f != null && f !== false).map((f) => (f.nodeType ? f : semEmoji(f))));
     return n;
   }
   const norm = (t) => limpo(t).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -198,7 +201,7 @@
         el("div", { class: "campo" }, el("span", { class: "rot", text: "Do que é a ajuda?" }),
           radio("cat", [["monitoramento", "Operação – Monitoramento"], ["suporte_crisp", "Operação – Suporte (Crisp)"], ["suporte_blip", "Operação – Suporte (Blip)"]], "monitoramento")),
         el("label", {}, "O que está acontecendo (opcional)", texto));
-      textoBotao = "🆘 Pedir ajuda"; foco = texto;
+      textoBotao = "Pedir ajuda"; foco = texto;
       gravar = async (_v, form) => { await rpc("pedir_ajuda", { p_categoria: marcado(form, "cat"), p_texto: limpo(texto.value) || null }); return "Pedido de ajuda enviado para a equipe."; };
     }
 

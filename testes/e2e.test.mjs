@@ -356,7 +356,7 @@ try {
     ok(m.j.id === "/" && m.j.display === "standalone" && m.j.icons.some((x) => x.purpose === "maskable") && icone, "009n: manifesto do app (id, janela própria, ícones)");
     ok(await s.isHidden("#b-instalar"), "009n: sem convite do navegador, o botão Instalar fica escondido");
     await s.evaluate(() => { const e = new Event("beforeinstallprompt", { cancelable: true }); e.prompt = async () => {}; e.userChoice = Promise.resolve({ outcome: "accepted" }); dispatchEvent(e); });
-    ok(await esperar(s, "#b-instalar:not([hidden])"), "009n: o navegador oferece instalar: aparece o botão 📲 Instalar");
+    ok(await esperar(s, "#b-instalar:not([hidden])"), "009n: o navegador oferece instalar: aparece o botão Instalar");
     await s.click("#b-instalar");
     ok(await esperar(s, "#toast:has-text('Comunique instalado')") && await sumir(s, "#b-instalar"), "009n: instalar usa o convite uma vez e o botão some"); }
   // troca de tela: o foco vai para o título da tela nova (o link clicado é recriado)
@@ -1263,14 +1263,14 @@ try {
   ok(await esperar(m7, cardAtiv + " .bullet.aguardando >> text=Esperando os documentos do parceiro"), "aguardando terceiro pausa a tarefa");
   await m7.click(cardAtiv + " button:has-text('Retomar')");
   ok(await esperar(m7, cardAtiv + " >> text=Em andamento"), "retomar volta para em andamento");
-  await m7.click(cardAtiv + " button:has-text('💬')");
+  await m7.click(cardAtiv + " button[aria-label^='Comentários']");
   await m7.selectOption("#janela-comentarios select", "Suporte Um");
   await m7.type("#at-comentario", "dá uma olhada nos de ontem");
   await m7.click("#janela-comentarios button.primary");
   ok(await esperar(m7, "#janela-comentarios .comentario >> text=@Suporte Um dá uma olhada nos de ontem"), "comentário com @menção");
   await m7.screenshot({ path: path.join(PRINTS, "m2-comentarios.png") });
   await m7.click("#janela-comentarios .janela-topo button");
-  ok(await esperar(m7, cardAtiv + " button:has-text('💬 1')"), "o card mostra quantos comentários tem");
+  ok(await esperar(m7, cardAtiv + " button[aria-label='Comentários (1)']"), "o card mostra quantos comentários tem");
   await m7.screenshot({ path: path.join(PRINTS, "m3-tarefas.png"), fullPage: true });
   await m7.click(cardAtiv + " >> text=Concluir");
   await m7.click(cardAtiv + " >> text=Confirmar conclusão");
@@ -1278,7 +1278,7 @@ try {
   await s8.evaluate(() => App.carregar());
   ok(await esperar(s8, cardAtiv + " button:has-text('Agradecer')"), "quem pediu pode agradecer");
   await s8.click(cardAtiv + " button:has-text('Agradecer')");
-  ok(await esperar(s8, cardAtiv + " >> text=👏 Suporte Um") && await s8.isVisible(cardAtiv + " button:has-text('Agradecido')"), "agradecimento aparece no card");
+  ok(await esperar(s8, cardAtiv + " >> text=Agradeceram: Suporte Um") && await s8.isVisible(cardAtiv + " button:has-text('Agradecido')"), "agradecimento aparece no card");
 
   await s8.click("#at-nova-box summary");
   await s8.click("#at-tipos .chip[data-tipo=contato_entregador]");
@@ -1482,6 +1482,8 @@ try {
             const p = t.parentElement;
             if (!p || !p.getClientRects().length || p.closest("script, style, template, [hidden]")) continue;
             if (/[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{2}/.test(t.data)) lista.push(`CPF na tela "${t.data.trim().slice(0, 50)}" em <${p.tagName.toLowerCase()}>`);
+            // 009u: nenhuma tela mostra emoji (regra do usuário; as mensagens de WhatsApp ficam dentro de caixas de texto)
+            if (/\p{Extended_Pictographic}/u.test(t.data) && !p.closest("textarea")) lista.push(`emoji na tela "${t.data.trim().slice(0, 40)}" em <${p.tagName.toLowerCase()}${p.id ? "#" + p.id : ""}>`);
             if (/\b(null|undefined|NaN)\b|\[object Object\]/.test(t.data)) lista.push(`texto quebrado "${t.data.trim().slice(0, 50)}" em <${p.tagName.toLowerCase()}${p.id ? "#" + p.id : ""}>`);
           }
           return lista;

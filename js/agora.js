@@ -35,7 +35,7 @@
       el("fieldset", { class: "opcoes-col" }, el("legend", { text: "Do que é a ajuda?" }), ...radios),
       el("label", {}, "O que está acontecendo (opcional)", texto), erro,
       el("div", { class: "actions" },
-        acao("🆘 Pedir ajuda", async () => {
+        acao([App.ic("ajuda"), "Pedir ajuda"], async () => {
           await rpc("pedir_ajuda", { p_categoria: d.querySelector("input[name=ag-categoria]:checked").value,
             p_texto: texto.value.trim() || null });
           d.close();
@@ -57,7 +57,7 @@
       el("label", {}, "Aviso", texto),
       el("div", {}, el("span", { class: "meta", text: "Fica na tela por" }), chips), erro,
       el("div", { class: "actions" },
-        acao("📢 Publicar aviso", async () => {
+        acao([App.ic("aviso"), "Publicar aviso"], async () => {
           if (!texto.value.trim()) throw new Error("Escreva o aviso.");
           await rpc("criar_aviso_geral", { p_texto: texto.value.trim(), p_horas: horas });
           d.close();
@@ -94,7 +94,7 @@
       itens.length ? el("ul", { class: "turno-itens" }, linhas) : el("p", { class: "meta", text: "Nenhuma tratativa ou atividade aceita está com você." }),
       el("label", {}, "Recado para quem entra", texto), erro,
       el("div", { class: "actions" },
-        acao("🔁 Passar o turno", async () => {
+        acao([App.ic("turno"), "Passar o turno"], async () => {
           const p_itens = linhas.map((li) => {
             const s = li.querySelector("select"), v = s.value, it = s._item;
             return { tipo: it.tipo, id: it.id, titulo: it.titulo, acao: v.startsWith("p:") ? "passar" : v, para: v.startsWith("p:") ? v.slice(2) : null };
@@ -118,7 +118,7 @@
     const erro = erroEl();
     let situacao, botoes = [];
     if (a.aceito_por_nome) {
-      situacao = a.meu ? `🤝 ${a.aceito_por_nome} vai te ajudar` : a.aceito_por_mim ? `🤝 Você está ajudando ${a.criado_por_nome}` : `🤝 ${a.aceito_por_nome} está ajudando`;
+      situacao = a.meu ? `${a.aceito_por_nome} vai te ajudar` : a.aceito_por_mim ? `Você está ajudando ${a.criado_por_nome}` : `${a.aceito_por_nome} está ajudando`;
       if (a.meu || a.aceito_por_mim) botoes = [acao("Resolvido", () => rpc("resolver_aviso_rapido", { p_id: a.id, p_nota: null }), { classe: "btn small primary", ok: "Pedido de ajuda resolvido.", erro })];
     } else if (a.meu) {
       if (a.para_moderadores) {
@@ -136,10 +136,10 @@
     } else {
       situacao = a.para_moderadores ? `${a.criado_por_nome} precisa de ajuda (ninguém pegou; enviado aos moderadores)`
         : `${a.criado_por_nome} precisa de ajuda · ${minutosAte(a.expira_em)} min para alguém pegar`;
-      botoes = [acao("🙋 Eu ajudo", async () => { await rpc("aceitar_ajuda", { p_id: a.id }); App.som?.parar(); }, { classe: "btn small primary", ok: "Você aceitou ajudar. Combine com quem pediu.", erro })];
+      botoes = [acao([App.ic("juntos"), "Eu ajudo"], async () => { await rpc("aceitar_ajuda", { p_id: a.id }); App.som?.parar(); }, { classe: "btn small primary", ok: "Você aceitou ajudar. Combine com quem pediu.", erro })];
     }
     return el("article", { class: "rapido ajuda" + (a.aceito_por_nome ? " aceita" : expirado ? " expirada" : "") , "data-tipo": "ajuda" },
-      el("div", { class: "rapido-tipo", text: "🆘 Pedido de ajuda · " + a.titulo }),
+      el("div", { class: "rapido-tipo", icone: "ajuda" }, "Pedido de ajuda: " + a.titulo),
       el("div", { class: "rapido-quem", text: situacao }),
       a.texto ? el("div", { class: "rapido-texto", text: a.texto }) : null,
       a.link ? el("div", { class: "meta" }, "Link/protocolo: ", linkOuProtocolo(a.link)) : null,
@@ -149,7 +149,7 @@
 
   function cartaoAviso(a) {
     return el("article", { class: "rapido aviso-geral", "data-tipo": "aviso" },
-      el("div", { class: "rapido-tipo", text: "📢 Aviso geral" }),
+      el("div", { class: "rapido-tipo", icone: "aviso" }, "Aviso geral"),
       el("div", { class: "rapido-texto", text: a.texto }),
       el("div", { class: "meta", text: `${a.meu ? "seu" : "de " + (a.criado_por_nome || "—")} · às ${hora(a.criado_em)} · fica até ${hora(a.expira_em)}` }),
       a.meu || souModerador() ? el("div", { class: "actions" }, acao("Encerrar aviso", () => rpc("encerrar_aviso_rapido", { p_id: a.id }), { classe: "btn small link", ok: "Aviso encerrado." })) : null);
@@ -159,7 +159,7 @@
   function cartaoPassagem(p) {
     const pano = p.panorama || {};
     return el("article", { class: "rapido passagem", "data-tipo": "turno" },
-      el("div", { class: "rapido-tipo", text: `🔁 Passagem de turno de ${p.de_nome || "—"} · ${hora(p.criada_em)}` }),
+      el("div", { class: "rapido-tipo", icone: "turno" }, `Passagem de turno de ${p.de_nome || "—"}, às ${hora(p.criada_em)}`),
       p.texto ? el("div", { class: "rapido-texto", text: p.texto }) : null,
       (p.itens || []).length ? el("ul", { class: "passagem-itens" }, p.itens.map((it) =>
         el("li", {}, el("b", { text: it.acao === "passar" ? `Passou para ${it.para_nome}` : it.acao === "abrir" ? "Deixou aberta" : "Manteve" }), ": " + (it.titulo || "")))) : null,
@@ -179,9 +179,9 @@
 
   // botões pequenos ao lado do "Olá"
   const botoes = () => [
-    el("button", { class: "btn small acao-agora ajuda", type: "button", id: "b-pedir-ajuda", onclick: pedirAjuda }, "🆘 Pedir ajuda"),
-    el("button", { class: "btn small acao-agora", type: "button", id: "b-aviso-geral", onclick: avisoGeral }, "📢 Aviso geral"),
-    el("button", { class: "btn small acao-agora", type: "button", id: "b-passar-turno", onclick: passarTurno }, "🔁 Passar o turno"),
+    el("button", { class: "btn small acao-agora ajuda", type: "button", id: "b-pedir-ajuda", onclick: pedirAjuda, icone: "ajuda" }, "Pedir ajuda"),
+    el("button", { class: "btn small acao-agora", type: "button", id: "b-aviso-geral", onclick: avisoGeral, icone: "aviso" }, "Aviso geral"),
+    el("button", { class: "btn small acao-agora", type: "button", id: "b-passar-turno", onclick: passarTurno, icone: "turno" }, "Passar o turno"),
   ];
 
   // ---------- lembrete das 18h ----------
@@ -201,7 +201,7 @@
     if (!mostrar) { atual?.remove(); return; }
     if (atual) return;
     const aviso = el("div", { class: "aviso-versao lembrete-turno", id: "lembrete-turno", role: "status" },
-      el("span", { text: "🔁 Chegando as 18h: antes de sair, passe o turno para quem entra." }),
+      el("span", { icone: "turno" }, "Chegando as 18h: antes de sair, passe o turno para quem entra."),
       el("button", { class: "btn primary small", type: "button", onclick: () => passarTurno() }, "Passar o turno agora"),
       el("button", { class: "btn link", type: "button", onclick: (e) => {
         try { sessionStorage.setItem("comunique-turno-depois", String(Date.now() + 30 * 60000)); } catch (_) {}

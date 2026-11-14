@@ -148,7 +148,7 @@
     c.revisar ? el("div", { onclick: (e) => e.stopPropagation() }, botaoRevisar(c)) : null);
   // botão "revisar": abre a janela para completar os dados (qualquer pessoa da equipe)
   const botaoRevisar = (c, discreto) => el("button", { class: "revisar-cad" + (discreto ? " discreto" : ""), type: "button", title: "Revisar: " + c.revisar,
-    onclick: (e) => { e.stopPropagation(); App.abrirCadastro(c.id); } }, discreto ? "revisar" : "⚠ revisar: " + c.revisar);
+    onclick: (e) => { e.stopPropagation(); App.abrirCadastro(c.id); } }, discreto ? "revisar" : [App.ic("alerta"), "revisar: " + c.revisar]);
 
   // resumo do que o sistema já sabe do ID (ficha, bloqueios, leves, comentários)
   function resumoHistorico(h, idApp) {
@@ -158,7 +158,7 @@
     if (h.leves) partes.push(`${h.leves} leve(s)`);
     if (h.comentarios) partes.push(`${h.comentarios} comentário(s)`);
     return el("div", { class: "quadrinho" + (h.encerrado ? " grave" : "") },
-      h.encerrado ? el("p", { style: "margin:0" }, el("b", { text: "⚠ Este ID está com a parceria encerrada" }), h.encerrado_infracao ? ` (${h.encerrado_infracao}, ${dt(h.encerrado_em)})` : "") : null,
+      h.encerrado ? el("p", { style: "margin:0" }, el("b", { icone: "alerta" }, "Este ID está com a parceria encerrada"), h.encerrado_infracao ? ` (${h.encerrado_infracao}, ${dt(h.encerrado_em)})` : "") : null,
       el("p", { style: "margin:0" }, el("b", { text: "Este ID já existe no Comunique: " }), partes.join(" · ") || "sem registros", h.bloqueado_agora ? " · bloqueado agora" : ""),
       App.abrirFicha ? el("button", { class: "btn link", type: "button", onclick: () => App.abrirFicha(idApp) }, "Consultar entregador") : null);
   }

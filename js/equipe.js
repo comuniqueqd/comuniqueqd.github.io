@@ -37,8 +37,8 @@
     t.replaceChildren(head, el("tbody", {}, eq.membros.map((m) => {
       let pa, pb;
       if (m.admin_final) {
-        pa = el("span", { text: "Moderador · administrador final 🔒", title: "Este acesso não pode ser removido nem alterado." });
-        pb = el("span", { text: "Moderador 🔒" });
+        pa = el("span", { title: "Este acesso não pode ser removido nem alterado." }, "Moderador, administrador final ", App.ic("cadeado", { rotulo: "fixo" }));
+        pb = el("span", {}, "Moderador ", App.ic("cadeado", { rotulo: "fixo" }));
       } else {
         pa = selPapel(OPC_ATIV, m.papel, "Acesso de " + m.nome + " na ativação",
           (e) => salvarMembro(m.email, m.nome, e.target.value, m.papel_bloqueios, e.target, `Ativação: ${m.nome} agora é ${PAPEL[e.target.value]}.`));

@@ -163,7 +163,7 @@
     if (!A.tipos) return;
     const chips = $("#at-tipos");
     if (!chips.childElementCount) chips.replaceChildren(...A.tipos.tipos.map((t) => el("button", { class: "chip tipo-chip", type: "button", "data-tipo": t.tipo,
-      onclick: () => { F.tipo = t.tipo; renderFormTarefa(); $("#at-campos input, #at-campos select")?.focus(); } }, `${t.icone || ""} ${t.nome}`)));
+      onclick: () => { F.tipo = t.tipo; renderFormTarefa(); $("#at-campos input, #at-campos select")?.focus(); } }, App.icTipo(t.tipo), t.nome)));
     chips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.tipo === F.tipo)));
     montarCampos($("#at-campos"), F.tipo);
     $("#at-titulo-box").hidden = F.tipo !== "livre";
@@ -199,7 +199,7 @@
     const b = e.currentTarget; b.disabled = true;
     try {
       const a = await rpc("pegar_proxima");
-      toast(a ? `Com você agora: ${a.titulo}` : "Nenhuma tarefa aberta para você agora. 🎉");
+      toast(a ? `Com você agora: ${a.titulo}` : "Nenhuma tarefa aberta para você agora.");
       await App.carregar();
     } catch (err) { toast(msgErro(err)); } finally { b.disabled = false; }
   });
@@ -266,7 +266,7 @@
     if (!a.meta) return null;
     return el("div", { class: "progresso-tarefa" },
       App.u.progresso(a.progresso, a.meta, `Progresso: ${a.progresso} de ${a.meta}`),  // 009l: <progress> nativo
-      el("span", { class: "meta", text: `${a.progresso} de ${a.meta}${a.progresso_automatico ? (a.tipo === "ativar_parceiro" ? " (conta sozinho: parceiros ativados por quem pegou, na cidade)" : " (conta sozinho: entregadores aprovados por quem pegou, na cidade)") : ""}${a.progresso >= a.meta ? " · meta atingida 🎉" : ""}` }),
+      el("span", { class: "meta", text: `${a.progresso} de ${a.meta}${a.progresso_automatico ? (a.tipo === "ativar_parceiro" ? " (conta sozinho: parceiros ativados por quem pegou, na cidade)" : " (conta sozinho: entregadores aprovados por quem pegou, na cidade)") : ""}${a.progresso >= a.meta ? ", meta atingida" : ""}` }),
       !a.progresso_automatico && a.pode_mexer && a.status !== "aberta" ? el("button", { class: "btn small", type: "button", onclick: (e) => acaoAtividade("avancar_tarefa", { p_id: a.id, p_delta: 1 }, e.currentTarget) }, "+1") : null,
       !a.progresso_automatico && a.pode_mexer && a.status !== "aberta" && a.progresso > 0 ? el("button", { class: "btn link", type: "button", onclick: (e) => acaoAtividade("avancar_tarefa", { p_id: a.id, p_delta: -1 }, e.currentTarget) }, "−1") : null);
   }
@@ -282,7 +282,7 @@
         const cb = el("input", { type: "checkbox", disabled: !a.pode_mexer || null }); cb.checked = !!x.feito;
         cb.addEventListener("change", () => { cb.blur(); acaoAtividade("checklist_tarefa", { p_id: a.id, p_acao: "marcar", p_indice: i }); });
         return el("li", {}, el("label", { class: "marcar" + (x.feito ? " feito" : "") }, cb, x.texto, x.feito && x.por_nome ? el("span", { class: "meta", text: ` · ${x.por_nome}` }) : null),
-          a.pode_mexer ? el("button", { class: "btn link", type: "button", "aria-label": "Remover " + x.texto, onclick: () => acaoAtividade("checklist_tarefa", { p_id: a.id, p_acao: "remover", p_indice: i }) }, "✕") : null);
+          a.pode_mexer ? el("button", { class: "btn link", type: "button", "aria-label": "Remover " + x.texto, onclick: () => acaoAtividade("checklist_tarefa", { p_id: a.id, p_acao: "remover", p_indice: i }) }, App.ic("fechar")) : null);
       })),
       a.pode_mexer ? el("form", { class: "actions", onsubmit: (e) => { e.preventDefault(); novo.blur(); if (novo.value.trim()) acaoAtividade("checklist_tarefa", { p_id: a.id, p_acao: "incluir", p_texto: novo.value.trim() }); } },
         novo, el("button", { class: "btn small", type: "submit" }, "Incluir")) : null);
@@ -307,9 +307,9 @@
       : `Esperou ${tempo(a.seg_espera)} até alguém pegar · trabalhando há ${tempo(a.seg_execucao)}`;
     return el("article", { class: "card tarefa-card" + (a.opcional_para_mim && a.status === "aberta" ? " opcional" : "") + (a.status === "concluida" ? " tratada" : "") + (atrasada ? " atrasada" : "") + (prevPassou ? " previsao-passou" : "") + (a.aguardando_desde ? " aguardando" : ""), "data-id": a.id, "data-tipo": a.tipo },
       el("div", { class: "head" },
-        el("span", { class: "name" }, a.tipo !== "livre" ? el("span", { class: "tag tipo", text: `${a.tipo_icone} ${a.tipo_nome}` }) : null,
+        el("span", { class: "name" }, a.tipo !== "livre" ? el("span", { class: "tag tipo" }, App.icTipo(a.tipo), a.tipo_nome) : null,
           a.opcional ? el("span", { class: "tag opcional", text: a.opcional_para_mim ? "Opcional" : "Opcional para os outros" }) : null,
-          a.recorrente ? el("span", { class: "tag", title: "Tarefa que se repete", text: "🔁" }) : null, a.titulo),
+          a.recorrente ? el("span", { class: "tag", title: "Tarefa que se repete" }, App.ic("recorrente", { rotulo: "Tarefa que se repete" })) : null, a.titulo),
         a.status === "aberta" ? el("span", { class: "esperando" + (espera.velho ? " velho" : ""), text: `esperando há ${espera.txt}` }) : null),
       resumoCampos(a),
       a.descricao ? el("div", { class: "obs", text: a.descricao }) : null,
@@ -317,30 +317,30 @@
       el("div", { class: "meta linha-tarefa" },
         `Por ${a.criada_por === S.me.id ? "você" : a.criada_por_nome} · ${dt(a.criada_em)}${a.cidade ? " · " + a.cidade : ""}${a.modo === "registro" ? " · Registro do que já foi feito" : " · " + para}`,
         a.prazo && a.status !== "concluida" ? el("span", { class: atrasada ? "err" : null, text: ` · Prazo: ${dt(a.prazo)}${atrasada ? " (passou)" : ""}` }) : null),
-      a.aguardando_desde ? el("div", { class: "bullet aguardando" }, el("span", {}, el("b", { text: "⏳ Aguardando terceiro" }), ` desde ${dt(a.aguardando_desde)}: ${a.aguardando_motivo}`)) : null,
-      a.status === "aceita" && !a.aguardando_desde ? el("div", { class: "bullet pendente" }, el("span", {}, el("b", { text: "Em andamento" }), ` com ${quemEsta} desde ${dt(a.aceita_em)}`, tempos ? el("span", { class: "meta tempos", text: " · ⏱ " + tempos }) : null)) : null,
-      a.pode_entrar ? el("div", { class: "bullet juntos" }, el("span", {}, el("b", { text: "🤝 Já tem gente trabalhando nela" }), ` (${quemEsta}). Dá para entrar junto: as suas aprovações também contam.`)) : null,
+      a.aguardando_desde ? el("div", { class: "bullet aguardando" }, el("span", {}, el("b", { icone: "aguardando" }, "Aguardando terceiro"), ` desde ${dt(a.aguardando_desde)}: ${a.aguardando_motivo}`)) : null,
+      a.status === "aceita" && !a.aguardando_desde ? el("div", { class: "bullet pendente" }, el("span", {}, el("b", { text: "Em andamento" }), ` com ${quemEsta} desde ${dt(a.aceita_em)}`, tempos ? el("span", { class: "meta tempos", icone: "tempo" }, tempos) : null)) : null,
+      a.pode_entrar ? el("div", { class: "bullet juntos" }, el("span", {}, el("b", { icone: "juntos" }, "Já tem gente trabalhando nela"), ` (${quemEsta}). Dá para entrar junto: as suas aprovações também contam.`)) : null,
       a.status === "aceita" ? App.u.previsao(a, "atividade", a.id, a.pode_prever) : null,
       a.status === "concluida" ? el("div", { class: "bullet concluida" }, el("span", {}, el("b", { text: "Concluída" }), ` por ${a.concluida_por_nome} em ${dt(a.concluida_em)}${a.nota ? " — " + a.nota : ""}`,
-        tempos && a.modo !== "registro" ? el("span", { class: "meta tempos", text: " · ⏱ " + tempos }) : null)) : null,
-      a.aguardando_desde && tempos ? el("div", { class: "meta tempos", text: "⏱ " + tempos }) : null,
+        tempos && a.modo !== "registro" ? el("span", { class: "meta tempos", icone: "tempo" }, tempos) : null)) : null,
+      a.aguardando_desde && tempos ? el("div", { class: "meta tempos", icone: "tempo" }, tempos) : null,
       blocoProgresso(a),
       blocoChecklist(a),
-      a.agradecimentos.length ? el("div", { class: "meta agradecimentos", text: "👏 " + a.agradecimentos.join(", ") }) : null,
+      a.agradecimentos.length ? el("div", { class: "meta agradecimentos", icone: "agradecer" }, "Agradeceram: " + a.agradecimentos.join(", ")) : null,
       a.revisao ? el("div", { class: "bullet " + (a.revisao.resultado === "ok" ? "concluida" : "atrasada") }, el("span", {},
-        el("b", { text: a.revisao.resultado === "ok" ? "✅ Revisada: tudo certo" : "✏️ Revisada: pediu ajuste" }), ` por ${a.revisao.por_nome}${a.revisao.comentario ? " — " + a.revisao.comentario : ""}`)) : null,
+        el("b", { icone: a.revisao.resultado === "ok" ? "ok" : "ajustar" }, a.revisao.resultado === "ok" ? "Revisada: tudo certo" : "Revisada: pediu ajuste"), ` por ${a.revisao.por_nome}${a.revisao.comentario ? " — " + a.revisao.comentario : ""}`)) : null,
       el("div", { class: "actions" },
         a.pode_aceitar ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, a.compartilhavel ? "Tarefa aceita. Outras pessoas ainda podem entrar junto." : "Tarefa aceita. Ela está com você.") }, "Eu faço") : null,
-        a.pode_entrar ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Você entrou na tarefa. Suas aprovações contam junto.") }, "🤝 Entrar junto") : null,
+        a.pode_entrar ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Você entrou na tarefa. Suas aprovações contam junto.") }, [App.ic("juntos"), "Entrar junto"]) : null,
         a.status === "aberta" ? el("button", { class: "btn small", type: "button", onclick: () => janelaPedir(a) }, "Pedir para alguém") : null,
         a.cadastro_id && a.status !== "concluida" ? el("button", { class: "btn small", type: "button", onclick: () => App.abrirCadastro(a.cadastro_id) }, "Completar o cadastro") : null,
         a.pode_concluir && !cx ? el("button", { class: "btn approve small", type: "button", onclick: () => { A.caixa["a" + a.id] = { texto: "" }; render(); } }, "Concluir") : null,
         cx ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("concluir_atividade", { p_id: a.id, p_nota: cx.texto || null }, e.currentTarget, "Tarefa concluída.") }, "Confirmar conclusão") : null,
         cx ? el("button", { class: "btn link", type: "button", onclick: () => { delete A.caixa["a" + a.id]; render(); } }, "Cancelar") : null,
-        a.pode_concluir && !a.pode_entrar && !cx && !a.aguardando_desde ? el("button", { class: "btn small", type: "button", onclick: () => janelaAguardar(a) }, "⏳ Aguardando terceiro") : null,
-        a.pode_concluir && !a.pode_entrar && a.aguardando_desde ? el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoAtividade("aguardar_terceiro", { p_id: a.id, p_motivo: null }, e.currentTarget, "Tarefa retomada.") }, "▶ Retomar") : null,
-        el("button", { class: "btn small quiet", type: "button", onclick: () => janelaComentarios(a) }, `💬 ${a.comentarios || ""}`.trim()),
-        a.pode_agradecer ? el("button", { class: "btn small quiet", type: "button", "aria-pressed": String(a.agradeci), onclick: (e) => acaoAtividade("agradecer_tarefa", { p_id: a.id }, e.currentTarget, a.agradeci ? null : "Agradecimento enviado.") }, a.agradeci ? "👏 Agradecido" : "👏 Agradecer") : null,
+        a.pode_concluir && !a.pode_entrar && !cx && !a.aguardando_desde ? el("button", { class: "btn small", type: "button", onclick: () => janelaAguardar(a), icone: "aguardando" }, "Aguardando terceiro") : null,
+        a.pode_concluir && !a.pode_entrar && a.aguardando_desde ? el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoAtividade("aguardar_terceiro", { p_id: a.id, p_motivo: null }, e.currentTarget, "Tarefa retomada.") }, [App.ic("tocar"), "Retomar"]) : null,
+        el("button", { class: "btn small quiet", type: "button", onclick: () => janelaComentarios(a), icone: "comentario", "aria-label": `Comentários${a.comentarios ? " (" + a.comentarios + ")" : ""}` }, a.comentarios ? String(a.comentarios) : "Comentar"),
+        a.pode_agradecer ? el("button", { class: "btn small quiet", type: "button", "aria-pressed": String(a.agradeci), onclick: (e) => acaoAtividade("agradecer_tarefa", { p_id: a.id }, e.currentTarget, a.agradeci ? null : "Agradecimento enviado.") }, [App.ic("agradecer"), a.agradeci ? "Agradecido" : "Agradecer"]) : null,
         el("span", { class: "spacer" }),
         a.pode_excluir && a.status !== "concluida" ? (A.conf[a.id]
           ? el("span", {}, el("button", { class: "btn danger small", type: "button", onclick: (e) => acaoAtividade("excluir_atividade", { p_id: a.id }, e.currentTarget, "Tarefa excluída.") }, "Confirmar exclusão"),
@@ -358,7 +358,7 @@
       el("p", { class: "meta", text: "Tarefa criada sem prazo recebe o prazo do tipo. Sem dono na metade do prazo, os moderadores são avisados; passou do prazo, quem está com ela é avisado." }),
       el("div", { class: "prazos-tipos" }, A.tipos.tipos.map((t) => {
         const inp = el("input", { type: "number", min: "0.25", max: "720", step: "0.25", value: t.prazo_horas ?? "", placeholder: "sem prazo", "aria-label": "Prazo em horas: " + t.nome });
-        return el("label", {}, `${t.icone || ""} ${t.nome}`, el("span", { class: "linha" }, inp, el("span", { class: "meta", text: "h" }),
+        return el("label", {}, t.nome, el("span", { class: "linha" }, inp, el("span", { class: "meta", text: "h" }),
           el("button", { class: "btn small", type: "button", onclick: async (e) => {
             const b = e.currentTarget; b.disabled = true;
             try { await rpc("salvar_prazo_tipo_tarefa", { p_tipo: t.tipo, p_prazo_horas: inp.value === "" ? null : Number(inp.value) }); t.prazo_horas = inp.value === "" ? null : Number(inp.value); toast("Prazo salvo."); renderFormTarefa(); }

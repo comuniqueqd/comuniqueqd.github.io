@@ -34,7 +34,7 @@
     if (!V.pref) { carregarPref().then(() => App.render()).catch(() => {}); return null; }
     const on = seguindo("entregador", id);
     return el("button", { class: "btn small olho", type: "button", "aria-pressed": String(on), title: on ? "Parar de acompanhar" : "Receber aviso de tudo o que acontecer com este entregador",
-      onclick: (e) => alternar("entregador", id, !on, e.currentTarget) }, on ? "👀 De olho nele" : "👀 Ficar de olho");
+      onclick: (e) => alternar("entregador", id, !on, e.currentTarget) }, [App.ic("olho"), on ? "De olho nele" : "Ficar de olho"]);
   }
   function renderPref() {
     const box = $("#av-prefs"), p = V.pref;
@@ -59,7 +59,7 @@
           el("p", { class: "meta", text: "O que é para você (tarefas, decisões dos seus cadastros, previsões vencidas) e o que vem do “de olho nele” sempre chega." })),
         el("div", {}, el("h4", { text: "Cidades que você segue" }),
           cidadesSeg.length ? el("div", { class: "chips-seguindo" }, cidadesSeg.map((x) => el("span", { class: "chip" }, x.alvo,
-            el("button", { type: "button", title: "Deixar de seguir", "aria-label": "Deixar de seguir " + x.alvo, onclick: (e) => alternar("cidade", x.alvo, false, e.currentTarget) }, "✕"))))
+            el("button", { type: "button", title: "Deixar de seguir", "aria-label": "Deixar de seguir " + x.alvo, onclick: (e) => alternar("cidade", x.alvo, false, e.currentTarget) }, App.ic("fechar")))))
             : el("p", { class: "meta", text: "Nenhuma. Siga uma cidade para receber os avisos dela sem ser a responsável." }),
           el("div", { class: "actions" }, sel, el("button", { class: "btn small", type: "button", onclick: (e) => sel.value && alternar("cidade", sel.value, true, e.currentTarget) }, "Seguir cidade"))),
         S.me.papel_bloqueios ? el("div", {}, el("h4", { text: "De olho em" }),
@@ -117,7 +117,7 @@
     tira.style.right = `${Math.max(8, document.documentElement.clientWidth - b.right)}px`;
     tira.replaceChildren(
       el("div", { class: "tira-topo" }, el("b", { text: n?.nao_lidas ? `${n.nao_lidas} aviso(s) novo(s)` : "Avisos recentes" }),
-        el("button", { class: "btn link", type: "button", onclick: fecharTira, "aria-label": "Fechar" }, "✕")),
+        el("button", { class: "btn link", type: "button", onclick: fecharTira, "aria-label": "Fechar" }, App.ic("fechar"))),
       linhaDia(),
       itens.length ? el("ul", { class: "lista-avisos" }, itens.slice(0, 12).map((x) => linhaAviso(x, () => fecharTira())))
         : el("p", { class: "meta", style: "padding:12px", text: "Nenhum aviso ainda." }),

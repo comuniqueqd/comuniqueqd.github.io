@@ -29,7 +29,7 @@
   // botão de função: ícone, nome, para que serve e uma linha viva (o que está acontecendo agora)
   const funcao = ({ id, href, icone, titulo, texto, vivo, cor, onclick }) =>
     el("a", { class: "funcao " + cor, href, id, onclick },
-      el("span", { class: "funcao-icone", "aria-hidden": "true", text: icone }),
+      el("span", { class: "funcao-icone" }, App.ic(icone)),
       el("span", { class: "funcao-corpo" },
         el("b", { text: titulo }),
         el("span", { class: "funcao-texto", text: texto }),
@@ -73,7 +73,7 @@
   function renderAcordos() {
     const lista = S.resumo?.acordos_vencidos || [];
     $("#inicio-acordos").replaceChildren(...lista.map((a) => el("div", { class: "acordo-vencido", role: "alert" },
-      el("span", { class: "acordo-icone", "aria-hidden": "true", text: "⚠️" }),
+      el("span", { class: "acordo-icone" }, App.ic("alerta")),
       el("div", { class: "acordo-corpo" },
         el("b", { text: a.dias === 0 ? `Acordo vence hoje: fazer o ajuste · ${a.estabelecimento} (${a.cidade})` : `Acordo vencido há ${-a.dias} dia(s): fazer o ajuste · ${a.estabelecimento} (${a.cidade})` }),
         el("span", { class: "rapido-texto", text: a.acordo })),
@@ -90,25 +90,25 @@
 
     // ---------- funções ----------
     const fn = [
-      funcao({ id: "fn-ativacao", href: "#ativacao/novo", icone: "📝", cor: "f-ativ", titulo: "Nova ativação",
+      funcao({ id: "fn-ativacao", href: "#ativacao/novo", icone: "ativacao", cor: "f-ativ", titulo: "Nova ativação",
         texto: "Enviar o cadastro de um entregador para aprovação.",
         vivo: a ? (staffAtiv() ? `${a.equipe_aguardando_analise ?? a.aguardando_analise} aguardando análise` : `${a.meus_aguardando_analise} ${a.meus_aguardando_analise === 1 ? "seu" : "seus"} em análise`) : null }),
-      S.me.papel_bloqueios ? funcao({ id: "fn-bloqueio", href: "#bloqueios/novo", icone: "⛔", cor: "f-bloq", titulo: "Novo bloqueio",
+      S.me.papel_bloqueios ? funcao({ id: "fn-bloqueio", href: "#bloqueios/novo", icone: "bloqueio", cor: "f-bloq", titulo: "Novo bloqueio",
         texto: "Registrar um bloqueio ou uma infração leve, com a punição calculada.",
         vivo: b ? `${b.equipe_bloqueados_agora ?? b.meus_bloqueados_agora ?? 0} bloqueados agora` : null }) : null,
-      S.me.papel_bloqueios ? funcao({ id: "card-entregadores", href: "#entregadores/cadastrar", icone: "🪪", cor: "f-ent", titulo: "Cadastrar entregador",
+      S.me.papel_bloqueios ? funcao({ id: "card-entregadores", href: "#entregadores/cadastrar", icone: "entregador", cor: "f-ent", titulo: "Cadastrar entregador",
         texto: "Criar a ficha com ID, nome e cidade, sem ativar nem bloquear." }) : null,
-      funcao({ id: "fn-parceiro", href: "#parceiros/novo", icone: "🏪", cor: "f-par", titulo: "Ativar parceiro",
+      funcao({ id: "fn-parceiro", href: "#parceiros/novo", icone: "parceiro", cor: "f-par", titulo: "Ativar parceiro",
         texto: "Registrar um estabelecimento que você ativou." }),
-      funcao({ id: "fn-calculadora", href: "#ferramentas/calculadora", icone: "🧮", cor: "f-fer", titulo: "Calculadora de bairro",
+      funcao({ id: "fn-calculadora", href: "#ferramentas/calculadora", icone: "calculadora", cor: "f-fer", titulo: "Calculadora de bairro",
         texto: "Bairro cobrado errado? Veja quanto falta pagar ao entregador." }),
-      funcao({ id: "fn-adicional", href: "#financeiro/adicional", icone: "💰", cor: "f-fin", titulo: "Registrar adicional",
+      funcao({ id: "fn-adicional", href: "#financeiro/adicional", icone: "adicional", cor: "f-fin", titulo: "Registrar adicional",
         texto: "Valor combinado com o entregador além da entrega.",
         vivo: r?.financeiro_pendentes ? `${r.financeiro_pendentes} seu(s) ainda não lançado(s)` : null }),
-      funcao({ id: "fn-sugerir", href: "#atividades/sugeridas", icone: "💡", cor: "f-sug", titulo: "Nova tarefa", onclick: abrirSugerir,
+      funcao({ id: "fn-sugerir", href: "#atividades/sugeridas", icone: "tarefa", cor: "f-sug", titulo: "Nova tarefa", onclick: abrirSugerir,
         texto: "Pedir algo para alguém ou registrar o que você já fez.",
         vivo: at ? `${at.equipe_abertas} abertas na equipe` : null }),
-      funcao({ id: "card-registros", href: "#avisos/equipe", icone: "🗂️", cor: "f-reg", titulo: "Registros",
+      funcao({ id: "card-registros", href: "#avisos/equipe", icone: "registros", cor: "f-reg", titulo: "Registros",
         texto: "Tudo o que a equipe fez, em ordem: quem, o quê e quando." }),
     ].filter(Boolean);
     $("#inicio-funcoes").replaceChildren(...fn);

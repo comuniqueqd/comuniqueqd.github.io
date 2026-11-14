@@ -7,16 +7,26 @@
 
   // ---------- utilidades ----------
   const $ = (s) => document.querySelector(s);
+  // 009u: nenhuma tela mostra emoji (regra do usuário). Textos que vêm do banco ou que a equipe escreveu passam por aqui;
+  // as mensagens prontas de WhatsApp ficam com os emojis porque vão para o .value das caixas de texto, que não passa por aqui.
+  const EMOJI = /\p{Extended_Pictographic}\uFE0F?(?:\u200D\p{Extended_Pictographic}\uFE0F?)*[\u{1F3FB}-\u{1F3FF}]?/gu;
+  const semEmoji = (t) => {
+    const s = String(t);
+    if (!EMOJI.test(s)) return s;
+    EMOJI.lastIndex = 0;
+    return s.replace(EMOJI, "").replace(/[ \t]{2,}/g, " ").replace(/^[ \t]+/, "");
+  };
   const el = (tag, attrs = {}, ...kids) => {
     const n = document.createElement(tag);
     for (const [k, v] of Object.entries(attrs)) {
       if (v == null || v === false) continue;
+      if (k === "icone") { if (App.ic) n.append(App.ic(v)); continue; }   // 009u: ícone próprio antes do texto
       if (k === "class") n.className = v;
-      else if (k === "text") n.textContent = v;
+      else if (k === "text") n.textContent = semEmoji(v);
       else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
       else n.setAttribute(k, v === true ? "" : v);
     }
-    for (const k of kids.flat()) if (k != null && k !== false) n.append(k.nodeType ? k : document.createTextNode(String(k)));
+    for (const k of kids.flat()) if (k != null && k !== false) n.append(k.nodeType ? k : document.createTextNode(semEmoji(k)));
     return n;
   };
   const onlyDigits = (s) => String(s || "").replace(/\D/g, "");
@@ -267,7 +277,7 @@
   function janela(titulo, ...conteudo) {
     const d = el("dialog", { class: "janela", "aria-label": titulo },
       el("div", { class: "janela-topo" }, el("h3", { text: titulo }),
-        el("button", { class: "btn link", type: "button", "aria-label": "Fechar", onclick: () => d.close() }, "✕")),
+        el("button", { class: "btn link fechar", type: "button", "aria-label": "Fechar", onclick: () => d.close() }, App.ic("fechar"))),
       ...conteudo);
     d.addEventListener("close", () => d.remove());
     document.body.append(d);
@@ -312,7 +322,7 @@
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
 
-  App.u = { progresso, ordenavel, grifar, FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
+  App.u = { semEmoji, progresso, ordenavel, grifar, FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
             vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas, nomesEscolhidos, papelAtiv, papelBloq };
 
   // ---------- módulos e rotas ----------
@@ -571,7 +581,7 @@
     const nPed = S.resumo?.pedidos_acesso ?? S.equipe?.pedidos?.length ?? 0;
     $("#c-pedidos").textContent = nPed; $("#c-pedidos").hidden = !nPed;
     const nAv = S.notif?.nao_lidas || 0;
-    $("#c-avisos").textContent = nAv ? `🔔 ${nAv}` : "🔔";
+    $("#c-avisos").replaceChildren(App.ic("sino"), ...(nAv ? [el("b", { class: "num", text: String(nAv) })] : []));
     $("#b-avisos").dataset.novas = String(nAv > 0);
     $("#b-avisos").setAttribute("aria-label", nAv ? `${nAv} aviso(s) novo(s)` : "Avisos");
     mod.render?.(App.atual.aba);

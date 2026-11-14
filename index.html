@@ -28,9 +28,9 @@
           <div class="busca-res" id="busca-res" hidden></div>
         </form>
         <span id="who"></span><span class="role" id="papel" hidden></span>
-        <button class="sino" id="b-instalar" type="button" hidden title="Instalar o Comunique como um app no computador ou no celular">📲 Instalar</button>
-        <button class="sino tema" id="b-tema" type="button" aria-label="Tema escuro" title="Trocar tema claro/escuro"><span aria-hidden="true" class="tema-lua">🌙</span><span aria-hidden="true" class="tema-sol">☀️</span></button>
-        <button class="sino" id="b-avisos" type="button" aria-label="Avisos" hidden><span id="c-avisos">🔔</span></button>
+        <button class="sino" id="b-instalar" type="button" hidden title="Instalar o Comunique como um app no computador ou no celular"><span data-icone="instalar"></span>Instalar</button>
+        <button class="sino tema" id="b-tema" type="button" aria-label="Tema escuro" title="Trocar tema claro/escuro"><span aria-hidden="true" class="tema-lua" data-icone="lua"></span><span aria-hidden="true" class="tema-sol" data-icone="sol"></span></button>
+        <button class="sino" id="b-avisos" type="button" aria-label="Avisos" hidden><span id="c-avisos" data-icone="sino"></span></button>
         <button class="btn link" id="b-sair" type="button" hidden>Sair</button>
       </div>
     </div>
@@ -521,7 +521,7 @@
     <div id="at-lista" class="protege-foco"></div>
   </section>
   <section class="view" id="v-at-sugeridas" hidden>
-    <div class="inicio-topo"><h2>Tarefas</h2><button class="btn primary small" type="button" id="at-proxima">▶ Pegar a próxima</button></div>
+    <div class="inicio-topo"><h2>Tarefas</h2><button class="btn primary small" type="button" id="at-proxima"><span data-icone="tocar"></span>Pegar a próxima</button></div>
     <p class="sub">Peça algo para alguém ou para a equipe, ou registre o que você já fez. Se ninguém indicado aceitar em 10 minutos, a tarefa fica aberta para todos. “Pegar a próxima” escolhe a mais justa para você.</p>
     <details class="panel" id="at-nova-box">
       <summary><b>Nova tarefa</b></summary>
@@ -633,7 +633,7 @@
 
   <!-- ===================== EQUIPE ===================== -->
   <section class="view" id="v-equipe" hidden>
-    <div class="inicio-topo"><h2>Equipe</h2><button class="btn small" type="button" id="b-teste-som" data-teste-som>🔔 Testar avisos e sons</button></div>
+    <div class="inicio-topo"><h2>Equipe</h2><button class="btn small" type="button" id="b-teste-som" data-teste-som><span data-icone="som"></span>Testar avisos e sons</button></div>
     <p class="sub">Cada pessoa tem um acesso por módulo. <b>Moderador</b>: tudo, inclusive desfazer, excluir, regras e equipe. <b>Monitorador</b>: aprova/reprova na ativação; nos bloqueios, faz tratativas e libera antes do prazo. <b>Suporte</b>: envia cadastros, registra bloqueios e acompanha.</p>
     <form class="panel" id="f-membro" novalidate>
       <h3>Autorizar acesso</h3>
@@ -655,7 +655,7 @@
     </div>
   </section>
   <section class="view" id="v-eq-regras" hidden>
-    <div class="inicio-topo"><h2>Regras de equipe</h2><button class="btn small" type="button" id="b-teste-som-todos" data-teste-som>🔔 Testar avisos e sons</button></div>
+    <div class="inicio-topo"><h2>Regras de equipe</h2><button class="btn small" type="button" id="b-teste-som-todos" data-teste-som><span data-icone="som"></span>Testar avisos e sons</button></div>
     <p class="sub">Quem cuida de cada cidade. O responsável recebe as tratativas da cidade, um aviso a cada cadastro novo e o aviso de tratativa atrasada. Cidades de operador logístico usam o responsável pelos operadores (aba Operadores logísticos).</p>
     <div class="panel">
       <h3>Cidades</h3>
@@ -700,6 +700,7 @@
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="js/base.js?v=009t"></script>
+<script src="js/icones.js?v=009t"></script>
 <script src="js/inicio.js?v=009t"></script>
 <script src="js/ativacao.js?v=009t"></script>
 <script src="js/bloqueios.js?v=009t"></script>

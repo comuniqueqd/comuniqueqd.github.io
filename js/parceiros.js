@@ -15,7 +15,7 @@
   // aviso depois de aprovar: em quais tarefas a aprovação entrou (também usado na ativação de entregadores)
   App.contouPara = function (tarefas) {
     if (!tarefas?.length) return "";
-    return " Contou para: " + tarefas.map((t) => `${t.titulo} (${t.progresso} de ${t.meta}${t.progresso >= t.meta ? " 🎉" : ""})`).join("; ") + ".";
+    return " Contou para: " + tarefas.map((t) => `${t.titulo} (${t.progresso} de ${t.meta}${t.progresso >= t.meta ? ", meta atingida" : ""})`).join("; ") + ".";
   };
 
   const form = $("#pa-form"), erro = $("#pa-erro");
@@ -27,7 +27,7 @@
       const r = await rpc("registrar_parceiro", { p_estabelecimento: $("#pa-estab").value.trim(), p_cidade: $("#pa-cidade").value.trim(), p_observacao: $("#pa-obs").value.trim() || null });
       form.reset(); $("#pa-estab").focus();
       const te = r.tarefa_entregadores;
-      toast(`🎉 Parceiro ativado: ${r.parceiro.estabelecimento}!${App.contouPara(r.tarefas)}` +
+      toast(`Parceiro ativado: ${r.parceiro.estabelecimento}!${App.contouPara(r.tarefas)}` +
         (te ? (te.nova ? ` Nasceu a tarefa “${te.titulo}” para a equipe.` : ` A tarefa de entregadores da cidade subiu para ${te.meta}.`) : ""));
       await App.carregar();
     } catch (e) { erro.textContent = msgErro(e); erro.hidden = false; } finally { b.disabled = false; }
@@ -56,7 +56,7 @@
       minhas.length ? el("ul", { class: "pa-tarefas" }, minhas.map((a) => {
         const pct = a.meta ? Math.min(100, Math.round((a.progresso / a.meta) * 100)) : 0;
         return el("li", {}, el("b", { text: a.titulo }), el("div", { class: "progresso-tarefa" }, App.u.progresso(a.progresso, a.meta, `Progresso: ${a.progresso} de ${a.meta}`),
-          el("span", { class: "meta", text: `${a.progresso} de ${a.meta}${a.progresso >= a.meta ? " · meta atingida 🎉" : ""}` })));
+          el("span", { class: "meta", text: `${a.progresso} de ${a.meta}${a.progresso >= a.meta ? ", meta atingida" : ""}` })));
       })) : el("p", { class: "meta" }, "Nenhuma em andamento com você. ", el("a", { href: "#atividades/sugeridas" }, "Criar uma tarefa “Aprovar parceiros”"), " para você ou para alguém: cada parceiro ativado na cidade conta sozinho."),
       el("h3", { text: "Os seus últimos" }),
       !P.meus ? carregandoEl() : P.meus.length ? el("ul", { class: "parceiros-lista" }, P.meus.slice(0, 8).map(linha)) : el("p", { class: "meta", text: "Você ainda não ativou nenhum parceiro." }));
@@ -120,7 +120,7 @@
       el("h4", {}, d.charAt(0).toUpperCase() + d.slice(1), el("span", { class: "count", text: l.length })),
       el("ul", { class: "pa-hist" }, l.map((p) => el("li", {},
         el("span", { class: "meta mono", text: new Date(p.criado_em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) }),
-        el("span", { class: "pa-hist-frase" }, "🎉 ", el("b", { text: p.meu ? "Você" : p.criado_por_nome || "Alguém" }), " ativou ", el("b", { text: p.estabelecimento }), ` em ${p.cidade}!`,
+        el("span", { class: "pa-hist-frase" }, el("b", { text: p.meu ? "Você" : p.criado_por_nome || "Alguém" }), " ativou ", el("b", { text: p.estabelecimento }), ` em ${p.cidade}!`,
           p.observacao ? el("span", { class: "meta", text: ` · ${p.observacao}` }) : null)))))));
   }
   function renderCidades() {
@@ -173,11 +173,11 @@
   // ---------- Notícias rápidas (tela inicial) ----------
   // texto comemorativo escolhido pelo id (o mesmo parceiro sempre com a mesma frase)
   const FRASES = [
-    (q, e, c) => `🎉 ${q} ativou ${e} em ${c}! Mais um parceiro com a gente!`,
-    (q, e, c) => `🥳 Parceiro novo na área: ${e} (${c}), ativado por ${q}. Mandou bem!`,
-    (q, e, c) => `🚀 ${q} trouxe ${e} para o time em ${c}. Bora crescer!`,
-    (q, e, c) => `👏 ${e} agora é parceiro em ${c}. Valeu, ${q}!`,
-    (q, e, c) => `🌟 ${c} ganhou mais um parceiro: ${e}, graças a ${q}!`,
+    (q, e, c) => `${q} ativou ${e} em ${c}. Mais um parceiro com a gente.`,
+    (q, e, c) => `Parceiro novo: ${e} (${c}), ativado por ${q}.`,
+    (q, e, c) => `${q} trouxe ${e} para a rede em ${c}.`,
+    (q, e, c) => `${e} agora é parceiro em ${c}. Ativação de ${q}.`,
+    (q, e, c) => `${c} ganhou mais um parceiro: ${e}, por ${q}.`,
   ];
   const primeiro = (n) => String(n || "Alguém").split(" ")[0];
   App.noticias = {
@@ -187,7 +187,7 @@
       if (!box) return;
       const l = S.noticias || [];
       box.hidden = !l.length;
-      box.replaceChildren(...(l.length ? [el("h2", { class: "rapidos-titulo", text: "📰 Notícias rápidas" }),
+      box.replaceChildren(...(l.length ? [el("h2", { class: "rapidos-titulo", icone: "noticias" }, "Notícias rápidas"),
         el("ul", { class: "noticias" }, l.map((n) => el("li", { class: "noticia" },
           el("span", { class: "noticia-texto", text: FRASES[n.id % FRASES.length](n.eu ? "Você" : primeiro(n.quem), n.estabelecimento, n.cidade) }),
           el("span", { class: "meta", text: App.u.duracao(n.quando).txt === "0 min" ? "agora" : "há " + App.u.duracao(n.quando).txt }))))] : []));
