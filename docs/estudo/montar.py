@@ -88,7 +88,7 @@ function indice(){const lista=todas(),prontas=lista.filter(a=>a[2]).length,rev=p
   m.meta?el("p",{class:"meta-mod",text:m.meta}):null,
   m.aulas.map(([id,t,pronta])=>{const f=feitas.get(id);const b=el("button",{class:"aula-l",type:"button","aria-current":String(atual===id)},el("span",{class:"ok"+(f?" feito":""),"aria-hidden":"true"}),el("span",{text:t}),el("span",{class:"st",text:pronta?(f?quando(f):""):"em breve"}));if(!pronta)b.disabled=true;else b.addEventListener("click",()=>abrirAula(id));return b}),
   m.projeto_ponte?el("p",{class:"ponte",text:"Projeto do módulo: "+m.projeto_ponte}):null);
-  if(m.aulas.some(a=>a[0]===atual)||(!atual&&mi<2))d.open=true;return d}))}
+  if(m.aulas.some(a=>a[0]===atual)||((!atual||atual==="metodo")&&mi<2))d.open=true;return d}))}
 function abrirMetodo(){atual="metodo";const M=CU.metodologia;
  document.getElementById("aula").replaceChildren(...[el("h2",{text:"Como o curso funciona"}),M.map(s=>[s.titulo?el("h3",{text:s.titulo}):null,s.blocos.map(b=>Array.isArray(b)?el("ul",{},b.map(i=>el("li",{text:i}))):el("p",{text:b}))])].flat(Infinity).filter(Boolean));indice();document.getElementById("aula").scrollIntoView?.({block:"start"})}
 function proxima(id){const l=todas(),i=l.findIndex(a=>a[0]===id);const n=l.slice(i+1).find(a=>a[2]);return n?n[0]:null}

@@ -1,18 +1,1420 @@
-{"modulos":[
- {"id":"m0","titulo":"Como estudar","aulas":[["m0a1","Como funciona este curso e onde praticar",true]]},
- {"id":"m1","titulo":"A web por dentro: HTML e CSS","aulas":[["m1a1","Sua primeira página",true],["m1a2","Títulos, listas, links e imagens",false],["m1a3","Formulários: campos e botões",false],["m1a4","CSS: seletores, cores e tamanhos",false],["m1a5","Caixas, espaçamento e alinhamento (flex e grid)",false],["m1a6","Variáveis de CSS e tema escuro",false]]},
- {"id":"m2","titulo":"JavaScript do zero","aulas":[["m2a1","Variáveis, números e textos",false],["m2a2","Condições e funções",false],["m2a3","Listas e objetos",false],["m2a4","DOM: achar e mudar elementos",false],["m2a5","Eventos: o clique e a digitação",false],["m2a6","Buscar dados com fetch e async/await",false],["m2a7","Organizar em arquivos e módulos",false]]},
- {"id":"m3","titulo":"Dados e SQL","aulas":[["m3a1","Banco de dados × planilha",false],["m3a2","Tabelas, colunas e chaves",false],["m3a3","SELECT, WHERE e ORDER BY",false],["m3a4","INSERT, UPDATE e DELETE",false],["m3a5","JOIN",false],["m3a6","Contar e agrupar",false]]},
- {"id":"m4","titulo":"Supabase e o banco do Comunique","aulas":[["m4a1","O que o Supabase faz por nós",false],["m4a2","Funções no banco (RPC)",false],["m4a3","Login e papéis",false],["m4a4","Migrações e o SQL Editor",false]]},
- {"id":"m5","titulo":"Git, GitHub e publicar","aulas":[["m5a1","O que é versão e por que o Git",false],["m5a2","Commit, branch e push",false],["m5a3","GitHub Pages: o site no ar",false]]},
- {"id":"m6","titulo":"Testes automáticos","aulas":[["m6a1","Por que testar",false],["m6a2","Um teste de função",false],["m6a3","Um teste de tela com Playwright",false]]},
- {"id":"m7","titulo":"Design de interface","aulas":[["m7a1","Hierarquia e leitura",false],["m7a2","Cor, contraste e acessibilidade",false],["m7a3","Tipografia",false],["m7a4","Sistema visual e tokens",false],["m7a5","Escrita de interface",false]]},
- {"id":"m8","titulo":"Análise de dados","aulas":[["m8a1","Da pergunta ao número",false],["m8a2","Tempo, fuso e semanas",false],["m8a3","Gráficos que se leem rápido",false],["m8a4","Medir sem vigiar",false]]},
- {"id":"m9","titulo":"Segurança e LGPD","aulas":[["m9a1","Login × permissão",false],["m9a2","Nunca confiar na tela",false],["m9a3","LGPD na prática",false]]},
- {"id":"m10","titulo":"Produto, processo e IA","aulas":[["m10a1","Spec antes de construir",false],["m10a2","Versões pequenas e revisão",false],["m10a3","Trabalhar com agentes e skills",false]]},
- {"id":"m11","titulo":"Projeto: um mini-Comunique","aulas":[["m11a1","O projeto e as etapas (um registro de ocorrências do zero até o ar)",false]]}
-],
-"aulas":{
- "m0a1":{"objetivo":"Saber como cada aula funciona e preparar onde praticar.","explicacao":["Cada aula tem: objetivo, explicação curta, um exemplo, um exercício para você fazer, a resposta (escondida até você pedir) e onde aquilo aparece no Comunique.","Para praticar HTML, CSS e JavaScript você não precisa instalar nada no começo: um editor online como o CodePen (codepen.io) ou o StackBlitz já mostra o resultado ao lado. Mais tarde, para trabalhar com arquivos de verdade, o Visual Studio Code (gratuito) é o mais usado.","Para SQL, o SQLBolt (sqlbolt.com) tem exercícios no próprio navegador; mais adiante você pode usar o SQL Editor do Supabase num projeto de teste (nunca no banco real do Comunique).","Marque cada aula como feita ao terminar. Quando quiser a próxima, é só me pedir \"próxima aula\"; eu escrevo uma ou duas por vez, olhando as suas dúvidas."],"exemplo":"","exercicio":"Abra o codepen.io, clique em \"Start Coding\" e escreva na caixa de HTML: <h1>Olá, Comunique</h1>. Veja o resultado aparecer ao lado.","resposta":"Aparece um título grande com o texto \"Olá, Comunique\". Pronto: você escreveu sua primeira linha de HTML.","comunique":"O Comunique inteiro começou assim: um arquivo index.html com títulos, campos e botões."},
- "m1a1":{"objetivo":"Escrever uma página HTML completa e entender cada parte dela.","explicacao":["HTML é feito de etiquetas (tags) entre sinais de menor e maior. Quase toda etiqueta abre e fecha: <p> abre um parágrafo e </p> fecha.","Toda página tem duas partes: o <head> (informações sobre a página, como o título da aba) e o <body> (o que aparece na tela).","As etiquetas mais básicas: <h1> a <h6> para títulos (h1 é o maior), <p> para parágrafo e <button> para botão.","O atributo lang=\"pt-BR\" avisa o navegador e o leitor de tela que a página é em português; o meta charset=\"utf-8\" garante que os acentos apareçam certos."],"exemplo":"<!doctype html>\n<html lang=\"pt-BR\">\n  <head>\n    <meta charset=\"utf-8\">\n    <title>Registro da equipe</title>\n  </head>\n  <body>\n    <h1>Comunique</h1>\n    <p>Registro da equipe de operação.</p>\n    <button>Novo bloqueio</button>\n  </body>\n</html>","exercicio":"Mude o exemplo para a sua equipe: troque o título da aba para \"Minha página\", acrescente um <h2> escrito \"Pendências\" embaixo do parágrafo e um segundo botão \"Nova ativação\".","resposta":"<body>\n  <h1>Comunique</h1>\n  <p>Registro da equipe de operação.</p>\n  <h2>Pendências</h2>\n  <button>Novo bloqueio</button>\n  <button>Nova ativação</button>\n</body>\n\n(e no <head>: <title>Minha página</title>)","comunique":"No index.html do Comunique cada tela é uma <section> com um <h2>, e os botões grandes da tela inicial são links (<a>) com o nome da ação, como \"Novo bloqueio\"."}
-}}
+{
+ "versao": 2,
+ "revisao_dias": [
+  1,
+  3,
+  7,
+  21
+ ],
+ "modulos": [
+  {
+   "id": "m0",
+   "titulo": "Como estudar",
+   "meta": "Sabe como cada aula funciona, onde praticar, o que é um programa e como achar e editar um arquivo no editor.",
+   "projeto_ponte": "Criar a pasta mini-comunique no computador, com um arquivo leia-me.txt escrito no editor dizendo o que o projeto vai fazer (registro de ocorrências: ID, cidade, tipo, descrição).",
+   "aulas": [
+    [
+     "m0a1",
+     "Como funciona este curso e onde praticar",
+     true
+    ],
+    [
+     "m0a2",
+     "O que é um programa: o computador seguindo passos",
+     true
+    ],
+    [
+     "m0a3",
+     "Arquivos, pastas e o editor de código",
+     true
+    ]
+   ]
+  },
+  {
+   "id": "m1",
+   "titulo": "A web por dentro: HTML e CSS",
+   "meta": "Monta uma página com formulário e estilo próprio, e usa as Ferramentas do desenvolvedor para inspecionar e testar mudanças.",
+   "projeto_ponte": "Página estática 'Registrar ocorrência': formulário (ID do entregador, cidade, tipo, descrição, botão) e uma lista de exemplo de ocorrências, com cores em variáveis de CSS.",
+   "aulas": [
+    [
+     "m1a1",
+     "Sua primeira página",
+     true
+    ],
+    [
+     "m1a2",
+     "Títulos, listas, links e imagens",
+     true
+    ],
+    [
+     "m1a3",
+     "Formulários: campos e botões",
+     true
+    ],
+    [
+     "m1a4",
+     "CSS: seletores, cores e tamanhos",
+     true
+    ],
+    [
+     "m1a7",
+     "Ferramentas do desenvolvedor: inspecionar a página",
+     true
+    ],
+    [
+     "m1a5",
+     "O modelo de caixa: margem, borda e espaçamento",
+     true
+    ],
+    [
+     "m1a8",
+     "Alinhar com flex e grid",
+     true
+    ],
+    [
+     "m1a6",
+     "Variáveis de CSS e tema escuro",
+     true
+    ]
+   ]
+  },
+  {
+   "id": "m2",
+   "titulo": "JavaScript do zero",
+   "meta": "Escreve código que lê o formulário, confere os dados, monta a lista na tela e busca dados de um arquivo, lendo os erros do console para se corrigir.",
+   "projeto_ponte": "A página do m1 ganha vida: ao enviar, confere se o ID foi preenchido, adiciona a ocorrência na lista da tela e limpa o formulário; a lista inicial vem de um arquivo ocorrencias.json com fetch.",
+   "aulas": [
+    [
+     "m2a8",
+     "Onde o JavaScript roda: console e a tag script",
+     false
+    ],
+    [
+     "m2a1",
+     "Variáveis, números e textos",
+     false
+    ],
+    [
+     "m2a9",
+     "Ler mensagens de erro e usar console.log",
+     false
+    ],
+    [
+     "m2a2",
+     "Condições: fazer uma coisa ou outra",
+     false
+    ],
+    [
+     "m2a10",
+     "Funções: receber e devolver",
+     false
+    ],
+    [
+     "m2a3",
+     "Listas e repetição (arrays e for)",
+     false
+    ],
+    [
+     "m2a11",
+     "Objetos e listas de objetos",
+     false
+    ],
+    [
+     "m2a4",
+     "DOM: achar e mudar elementos",
+     false
+    ],
+    [
+     "m2a5",
+     "Eventos: o clique e a digitação",
+     false
+    ],
+    [
+     "m2a6",
+     "Buscar dados com fetch e async/await",
+     false
+    ],
+    [
+     "m2a7",
+     "Organizar em arquivos e módulos",
+     false
+    ]
+   ]
+  },
+  {
+   "id": "m5",
+   "titulo": "Git, GitHub e publicar",
+   "meta": "Guarda cada passo do projeto com commits, usa o terminal sem medo e publica a página no GitHub Pages.",
+   "projeto_ponte": "O mini-Comunique vira um repositório no GitHub, com um commit por etapa feita até aqui, e fica no ar no GitHub Pages (ainda sem banco).",
+   "aulas": [
+    [
+     "m5a4",
+     "Terminal sem medo: pastas e comandos básicos",
+     false
+    ],
+    [
+     "m5a1",
+     "O que é versão e por que o Git",
+     false
+    ],
+    [
+     "m5a2",
+     "Commit e histórico",
+     false
+    ],
+    [
+     "m5a5",
+     "Branch, push e pull request",
+     false
+    ],
+    [
+     "m5a3",
+     "GitHub Pages: o site no ar",
+     false
+    ]
+   ]
+  },
+  {
+   "id": "m3",
+   "titulo": "Dados e SQL",
+   "meta": "Cria tabelas e responde perguntas da operação com consultas SQL, cuidando de nulos e datas.",
+   "projeto_ponte": "No banco de prática, criar as tabelas cidades e ocorrencias, inserir 20 ocorrências fictícias e responder 5 perguntas por consulta (ex.: quantas por cidade nesta semana; qual tipo mais aparece).",
+   "aulas": [
+    [
+     "m3a1",
+     "Banco de dados × planilha",
+     false
+    ],
+    [
+     "m3a2",
+     "Tabelas, colunas e chaves",
+     false
+    ],
+    [
+     "m3a3",
+     "SELECT, WHERE e ORDER BY",
+     false
+    ],
+    [
+     "m3a4",
+     "INSERT, UPDATE e DELETE (sempre com WHERE)",
+     false
+    ],
+    [
+     "m3a7",
+     "Nulos, textos e datas: as armadilhas",
+     false
+    ],
+    [
+     "m3a5",
+     "JOIN: juntar duas tabelas",
+     false
+    ],
+    [
+     "m3a6",
+     "Contar e agrupar",
+     false
+    ]
+   ]
+  },
+  {
+   "id": "m4",
+   "titulo": "Supabase e o banco do Comunique",
+   "meta": "Chama uma função do banco a partir do site, entende login e papéis e aplica uma migração.",
+   "projeto_ponte": "O formulário do mini-Comunique grava de verdade: uma função registrar_ocorrencia() no Supabase de prática, chamada pelo site com rpc, e a lista lida de outra função.",
+   "aulas": [
+    [
+     "m4a1",
+     "O que o Supabase faz por nós",
+     false
+    ],
+    [
+     "m4a2",
+     "Funções no banco: escrever uma função SQL",
+     false
+    ],
+    [
+     "m4a6",
+     "Chamar a função pelo site (rpc)",
+     false
+    ],
+    [
+     "m4a3",
+     "Login e papéis",
+     false
+    ],
+    [
+     "m4a4",
+     "Migrações e o SQL Editor",
+     false
+    ]
+   ]
+  },
+  {
+   "id": "m6",
+   "titulo": "Testes automáticos",
+   "meta": "Escreve um teste de função e um teste de tela que confirmam o 'Quando..., então...' de uma regra.",
+   "projeto_ponte": "Três testes no mini-Comunique: ID vazio é recusado; ocorrência válida aparece na lista; a contagem por cidade bate.",
+   "aulas": [
+    [
+     "m6a1",
+     "Por que testar: do 'Quando..., então...' ao teste",
+     false
+    ],
+    [
+     "m6a2",
+     "Um teste de função",
+     false
+    ],
+    [
+     "m6a3",
+     "Um teste de tela com Playwright",
+     false
+    ]
+   ]
+  },
+  {
+   "id": "m7",
+   "titulo": "Design de interface",
+   "meta": "Avalia e melhora uma tela pela leitura, contraste, tipografia, tokens e textos.",
+   "projeto_ponte": "Revisar a tela do mini-Comunique: contraste conferido, cores e espaços em tokens, botões e mensagens de erro reescritos em linguagem simples.",
+   "aulas": [
+    [
+     "m7a1",
+     "Hierarquia e leitura",
+     false
+    ],
+    [
+     "m7a2",
+     "Cor, contraste e acessibilidade",
+     false
+    ],
+    [
+     "m7a3",
+     "Tipografia",
+     false
+    ],
+    [
+     "m7a4",
+     "Sistema visual e tokens",
+     false
+    ],
+    [
+     "m7a5",
+     "Escrita de interface",
+     false
+    ]
+   ]
+  },
+  {
+   "id": "m8",
+   "titulo": "Análise de dados",
+   "meta": "Sai de uma pergunta da operação até um número e um gráfico confiáveis, no fuso e na semana certos.",
+   "projeto_ponte": "Uma função resumo_semana() (terça a segunda, horário de Brasília) e um quadrinho na tela com as ocorrências da semana por cidade.",
+   "aulas": [
+    [
+     "m8a1",
+     "Da pergunta ao número",
+     false
+    ],
+    [
+     "m8a2",
+     "Tempo, fuso e semanas",
+     false
+    ],
+    [
+     "m8a3",
+     "Gráficos que se leem rápido",
+     false
+    ],
+    [
+     "m8a4",
+     "Medir sem vigiar",
+     false
+    ]
+   ]
+  },
+  {
+   "id": "m9",
+   "titulo": "Segurança e LGPD",
+   "meta": "Explica e aplica quem pode fazer o quê no banco e quais dados não guardar.",
+   "projeto_ponte": "Só quem está logado registra (conferido na função, não no botão) e a ocorrência não guarda CPF nem telefone.",
+   "aulas": [
+    [
+     "m9a1",
+     "Login × permissão",
+     false
+    ],
+    [
+     "m9a2",
+     "Nunca confiar na tela",
+     false
+    ],
+    [
+     "m9a3",
+     "LGPD na prática",
+     false
+    ]
+   ]
+  },
+  {
+   "id": "m10",
+   "titulo": "Produto, processo e IA",
+   "meta": "Escreve uma spec curta, divide em versões pequenas e trabalha com o Claude e agentes sem perder o controle.",
+   "projeto_ponte": "Spec da versão 2 do mini-Comunique (ex.: marcar ocorrência como resolvida) no formato Pedido, Problema, Quando..., então..., Pronto quando.",
+   "aulas": [
+    [
+     "m10a1",
+     "Spec antes de construir",
+     false
+    ],
+    [
+     "m10a2",
+     "Versões pequenas e revisão",
+     false
+    ],
+    [
+     "m10a3",
+     "Trabalhar com agentes e skills",
+     false
+    ]
+   ]
+  },
+  {
+   "id": "m11",
+   "titulo": "Projeto: um mini-Comunique",
+   "meta": "Constrói a versão 2 do mini-Comunique sozinho, do spec ao ar, com testes e revisão.",
+   "projeto_ponte": "É o próprio projeto final: a versão 2 no ar, com testes passando e um texto curto 'o que aprendi e o que faria diferente'.",
+   "aulas": [
+    [
+     "m11a1",
+     "O projeto: retomar as pontes e fechar a spec",
+     false
+    ],
+    [
+     "m11a2",
+     "Banco: tabela, função e permissão",
+     false
+    ],
+    [
+     "m11a3",
+     "Tela: formulário, lista e erros",
+     false
+    ],
+    [
+     "m11a4",
+     "Testes, publicar e revisar",
+     false
+    ]
+   ]
+  }
+ ],
+ "aulas": {
+  "m0a1": {
+   "objetivo": "Escrever uma linha de HTML no CodePen, conferir o resultado na tela e escrever um pedido de dica ao Claude no formato do curso.",
+   "tempo_min": 20,
+   "antes": "Nenhuma: é a primeira aula. Precisa só de um computador com internet e o Chrome ou o Edge.",
+   "explicacao": [
+    "Cada aula é uma sessão de 15 a 30 minutos, sempre na mesma ordem: revisão, objetivo, explicação, exemplo, prática, erros comuns, checagem e onde aquilo aparece no Comunique.",
+    "A revisão são 3 perguntas de aulas passadas, respondidas de cabeça antes de conferir. Como esta é a primeira aula, ela não tem revisão. O aquecimento começa na próxima.",
+    "A prática vai do guiado ao livre: prever (adivinhar o que vai acontecer), rodar (fazer e conferir), investigar, ordenar, modificar e, por último, criar o seu.",
+    "Navegador é o programa que abre sites, como o Chrome ou o Edge. Ele também abre páginas guardadas no seu computador, sem internet.",
+    "HTML é a língua em que as páginas são escritas. Um arquivo .html é um texto comum que o navegador sabe transformar em página.",
+    "Lugar de praticar recomendado: o site CodePen (codepen.io/pen). Ele abre no navegador, não precisa instalar nada nem criar conta, e mostra o resultado enquanto você digita. Sem internet, dá para usar o Bloco de Notas (veja a alternativa no fim do exemplo). O editor de verdade, o Visual Studio Code, gratuito, entra na aula m0a3.",
+    "Travou? Peça ao Claude uma dica, não a resposta: diga a aula, o que tentou, o que esperava e o que aconteceu, e termine com: me dê só uma dica pequena."
+   ],
+   "exemplo": "Criar a primeira página no CodePen, sem instalar nada\n\n// 1. Abrir o lugar de praticar\nNo Chrome ou no Edge, digite codepen.io/pen na barra de endereço e aperte Enter.\nNão precisa criar conta: feche o aviso de cadastro, se aparecer.\n\n// 2. Achar o quadro certo\nA tela tem três quadros, com os nomes HTML, CSS e JS.\nClique dentro do quadro HTML.\n\n// 3. Escrever\nDigite uma linha só:\n<h1>Olá, Mateus</h1>\n\n// 4. Conferir\nNa área branca embaixo dos quadros aparece Olá, Mateus em letra grande e negrito,\nquase na hora. Não precisa salvar.\n\nAlternativa sem internet (Windows): abra o Bloco de Notas (tecla Windows, digite Bloco de Notas, Enter),\ndigite a mesma linha e vá em Arquivo > Salvar como. Escolha a Área de Trabalho,\nTipo: Todos os arquivos, Codificação: UTF-8, nome: ola.html. Clique duas vezes no arquivo:\nele abre no navegador, e o endereço começa com file:///C:/Users/(seu usuário)/...\n(Mac: TextEdit, com Formatar > Criar Texto Simples.)",
+   "como_o_computador_le": [
+    "Você digita no quadro HTML. O CodePen entrega esse texto ao navegador, que lê de cima para baixo.",
+    "Encontra <h1>: entende 'aqui começa o título principal'.",
+    "Lê Olá, Mateus: é o conteúdo do título.",
+    "Encontra </h1>, com a barra: o título acabou.",
+    "Desenha na área de resultado Olá, Mateus em letra grande e negrito. As marcas <h1> e </h1> não aparecem: são instruções para o navegador, não texto.",
+    "Quando você para de digitar, o CodePen faz tudo de novo sozinho. Por isso o resultado muda sem salvar.",
+    "Na alternativa do Bloco de Notas, a leitura é a mesma. A diferença é o endereço: começa com file:///, que quer dizer que a página veio de um arquivo do seu computador, não da internet."
+   ],
+   "pratica": [
+    {
+     "tipo": "prever",
+     "enunciado": "Antes de digitar: a linha é <h1>Olá, Mateus</h1>. O que vai aparecer no resultado? As marcas <h1> e </h1> aparecem?",
+     "resposta": "Aparece Olá, Mateus em letra grande e negrito. As marcas não aparecem: o navegador usa as marcas como instrução e mostra só o texto de dentro."
+    },
+    {
+     "tipo": "rodar",
+     "enunciado": "Faça os 4 passos do exemplo. Bateu com a sua previsão? Precisou salvar alguma coisa?",
+     "resposta": "Deve bater: título grande, sem as marcas, na área embaixo dos quadros. Não precisou salvar: o CodePen mostra o resultado enquanto você digita."
+    },
+    {
+     "tipo": "investigar",
+     "enunciado": "No quadro HTML, numa linha nova embaixo do título, escreva só Turno da noite, sem nenhuma marca. Como esse texto aparece, comparado com o título? Por quê?",
+     "resposta": "Aparece em letra normal, menor e sem negrito, embaixo do título. Sem marca, o navegador mostra como texto comum. Quem diz 'isto é título' é a marca <h1>."
+    },
+    {
+     "tipo": "ordenar",
+     "enunciado": "Monte um pedido de dica ao Claude. As linhas estão embaralhadas e uma delas não serve:\n1) Esperava um título grande, mas a área do resultado ficou em branco.\n2) Não me dê a resposta. Me dê só uma dica pequena.\n3) Estou na aula m0a1 do meu curso.\n4) Tentei isto: escrevi <h1>Olá, Mateus</h1> no CodePen.\n5) Me manda o código pronto que funciona.",
+     "resposta": "3, 4, 1, 2. A linha 5 sobra: ela pede a resposta inteira, e a regra do curso é dica antes de resposta.\n\nMontado:\nEstou na aula m0a1 do meu curso.\nTentei isto: escrevi <h1>Olá, Mateus</h1> no CodePen.\nEsperava um título grande, mas a área do resultado ficou em branco.\nNão me dê a resposta. Me dê só uma dica pequena."
+    },
+    {
+     "tipo": "modificar",
+     "enunciado": "No quadro HTML, troque Olá, Mateus por Registro de ocorrências. O que acontece com o resultado?",
+     "resposta": "A linha fica <h1>Registro de ocorrências</h1> e o título no resultado muda sozinho, em um ou dois segundos. Se não mudou, confira se você está digitando no quadro HTML (e não no CSS ou no JS)."
+    },
+    {
+     "tipo": "criar",
+     "enunciado": "Sem olhar o exemplo, abra um CodePen novo (codepen.io/pen) e escreva duas linhas: um título <h1> com Meu turno e, embaixo, um parágrafo com Hoje revisei 3 bloqueios. Parágrafo se escreve com <p> e </p>. (Sem internet? Faça o mesmo num arquivo turno.html pelo Bloco de Notas, como na alternativa do exemplo.)",
+     "resposta": "No quadro HTML:\n<h1>Meu turno</h1>\n<p>Hoje revisei 3 bloqueios.</p>\n\nNo resultado: Meu turno grande e, embaixo, a frase em letra normal."
+    }
+   ],
+   "dicas": [
+    "Olhe os passos 1 a 4 do exemplo: são os mesmos, só muda o texto.",
+    "O passo que mais dá errado é o 2: o texto vai no quadro com o nome HTML. Depois, cada linha precisa abrir e fechar a sua marca.",
+    "Escreva <h1>___</h1> na primeira linha e <p>___</p> na segunda, no quadro HTML."
+   ],
+   "erros_comuns": [
+    "Digitar no quadro CSS ou JS em vez do HTML -> o resultado fica em branco (no quadro JS pode aparecer um aviso vermelho) -> apague o texto dali e digite no quadro que tem o nome HTML.",
+    "Esquecer a barra no fechamento (<h1>Olá, Mateus<h1>) -> o título aparece, mas tudo o que você escrever embaixo também fica grande -> feche com </h1>, com a barra.",
+    "Na alternativa do Bloco de Notas, o arquivo virou ola.html.txt -> ao abrir, aparece o texto com as marcas <h1>, ou ele abre de novo no Bloco de Notas -> no Salvar como, escolha Tipo: Todos os arquivos. Para ver o final dos nomes no Windows 11: Explorador de Arquivos > Exibir > Mostrar > Extensões de nomes de arquivos.",
+    "Na alternativa do Bloco de Notas, acentos estranhos, como OlÃ¡ -> letras trocadas na tela -> salve com Codificação: UTF-8. Na aula m1a1 entra uma linha (meta charset) que resolve de vez.",
+    "Pedir a resposta pronta ao Claude -> este exercício funciona, mas no seguinte você trava de novo -> peça uma dica pequena; só peça a resposta depois de duas dicas, explique-a com suas palavras e refaça sem olhar no dia seguinte."
+   ],
+   "revisao": [],
+   "checagem": [
+    "Consigo dizer as partes de uma aula na ordem.",
+    "Consigo abrir o CodePen, escrever uma linha de HTML no quadro certo e ver o resultado.",
+    "Consigo explicar por que as marcas <h1> e </h1> não aparecem na tela.",
+    "Consigo escrever um pedido de dica ao Claude sem pedir a resposta."
+   ],
+   "comunique": "O Comunique é feito das mesmas peças que você vai aprender: index.html (as telas, em HTML), estilo.css (a aparência) e a pasta js (o comportamento, em JavaScript). Para ver: abra https://comuniqueqd.github.io/ no Chrome e aperte Ctrl+U (no Mac, Cmd+Option+U). Aparece o texto do index.html, o mesmo tipo de texto que você acabou de escrever, só que bem maior. Na linha 4 aparece <meta charset=\"utf-8\">, que você vai usar na aula m1a1. Só olhe; ainda não precisa entender."
+  },
+  "m0a2": {
+   "objetivo": "Escrever em passos numerados, sem ambiguidade, o procedimento que decide se um bloqueio precisa de tratativa, e prever o resultado para um valor dado.",
+   "tempo_min": 20,
+   "antes": "m0a1 (escrever uma linha de HTML no CodePen; saber como a aula funciona).",
+   "explicacao": [
+    "Programa é uma lista de instruções que o computador segue, uma de cada vez, na ordem. Como o roteiro que a equipe segue num caso de atraso.",
+    "O computador não adivinha e não tem bom senso. Faz exatamente o que está escrito, nem mais nem menos. Se um passo diz 'resolva o caso' e não diz como, ele não sabe o que fazer.",
+    "Algoritmo é o nome dessa lista de passos para resolver um problema. Uma receita de bolo é um algoritmo; o roteiro de tratativa também.",
+    "Três peças aparecem em quase todo programa: sequência (um passo depois do outro), decisão (se isso, faça aquilo; senão, outra coisa) e repetição (faça de novo para cada item da lista).",
+    "Programas guardam informações para usar depois, como você anota o ID do entregador antes de abrir a ficha. Essa anotação se chama variável (ela volta no módulo 2).",
+    "Linguagem de programação é um jeito combinado de escrever os passos para o computador entender. HTML descreve a página, JavaScript dá os passos, SQL faz perguntas ao banco de dados (o lugar onde o app guarda os registros, como uma planilha enorme).",
+    "Antes de escrever código, escreva os passos em português. As linhas com // no exemplo são rótulos: dizem para que serve cada parte e voltam iguais nas aulas de JavaScript."
+   ],
+   "exemplo": "Algoritmo: decidir se o bloqueio precisa de tratativa\n\n// 1. Guardar o dado\nPasso 1. Anote as horas do bloqueio. Chame de HORAS.\n// 2. Fazer a pergunta\nPasso 2. HORAS é 10 ou mais? Se sim, siga para o passo 3. Se não, vá para o passo 4.\n// 3a. Caminho do sim\nPasso 3. Escreva: Precisa de tratativa. Vá para o passo 5.\n// 3b. Caminho do não\nPasso 4. Escreva: Sem tratativa.\n// 4. Terminar\nPasso 5. Fim.",
+   "como_o_computador_le": [
+    "Com um bloqueio de 24 horas:",
+    "Passo 1: anota HORAS = 24.",
+    "Passo 2: pergunta: 24 é 10 ou mais? Sim. Então não pula; segue para o passo 3.",
+    "Passo 3: escreve Precisa de tratativa. Depois obedece 'vá para o passo 5'.",
+    "Passo 4: não roda, porque o passo 3 mandou pular.",
+    "Passo 5: fim. Só uma frase foi escrita.",
+    "Com um bloqueio de 1 hora: passo 1, HORAS = 1; passo 2, 1 é 10 ou mais? Não, então pula para o passo 4; passo 4 escreve Sem tratativa; passo 5, fim."
+   ],
+   "pratica": [
+    {
+     "tipo": "prever",
+     "enunciado": "Siga o algoritmo do exemplo com HORAS = 10. O que é escrito?",
+     "resposta": "Precisa de tratativa. A pergunta é '10 ou mais', e 10 conta: 10 é igual a 10."
+    },
+    {
+     "tipo": "rodar",
+     "enunciado": "Faça de conta que você é o computador: siga o algoritmo à risca, com o dedo em cada passo, para HORAS = 9,5 e depois para HORAS = 32. Anote o que foi escrito em cada caso.",
+     "resposta": "9,5: Sem tratativa (o passo 2 dá não e pula para o 4). 32: Precisa de tratativa (o passo 2 dá sim, o passo 3 escreve e pula para o 5)."
+    },
+    {
+     "tipo": "investigar",
+     "enunciado": "Apague do passo 3 a frase 'Vá para o passo 5'. Siga de novo com HORAS = 24. O que é escrito agora? Por quê?",
+     "resposta": "As duas frases: Precisa de tratativa e Sem tratativa. Sem a ordem de pular, o computador simplesmente segue para o próximo passo, o 4, e escreve também. Ele não 'percebe' que não faz sentido."
+    },
+    {
+     "tipo": "ordenar",
+     "enunciado": "Coloque em ordem o algoritmo para registrar uma ocorrência. Uma linha não serve:\n1) Clique em Registrar.\n2) Abra a tela Registrar ocorrência.\n3) Escolha a cidade na lista.\n4) Digite o ID do entregador.\n5) Confira se apareceu a mensagem Registrado.\n6) Escolha a cor do botão.",
+     "resposta": "2, 4, 3, 1, 5. A linha 6 sobra: não faz parte de registrar. As linhas 4 e 3 podem trocar entre si (tanto faz preencher o ID ou a cidade primeiro), mas abrir a tela vem antes de tudo, e conferir vem depois de clicar."
+    },
+    {
+     "tipo": "modificar",
+     "enunciado": "Mude o algoritmo para tratar o encerramento de parceria: se o bloqueio não tiver horas (campo vazio), escreva Encerramento de parceria e termine, antes de qualquer outra pergunta.",
+     "resposta": "Passo 1. Anote as horas do bloqueio. Chame de HORAS.\nPasso 2. HORAS está vazio? Se sim, siga para o passo 3. Se não, vá para o passo 4.\nPasso 3. Escreva: Encerramento de parceria. Vá para o passo 7.\nPasso 4. HORAS é 10 ou mais? Se sim, siga para o passo 5. Se não, vá para o passo 6.\nPasso 5. Escreva: Precisa de tratativa. Vá para o passo 7.\nPasso 6. Escreva: Sem tratativa.\nPasso 7. Fim.\n\nA pergunta do vazio vem primeiro: não dá para perguntar se 'nada' é 10 ou mais."
+    },
+    {
+     "tipo": "criar",
+     "enunciado": "Escreva um algoritmo em passos numerados para as infrações leves. Imagine que o limite é 3: o entregador recebe uma leve; se, contando esta, ele tem 3 ou mais leves no período, escreva Vira bloqueio; senão, escreva Só o aviso. Use os rótulos // 1. Guardar o dado, // 2. Fazer a pergunta, // 3a. Caminho do sim, // 3b. Caminho do não, // 4. Terminar.",
+     "resposta": "// 1. Guardar o dado\nPasso 1. Conte as leves do entregador no período, contando esta. Chame de LEVES.\n// 2. Fazer a pergunta\nPasso 2. LEVES é 3 ou mais? Se sim, siga para o passo 3. Se não, vá para o passo 4.\n// 3a. Caminho do sim\nPasso 3. Escreva: Vira bloqueio. Vá para o passo 5.\n// 3b. Caminho do não\nPasso 4. Escreva: Só o aviso.\n// 4. Terminar\nPasso 5. Fim."
+    }
+   ],
+   "dicas": [
+    "Olhe o exemplo: a forma é a mesma, só mudam o dado e a pergunta.",
+    "Falta o subobjetivo 1: antes de perguntar, o algoritmo precisa ter o número de leves guardado com um nome.",
+    "Passo 1. Conte ___ e chame de LEVES. Passo 2. LEVES é ___ ou mais? Se sim, siga para o passo 3. Se não, vá para o passo ___. Passo 3. Escreva ___. Vá para o passo 5. Passo 4. Escreva ___. Passo 5. Fim."
+   ],
+   "erros_comuns": [
+    "Passo vago, como 'resolva o caso' -> quem segue à risca para e não sabe o que fazer -> troque por ações que dá para conferir: 'anote', 'escreva', 'vá para o passo'.",
+    "Esquecer o caminho do não -> para alguns valores nada é escrito -> toda pergunta precisa dizer o que fazer no sim e no não.",
+    "Esquecer de pular depois do caminho do sim -> as duas frases aparecem -> no fim do caminho do sim, mande ir para o fim.",
+    "Usar um dado antes de guardá-lo -> a pergunta fala de HORAS, mas ninguém anotou HORAS -> guarde o dado num passo anterior ao da pergunta."
+   ],
+   "revisao": [
+    {
+     "pergunta": "Quais são as partes de uma aula, na ordem?",
+     "resposta": "Revisão, objetivo, explicação, exemplo, prática, erros comuns, checagem e onde aparece no Comunique.",
+     "de": "m0a1"
+    },
+    {
+     "pergunta": "No CodePen, você escreveu <h1>Olá</h1> e a área do resultado ficou em branco. Qual a causa mais provável?",
+     "resposta": "O texto foi escrito no quadro CSS ou no JS. HTML vai no quadro com o nome HTML.",
+     "de": "m0a1"
+    },
+    {
+     "pergunta": "Como pedir ajuda ao Claude sem colar?",
+     "resposta": "Dizer a aula, o que tentou, o que esperava e o que aconteceu, e pedir só uma dica pequena. A resposta, só depois de duas dicas.",
+     "de": "m0a1"
+    }
+   ],
+   "checagem": [
+    "Consigo explicar com minhas palavras o que é um programa e o que é um algoritmo.",
+    "Consigo seguir um algoritmo à risca e dizer o que ele escreve para um valor dado.",
+    "Consigo escrever um algoritmo com uma pergunta, o caminho do sim e o caminho do não.",
+    "Consigo apontar num algoritmo onde está a sequência, a decisão e a repetição (se houver)."
+   ],
+   "comunique": "A regra do exemplo é de verdade: no Comunique, bloqueio de 10 horas ou mais gera uma tratativa (quem decide é o banco, na pasta supabase). E o app inteiro segue algoritmos. Para ver um, abra no navegador github.com/comuniqueqd/comuniqueqd.github.io, entre na pasta js, clique em base.js, aperte Ctrl+F e procure async function tique. Mesmo sem saber JavaScript, dá para ver a forma: se a aba está escondida, para; se nada mudou no banco, só redesenha a tela; senão, carrega tudo de novo. É um algoritmo com decisões que roda sozinho a cada 30 segundos (procure setInterval(tique, 30000) no mesmo arquivo)."
+  },
+  "m0a3": {
+   "objetivo": "Criar a pasta mini-comunique, abri-la no Visual Studio Code, salvar dentro dela um arquivo leia-me.txt e dizer o caminho completo desse arquivo.",
+   "tempo_min": 25,
+   "antes": "m0a1 (escrever HTML no CodePen e ver o resultado), m0a2 (seguir passos à risca).",
+   "explicacao": [
+    "Arquivo é um documento guardado no computador, com nome e extensão. Extensão é o final do nome, depois do ponto (.html, .css, .js, .txt), e diz que tipo de arquivo é.",
+    "Pasta é uma gaveta que guarda arquivos e outras pastas. Um projeto é uma pasta com tudo dele dentro, como o Comunique.",
+    "Caminho é o endereço do arquivo, de pasta em pasta, como estado, cidade, bairro e rua. Windows: C:\\Users\\(seu usuário)\\Documents\\mini-comunique\\leia-me.txt. Mac: /Users/(seu usuário)/Documents/mini-comunique/leia-me.txt. No lugar de (seu usuário) vem o nome da sua conta no computador.",
+    "O Explorador do Windows mostra Documentos, mas o nome de verdade da pasta no caminho é Documents. Se o seu Windows guarda os documentos no OneDrive, o caminho pode ser C:\\Users\\(seu usuário)\\OneDrive\\Documentos\\...; tudo bem, o importante é saber ler o caminho que aparece. E o Windows esconde as extensões; para ver: Explorador de Arquivos > Exibir > Mostrar > Extensões de nomes de arquivos (no Windows 10: aba Exibir, marque Extensões de nomes de arquivos).",
+    "Editor de código é um bloco de notas feito para programar: colore o código, completa as marcas e mostra as pastas ao lado. Vamos usar o Visual Studio Code (VS Code), gratuito, baixado em code.visualstudio.com.",
+    "No VS Code você abre a pasta inteira: Arquivo > Abrir Pasta (em inglês, File > Open Folder). Do lado esquerdo aparece a árvore de arquivos da pasta, chamada Explorer.",
+    "Uma bolinha no lugar do X da aba do arquivo quer dizer: ainda não foi salvo. Salvar: Ctrl+S (no Mac, Cmd+S). O navegador e os outros programas só veem o que está salvo; depois de salvar, recarregue a página no navegador (F5) para ver a mudança."
+   ],
+   "exemplo": "A pasta do projeto, vista como árvore\n\n// 1. A pasta do projeto\nmini-comunique  (pasta)\n// 2. Os arquivos dentro dela\n    leia-me.txt\n    index.html\n// 3. Uma pasta dentro da pasta\n    imagens  (pasta)\n        mapa.png\n\n// 4. O caminho completo de cada um (Windows)\nC:\\Users\\(seu usuário)\\Documents\\mini-comunique\\leia-me.txt\nC:\\Users\\(seu usuário)\\Documents\\mini-comunique\\index.html\nC:\\Users\\(seu usuário)\\Documents\\mini-comunique\\imagens\\mapa.png\n\n(Mac: /Users/(seu usuário)/Documents/mini-comunique/imagens/mapa.png)",
+   "como_o_computador_le": [
+    "Para achar C:\\Users\\(seu usuário)\\Documents\\mini-comunique\\imagens\\mapa.png, o computador anda pasta por pasta, da esquerda para a direita:",
+    "C: é o disco. Entra nele.",
+    "Users: a pasta com os usuários do computador. Entra.",
+    "(seu usuário): a pasta com o nome da sua conta no computador. Entra.",
+    "Documents: a pasta que o Explorador chama de Documentos. Entra.",
+    "mini-comunique: a pasta do projeto. Entra.",
+    "imagens: a pasta de imagens. Entra.",
+    "mapa.png: o arquivo. Achou e abre.",
+    "Se um nome estiver diferente (mini comunique com espaço, ou imagem sem o s), o caminho não leva a lugar nenhum: o computador não procura 'parecido', ele procura igual."
+   ],
+   "pratica": [
+    {
+     "tipo": "prever",
+     "enunciado": "Você abre a pasta mini-comunique no VS Code e cria nele o arquivo teste.html. Se abrir a mesma pasta no Explorador de Arquivos do Windows, o arquivo vai estar lá?",
+     "resposta": "Sim. O VS Code mexe nas pastas de verdade: a árvore da esquerda e o Explorador mostram a mesma pasta."
+    },
+    {
+     "tipo": "rodar",
+     "enunciado": "Instale o VS Code (code.visualstudio.com, botão de download para Windows). Crie em Documentos a pasta mini-comunique. No VS Code: Arquivo > Abrir Pasta > mini-comunique (se ele perguntar se confia nos autores, responda que sim: a pasta é sua). Crie teste.html pela árvore, escreva <h1>Teste</h1>, salve e abra no navegador (clique com o botão direito no arquivo dentro do Explorador do Windows > Abrir com > Chrome).",
+     "resposta": "A árvore da esquerda mostra MINI-COMUNIQUE com teste.html dentro. No navegador aparece Teste em letra grande, e o endereço termina em /mini-comunique/teste.html (antes disso vem o caminho de Documentos, que pode passar pelo OneDrive)."
+    },
+    {
+     "tipo": "investigar",
+     "enunciado": "Olhe o caminho C:\\Users\\(seu usuário)\\Documents\\mini-comunique\\imagens\\mapa.png. Qual é o disco? Quantas pastas existem entre o disco e o arquivo? Qual é a extensão do arquivo? Em qual pasta o mapa.png está diretamente?",
+     "resposta": "Disco: C:. Pastas: 5 (Users, a pasta do seu usuário, Documents, mini-comunique, imagens). Extensão: .png (uma imagem). Ele está diretamente na pasta imagens, que está dentro de mini-comunique."
+    },
+    {
+     "tipo": "ordenar",
+     "enunciado": "Coloque em ordem os passos para criar o primeiro arquivo do projeto no VS Code. Uma linha não serve:\n1) Clique em Arquivo > Abrir Pasta e escolha mini-comunique.\n2) Crie a pasta mini-comunique em Documentos.\n3) Aperte Ctrl+S.\n4) Clique no ícone de Novo Arquivo, ao lado do nome da pasta, e digite index.html.\n5) Escreva <h1>Mini-Comunique</h1> no arquivo.\n6) Desligue o computador para gravar.",
+     "resposta": "2, 1, 4, 5, 3. A linha 6 sobra: quem grava é o Ctrl+S, não desligar o computador. A pasta precisa existir antes de abrir, e o arquivo precisa existir antes de escrever nele."
+    },
+    {
+     "tipo": "modificar",
+     "enunciado": "Renomeie teste.html para ocorrencias.html pelo VS Code (botão direito no arquivo > Renomear, ou selecione e aperte F2). Abra de novo no navegador. O que mudou no endereço?",
+     "resposta": "O endereço passa a terminar em /mini-comunique/ocorrencias.html. A aba antiga, com teste.html, mostra erro se você recarregar: aquele caminho não existe mais."
+    },
+    {
+     "tipo": "criar",
+     "enunciado": "Projeto-ponte do módulo 0: na pasta mini-comunique, crie pelo VS Code o arquivo leia-me.txt e escreva, com suas palavras, em 3 a 5 linhas, o que o projeto vai fazer: registrar ocorrências de entregadores com ID do entregador, cidade, tipo e descrição. Salve. Depois escreva o caminho completo do arquivo.",
+     "resposta": "Um leia-me.txt possível:\nMini-Comunique\nRegistro de ocorrências da operação.\nCada ocorrência tem: ID do entregador, cidade, tipo e descrição.\nA tela mostra a lista das ocorrências registradas.\nProjeto de estudo, com dados fictícios.\n\nCaminho (Windows): C:\\Users\\(seu usuário)\\Documents\\mini-comunique\\leia-me.txt. A aba no VS Code fica sem a bolinha depois do Ctrl+S."
+    }
+   ],
+   "dicas": [
+    "Olhe o passo 4 do ordenar: o arquivo novo nasce pela árvore da esquerda, com a pasta já aberta.",
+    "Falta conferir o subobjetivo 4 do exemplo: o caminho completo. Clique com o botão direito no arquivo dentro do VS Code > Copiar Caminho (Copy Path) e cole em algum lugar para ver.",
+    "Arquivo > Abrir Pasta > mini-comunique; ícone Novo Arquivo > leia-me.txt; escreva ___ linhas sobre ID, ___, tipo e ___; Ctrl+S; caminho: C:\\Users\\___\\Documents\\mini-comunique\\leia-me.txt."
+   ],
+   "erros_comuns": [
+    "Abrir só o arquivo, e não a pasta -> a árvore da esquerda não aparece, ou mostra outra pasta -> Arquivo > Abrir Pasta e escolha mini-comunique.",
+    "Esquecer de salvar -> bolinha na aba no lugar do X, e o navegador mostra a versão antiga -> Ctrl+S e depois F5 no navegador. Se quiser, ligue Arquivo > Salvamento Automático (File > Auto Save).",
+    "Salvar no lugar errado, como Downloads -> o arquivo não aparece na árvore do projeto -> crie os arquivos pela árvore do VS Code, que já está na pasta certa.",
+    "Nome com espaço, acento ou maiúscula (Leia Me.txt, ocorrências.html) -> funciona no seu computador, mas quebra endereços quando o site for para a internet (o espaço vira %20) -> use minúsculas, sem acento, com hífen: leia-me.txt.",
+    "Extensão escondida no Windows -> o arquivo vira index.html.txt e o navegador não o trata como página -> mostre as extensões no Explorador e renomeie."
+   ],
+   "revisao": [
+    {
+     "pergunta": "Num algoritmo com pergunta, o que acontece se você esquecer de mandar pular depois do caminho do sim?",
+     "resposta": "O computador segue para o passo seguinte e faz também o caminho do não. As duas frases aparecem.",
+     "de": "m0a2"
+    },
+    {
+     "pergunta": "Quais são as três peças que aparecem em quase todo programa?",
+     "resposta": "Sequência, decisão e repetição.",
+     "de": "m0a2"
+    },
+    {
+     "pergunta": "Por que as marcas <h1> e </h1> não aparecem na tela?",
+     "resposta": "Porque são instruções para o navegador (aqui começa e aqui termina o título), não texto. Ele mostra só o que está entre elas.",
+     "de": "m0a1"
+    }
+   ],
+   "checagem": [
+    "Consigo abrir uma pasta no VS Code e criar um arquivo novo dentro dela.",
+    "Consigo dizer o caminho completo de um arquivo do meu projeto.",
+    "Consigo perceber quando um arquivo não foi salvo e salvar com o atalho.",
+    "Consigo mostrar as extensões dos arquivos no Explorador do Windows.",
+    "Consigo dar nomes de arquivo sem espaço, sem acento e em minúsculas."
+   ],
+   "comunique": "O Comunique é uma pasta como a sua mini-comunique, só que maior. Veja a árvore em github.com/comuniqueqd/comuniqueqd.github.io: index.html e estilo.css na raiz; a pasta js com um arquivo por parte do app (ativacao.js, bloqueios.js, financeiro.js); a pasta supabase com os arquivos .sql do banco; a pasta testes com os testes automáticos. Repare nos nomes: minúsculas, sem acento, com hífen, como 009s-sem-cpf.sql."
+  },
+  "m1a1": {
+   "objetivo": "Escrever do zero uma página HTML completa (doctype, html com lang, head com charset e title, body) e explicar para que serve cada parte.",
+   "tempo_min": 25,
+   "antes": "m0a1 (escrever HTML no CodePen), m0a3 (criar e salvar um arquivo dentro de uma pasta no VS Code e abrir no navegador).",
+   "explicacao": [
+    "HTML é feito de etiquetas, chamadas tags, escritas entre < e >. Quase toda tag abre e fecha: <p> abre um parágrafo e </p>, com a barra, fecha.",
+    "Tag de abertura + conteúdo + tag de fechamento = elemento. Um elemento pode ficar dentro de outro, como caixa dentro de caixa. Fecha-se na ordem inversa: o último que abriu é o primeiro que fecha.",
+    "Atributo é uma informação extra na tag de abertura, no formato nome=\"valor\". Exemplo: <html lang=\"pt-BR\"> diz que a página está em português, e o leitor de tela (programa que lê a página em voz alta) usa a voz certa.",
+    "Toda página tem a mesma estrutura: <!doctype html> no topo (avisa que é HTML moderno), <html> por fora de tudo, <head> com informações sobre a página e <body> com o que aparece na tela.",
+    "meta quer dizer 'informação sobre a página'. No head: <meta charset=\"utf-8\"> faz os acentos aparecerem certos (UTF-8 é o jeito de guardar as letras que inclui acentos e ç); <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"> faz a página caber na tela do celular (copie igual, não precisa decorar); <title> é o texto da aba do navegador.",
+    "No body: <h1> é o título principal (um por página), <p> é um parágrafo e <button type=\"button\"> é um botão (o type diz que é um botão comum; ele volta na aula m1a3). Espaços e Enter a mais no código não aparecem na tela; servem para você ler melhor.",
+    "<!-- assim --> é um comentário: um recado para quem lê o código. O navegador ignora."
+   ],
+   "exemplo": "<!doctype html>\n<!-- 1. Avisar que é uma página HTML em português -->\n<html lang=\"pt-BR\">\n  <!-- 2. Informações sobre a página -->\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>Mini-Comunique</title>\n  </head>\n  <!-- 3. O que aparece na tela -->\n  <body>\n    <h1>Mini-Comunique</h1>\n    <p>Registro de ocorrências da equipe de operação.</p>\n    <button type=\"button\">Registrar ocorrência</button>\n  </body>\n</html>",
+   "como_o_computador_le": [
+    "O HTML não é uma lista de ordens: ele descreve o que existe na página. O navegador lê de cima para baixo e vai montando uma árvore de caixas.",
+    "linha 1: <!doctype html>: o navegador entende que é HTML moderno e usa as regras atuais.",
+    "linha 2: comentário: ignora.",
+    "linha 3: <html lang=\"pt-BR\">: abre a caixa de fora e anota o idioma.",
+    "linha 4: comentário: ignora.",
+    "linhas 5 a 9: <head>: guarda informações que não aparecem dentro da página. Acentos em UTF-8, tamanho de celular, e o título da aba: Mini-Comunique.",
+    "linha 10: comentário: ignora.",
+    "linha 11: <body>: daqui para baixo, o que aparece na tela.",
+    "linha 12: desenha o h1, grande, no topo.",
+    "linha 13: desenha o parágrafo embaixo, em letra normal.",
+    "linha 14: desenha o botão. Clicar nele não faz nada ainda: o comportamento vem com JavaScript, no módulo 2.",
+    "linhas 15 e 16: fecha o body e o html. A árvore está pronta: html contém head e body; body contém h1, p e button."
+   ],
+   "pratica": [
+    {
+     "tipo": "prever",
+     "enunciado": "No exemplo, a palavra Mini-Comunique aparece duas vezes: no title e no h1. Onde cada uma vai aparecer?",
+     "resposta": "A do title aparece na aba do navegador, lá em cima. A do h1 aparece dentro da página, como título grande."
+    },
+    {
+     "tipo": "rodar",
+     "enunciado": "No VS Code, na pasta mini-comunique, crie index.html, cole o exemplo, salve e abra no navegador (clique duplo no arquivo pelo Explorador do Windows, ou arraste para o Chrome). Confira a aba e a página. Clique no botão.",
+     "resposta": "Aba: Mini-Comunique. Página: o título grande, a frase embaixo e o botão Registrar ocorrência. Os comentários não aparecem. O clique no botão não faz nada, porque ainda não há JavaScript."
+    },
+    {
+     "tipo": "investigar",
+     "enunciado": "Olhe o exemplo. Quantos elementos estão diretamente dentro do body? E dentro do head? Qual elemento contém todos os outros?",
+     "resposta": "Dentro do body: 3 (h1, p e button). Dentro do head: 3 (os dois meta e o title). O html contém todos."
+    },
+    {
+     "tipo": "ordenar",
+     "enunciado": "Monte uma página mínima. As linhas estão embaralhadas e uma não serve:\n1) <body>\n2) </html>\n3) <html lang=\"pt-BR\">\n4) <h1>Ocorrências de hoje</h1>\n5) </head>\n6) <!doctype html>\n7) <head>\n8) </body>\n9) <title>Ocorrências</title>\n10) <meta charset=\"utf-8\">\n11) </h1>",
+     "resposta": "6, 3, 7, 10, 9, 5, 1, 4, 8, 2. A linha 11 sobra: o h1 da linha 4 já fecha. O meta charset vem antes do title porque o navegador precisa saber dos acentos antes de ler texto com acento.\n\nMontado:\n<!doctype html>\n<html lang=\"pt-BR\">\n<head>\n<meta charset=\"utf-8\">\n<title>Ocorrências</title>\n</head>\n<body>\n<h1>Ocorrências de hoje</h1>\n</body>\n</html>"
+    },
+    {
+     "tipo": "modificar",
+     "enunciado": "Mude o exemplo: título da aba Turno da noite; h1 Pendências do turno; um segundo parágrafo, Nenhuma tratativa atrasada.; e um segundo botão, Passar turno.",
+     "resposta": "<!doctype html>\n<html lang=\"pt-BR\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>Turno da noite</title>\n  </head>\n  <body>\n    <h1>Pendências do turno</h1>\n    <p>Registro de ocorrências da equipe de operação.</p>\n    <p>Nenhuma tratativa atrasada.</p>\n    <button type=\"button\">Registrar ocorrência</button>\n    <button type=\"button\">Passar turno</button>\n  </body>\n</html>"
+    },
+    {
+     "tipo": "criar",
+     "enunciado": "Sem olhar, escreva do zero a página bloqueios.html: idioma português, acentos certos, cabendo no celular, aba Bloqueios, título principal Bloqueios de hoje, um parágrafo Entregador Teste (ID abc123): atraso, 1 hora. e um botão Novo bloqueio.",
+     "resposta": "<!doctype html>\n<html lang=\"pt-BR\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>Bloqueios</title>\n  </head>\n  <body>\n    <h1>Bloqueios de hoje</h1>\n    <p>Entregador Teste (ID abc123): atraso, 1 hora.</p>\n    <button type=\"button\">Novo bloqueio</button>\n  </body>\n</html>"
+    }
+   ],
+   "dicas": [
+    "Comece pela estrutura que toda página tem, de fora para dentro: doctype, html, head, body.",
+    "Falta o subobjetivo 2: o head com charset, viewport e title. O que aparece na tela fica todo no subobjetivo 3, o body.",
+    "<!doctype html>\n<html lang=\"___\">\n  <head>\n    <meta charset=\"___\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>___</title>\n  </head>\n  <body>\n    <h1>___</h1>\n    <p>___</p>\n    <button type=\"button\">___</button>\n  </body>\n</html>"
+   ],
+   "erros_comuns": [
+    "Esquecer de fechar uma tag, como <h1> sem </h1> -> todo o texto de baixo fica grande, como se fosse título -> procure a tag aberta e feche com a barra: </h1>.",
+    "Fechar fora de ordem, como <p><button>Enviar</p></button> -> às vezes parece certo, mas a árvore fica torta e dá problema depois -> feche na ordem inversa: </button></p>.",
+    "Faltar o meta charset, ou salvar sem UTF-8 -> acentos viram símbolos, como OcorrÃªncia -> ponha <meta charset=\"utf-8\"> logo no começo do head; o VS Code salva em UTF-8 (aparece escrito no canto de baixo, à direita).",
+    "Texto da página dentro do head -> o texto não aparece na tela -> o que deve aparecer vai no body.",
+    "Usar o esqueleto automático do VS Code (num .html vazio, digitar ! e apertar Tab) sem revisar -> vem lang=\"en\" e o leitor de tela lê com sotaque de inglês -> troque para lang=\"pt-BR\"."
+   ],
+   "revisao": [
+    {
+     "pergunta": "Onde o VS Code mostra que um arquivo ainda não foi salvo?",
+     "resposta": "Numa bolinha que aparece no lugar do X, na aba do arquivo. Salva-se com Ctrl+S (no Mac, Cmd+S).",
+     "de": "m0a3"
+    },
+    {
+     "pergunta": "O que é um algoritmo? Dê um exemplo do seu trabalho.",
+     "resposta": "Uma lista de passos, em ordem e sem ambiguidade, para resolver um problema. Exemplo: decidir se um bloqueio precisa de tratativa (10 horas ou mais).",
+     "de": "m0a2"
+    },
+    {
+     "pergunta": "Em qual quadro do CodePen se escreve HTML? E o que acontece se escrever em outro?",
+     "resposta": "No quadro com o nome HTML. Escrito no CSS ou no JS, o resultado fica em branco.",
+     "de": "m0a1"
+    }
+   ],
+   "checagem": [
+    "Consigo escrever de cabeça a estrutura de uma página: doctype, html com lang, head e body.",
+    "Consigo dizer o que vai no head e o que vai no body.",
+    "Consigo explicar para que servem lang=\"pt-BR\" e meta charset.",
+    "Consigo achar uma tag que ficou sem fechar olhando a página no navegador.",
+    "Consigo escrever um comentário em HTML."
+   ],
+   "comunique": "Abra index.html do Comunique (no VS Code, ou com Ctrl+U no site) e leia só as primeiras linhas: <!DOCTYPE html>, <html lang=\"pt-BR\">, <head>, <meta charset=\"utf-8\">, o meta viewport e <title>Comunique</title>. É o mesmo começo do seu exemplo (doctype em maiúsculas ou minúsculas tanto faz). Depois do head vem o body, e cada tela do app é uma <section> com um <h2>: procure 'Novo cadastro' e 'Novo bloqueio'. Os comentários <!-- --> que aparecem por lá são recados para quem mexe no código."
+  },
+  "m1a2": {
+   "objetivo": "Montar uma página com títulos em níveis (h1 e h2), uma lista com marcadores, uma lista numerada, um link e uma imagem com texto alternativo.",
+   "tempo_min": 25,
+   "antes": "m1a1 (estrutura da página, abrir e fechar tags, atributos), m0a3 (pastas e caminhos).",
+   "explicacao": [
+    "Títulos vão de <h1> a <h6>, do mais importante para o menos. Use como um sumário: um h1 para a página, h2 para cada parte, h3 dentro de uma parte. Escolha pelo nível, não pelo tamanho da letra; o tamanho se muda com CSS (aula m1a4).",
+    "Lista com marcadores: <ul> (lista sem ordem) e um <li> para cada item. Lista numerada: <ol> (lista em ordem), com os mesmos <li>. Use ol quando a ordem importa, como os passos de uma tratativa.",
+    "Link: <a href=\"destino\">texto</a>. href é o atributo com o destino. O texto do link diz para onde vai, como regras de bloqueio, e não clique aqui.",
+    "O destino pode ser outro site, sempre começando com https://, ou um arquivo do seu projeto, como regras.html. Sem https://, o navegador procura a partir da pasta onde a página está: é o caminho relativo.",
+    "Imagem: <img src=\"imagens/mapa.png\" alt=\"...\">. src é o caminho da imagem (relativo, como no link); alt é o texto alternativo. A tag img não tem fechamento.",
+    "O alt é lido pelo leitor de tela e aparece quando a imagem não carrega. Descreva o que a imagem mostra e importa. Imagem só de enfeite leva alt vazio: alt=\"\".",
+    "Quem usa leitor de tela costuma pular de título em título e ouvir a lista de links. Por isso títulos em ordem, links com texto claro e alt bem escrito ajudam de verdade."
+   ],
+   "exemplo": "<!doctype html>\n<html lang=\"pt-BR\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>Ajuda da operação</title>\n  </head>\n  <body>\n    <!-- 1. Título da página e das partes -->\n    <h1>Ajuda da operação</h1>\n    <h2>Cidades atendidas</h2>\n    <!-- 2. Lista sem ordem -->\n    <ul>\n      <li>LAGARTO - SE</li>\n      <li>ITABAIANA - SE</li>\n    </ul>\n    <h2>Como tratar um atraso</h2>\n    <!-- 3. Lista em ordem -->\n    <ol>\n      <li>Abrir a ficha do entregador.</li>\n      <li>Registrar a ocorrência.</li>\n    </ol>\n    <!-- 4. Link e imagem -->\n    <p>Veja as <a href=\"regras.html\">regras de bloqueio</a>.</p>\n    <img src=\"imagens/mapa.png\" alt=\"Mapa com as duas cidades atendidas marcadas\">\n  </body>\n</html>",
+   "como_o_computador_le": [
+    "O navegador lê o body de cima para baixo e põe cada elemento na árvore, um embaixo do outro.",
+    "h1: desenha Ajuda da operação grande e anota: este é o título da página.",
+    "h2: desenha Cidades atendidas um pouco menor e anota: começa uma parte.",
+    "ul: abre uma lista; cada li vira uma linha com uma bolinha na frente.",
+    "segundo h2: começa outra parte, Como tratar um atraso.",
+    "ol: abre outra lista; o navegador numera sozinho, 1. e 2. Você não escreve os números.",
+    "p com a dentro: desenha o parágrafo; as palavras regras de bloqueio ficam azuis e sublinhadas. Nada acontece até o clique.",
+    "No clique: o navegador junta a pasta da página com regras.html e abre .../mini-comunique/regras.html.",
+    "img: procura imagens/mapa.png a partir da pasta da página. Achou: desenha a imagem. Não achou: mostra o ícone de imagem quebrada com o texto do alt."
+   ],
+   "pratica": [
+    {
+     "tipo": "prever",
+     "enunciado": "Troque <ul> e </ul> por <ol> e </ol> na lista de cidades. O que muda na tela?",
+     "resposta": "As bolinhas viram números: 1. LAGARTO - SE e 2. ITABAIANA - SE. Os li não mudam."
+    },
+    {
+     "tipo": "rodar",
+     "enunciado": "Salve o exemplo como ajuda.html na pasta mini-comunique e abra no navegador. Sem a pasta imagens, o que aparece no lugar da imagem? Depois crie a pasta imagens dentro de mini-comunique, coloque nela qualquer imagem .png com o nome mapa.png (por exemplo, um print da tela salvo pelo Paint) e recarregue.",
+     "resposta": "Sem a pasta: um ícone de imagem quebrada com o texto Mapa com as duas cidades atendidas marcadas (é o alt em ação). Com a imagem no lugar certo: a imagem aparece, no tamanho original dela."
+    },
+    {
+     "tipo": "investigar",
+     "enunciado": "Clique no link regras de bloqueio. O que aparece? Olhe a barra de endereço e explique de onde veio esse endereço.",
+     "resposta": "Uma página de erro de arquivo não encontrado (ERR_FILE_NOT_FOUND). O endereço termina em /mini-comunique/regras.html: o navegador juntou a pasta de ajuda.html com o href e não achou o arquivo, porque ele ainda não existe. A prática criar resolve isso."
+    },
+    {
+     "tipo": "ordenar",
+     "enunciado": "Monte uma parte Links úteis com uma lista de dois links. Uma linha não serve:\n1) <li><a href=\"https://comuniqueqd.github.io/\">Comunique</a></li>\n2) </ul>\n3) <h2>Links úteis</h2>\n4) <ul>\n5) <li><a href=\"regras.html\">Regras de bloqueio</a></li>\n6) <li>",
+     "resposta": "3, 4, 1, 5, 2 (as linhas 1 e 5 podem trocar de lugar entre si). A linha 6 sobra: um li aberto sem conteúdo e sem fechamento.\n\nMontado:\n<h2>Links úteis</h2>\n<ul>\n  <li><a href=\"https://comuniqueqd.github.io/\">Comunique</a></li>\n  <li><a href=\"regras.html\">Regras de bloqueio</a></li>\n</ul>"
+    },
+    {
+     "tipo": "modificar",
+     "enunciado": "Mude o exemplo: acrescente a cidade TOBIAS BARRETO - SE, um terceiro passo Avisar o responsável da cidade. e ajuste o alt para um mapa com três cidades.",
+     "resposta": "Só o miolo do body muda:\n<ul>\n  <li>LAGARTO - SE</li>\n  <li>ITABAIANA - SE</li>\n  <li>TOBIAS BARRETO - SE</li>\n</ul>\n<h2>Como tratar um atraso</h2>\n<ol>\n  <li>Abrir a ficha do entregador.</li>\n  <li>Registrar a ocorrência.</li>\n  <li>Avisar o responsável da cidade.</li>\n</ol>\n<p>Veja as <a href=\"regras.html\">regras de bloqueio</a>.</p>\n<img src=\"imagens/mapa.png\" alt=\"Mapa com as três cidades atendidas marcadas\">"
+    },
+    {
+     "tipo": "criar",
+     "enunciado": "Sem olhar, crie regras.html na mesma pasta de ajuda.html (assim o link do exemplo passa a funcionar): página completa com h1 Regras de bloqueio; um h2 Infrações leves com uma lista sem ordem de 2 itens; um h2 Passos do registro com uma lista numerada de 3 passos; e, no fim, um link Voltar para a ajuda que leva para ajuda.html.",
+     "resposta": "<!doctype html>\n<html lang=\"pt-BR\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>Regras de bloqueio</title>\n  </head>\n  <body>\n    <h1>Regras de bloqueio</h1>\n    <h2>Infrações leves</h2>\n    <ul>\n      <li>Demora para aceitar o pedido.</li>\n      <li>Não atualizou o status da entrega.</li>\n    </ul>\n    <h2>Passos do registro</h2>\n    <ol>\n      <li>Conferir o ID do entregador.</li>\n      <li>Escolher a infração.</li>\n      <li>Registrar e avisar o entregador.</li>\n    </ol>\n    <p><a href=\"ajuda.html\">Voltar para a ajuda</a></p>\n  </body>\n</html>\n\nTeste: em ajuda.html, clique em regras de bloqueio; em regras.html, clique em Voltar para a ajuda. Os dois links devem funcionar."
+    }
+   ],
+   "dicas": [
+    "Comece copiando a estrutura de página da m1a1 (doctype, html, head, body) e só depois pense no miolo.",
+    "Faltam os subobjetivos 2 e 3: uma ul com li para as leves e uma ol com li para os passos. O link de volta é o subobjetivo 4, com href=\"ajuda.html\".",
+    "<h1>___</h1>\n<h2>Infrações leves</h2>\n<ul>\n  <li>___</li>\n  <li>___</li>\n</ul>\n<h2>Passos do registro</h2>\n<ol>\n  <li>___</li> (3 vezes)\n</ol>\n<p><a href=\"___\">Voltar para a ajuda</a></p>"
+   ],
+   "erros_comuns": [
+    "li solto, fora de ul ou ol -> o item aparece sem bolinha, ou com espaçamento estranho -> todo li fica dentro de um ul ou de um ol.",
+    "Pular nível de título (h1 e depois h4) só porque a letra é menor -> na tela parece certo, mas o leitor de tela anuncia partes que não existem -> use h2 para as partes; o tamanho se muda com CSS.",
+    "Caminho diferente do nome real (Imagens/Mapa.png para a pasta imagens e o arquivo mapa.png) -> imagem quebrada ou ERR_FILE_NOT_FOUND -> confira letra por letra; no site publicado, maiúscula e minúscula são diferentes.",
+    "img sem alt -> o leitor de tela lê o nome do arquivo, mapa ponto png -> escreva no alt o que a imagem mostra, ou alt=\"\" se for só enfeite.",
+    "Link para outro site sem https:// (href=\"comuniqueqd.github.io\") -> o navegador procura um arquivo com esse nome na sua pasta e dá erro -> link para outro site sempre começa com https://."
+   ],
+   "revisao": [
+    {
+     "pergunta": "Qual a diferença entre o que vai no head e o que vai no body?",
+     "resposta": "O head guarda informações sobre a página (charset, viewport, title), que não aparecem dentro dela. O body tem tudo o que aparece na tela.",
+     "de": "m1a1"
+    },
+    {
+     "pergunta": "Qual o caminho completo, no Windows, do arquivo leia-me.txt que está na pasta mini-comunique, dentro de Documentos?",
+     "resposta": "C:\\Users\\(seu usuário)\\Documents\\mini-comunique\\leia-me.txt. O Explorador mostra Documentos, mas no caminho a pasta se chama Documents.",
+     "de": "m0a3"
+    },
+    {
+     "pergunta": "O computador segue um passo vago, como 'resolva o caso'?",
+     "resposta": "Não. Ele só faz exatamente o que está escrito; um passo vago faz o programa parar ou fazer outra coisa. Cada passo precisa ser uma ação que dá para conferir.",
+     "de": "m0a2"
+    }
+   ],
+   "checagem": [
+    "Consigo escolher entre ul e ol e escrever a lista com li.",
+    "Consigo organizar os títulos em níveis, com um h1 e h2 para as partes.",
+    "Consigo escrever um link para outro site e um link para outro arquivo da mesma pasta.",
+    "Consigo pôr uma imagem com src relativo e um alt que descreve o que ela mostra.",
+    "Consigo explicar por que um link ou uma imagem deu arquivo não encontrado."
+   ],
+   "comunique": "No index.html do Comunique, o menu de cima é uma série de links: procure nav class=\"modulos\" e veja <a href=\"#inicio\">Início</a>, <a href=\"#parceiros\">Parceiros</a> e os outros. O # no href leva para uma parte da mesma página, sem abrir outro arquivo (o app troca a tela com JavaScript). Na Calculadora de bairro há uma lista numerada: procure ol class=\"passos\", embaixo de Como funciona. E repare no topo: o símbolo do Dino não é um <img>, é um desenho feito em código (<svg>) marcado com aria-hidden, porque é enfeite e o nome Comunique já está escrito ao lado; é o mesmo raciocínio do alt=\"\"."
+  },
+  "m1a3": {
+   "objetivo": "Montar o formulário Registrar ocorrência com campo de texto, listas de opções, caixa de texto grande e botão, cada campo ligado ao seu rótulo, e prever o que o navegador faz ao enviar.",
+   "tempo_min": 30,
+   "antes": "m1a1 (estrutura da página e atributos), m1a2 (títulos e listas; atributos como href e src).",
+   "explicacao": [
+    "Formulário é a parte da página onde a pessoa preenche dados, como o Novo bloqueio do Comunique. Tudo fica dentro de <form> e </form>.",
+    "<input> é um campo de uma linha e não tem fechamento. O atributo type diz o tipo: text (texto), number (número), date (data).",
+    "<label> é o rótulo do campo. Para ligar os dois, o for do label tem o mesmo texto que o id do campo. Assim, clicar no rótulo põe o cursor no campo, e o leitor de tela diz ID do entregador ao entrar nele.",
+    "id é o nome único de um elemento na página: não pode repetir. name é o nome com que o dado é enviado. Em geral, use o mesmo texto nos dois.",
+    "<select> é uma lista de opções, e cada <option> é uma escolha: value é o que é enviado; o texto entre as tags é o que a pessoa vê. <textarea> é a caixa de várias linhas e fecha com </textarea>.",
+    "required no campo faz o navegador recusar o envio com o campo vazio e mostrar um aviso. É ajuda para quem preenche, não proteção: a conferência que vale fica no banco de dados (módulo 9).",
+    "<button type=\"submit\"> envia o formulário. Como ainda não há um programa para receber os dados (módulos 2 e 4), o navegador recarrega a página e põe os dados no endereço, depois de um ?."
+   ],
+   "exemplo": "<!doctype html>\n<html lang=\"pt-BR\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>Registrar ocorrência</title>\n  </head>\n  <body>\n    <h1>Registrar ocorrência</h1>\n    <form>\n      <!-- 1. Rótulo + campo de texto -->\n      <p>\n        <label for=\"id-entregador\">ID do entregador</label>\n        <input type=\"text\" id=\"id-entregador\" name=\"id-entregador\" required>\n      </p>\n      <!-- 2. Listas de opções -->\n      <p>\n        <label for=\"cidade\">Cidade</label>\n        <select id=\"cidade\" name=\"cidade\" required>\n          <option value=\"\">Escolha a cidade</option>\n          <option value=\"LAGARTO - SE\">LAGARTO - SE</option>\n          <option value=\"ITABAIANA - SE\">ITABAIANA - SE</option>\n        </select>\n      </p>\n      <p>\n        <label for=\"tipo\">Tipo</label>\n        <select id=\"tipo\" name=\"tipo\" required>\n          <option value=\"\">Escolha o tipo</option>\n          <option value=\"atraso\">Atraso na entrega</option>\n          <option value=\"nao-entregue\">Pedido não entregue</option>\n          <option value=\"comportamento\">Mau comportamento</option>\n        </select>\n      </p>\n      <!-- 3. Texto longo -->\n      <p>\n        <label for=\"descricao\">Descrição</label>\n        <textarea id=\"descricao\" name=\"descricao\" rows=\"4\"></textarea>\n      </p>\n      <!-- 4. Botão de enviar -->\n      <button type=\"submit\">Registrar</button>\n    </form>\n  </body>\n</html>",
+   "como_o_computador_le": [
+    "h1: desenha Registrar ocorrência no topo.",
+    "form: abre a área do formulário. Sozinho, não desenha nada; é a caixa que junta os campos.",
+    "label for=\"id-entregador\": desenha ID do entregador e anota: este rótulo é do elemento com id id-entregador.",
+    "input: desenha a caixinha de texto, liga ao rótulo pelo id e marca como obrigatória (required).",
+    "select da cidade: desenha uma lista fechada mostrando a primeira opção, Escolha a cidade, que tem value vazio.",
+    "select do tipo: o mesmo; a pessoa vê Atraso na entrega, mas o valor guardado é atraso.",
+    "textarea: desenha uma caixa com 4 linhas de altura.",
+    "button type=\"submit\": desenha o botão Registrar.",
+    "Clique em Registrar com o ID vazio: o navegador confere cada required, para no primeiro vazio, põe o cursor nele e mostra um balão pedindo para preencher. Nada é enviado.",
+    "Clique com tudo preenchido: o navegador junta name=value de cada campo e recarrega a página com isso no endereço, por exemplo ...ocorrencia.html?id-entregador=abc123&cidade=LAGARTO+-+SE&tipo=atraso&descricao=Teste (o espaço vira +)."
+   ],
+   "pratica": [
+    {
+     "tipo": "prever",
+     "enunciado": "Preencha só a cidade e o tipo e clique em Registrar. O que acontece?",
+     "resposta": "Nada é enviado. O cursor vai para ID do entregador, com um balão do navegador pedindo para preencher o campo, porque ele tem required. A descrição vazia não impede o envio: ela não tem required."
+    },
+    {
+     "tipo": "rodar",
+     "enunciado": "Salve o exemplo como ocorrencia.html na pasta mini-comunique e abra no navegador. Preencha tudo com dados fictícios (ID abc123, LAGARTO - SE, Atraso na entrega, descrição Teste) e clique em Registrar. Olhe a barra de endereço.",
+     "resposta": "A página recarrega com os campos vazios, e o endereço ganha, depois do ?, algo como id-entregador=abc123&cidade=LAGARTO+-+SE&tipo=atraso&descricao=Teste. Cada pedaço é name=value, separados por &."
+    },
+    {
+     "tipo": "investigar",
+     "enunciado": "Clique na palavra Descrição (o rótulo, não a caixa). O que acontece? Agora apague for=\"descricao\" do label, salve, recarregue e clique de novo. Por que mudou? E, no endereço do envio, por que aparece tipo=atraso e não Atraso na entrega?",
+     "resposta": "Com o for, o cursor vai para a caixa de descrição. Sem o for, nada acontece: o rótulo não sabe de qual campo é (e o leitor de tela também não). No endereço vai o name do campo (tipo) e o value da opção (atraso); o texto entre as tags é só para a pessoa ler."
+    },
+    {
+     "tipo": "ordenar",
+     "enunciado": "Monte o rótulo e a lista de tipos. Uma linha não serve:\n1) <option value=\"\">Escolha o tipo</option>\n2) </select>\n3) <label for=\"tipo\">Tipo</label>\n4) <select id=\"tipo\" name=\"tipo\" required>\n5) <option value=\"atraso\">Atraso na entrega</option>\n6) <input id=\"tipo\">",
+     "resposta": "3, 4, 1, 5, 2. A linha 6 sobra: criaria um segundo elemento com id tipo, e id não pode repetir. A opção de value vazio vem primeiro para a lista começar em Escolha o tipo e o required funcionar.\n\nMontado:\n<label for=\"tipo\">Tipo</label>\n<select id=\"tipo\" name=\"tipo\" required>\n  <option value=\"\">Escolha o tipo</option>\n  <option value=\"atraso\">Atraso na entrega</option>\n</select>"
+    },
+    {
+     "tipo": "modificar",
+     "enunciado": "Acrescente ao formulário um campo obrigatório Data da ocorrência (type=\"date\") entre o tipo e a descrição, e uma terceira cidade, TOBIAS BARRETO - SE.",
+     "resposta": "Na lista de cidades, mais uma opção:\n<option value=\"TOBIAS BARRETO - SE\">TOBIAS BARRETO - SE</option>\n\nEntre o tipo e a descrição, um campo novo:\n<p>\n  <label for=\"data\">Data da ocorrência</label>\n  <input type=\"date\" id=\"data\" name=\"data\" required>\n</p>\n\nNa tela, o campo de data ganha um calendário. Depois de enviar, o endereço traz também data=2026-11-15 (ano-mês-dia), seja qual for o formato que a tela mostra."
+    },
+    {
+     "tipo": "criar",
+     "enunciado": "Sem olhar, crie ativacao.html com o formulário Nova ativação: ID do entregador (obrigatório), nome do entregador, cidade (lista com a opção vazia e 2 cidades, obrigatória), observação (caixa de várias linhas) e um botão Enviar cadastro. Cada campo com seu label ligado. Teste clicando nos rótulos e enviando com dados fictícios.",
+     "resposta": "<!doctype html>\n<html lang=\"pt-BR\">\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>Nova ativação</title>\n  </head>\n  <body>\n    <h1>Nova ativação</h1>\n    <form>\n      <p>\n        <label for=\"id-app\">ID do entregador</label>\n        <input type=\"text\" id=\"id-app\" name=\"id-app\" required>\n      </p>\n      <p>\n        <label for=\"nome\">Nome do entregador</label>\n        <input type=\"text\" id=\"nome\" name=\"nome\">\n      </p>\n      <p>\n        <label for=\"cidade\">Cidade</label>\n        <select id=\"cidade\" name=\"cidade\" required>\n          <option value=\"\">Escolha a cidade</option>\n          <option value=\"LAGARTO - SE\">LAGARTO - SE</option>\n          <option value=\"ITABAIANA - SE\">ITABAIANA - SE</option>\n        </select>\n      </p>\n      <p>\n        <label for=\"observacao\">Observação</label>\n        <textarea id=\"observacao\" name=\"observacao\" rows=\"3\"></textarea>\n      </p>\n      <button type=\"submit\">Enviar cadastro</button>\n    </form>\n  </body>\n</html>"
+    }
+   ],
+   "dicas": [
+    "Olhe o exemplo: a forma de cada campo se repete (um p com label e campo dentro). Só mudam os textos, os ids e o tipo de campo.",
+    "Confira o subobjetivo 1 em cada campo: o for do label igual ao id do campo, e um name para o dado ir junto. Os obrigatórios ganham required.",
+    "<form>\n  <p><label for=\"___\">ID do entregador</label> <input type=\"text\" id=\"___\" name=\"___\" required></p>\n  <p><label for=\"nome\">___</label> <input type=\"text\" id=\"nome\" name=\"nome\"></p>\n  <p><label for=\"cidade\">Cidade</label> <select id=\"cidade\" name=\"cidade\" required> <option value=\"\">___</option> ... </select></p>\n  <p><label for=\"___\">Observação</label> <textarea id=\"___\" name=\"___\"></textarea></p>\n  <button type=\"___\">Enviar cadastro</button>\n</form>"
+   ],
+   "erros_comuns": [
+    "for e id diferentes (for=\"id\" e id=\"id-entregador\") -> clicar no rótulo não põe o cursor no campo -> use exatamente o mesmo texto nos dois.",
+    "Campo sem name -> ele some do endereço depois do envio -> todo campo cujo dado deve ir junto precisa de name.",
+    "id repetido na página -> clicar num rótulo leva para o campo errado -> cada id é único; troque um deles.",
+    "Esquecer o </textarea> -> o resto do formulário aparece escrito dentro da caixa -> feche com </textarea>. O input é o contrário: não tem fechamento.",
+    "Achar que required protege os dados -> qualquer pessoa consegue tirar o required pelas Ferramentas do desenvolvedor (aula m1a7) -> trate o required só como ajuda; a regra que vale fica no banco."
+   ],
+   "revisao": [
+    {
+     "pergunta": "Quando usar ol e quando usar ul?",
+     "resposta": "ol quando a ordem importa (passos de uma tratativa, numerados sozinhos). ul quando não importa (lista de cidades, com bolinhas).",
+     "de": "m1a2"
+    },
+    {
+     "pergunta": "Para que serve o atributo lang=\"pt-BR\" na tag html?",
+     "resposta": "Diz que a página está em português. O leitor de tela usa a voz em português, e o navegador sabe o idioma (para traduzir, corrigir ortografia etc.).",
+     "de": "m1a1"
+    },
+    {
+     "pergunta": "Por que dar nomes de arquivo sem espaço, sem acento e em minúsculas?",
+     "resposta": "Porque no endereço da web o espaço vira %20, acentos podem quebrar, e no site publicado maiúscula e minúscula são diferentes. leia-me.txt é seguro; Leia Me.txt não.",
+     "de": "m0a3"
+    }
+   ],
+   "checagem": [
+    "Consigo ligar um label ao seu campo com for e id e testar clicando no rótulo.",
+    "Consigo escrever um select com a opção vazia e outras opções com value.",
+    "Consigo escolher entre input e textarea para um campo.",
+    "Consigo prever o que o navegador faz ao enviar um formulário com um campo required vazio.",
+    "Consigo ler no endereço, depois do envio, o name e o value de cada campo."
+   ],
+   "comunique": "Abra index.html e procure Novo cadastro (section id=\"v-novo\"). Veja o <form class=\"cad\" id=\"form\">, o label for=\"f-idapp\" ligado ao input id=\"f-idapp\", a textarea id=\"f-obs\" e o button type=\"submit\" Enviar cadastro. No Novo bloqueio (procure bq-form), a cidade é um <select id=\"bq-cidade\"> cuja primeira opção é Escolha a cidade, com value vazio, igual ao seu. Duas diferenças: lá o label envolve o campo, em vez de ficar ao lado (as duas formas valem, com o for igual ao id); e o form tem novalidate, que desliga os balões do navegador, porque o JavaScript do app confere os campos e mostra as mensagens do jeito dele (módulo 2)."
+  },
+  "m1a4": {
+   "objetivo": "Escrever um arquivo estilo.css, ligado à página 'Registrar ocorrência', que muda cor, fundo, fonte e tamanho usando seletores de tag, de classe e de id.",
+   "tempo_min": 25,
+   "antes": "m1a1 (estrutura html/head/body), m1a3 (formulário com label, input, select, textarea e button). Você precisa ter o formulário 'Registrar ocorrência' da m1a3, salvo como ocorrencia.html na pasta mini-comunique.",
+   "explicacao": [
+    "O HTML diz O QUE tem na página (título, campo, botão). O CSS diz COMO aparece (cor, tamanho, letra). É como o formulário em papel e a caneta colorida que você usa para destacar.",
+    "CSS é um arquivo de texto com regras. Cada regra tem duas partes: o seletor (quem vai mudar) e, entre { }, as declarações (o que muda). Cada declaração é propriedade: valor; e termina com ponto e vírgula.",
+    "Três seletores para começar: h1 escolhe todas as tags h1; .destaque (com ponto) escolhe tudo que tem class=\"destaque\"; #botao-registrar (com cerquilha) escolhe o único elemento com id=\"botao-registrar\". Classe é etiqueta que pode repetir; id é como o ID do entregador: um só por página.",
+    "Cores: color muda a cor do texto e background-color muda o fundo. Dá para escrever o nome em inglês (white, black) ou um código hexadecimal, como #14352B: um # e seis letras e números que dizem quanto de vermelho, verde e azul a cor tem.",
+    "Tamanhos: font-size muda o tamanho da letra. px é pixel, um pontinho da tela; 16px é o tamanho normal de texto. font-family escolhe a letra (system-ui quer dizer 'a letra do próprio sistema') e font-weight: bold deixa em negrito.",
+    "Para ligar o CSS ao HTML, coloque dentro do <head>: <link rel=\"stylesheet\" href=\"estilo.css\">. O href é o caminho do arquivo; se estilo.css está na mesma pasta da página, basta o nome. Enquanto aprende, também dá para escrever as regras dentro de <style> ... </style> no <head>, ou usar o quadro CSS do CodePen.",
+    "Quando duas regras mudam a mesma coisa no mesmo elemento, vence a mais específica: id vence classe, que vence tag. Empatou? Vence a que vem por último no arquivo. Isso se chama cascata."
+   ],
+   "exemplo": "<!-- ocorrencia.html, dentro do <head> -->\n<link rel=\"stylesheet\" href=\"estilo.css\">\n\n/* estilo.css */\n/* 1. Escolher quem muda (seletor de tag) */\nbody {\n  /* 2. Dizer o que muda (propriedade: valor;) */\n  font-family: system-ui, sans-serif;\n  background-color: #FAF7F1;\n  color: #14352B;\n}\nh1 { font-size: 28px; }\n/* 3. Etiqueta que pode repetir (classe) */\n.destaque { color: #B3261E; font-weight: bold; }\n/* 4. Um elemento só (id) */\n#botao-registrar { background-color: #18774E; color: white; font-size: 16px; }\n\n<!-- ocorrencia.html: o aviso entra no form, logo antes do botão; o botão Registrar ganha o id -->\n<p class=\"destaque\">Preencha o ID antes de enviar.</p>\n<button id=\"botao-registrar\" type=\"submit\">Registrar</button>",
+   "como_o_computador_le": [
+    "O navegador lê o ocorrencia.html de cima para baixo e monta a árvore de elementos (html, head, body, h1, form, p, button...).",
+    "No <head> ele encontra o <link> e baixa o arquivo estilo.css. Se o caminho estiver errado, ele não acha o arquivo e a página fica sem estilo, sem mostrar erro na tela.",
+    "Para cada elemento da página, ele procura as regras cujo seletor combina. O <p class=\"destaque\"> combina com .destaque; o <button id=\"botao-registrar\"> combina com #botao-registrar.",
+    "O body recebe fonte system-ui, fundo #FAF7F1 e texto #14352B. A cor do texto e a fonte passam para os filhos (herança): o h1 e o p também ficam com texto #14352B, a não ser que outra regra mude.",
+    "No <p class=\"destaque\"> há duas regras de cor: a herdada do body (#14352B) e a da classe (#B3261E). A regra que escolhe o próprio elemento vence a herança, então o texto fica vermelho e em negrito.",
+    "O h1 fica com 28px. O botão fica com fundo #18774E, texto branco e letra de 16px.",
+    "Só então a página é desenhada na tela. Se você mudar o CSS e salvar, precisa recarregar a página (F5) para o navegador ler de novo."
+   ],
+   "pratica": [
+    {
+     "tipo": "prever",
+     "enunciado": "Com o exemplo carregado, o texto 'Preencha o ID antes de enviar.' aparece de que cor? E o h1 'Registrar ocorrência'?",
+     "resposta": "O texto do p.destaque aparece vermelho (#B3261E) e em negrito, porque a regra .destaque escolhe esse elemento. O h1 aparece na cor do body (#14352B, verde-escuro), com 28px, porque herda a cor do body e nenhuma regra muda a cor dele."
+    },
+    {
+     "tipo": "rodar",
+     "enunciado": "Crie estilo.css na pasta mini-comunique, a mesma do ocorrencia.html. Cole as regras do exemplo, ponha o <link> no head, acrescente o aviso e o id do botão como no fim do exemplo e abra o ocorrencia.html no navegador. Bateu com a sua previsão? (No CodePen: o HTML no quadro HTML, só as regras no quadro CSS, sem o <link>.)",
+     "resposta": "Fundo bege-claro, texto verde-escuro, título maior, aviso vermelho em negrito e botão verde com texto branco. Se nada mudou, confira o caminho no href e se o arquivo se chama exatamente estilo.css."
+    },
+    {
+     "tipo": "investigar",
+     "enunciado": "Acrescente no fim do arquivo a regra p { color: blue; }. O texto 'Preencha o ID antes de enviar.' fica azul ou continua vermelho? Por quê?",
+     "resposta": "Continua vermelho. A regra .destaque (classe) é mais específica que p (tag), e a mais específica vence mesmo vindo antes no arquivo. Os outros parágrafos, sem a classe, ficam azuis."
+    },
+    {
+     "tipo": "ordenar",
+     "enunciado": "Monte uma regra que deixa a classe .tipo em negrito e com 14px. Linhas embaralhadas (uma não serve): (1) font-size: 14px; (2) } (3) .tipo { (4) font-weight: bold; (5) tipo: bold;",
+     "resposta": "3, 4, 1, 2 (a linha 5 não serve: tipo não é uma propriedade do CSS).\n.tipo {\n  font-weight: bold;\n  font-size: 14px;\n}"
+    },
+    {
+     "tipo": "modificar",
+     "enunciado": "Mude o exemplo para: título com 32px e na cor #18774E; botão com fundo #14352B.",
+     "resposta": "h1 { font-size: 32px; color: #18774E; }\n#botao-registrar { background-color: #14352B; color: white; font-size: 16px; }"
+    },
+    {
+     "tipo": "criar",
+     "enunciado": "No ocorrencia.html, depois do </form>, crie uma lista de ocorrências de exemplo: <ul> com três <li class=\"ocorrencia\">, como 'abc123 - LAGARTO - Atraso'. Dê a uma delas também a classe grave (class=\"ocorrencia grave\"). Escreva o CSS: toda .ocorrencia com fundo branco e letra de 15px; a .grave com texto #B3261E e em negrito.",
+     "resposta": "<ul>\n  <li class=\"ocorrencia\">abc123 - LAGARTO - Atraso</li>\n  <li class=\"ocorrencia grave\">xyz789 - ITABAIANA - Retenção</li>\n  <li class=\"ocorrencia\">teste01 - CARPINA - Mal uso</li>\n</ul>\n\n.ocorrencia { background-color: white; font-size: 15px; }\n.grave { color: #B3261E; font-weight: bold; }"
+    }
+   ],
+   "dicas": [
+    "Olhe a regra .destaque do exemplo: é a mesma forma, só muda o nome da classe e as propriedades.",
+    "Faltam dois subobjetivos: no HTML, pôr a etiqueta (class=\"...\") em cada li; no CSS, uma regra para cada classe (.ocorrencia e .grave). Um elemento pode ter duas classes separadas por espaço.",
+    "HTML: <li class=\"ocorrencia ___\">. CSS: .ocorrencia { background-color: ___; font-size: ___; } e .grave { color: ___; font-weight: ___; }"
+   ],
+   "erros_comuns": [
+    "Esquecer o ponto no seletor de classe (destaque em vez de .destaque) -> nada muda no elemento, sem mensagem de erro -> classe no CSS sempre começa com ponto; id com #.",
+    "Esquecer o ; entre declarações ou a } no fim da regra -> a declaração seguinte (ou a regra inteira) é ignorada -> confira que cada propriedade: valor termina com ; e que toda { tem sua }.",
+    "Caminho errado no <link> (estilo.css em outra pasta, ou nome com letra maiúscula diferente) -> a página aparece toda sem estilo, letra padrão e fundo branco -> deixe o estilo.css na mesma pasta do ocorrencia.html e escreva o nome igualzinho.",
+    "Esquecer o # na cor (color: B3261E) -> a cor não muda -> código hexadecimal sempre com #.",
+    "Salvar o CSS e não recarregar a página -> parece que não funcionou -> aperte F5 depois de salvar."
+   ],
+   "revisao": [
+    {
+     "pergunta": "No formulário, como o <label> fica ligado ao seu campo?",
+     "resposta": "O atributo for do label tem o mesmo valor do id do campo. Ex.: <label for=\"id-entregador\"> e <input id=\"id-entregador\">. Clicar no texto leva ao campo.",
+     "de": "m1a3"
+    },
+    {
+     "pergunta": "O que vai dentro do <head> e o que vai dentro do <body>?",
+     "resposta": "No head vão informações sobre a página que não aparecem no conteúdo (charset, título da aba e, a partir de agora, o link do CSS). No body vai o que a pessoa vê: títulos, textos, formulário, botões.",
+     "de": "m1a1"
+    },
+    {
+     "pergunta": "O que quer dizer que o computador segue os passos 'à risca'?",
+     "resposta": "Ele faz exatamente o que está escrito, na ordem, sem adivinhar a intenção. Um passo escrito errado é executado errado (ou não é executado), mesmo que para uma pessoa estivesse óbvio.",
+     "de": "m0a2"
+    }
+   ],
+   "checagem": [
+    "Consigo ligar um arquivo estilo.css a uma página com <link rel=\"stylesheet\" href=\"estilo.css\">.",
+    "Consigo escrever uma regra com seletor de tag, de classe (.) e de id (#), sem olhar.",
+    "Consigo mudar cor do texto, cor de fundo, tamanho e peso da letra.",
+    "Consigo dizer qual regra vence quando uma classe e uma tag mudam a mesma cor."
+   ],
+   "comunique": "No index.html do Comunique, procure a linha <link rel=\"stylesheet\" href=\"estilo.css?v=009t\">: é o mesmo link desta aula (o ?v= serve só para o navegador buscar a versão nova). No estilo.css, procure .btn.primary (o botão principal do app) e h1 { font-size: 22px; ... }: são regras como as suas. Lá as cores aparecem como var(--accent) ou var(--floresta) em vez de um código #; isso é a aula m1a6."
+  },
+  "m1a7": {
+   "objetivo": "Usar as Ferramentas do desenvolvedor do Chrome ou Edge para encontrar o elemento de um botão, descobrir qual regra de CSS pinta ele e testar uma cor nova ao vivo antes de passar para o arquivo.",
+   "tempo_min": 20,
+   "antes": "m1a4 (ligar o estilo.css e escrever regras com tag, classe e id). Tenha a página 'Registrar ocorrência' com estilo aberta no Chrome ou no Edge.",
+   "explicacao": [
+    "As Ferramentas do desenvolvedor (DevTools) são um painel que todo navegador traz para ver a página por dentro. É como abrir a tampa do baú da moto para ver o que tem lá, sem desmontar nada.",
+    "Para abrir: F12, ou clique com o botão direito em qualquer parte da página e escolha Inspecionar. No Mac: Cmd+Option+I.",
+    "A aba Elements (Elementos) mostra o HTML como árvore. Ao passar o mouse numa linha, o elemento acende na página. O ícone da setinha num quadrado (canto de cima, à esquerda) faz o contrário: você clica na página e ele mostra a linha do HTML.",
+    "Ao lado da árvore fica o painel Styles (Estilos): todas as regras de CSS que acertam o elemento escolhido, a que vence em cima. Regra riscada é a que perdeu na cascata. Dá para clicar num valor e mudar, ou desmarcar a caixinha para desligar uma linha.",
+    "Clicando duas vezes num texto da árvore, você muda o texto na hora. No painel Computed (Calculado) aparece o desenho do modelo de caixa do elemento, que é a próxima aula.",
+    "Existe também a aba Console. Por enquanto só saiba que ela existe: é onde o JavaScript escreve recados e mostra erros, a partir do módulo 2.",
+    "Nada do que você muda no DevTools vai para o arquivo. Tudo fica só nesta aba, até recarregar a página. É um rascunho seguro: teste lá, e o que gostar você copia para o estilo.css."
+   ],
+   "exemplo": "Roteiro: trocar a cor do botão Registrar sem medo\n\n1. Abrir: com a página aberta, aperte F12 (ou botão direito > Inspecionar).\n2. Achar o elemento: clique na setinha do canto do DevTools e depois no botão Registrar. Na árvore acende:\n   <button id=\"botao-registrar\" type=\"submit\">Registrar</button>\n3. Ver quem pinta: no painel Styles aparece\n   #botao-registrar {\n     background-color: #18774E;\n     color: white;\n     font-size: 16px;\n   }\n   estilo.css:12   (arquivo e linha de onde veio a regra; o número depende do seu arquivo)\n4. Testar ao vivo: clique em #18774E, digite #14352B e aperte Enter. O botão muda na hora.\n5. Levar para o arquivo: gostou? Abra o estilo.css no editor, troque o valor na linha indicada, salve e recarregue (F5).",
+   "como_o_computador_le": [
+    "Quando a página abre, o navegador guarda na memória a árvore de elementos e as regras do CSS que ele leu dos arquivos.",
+    "O DevTools mostra essa cópia da memória, não o arquivo. Por isso a árvore da aba Elements pode ser diferente do ocorrencia.html (o navegador às vezes completa tags que faltam, e mais tarde o JavaScript também acrescenta elementos).",
+    "Ao clicar no botão com a setinha, o DevTools pergunta ao navegador: quais regras combinam com este elemento? Ele lista todas, a mais forte em cima, e risca as declarações que perderam na cascata.",
+    "Ao trocar #18774E por #14352B no painel Styles, a regra na memória muda e o navegador redesenha a página na hora.",
+    "O arquivo estilo.css no seu computador continua com #18774E. Ao apertar F5, o navegador joga fora a memória, lê os arquivos de novo e o botão volta à cor antiga."
+   ],
+   "pratica": [
+    {
+     "tipo": "prever",
+     "enunciado": "Você mudou o texto do h1 para 'Teste' e a cor do botão para preto no DevTools. Depois apertou F5. O que aparece?",
+     "resposta": "A página volta ao que está nos arquivos: o h1 com 'Registrar ocorrência' e o botão com a cor do estilo.css. O DevTools nunca salva no arquivo."
+    },
+    {
+     "tipo": "rodar",
+     "enunciado": "Abra a sua página, aperte F12 e use a setinha para escolher o botão Registrar. Qual arquivo e qual linha o painel Styles mostra ao lado da regra #botao-registrar?",
+     "resposta": "Aparece estilo.css seguido do número da linha onde a regra começa no seu arquivo (o número depende de como você escreveu). Esse é o lugar para editar quando quiser tornar a mudança permanente."
+    },
+    {
+     "tipo": "investigar",
+     "enunciado": "Se ainda não tem, acrescente no fim do estilo.css a regra p { color: blue; } (é a da m1a4). Recarregue e inspecione o parágrafo de classe destaque. No painel Styles, qual declaração de cor aparece riscada? Por quê?",
+     "resposta": "Aparece riscada color: blue (da regra p). A regra .destaque é mais específica (classe vence tag) e o color: #B3261E dela vence. O DevTools risca a declaração que perdeu."
+    },
+    {
+     "tipo": "ordenar",
+     "enunciado": "Ponha em ordem os passos para testar um tamanho de letra novo no título e depois deixar valendo. (1) Trocar o valor de font-size no painel Styles. (2) Abrir o DevTools com F12. (3) Salvar o estilo.css e recarregar a página. (4) Clicar na setinha e depois no título. (5) Copiar o valor que ficou bom para a regra h1 no estilo.css. (6) Apagar a pasta do projeto.",
+     "resposta": "2, 4, 1, 5, 3. O passo 6 não serve (e apagaria seu trabalho)."
+    },
+    {
+     "tipo": "modificar",
+     "enunciado": "No DevTools, escolha um li de classe ocorrencia. No painel Styles, clique dentro da regra .ocorrencia, depois do último ponto e vírgula, e acrescente uma declaração nova: font-size: 20px. Depois desmarque a caixinha ao lado de background-color. O que muda? Como você desfaz tudo de uma vez?",
+     "resposta": "As ocorrências ficam com letra de 20px e, ao desmarcar a caixinha, o fundo branco some (volta o fundo da página). Para desfazer tudo, basta recarregar a página (F5)."
+    },
+    {
+     "tipo": "criar",
+     "enunciado": "Use o DevTools para escolher uma cor nova para a classe .grave que fique bem legível sobre o fundo branco da ocorrência. Teste pelo menos duas cores ao vivo. Depois passe a escolhida para o estilo.css, salve, recarregue e confirme no DevTools que a regra nova veio do arquivo.",
+     "resposta": "Uma solução: no painel Styles, em .grave, trocar #B3261E por #8C1D18 e depois por #A01C3C; escolher #8C1D18 (vermelho mais escuro, fácil de ler). No estilo.css: .grave { color: #8C1D18; font-weight: bold; }. Após F5, ao inspecionar um li.grave, o painel Styles mostra .grave com #8C1D18 e o nome estilo.css ao lado."
+    }
+   ],
+   "dicas": [
+    "Comece pelo elemento: use a setinha e clique numa ocorrência grave. A regra .grave vai aparecer no painel Styles.",
+    "Faltam dois subobjetivos: testar ao vivo (clicar no valor da cor e digitar outro) e levar para o arquivo (editar o estilo.css, salvar, F5).",
+    "No painel Styles: .grave { color: ___ } -> Enter -> olhar a página. No editor: .grave { color: ___; font-weight: bold; } -> salvar -> F5 -> inspecionar de novo."
+   ],
+   "erros_comuns": [
+    "Mudar no DevTools e achar que salvou -> ao recarregar, tudo volta como antes -> copie o que gostou para o estilo.css e salve no editor.",
+    "Mexer na aba errada (Console ou Sources) -> você não acha o painel Styles -> volte para a aba Elements (Elementos); o painel Styles fica ao lado ou embaixo da árvore.",
+    "Escolher o elemento de fora (o form em vez do button) -> a regra que você procura não aparece -> use a setinha e clique exatamente em cima do botão, ou abra as setinhas da árvore até achar a linha certa.",
+    "Achar que a regra riscada está com defeito -> ela só perdeu na cascata -> procure acima dela a regra que vence (mais específica ou que vem depois)."
+   ],
+   "revisao": [
+    {
+     "pergunta": "Qual o símbolo que começa um seletor de classe? E um de id?",
+     "resposta": "Classe começa com ponto (.destaque). Id começa com cerquilha (#botao-registrar).",
+     "de": "m1a4"
+    },
+    {
+     "pergunta": "Para que serve o atributo alt de uma <img>?",
+     "resposta": "É o texto que descreve a imagem. Aparece se a imagem não carregar e é lido em voz alta por leitores de tela para quem não enxerga.",
+     "de": "m1a2"
+    },
+    {
+     "pergunta": "Por que o nome do arquivo precisa terminar em .html ou .css?",
+     "resposta": "A extensão (o final depois do ponto) diz ao computador e ao navegador que tipo de arquivo é e como abrir. Um index.html.txt, por exemplo, é aberto como texto comum, não como página.",
+     "de": "m0a3"
+    }
+   ],
+   "checagem": [
+    "Consigo abrir as Ferramentas do desenvolvedor de dois jeitos (F12 e botão direito > Inspecionar).",
+    "Consigo achar a linha de um elemento clicando nele com a setinha.",
+    "Consigo dizer qual regra pinta um elemento e de qual arquivo e linha ela vem.",
+    "Consigo testar uma cor ao vivo e explicar por que ela some ao recarregar."
+   ],
+   "comunique": "Abra https://comuniqueqd.github.io, aperte F12 e use a setinha no botão verde-escuro de ação de um formulário (por exemplo, Enviar cadastro). Na árvore ele aparece com class=\"btn primary\". No painel Styles aparecem duas regras .btn.primary do estilo.css: a de cima, que vence, com background: var(--floresta); a de baixo, com background: var(--accent) riscado. É a cascata da m1a4: as duas têm a mesma força, e vence a que vem depois no arquivo. Passe o mouse sobre var(--floresta) para ver a cor de verdade. Mude à vontade: nada vai para o app, só para a sua aba."
+  },
+  "m1a5": {
+   "objetivo": "Aplicar padding, border, margin e box-sizing: border-box para transformar cada ocorrência da lista num cartão com espaço por dentro e distância entre um e outro, e calcular a largura final de uma caixa.",
+   "tempo_min": 25,
+   "antes": "m1a4 (regras com classe; cores e px), m1a7 (abrir o DevTools e escolher um elemento). Tenha a lista de ocorrências com a classe ocorrencia.",
+   "explicacao": [
+    "Para o navegador, todo elemento é uma caixa retangular, mesmo que você não veja as bordas. Isso se chama modelo de caixa.",
+    "Pense numa caixa de entrega: o produto é o conteúdo (o texto), o enchimento de plástico bolha é o padding (espaço entre o conteúdo e a borda), o papelão é a border (borda) e a distância entre uma caixa e outra na prateleira é a margin (margem).",
+    "Padding fica DENTRO da borda e pega a cor de fundo do elemento. Margin fica FORA da borda e é sempre transparente.",
+    "Border tem três partes numa linha só: espessura, estilo e cor. Ex.: border: 1px solid #E5DED1 (1 pixel, linha contínua, bege). border-radius arredonda os cantos.",
+    "Atalhos: padding: 12px vale para os quatro lados. padding: 12px 16px é 12px em cima e embaixo, 16px nos lados. O mesmo vale para margin. margin-bottom muda só embaixo.",
+    "Por padrão, width (largura) mede só o conteúdo: padding e borda são somados por fora, e a caixa fica maior do que você pediu. Com box-sizing: border-box, a largura já inclui padding e borda, e a conta fica fácil.",
+    "Por isso quase todo projeto começa com * { box-sizing: border-box; }. O asterisco é o seletor que escolhe todos os elementos."
+   ],
+   "exemplo": "/* 1. Combinar a conta da largura para tudo */\n* { box-sizing: border-box; }\n\n/* 2. Cartão de ocorrência */\n.ocorrencia {\n  background-color: white;\n  /* 3. Enchimento (dentro da borda) */\n  padding: 12px 16px;\n  /* 4. Papelão (a borda) */\n  border: 1px solid #E5DED1;\n  border-radius: 10px;\n  /* 5. Distância até o próximo cartão */\n  margin-bottom: 12px;\n  width: 320px;\n}",
+   "como_o_computador_le": [
+    "O seletor * combina com todos os elementos, então todos passam a usar box-sizing: border-box.",
+    "Para cada li.ocorrencia, o navegador começa pela largura pedida: width = 320px. Como é border-box, esses 320px já incluem padding e borda.",
+    "Ele separa: borda de 1px de cada lado (2px) e padding de 16px de cada lado (32px). Sobram 320 - 2 - 32 = 286px para o texto. Se o texto não cabe numa linha, ele quebra.",
+    "A altura vem do conteúdo: altura das linhas do texto + 12px de padding em cima + 12px embaixo + 1px de borda em cima + 1px embaixo.",
+    "Ele pinta o fundo branco no conteúdo e no padding, desenha a borda bege com cantos arredondados de 10px.",
+    "Depois deixa 12px vazios (margin-bottom) abaixo da borda e só então coloca o próximo cartão.",
+    "Sem o box-sizing: border-box, a conta seria outra: 320 de conteúdo + 32 de padding + 2 de borda = 354px na tela."
+   ],
+   "pratica": [
+    {
+     "tipo": "prever",
+     "enunciado": "Sem box-sizing: border-box, uma caixa tem width: 200px; padding: 10px; border: 2px solid black. Qual a largura que aparece na tela? E com border-box?",
+     "resposta": "Sem border-box: 200 + 10 + 10 + 2 + 2 = 224px. Com border-box: 200px (o conteúdo fica com 200 - 20 - 4 = 176px)."
+    },
+    {
+     "tipo": "rodar",
+     "enunciado": "Aplique o exemplo à sua lista e recarregue. Depois inspecione um li.ocorrencia no DevTools e abra o painel Computed (Calculado). Que números aparecem no desenho de caixas?",
+     "resposta": "O desenho mostra, de fora para dentro: margin (0 em cima, 12 embaixo), border (1 em todos os lados), padding (12 em cima e embaixo, 16 nos lados) e, no centro, o conteúdo com 286 de largura e a altura do texto."
+    },
+    {
+     "tipo": "investigar",
+     "enunciado": "Os cartões parecem colados nas bolinhas da lista e há um recuo à esquerda que você não colocou. Inspecione o <ul> no DevTools. De onde vem o recuo?",
+     "resposta": "O próprio navegador dá ao <ul> um padding à esquerda (cerca de 40px) para as bolinhas, e uma margem em cima e embaixo. No painel Styles isso aparece como 'user agent stylesheet' (o estilo padrão do navegador). Para tirar: ul { list-style: none; padding: 0; margin: 0; }."
+    },
+    {
+     "tipo": "ordenar",
+     "enunciado": "Monte a regra que deixa o formulário com espaço por dentro e borda. Linhas embaralhadas (uma não serve): (1) border: 1px solid #E5DED1; (2) form { (3) padding: 20px; (4) } (5) margin: border; (6) border-radius: 12px;",
+     "resposta": "2, 3, 1, 6, 4 (a linha 5 não serve: border não é valor de margin).\nform {\n  padding: 20px;\n  border: 1px solid #E5DED1;\n  border-radius: 12px;\n}"
+    },
+    {
+     "tipo": "modificar",
+     "enunciado": "Mude o cartão para ter uma faixa grossa à esquerda que mostre que é ocorrência: borda esquerda de 4px na cor #E8A33D (âmbar), mantendo a borda fina nos outros lados.",
+     "resposta": "Acrescente depois da linha border: border-left: 4px solid #E8A33D;\nComo vem depois e muda só o lado esquerdo, ela vence a borda geral apenas nesse lado."
+    },
+    {
+     "tipo": "criar",
+     "enunciado": "Faça os campos do formulário ficarem confortáveis: todos os input, select e textarea com largura total (width: 100%), 10px de espaço por dentro, borda fina bege e cantos arredondados de 8px; e 14px de distância entre um campo e o rótulo de baixo.",
+     "resposta": "input, select, textarea {\n  width: 100%;\n  padding: 10px;\n  border: 1px solid #E5DED1;\n  border-radius: 8px;\n  margin-bottom: 14px;\n}\n(A vírgula entre seletores aplica a mesma regra aos três. Com * { box-sizing: border-box; } o width: 100% não passa da borda do formulário.)"
+    }
+   ],
+   "dicas": [
+    "Olhe o exemplo do cartão: as mesmas quatro ideias (padding, border, border-radius, margin) servem para os campos.",
+    "Faltam os subobjetivos 1 (box-sizing para tudo, senão o 100% vaza) e escolher os três elementos de uma vez (seletores separados por vírgula).",
+    "input, ___, ___ { width: ___; padding: ___; border: 1px solid ___; border-radius: ___; margin-bottom: ___; }"
+   ],
+   "erros_comuns": [
+    "Campo com width: 100% e padding passando da borda do formulário -> a caixa vaza para a direita -> ponha * { box-sizing: border-box; } no começo do CSS.",
+    "Usar margin para dar espaço por dentro de um cartão com fundo -> o fundo não cresce e o texto continua colado na borda -> espaço por dentro é padding; margin é por fora.",
+    "Escrever a borda incompleta (border: 1px #E5DED1, sem o estilo) -> a borda não aparece -> inclua o estilo: solid.",
+    "Esquecer a unidade (padding: 12) -> a declaração é ignorada -> escreva 12px (só o zero pode ficar sem unidade)."
+   ],
+   "revisao": [
+    {
+     "pergunta": "Você mudou a cor do botão no DevTools e apertou F5. A mudança fica?",
+     "resposta": "Não. O DevTools muda só a cópia na memória; ao recarregar, o navegador lê os arquivos de novo. Para valer, é preciso mudar o estilo.css e salvar.",
+     "de": "m1a7"
+    },
+    {
+     "pergunta": "Qual a diferença entre um <select> e um <input> no formulário?",
+     "resposta": "O select mostra uma lista de opções fixas (cada uma num <option>) e a pessoa escolhe uma, como a cidade. O input é um campo onde a pessoa digita, como o ID do entregador.",
+     "de": "m1a3"
+    },
+    {
+     "pergunta": "Um programa é uma lista de passos. O que acontece se dois passos estão na ordem errada?",
+     "resposta": "O computador executa na ordem escrita, então o resultado sai errado ou dá erro. Ele não reordena sozinho.",
+     "de": "m0a2"
+    }
+   ],
+   "checagem": [
+    "Consigo explicar a diferença entre padding, border e margin com o exemplo da caixa de entrega.",
+    "Consigo calcular a largura que aparece na tela de uma caixa, com e sem border-box.",
+    "Consigo transformar a lista de ocorrências em cartões com espaço por dentro e entre eles.",
+    "Consigo ver o modelo de caixa de um elemento no painel Computed do DevTools."
+   ],
+   "comunique": "No estilo.css do Comunique, procure * { box-sizing: border-box; } logo depois dos temas: é a mesma linha desta aula. Procure também a regra .card {: o cartão do app usa padding: 14px 16px, border: 1px solid var(--line), border-left: 4px solid ... (a faixa de cor da situação) e border-radius: var(--radius). No site, inspecione um cartão e veja as caixas no painel Computed."
+  },
+  "m1a8": {
+   "objetivo": "Usar display: flex para pôr os botões e o cabeçalho numa linha, e display: grid com auto-fit e minmax para arrumar a lista de ocorrências em colunas que se ajustam à largura da tela.",
+   "tempo_min": 25,
+   "antes": "m1a5 (modelo de caixa: padding, margin, box-sizing). Tenha a página com cabeçalho (h1), formulário e a lista de cartões de ocorrência.",
+   "explicacao": [
+    "Normalmente os elementos de bloco (h1, p, form, li) ficam um embaixo do outro. Para pôr lado a lado, você muda o jeito de arrumar dos FILHOS, escrevendo uma regra no PAI (o elemento que está por fora, que contém os outros).",
+    "display: flex arruma os filhos numa linha, como entregadores em fila no ponto de coleta. É bom para uma linha só: botões, cabeçalho com título de um lado e algo do outro.",
+    "gap é o espaço entre os filhos. Com ele você não precisa de margem em cada um.",
+    "No flex, justify-content controla a linha de lado a lado (space-between joga um para cada ponta) e align-items controla de cima a baixo (center deixa todos no meio da altura).",
+    "flex-wrap: wrap deixa os filhos descerem para a linha de baixo quando não cabem, em vez de espremer. Assim funciona no celular.",
+    "display: grid arruma os filhos em colunas, como as baias de um galpão. grid-template-columns diz quantas colunas e de que largura. fr é 'uma parte do espaço que sobra'.",
+    "Para colunas que se ajustam sozinhas: grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)). Quer dizer: caiba quantas colunas der, cada uma com no mínimo 220px e dividindo igual o que sobrar. No computador vira 3 colunas; no celular, 1. Isso é ser responsivo: a página se adapta ao tamanho da tela."
+   ],
+   "exemplo": "/* 1. Cabeçalho: título de um lado, botão do outro */\n.topo {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  flex-wrap: wrap;\n  gap: 8px;\n}\n/* 2. Botões em linha */\n.acoes { display: flex; gap: 8px; flex-wrap: wrap; }\n/* 3. Lista em colunas que se ajustam */\n.lista {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));\n  gap: 12px;\n}\n\n<!-- ocorrencia.html: a regra vai no pai. O header fica no lugar do h1 sozinho; a div.acoes fica dentro do form, no lugar do botão sozinho -->\n<header class=\"topo\"><h1>Registrar ocorrência</h1><a href=\"#lista\">Ver lista</a></header>\n<div class=\"acoes\"><button id=\"botao-registrar\" type=\"submit\">Registrar</button><button type=\"reset\">Limpar</button></div>\n<ul class=\"lista\"><li class=\"ocorrencia\">...</li> ...</ul>",
+   "como_o_computador_le": [
+    "O navegador encontra .topo com display: flex. Os filhos dele (o h1 e o link) deixam de empilhar e ficam numa linha.",
+    "justify-content: space-between: ele mede a largura do header, coloca o h1 colado à esquerda, o link colado à direita e deixa o espaço que sobra no meio.",
+    "align-items: center: ele alinha os dois pelo meio da altura, então o link pequeno fica centralizado em relação ao título grande.",
+    "flex-wrap: wrap: numa tela estreita, se os dois não cabem lado a lado (contando o gap de 8px), o link desce para uma segunda linha.",
+    "Na .lista com display: grid, imagine que a lista tem 760px de largura. Ele tenta caber colunas de no mínimo 220px com 12px de gap. 3 colunas: 3 x 220 + 2 x 12 = 684, cabe. 4 colunas: 4 x 220 + 3 x 12 = 916, não cabe. Fica com 3.",
+    "1fr: os 76px que sobram (760 - 684) são divididos igual, e cada coluna fica com cerca de 245px.",
+    "Os li.ocorrencia vão sendo colocados em ordem: 1, 2, 3 na primeira linha; o 4 começa a segunda linha. Num celular de 360px só cabe 1 coluna, e a lista volta a ficar um embaixo do outro."
+   ],
+   "pratica": [
+    {
+     "tipo": "prever",
+     "enunciado": "Uma .lista com display: grid; grid-template-columns: 1fr 1fr; gap: 12px tem 5 ocorrências. Como elas ficam arrumadas?",
+     "resposta": "Em 2 colunas de mesma largura, 3 linhas: 1 e 2 na primeira, 3 e 4 na segunda, a 5 sozinha na coluna da esquerda da terceira linha. Entre elas, 12px de espaço."
+    },
+    {
+     "tipo": "rodar",
+     "enunciado": "Aplique o exemplo, abra a página e vá estreitando a janela do navegador (ou use o botão de celular do DevTools, o ícone de telefone e tablet no topo). O que acontece com a lista e com o cabeçalho?",
+     "resposta": "A lista vai de 3 (ou 4) colunas para 2 e depois 1, sempre ocupando toda a largura. No cabeçalho, quando não cabe, o link desce para baixo do título."
+    },
+    {
+     "tipo": "investigar",
+     "enunciado": "Tire a linha flex-wrap: wrap da .acoes e coloque cinco botões com textos longos numa tela estreita. O que acontece? Para que servia a linha?",
+     "resposta": "Os botões ficam todos numa linha só: encolhem, o texto de dentro quebra em duas linhas e, se ainda não couberem, passam da largura da tela, criando rolagem para o lado. O flex-wrap: wrap deixava os que não cabem descerem para a linha de baixo."
+    },
+    {
+     "tipo": "ordenar",
+     "enunciado": "Monte a regra que deixa o formulário em duas colunas iguais com 16px de espaço. Linhas embaralhadas (uma não serve): (1) gap: 16px; (2) form { (3) display: grid; (4) } (5) grid-template-columns: 1fr 1fr; (6) justify-content: grid;",
+     "resposta": "2, 3, 5, 1, 4 (a linha 6 não serve: grid não é um valor de justify-content).\nform {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 16px;\n}"
+    },
+    {
+     "tipo": "modificar",
+     "enunciado": "No exemplo, os cartões ficam estreitos demais no computador. Mude para cada cartão ter no mínimo 280px e o espaço entre eles ser 16px.",
+     "resposta": ".lista {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));\n  gap: 16px;\n}"
+    },
+    {
+     "tipo": "criar",
+     "enunciado": "Dentro de cada cartão de ocorrência, ponha o ID e a cidade numa linha só, um de cada lado, e o tipo embaixo. Use <div class=\"cabeca\"><strong>abc123</strong><span>LAGARTO</span></div> e <p>Atraso</p>. Escreva o CSS para a .cabeca.",
+     "resposta": "<li class=\"ocorrencia\">\n  <div class=\"cabeca\"><strong>abc123</strong><span>LAGARTO</span></div>\n  <p>Atraso</p>\n</li>\n\n.cabeca {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  gap: 8px;\n}"
+    }
+   ],
+   "dicas": [
+    "É uma linha só com duas coisas, uma em cada ponta: é o mesmo caso do cabeçalho .topo do exemplo.",
+    "A regra vai no pai (.cabeca), não no strong nem no span. Falta escolher o jeito de arrumar (flex) e o espaço que joga um para cada lado.",
+    ".cabeca { display: ___; justify-content: ___; align-items: ___; gap: ___; }"
+   ],
+   "erros_comuns": [
+    "Pôr display: flex no filho em vez do pai -> nada fica lado a lado -> a regra vai no elemento que CONTÉM os itens que você quer arrumar.",
+    "Esquecer o flex-wrap: wrap -> no celular os itens se espremem ou a página rola para o lado -> acrescente flex-wrap: wrap (ou use grid com auto-fit).",
+    "Usar margem em cada item para separar -> sobra espaço na ponta e a conta fica difícil -> use gap no pai.",
+    "Escrever minmax(220px 1fr), sem vírgula, ou repeat(auto-fit minmax(...)) -> a regra inteira é ignorada e a lista volta a empilhar -> dentro dos parênteses, os valores vão separados por vírgula."
+   ],
+   "revisao": [
+    {
+     "pergunta": "Qual a diferença entre padding e margin?",
+     "resposta": "Padding é o espaço dentro da borda, entre o conteúdo e a borda, e pega a cor de fundo. Margin é o espaço fora da borda, entre um elemento e outro, sempre transparente.",
+     "de": "m1a5"
+    },
+    {
+     "pergunta": "No CSS, quando uma regra de classe e uma regra de tag mudam a cor do mesmo elemento, qual vence?",
+     "resposta": "A de classe, porque é mais específica (id vence classe, classe vence tag). Se as duas fossem do mesmo tipo, venceria a que vem por último no arquivo.",
+     "de": "m1a4"
+    },
+    {
+     "pergunta": "Como escrever um link que leva para outra página?",
+     "resposta": "Com a tag a e o atributo href: <a href=\"lista.html\">Ver lista</a>. O texto entre as tags é o que a pessoa clica.",
+     "de": "m1a2"
+    }
+   ],
+   "checagem": [
+    "Consigo pôr itens lado a lado com display: flex e gap, escrevendo a regra no pai.",
+    "Consigo jogar um item para cada ponta com justify-content: space-between.",
+    "Consigo montar uma lista em colunas com grid, repeat(auto-fit, minmax(...)) e gap.",
+    "Consigo testar se a página funciona estreita (celular) e explicar o que o flex-wrap faz."
+   ],
+   "comunique": "No estilo.css do Comunique: .titlebar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; ... } é o cabeçalho do app, igual ao .topo desta aula. .actions { display: flex; flex-wrap: wrap; gap: 8px; ... } são os botões dos cartões. E .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); ... } são os quadrinhos de números, que no celular descem para menos colunas."
+  },
+  "m1a6": {
+   "objetivo": "Escrever as cores da página 'Registrar ocorrência' em variáveis de CSS no :root, usar var() nas regras e montar um tema escuro com @media (prefers-color-scheme: dark) que redefine só as variáveis, conferindo o contraste.",
+   "tempo_min": 30,
+   "antes": "m1a4 (seletores e cores), m1a5 (cartões com padding e borda), m1a8 (flex e grid). Tenha a página com o formulário e a lista de cartões estilizados.",
+   "explicacao": [
+    "Até aqui o mesmo verde #18774E aparece em várias regras. Para trocar, você teria que caçar uma por uma. Variável de CSS é um nome para um valor: você escreve a cor uma vez e usa o nome no resto, como um apelido.",
+    "O nome da variável começa com dois tracinhos: --principal: #18774E;. O nome técnico é custom property (propriedade personalizada).",
+    "As variáveis ficam numa regra com o seletor :root, que quer dizer 'a raiz da página', o elemento html. Declaradas ali, valem para a página inteira.",
+    "Para usar, escreva var(--principal) no lugar do valor: background-color: var(--principal);. Mudou a variável, mudam todos os lugares que usam.",
+    "@media (prefers-color-scheme: dark) { ... } é uma condição: as regras de dentro só valem se o sistema da pessoa (Windows, Android, Mac) estiver no modo escuro. Dentro dela, você redefine só as variáveis no :root. As outras regras não mudam, porque já usam var().",
+    "Contraste é a diferença de claridade entre o texto e o fundo; com pouco contraste, a leitura cansa ou fica impossível. Ele é medido como uma razão (4,5:1, por exemplo), e o mínimo recomendado para texto comum é 4,5:1.",
+    "Por isso o tema escuro não é só inverter: o verde #18774E, ótimo com texto branco no claro, fica escuro demais sobre fundo escuro. No escuro a cor principal vira um verde claro (#6CCB9A) e o texto do botão vira escuro. O DevTools mostra a razão de contraste ao clicar no quadradinho de cor de uma propriedade color."
+   ],
+   "exemplo": "/* 1. Dar nome às cores (tema claro) */\n:root {\n  --fundo: #FAF7F1;\n  --texto: #14352B;\n  --principal: #18774E;\n  --texto-no-principal: #FFFFFF;\n}\n/* 2. Tema escuro: redefinir só as variáveis */\n@media (prefers-color-scheme: dark) {\n  :root {\n    --fundo: #0F1C17;\n    --texto: #EDE7DB;\n    --principal: #6CCB9A;\n    --texto-no-principal: #0F1C17;\n  }\n}\n/* 3. Usar os nomes nas regras */\nbody { background-color: var(--fundo); color: var(--texto); }\n#botao-registrar { background-color: var(--principal); color: var(--texto-no-principal); }",
+   "como_o_computador_le": [
+    "O navegador lê o :root e guarda os nomes no elemento html: --fundo = #FAF7F1, --texto = #14352B, --principal = #18774E, --texto-no-principal = #FFFFFF.",
+    "Ele chega no @media e pergunta ao sistema: o modo escuro está ligado? Se não, pula tudo o que está dentro.",
+    "Se sim, ele lê o :root de dentro. É o mesmo seletor e vem depois no arquivo, então vence (cascata): agora --fundo = #0F1C17, --texto = #EDE7DB, --principal = #6CCB9A, --texto-no-principal = #0F1C17.",
+    "Na regra body, ele troca var(--fundo) pelo valor guardado naquele momento. No claro, o fundo fica #FAF7F1; no escuro, #0F1C17. A regra do body é a mesma nos dois casos.",
+    "No #botao-registrar, var(--principal) vira o verde de cada tema e var(--texto-no-principal) a cor do texto do botão: branco no claro, escuro no escuro.",
+    "Se a pessoa troca o modo do sistema com a página aberta, o navegador refaz a pergunta, troca os valores das variáveis e redesenha tudo sozinho, sem recarregar."
+   ],
+   "pratica": [
+    {
+     "tipo": "prever",
+     "enunciado": "No exemplo, você muda só a linha --principal: #18774E; do :root (fora do @media) para --principal: #14352B;. Com o computador no modo claro, o que muda na página? E no modo escuro?",
+     "resposta": "No modo claro, o botão Registrar (e qualquer outra coisa que use var(--principal)) fica #14352B. No modo escuro nada muda, porque lá o --principal é redefinido para #6CCB9A dentro do @media."
+    },
+    {
+     "tipo": "rodar",
+     "enunciado": "Troque o modo do sistema para escuro e veja a página. Outra forma, sem mexer no sistema: no DevTools, aperte Ctrl+Shift+P (no Mac, Cmd+Shift+P), digite 'dark' e escolha 'Emulate CSS prefers-color-scheme: dark'. A página muda sem recarregar?",
+     "resposta": "Sim. O fundo fica verde-noite, o texto claro e o botão verde-claro com texto escuro. A página muda na hora, porque o navegador recalcula as variáveis assim que o modo muda."
+    },
+    {
+     "tipo": "investigar",
+     "enunciado": "Inspecione o botão Registrar no modo claro e clique no quadradinho de cor ao lado de color no painel Styles. O DevTools mostra 'Contrast ratio'. Por que o texto do botão no escuro é escuro (#0F1C17) e não branco?",
+     "resposta": "No claro, branco sobre #18774E dá cerca de 5,5:1, acima do mínimo de 4,5:1. No escuro, o fundo do botão é #6CCB9A, um verde claro: branco sobre ele teria contraste baixo, cerca de 2:1, difícil de ler. Texto escuro sobre o verde claro fica perto de 9:1."
+    },
+    {
+     "tipo": "ordenar",
+     "enunciado": "Monte o tema escuro para a cor de alerta. Linhas embaralhadas (uma não serve): (1) } (2) @media (prefers-color-scheme: dark) { (3) --alerta: #FF8A80; (4) } (5) :root { (6) var(--alerta): #FF8A80;",
+     "resposta": "2, 5, 3, 1, 4 (a linha 6 não serve: var() é só para USAR a variável, não para dar valor).\n@media (prefers-color-scheme: dark) {\n  :root {\n    --alerta: #FF8A80;\n  }\n}"
+    },
+    {
+     "tipo": "modificar",
+     "enunciado": "Ainda há cores escritas direto no CSS dos cartões (white, #E5DED1, #E8A33D, #B3261E). Crie as variáveis --superficie, --linha, --destaque e --alerta no :root e troque as cores das regras .ocorrencia e .grave por var(). Dê valores escuros para --superficie (#16261F), --linha (#273A31) e --alerta (#FF8A80) dentro do @media.",
+     "resposta": "No :root (fora do @media), junto das outras:\n--superficie: white; --linha: #E5DED1; --destaque: #E8A33D; --alerta: #B3261E;\n\nNo :root de dentro do @media:\n--superficie: #16261F; --linha: #273A31; --alerta: #FF8A80;\n\nNas regras:\n.ocorrencia { background-color: var(--superficie); border: 1px solid var(--linha); border-left: 4px solid var(--destaque); ... }\n.grave { color: var(--alerta); font-weight: bold; }\n(O --destaque âmbar funciona nos dois temas, então não precisa ser redefinido.)"
+    },
+    {
+     "tipo": "criar",
+     "enunciado": "PROJETO DO MÓDULO 1. Esta prática é maior que as outras: se o tempo da aula acabar, faça numa sessão extra, de 20 a 30 minutos, no dia seguinte. Monte a página estática 'Registrar ocorrência' completa no ocorrencia.html e no estilo.css: o formulário da m1a3 (ID do entregador, cidade, tipo, descrição), com os botões Registrar e Limpar, e a lista de três ocorrências de exemplo em cartões, usando o que viu no módulo (seletores, modelo de caixa, flex, grid). Toda cor deve vir de uma variável do :root, e o tema escuro deve funcionar mudando só as variáveis. Confira no DevTools que o texto tem contraste de pelo menos 4,5:1 nos dois temas.",
+     "resposta": "Uma solução completa está abaixo. Arquivo ocorrencia.html:\n<!doctype html>\n<html lang=\"pt-BR\">\n<head>\n  <meta charset=\"utf-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <title>Registrar ocorrência</title>\n  <link rel=\"stylesheet\" href=\"estilo.css\">\n</head>\n<body>\n  <header class=\"topo\">\n    <h1>Registrar ocorrência</h1>\n    <a href=\"#lista\">Ver lista</a>\n  </header>\n  <form>\n    <p>\n      <label for=\"id-entregador\">ID do entregador</label>\n      <input type=\"text\" id=\"id-entregador\" name=\"id-entregador\" required>\n    </p>\n    <p>\n      <label for=\"cidade\">Cidade</label>\n      <select id=\"cidade\" name=\"cidade\" required>\n        <option value=\"\">Escolha a cidade</option>\n        <option value=\"LAGARTO - SE\">LAGARTO - SE</option>\n        <option value=\"ITABAIANA - SE\">ITABAIANA - SE</option>\n        <option value=\"TOBIAS BARRETO - SE\">TOBIAS BARRETO - SE</option>\n      </select>\n    </p>\n    <p>\n      <label for=\"tipo\">Tipo</label>\n      <select id=\"tipo\" name=\"tipo\" required>\n        <option value=\"\">Escolha o tipo</option>\n        <option value=\"atraso\">Atraso na entrega</option>\n        <option value=\"nao-entregue\">Pedido não entregue</option>\n        <option value=\"comportamento\">Mau comportamento</option>\n      </select>\n    </p>\n    <p>\n      <label for=\"descricao\">Descrição</label>\n      <textarea id=\"descricao\" name=\"descricao\" rows=\"4\"></textarea>\n    </p>\n    <div class=\"acoes\">\n      <button id=\"botao-registrar\" type=\"submit\">Registrar</button>\n      <button type=\"reset\">Limpar</button>\n    </div>\n  </form>\n  <h2 id=\"lista\">Ocorrências de exemplo</h2>\n  <ul class=\"lista\">\n    <li class=\"ocorrencia\">\n      <div class=\"cabeca\"><strong>abc123</strong><span>LAGARTO - SE</span></div>\n      <p>Atraso na entrega</p>\n    </li>\n    <li class=\"ocorrencia grave\">\n      <div class=\"cabeca\"><strong>xyz789</strong><span>ITABAIANA - SE</span></div>\n      <p>Pedido não entregue</p>\n    </li>\n    <li class=\"ocorrencia\">\n      <div class=\"cabeca\"><strong>teste01</strong><span>TOBIAS BARRETO - SE</span></div>\n      <p>Mau comportamento</p>\n    </li>\n  </ul>\n</body>\n</html>\n\nArquivo estilo.css (na mesma pasta):\n/* 1. Cores em variáveis (tema claro) */\n:root {\n  --fundo: #FAF7F1;\n  --superficie: white;\n  --texto: #14352B;\n  --linha: #E5DED1;\n  --principal: #18774E;\n  --texto-no-principal: #FFFFFF;\n  --alerta: #B3261E;\n  --destaque: #E8A33D;\n}\n/* 2. Tema escuro: só as variáveis mudam */\n@media (prefers-color-scheme: dark) {\n  :root {\n    --fundo: #0F1C17;\n    --superficie: #16261F;\n    --texto: #EDE7DB;\n    --linha: #273A31;\n    --principal: #6CCB9A;\n    --texto-no-principal: #0F1C17;\n    --alerta: #FF8A80;\n  }\n}\n/* 3. Base */\n* { box-sizing: border-box; }\nbody {\n  margin: 0 auto;\n  max-width: 900px;\n  padding: 16px;\n  font-family: system-ui, sans-serif;\n  background-color: var(--fundo);\n  color: var(--texto);\n}\na { color: var(--principal); }\n/* 4. Cabeçalho e botões em linha (flex) */\n.topo, .acoes, .cabeca {\n  display: flex;\n  flex-wrap: wrap;\n  justify-content: space-between;\n  align-items: center;\n  gap: 8px;\n}\n.acoes { justify-content: flex-start; }\n/* 5. Formulário em caixa */\nform {\n  background-color: var(--superficie);\n  border: 1px solid var(--linha);\n  border-radius: 12px;\n  padding: 20px;\n}\nlabel { display: block; font-weight: bold; margin-bottom: 4px; }\ninput, select, textarea {\n  width: 100%;\n  padding: 10px;\n  margin-bottom: 14px;\n  border: 1px solid var(--linha);\n  border-radius: 8px;\n  background-color: var(--fundo);\n  color: var(--texto);\n  font: inherit;\n}\nbutton {\n  padding: 10px 16px;\n  border: 1px solid var(--principal);\n  border-radius: 8px;\n  background-color: transparent;\n  color: var(--principal);\n  font: inherit;\n  font-weight: bold;\n}\n#botao-registrar {\n  background-color: var(--principal);\n  color: var(--texto-no-principal);\n}\n/* 6. Lista em colunas (grid) e cartões */\n.lista {\n  list-style: none;\n  padding: 0;\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));\n  gap: 12px;\n}\n.ocorrencia {\n  background-color: var(--superficie);\n  border: 1px solid var(--linha);\n  border-left: 4px solid var(--destaque);\n  border-radius: 10px;\n  padding: 12px 16px;\n}\n.ocorrencia p { margin: 8px 0 0; }\n.grave { border-left-color: var(--alerta); color: var(--alerta); font-weight: bold; }\n\nConferência: fora do :root e do @media não deve sobrar nenhum código de cor (# seguido de 6 letras e números); o #botao-registrar é um id, não uma cor. Este é o projeto-ponte do módulo 1: no módulo 2, o JavaScript vai dar vida a esta mesma página."
+    }
+   ],
+   "dicas": [
+    "Comece pelo :root: liste todas as cores que já aparecem no seu estilo.css e dê um nome para cada uma (fundo, superficie, texto, linha, principal, alerta, destaque).",
+    "Faltam os subobjetivos 2 (o @media com o :root escuro, só com as variáveis que mudam) e 3 (trocar cada cor escrita nas regras por var(--nome)). A estrutura da página (flex no topo, grid na lista, cartões) você já tem das aulas m1a5 e m1a8.",
+    ":root { --fundo: ___; --texto: ___; --principal: ___; ... }\n@media (prefers-color-scheme: dark) { :root { --fundo: ___; ... } }\nbody { background-color: var(___); color: var(___); }\n.ocorrencia { background-color: var(___); border: 1px solid var(___); }"
+   ],
+   "erros_comuns": [
+    "Esquecer o var() e escrever background-color: --principal; -> a cor não aparece e o DevTools mostra a linha com um aviso de valor inválido -> para usar, sempre var(--principal).",
+    "Nome com um tracinho só (-principal) ou escrito diferente na hora de usar (var(--pricipal)) -> a cor some sem mensagem de erro -> o nome começa com -- e precisa ser idêntico (maiúsculas contam).",
+    "Esquecer o :root dentro do @media (escrever as variáveis soltas) -> o tema escuro não muda nada -> dentro do @media vai uma regra completa: :root { --fundo: ...; }.",
+    "Deixar cores escritas direto em alguma regra -> no tema escuro aquele pedaço continua claro (um cartão branco no meio da página escura) -> troque por uma variável e defina o valor escuro.",
+    "Escolher cores sem olhar o contraste -> texto apagado, difícil de ler num dos temas -> confira a razão no DevTools; texto comum precisa de pelo menos 4,5:1."
+   ],
+   "revisao": [
+    {
+     "pergunta": "Que regra coloca o título de um lado e o link do outro, na mesma linha?",
+     "resposta": "No pai dos dois: display: flex; justify-content: space-between; (e align-items: center para alinhar pela altura).",
+     "de": "m1a8"
+    },
+    {
+     "pergunta": "Como você descobre de qual arquivo e de qual linha vem a regra que pinta um botão?",
+     "resposta": "Abre o DevTools (F12), escolhe o botão com a setinha e olha o painel Styles: ao lado de cada regra aparece o nome do arquivo e o número da linha.",
+     "de": "m1a7"
+    },
+    {
+     "pergunta": "Para que servem lang=\"pt-BR\" no <html> e <meta charset=\"utf-8\"> no <head>?",
+     "resposta": "lang diz o idioma da página (o leitor de tela pronuncia certo e o tradutor sabe a língua). charset utf-8 faz os acentos e o ç aparecerem certos.",
+     "de": "m1a1"
+    }
+   ],
+   "checagem": [
+    "Consigo criar variáveis de cor no :root e usá-las com var().",
+    "Consigo montar um tema escuro que muda só as variáveis, dentro de @media (prefers-color-scheme: dark).",
+    "Consigo testar o tema escuro pelo DevTools sem mudar o sistema.",
+    "Consigo explicar o que é contraste e conferir a razão de uma cor no DevTools.",
+    "Consigo montar do zero a página 'Registrar ocorrência' do projeto do módulo 1."
+   ],
+   "comunique": "O começo do estilo.css do Comunique é esta aula em tamanho grande: o :root com --floresta, --jade, --ambar, --areia, --bg, --ink, --accent e outras; depois o @media (prefers-color-scheme: dark) que redefine só as variáveis. O app tem ainda um botão de tema (id b-tema, no index.html): por isso o seletor lá é :root:not([data-theme=\"light\"]) dentro do @media, e há uma terceira regra :root[data-theme=\"dark\"] para quem escolhe o escuro no botão. Note o comentário do arquivo sobre o contraste: o jade puro com texto branco dá 4,33:1, por isso os botões usam --accent #18774E (5,5:1)."
+  }
+ }
+}
