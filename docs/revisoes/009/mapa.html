@@ -82,6 +82,26 @@ h1{font-size:clamp(24px,3.6vw,32px);font-weight:800}
 .controles button{font:600 14px var(--b);min-width:40px;min-height:40px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
 .dica{position:absolute;left:12px;bottom:10px;z-index:2;font-size:12px;color:var(--muted);background:var(--surface);padding:4px 8px;border-radius:6px;border:1px solid var(--line)}
 .painel-det{margin-top:12px}
+
+/* como seguir */
+.seguir{display:grid;gap:22px}
+.frase{font:700 18px var(--t);max-width:70ch;margin:0}
+.trilhas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px}
+.trilha{background:var(--surface);border:1px solid var(--line);border-radius:12px;min-width:0}
+.trilha>h2{font-size:16px;padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+.trilha>h2 small{font:600 12px var(--b);color:var(--muted)}
+.passo{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 12px;padding:12px 14px;border-top:1px solid var(--line)}
+.passo:first-of-type{border-top:0}
+.passo .n{font:800 15px var(--t);color:var(--accent);font-variant-numeric:tabular-nums;grid-row:span 3;padding-top:1px}
+.passo b{font-weight:700}
+.passo p{margin:0;color:var(--muted);font-size:13.5px}
+.passo .ids{font-size:12px;color:var(--muted)}
+.duas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:16px}
+.cx{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.cx h2{font-size:15px;margin-bottom:8px}
+.cx ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:13.5px}
+.cx li::marker{color:var(--accent)}
+.urg{font:600 11.5px var(--b);background:var(--ambar);color:#14352B;border-radius:999px;padding:1px 8px;margin-left:6px;white-space:nowrap}
 </style>
 <div class="pg">
 <h1>Mapa da Varredura 009</h1>
@@ -91,6 +111,7 @@ h1{font-size:clamp(24px,3.6vw,32px);font-weight:800}
  <button type="button" data-v="mente" aria-pressed="true">Mapa mental</button>
  <button type="button" data-v="mapa" aria-pressed="false">Mapa de objetivos</button>
  <button type="button" data-v="telas" aria-pressed="false">Por tela</button>
+ <button type="button" data-v="seguir" aria-pressed="false">Como seguir</button>
  <button type="button" data-v="decisoes" aria-pressed="false">Precisa de você</button>
  <button type="button" data-v="placar" aria-pressed="false">Placar de base</button>
 </div>
@@ -202,15 +223,54 @@ function mente(){
  requestAnimationFrame(()=>{if(foco){const w=caixa.clientWidth,h=caixa.clientHeight;const sc=Math.min(0.75,Math.min(w,h)/900);const fx=foco.x+Math.cos(foco.a)*230,fy=foco.y+Math.sin(foco.a)*230;zoom={s:sc,x:w/2-fx*sc,y:h/2-fy*sc};foco=null;aplicar()}else aplicar(false)});
  return el("div",{},caixa,det,l.length?null:el("p",{class:"vazio",text:"Nada com esses filtros."}))}
 
-const DEC=[["Login por e-mail no Supabase (S1)",true,"Conferir em Authentication → Sign In / Providers: só Google ligado; Email, Phone e Anonymous desligados. Depois eu ponho a trava no banco (conta precisa ter identidade Google)."],
-["O suporte vê cadastros dos outros na Consulta, no Ver cadastro e na busca (S7)",true,"Manter assim porque ajuda o trabalho, ou fechar para o suporte ver só os que enviou?"],
-["Encerramento de parceria com prova e canal de contestação (M5)",true,"Decisões da Justiça anularam desativações sem prova. Pedir anexo antes de encerrar e pôr data e canal de contestação na mensagem. O texto deve passar pelo jurídico."],
-["Fonte do texto (AP)",true,"Trocar a Inter por Source Sans 3 ou Public Sans (Manrope continua nos títulos)."],
-["Fundo",false,"Proposta: areia só nas telas de diário (Caderno de Campo: Avisos, turno, resumo do dia) e fundo quase neutro no resto."],
-["Política de segurança do site (S2)",false,"Política pronta e testada localmente (0 violações em 26 telas). Falta testar com o login real do Google numa cópia publicada antes de ligar."],
-["CPF e telefone em texto livre (S3/S4/S5)",false,"Proposta: avisar e mascarar ao digitar, limpeza periódica, exclusão de um entregador a pedido e privacidade.html atualizada."],
-["Print de uso do Supabase",true,"Para fechar a frente de tráfego com números reais (egress, Realtime, tamanho das tabelas)."]];
-function decisoes(){return el("div",{class:"dec"},DEC.map(([t,v,p])=>el("div",{},el("h3",{},t,v?el("span",{class:"voce",text:"precisa de você"}):null),el("p",{text:p}))))}
+
+// ---------- como seguir (estudo de rumo b1–b4) ----------
+const TRILHAS=[
+["App: arrumar a 009 em fatias","congelar funções novas até o fim",[
+ ["009u-1 · Dinheiro, confiança e rede de testes","Adicional mostra de quem é o ID antes de salvar; fim do aviso falso \"Este ID já existe\"; aprovação contada uma vez; pausa não estoura o prazo; código cru fora da tela; função antiga de bloqueio fechada; emojis que ainda escapam; conta da Atenção e índice do resumo (17 s → 0,4 s; 6,4 s → 0,2 s); testes contra o banco completo rodando no GitHub; schema.sql zerando tudo; trava de login no banco (depois da sua conferência).","A4 AP-04 A5-1 A5-2 AP-13 A5-3 AP-14 AT1 AT2 A7-03 A7-04 S1"],
+ ["009u-2 · Fundação visual","DESIGN.md aplicado: 3 cantos e a pílula, 6 tamanhos de letra, 4 papéis de botão, borda dos campos com contraste, tema escuro em 3 camadas, sem faixa lateral, sem caixa alta, alvos de 44 px; formulários com cursor no 1º campo e todos os erros de uma vez; fonte nova (com teste A/B); teste visual com tetos para o desvio não voltar.","AP-05 AP-06 AP-07 AP-02 AP-12 AP-15 AP-16 A1 A3 AP-09"],
+ ["009u-3 · Moldura nova","Barra lateral no computador; no celular, topo de 56 px e barra embaixo com 4 destinos; menu de 9 para 6 itens; pedido de ajuda visível em qualquer tela; busca vira paleta Ctrl+K com ações.","AP-01 A6 A2 M3"],
+ ["009u-4 · Listas em linhas","Piloto em Ativação → Pendentes (uma linha por cadastro, paginada, desenhada por chave, sem perder o foco). Depois as filas de tarefas (prazo em contagem regressiva, frase de tarefa) e os históricos (barra de filtros com contagem, ações no menu \"…\").","AP-03 AT4 A3-01 A3-02 A3-03 M2 M7 AP-11 AP-08 M6"],
+ ["009u-5 · Início nova e o Caderno","Início: em cima o dia (Caderno), embaixo a fila (Mesa); Avisos → Equipe e Passagem de turno como diário, com \"Recebi\" e \"Copiar para o grupo\".","AP-10 A5 M8 AP-13 M4 A7"],
+ ["009v · Alicerce do banco e dos dados","Todas as funções atuais num arquivo só com teste que confere o banco; recarga de 30 s só quando algo mudou; retenção (avisos lidos > 90 dias), CPF fora do texto livre, excluir entregador a pedido, backup semanal fora do repositório, política de segurança do site; CLAUDE.md dividido; contagem de uso antes de cortar.","A7-01 A7-02 AT3 S3 S4 S5 S2 A7-06"],
+ ["Revisão leve e medir","Suíte verde, placar comparado com a base de hoje, decisão de cortes pelo uso (30 dias sem uso = guardado)."," "],
+ ["011 · Painel financeiro (antes da 010)","Já há dados desde 08/11; custo de adicional por pedido, motivos, casos fora do normal."," "],
+ ["010 · Comemorativa","Desafios de equipe (sem ranking individual público), \"Quem somos\", documentação de lançamento."," "]]],
+["Extensão: trilha paralela","não espera o visual",[
+ ["1.2.2 · Consertos","Notificação sem emoji, consulta leve a cada minuto, ramo sem uso removido, chave no manifesto (mesmo ID no teste e na loja), imagens da loja refeitas.","AP-14 AT7 S9"],
+ ["Piloto de 1 semana","2 ou 3 pessoas, nas telas reais do Quero Log e do Crisp; conferir a leitura de ID, nome e cidade."," "],
+ ["Volta à loja (não listada)","Reenvio com a lista de conferência pronta."," "],
+ ["1.3 · Contextual","Ficha resumida do entregador no topo, mensagens com \"Copiar\", opção \"não ler esta aba\"."," "]]],
+["Operação: sem código","o maior ganho de tempo",[
+ ["Uma fonte só","Data de corte: a planilha vira só leitura; o WhatsApp vira eco do app (\"Copiar para o grupo\"), sem proibir."," "],
+ ["Multiplicador por turno","Uma pessoa por turno que ajuda os outros nas novidades; materiais enxutos (cartões de um fluxo; decks completos só na 010)."," "],
+ ["Medir sem vigiar","Só números da equipe: quanto nasce no app, tempo até aceitar uma ajuda, tarefas no prazo, adicionais parados."," "]]]];
+const NAO=["Uma 009u gigante com tudo de uma vez.","Funções novas antes de a 009 ficar arrumada (congelar).","Passo de build ou framework: o app continua simples.","Interruptor Mesa × Caderno na tela inicial; cartões no celular.","Animação de entrada nas listas antes do desenho por chave.","Aviso de colisão, alertas por limite e painel ao vivo, por enquanto.","Ranking individual público nos desafios.","Apagar funções sem uso de uma vez: revogar, esperar um ciclo e só então apagar."];
+const MEDIDAS=["Testes falhando: 64 → 0; funções no ar sem arquivo: 10 → 0.","Menu: 9 → 6 itens; adicional: 10 → 5 cliques.","Linhas novas na planilha depois do corte: 0 (tudo nasce no app).","Tráfego abaixo de 3,5 GB/mês; banco abaixo de 350 MB (gatilhos para o plano pago).","Toda função visível usada por ao menos 2 pessoas em 30 dias."];
+function seguir(){return el("div",{class:"seguir"},
+ el("p",{class:"frase",text:"Arrumar antes de crescer: a 009 em fatias pequenas, começando pelo que mexe com dinheiro e confiança, com a extensão e a operação andando em paralelo; o financeiro vem antes dos desafios."}),
+ el("div",{class:"trilhas"},TRILHAS.map(([t,sub,ps])=>el("section",{class:"trilha"},el("h2",{},t,el("small",{text:sub})),ps.map(([ti,tx,ids],k)=>el("div",{class:"passo"},el("span",{class:"n",text:String(k+1)}),el("b",{text:ti}),el("p",{text:tx}),ids.trim()?el("span",{class:"ids",text:"Itens do mapa: "+ids}):null))))),
+ el("div",{class:"duas"},el("section",{class:"cx"},el("h2",{text:"O que não fazer"}),el("ul",{},NAO.map(x=>el("li",{text:x})))),el("section",{class:"cx"},el("h2",{text:"Como saber se deu certo"}),el("ul",{},MEDIDAS.map(x=>el("li",{text:x}))))),
+ el("p",{class:"nota",text:"Feito a partir dos estudos b1 (produto e rumo), b2 (arquitetura), b3 (experiência e linha editorial) e b4 (equipe e operação). Onde discordavam (b2 queria o alicerce todo antes do visual; b4 queria a extensão e a operação primeiro), o caminho junta os dois: o que é crítico do alicerce entra na 1ª fatia, o resto na 009v, e extensão e operação andam em paralelo."}))}
+
+const DEC=[["Login por e-mail no Supabase (S1)","urgente","Conferir em Authentication → Sign In / Providers: só Google ligado; Email, Phone e Anonymous desligados. Depois eu ponho a trava no banco."],
+["Backup manual do banco","urgente","Baixar uma cópia antes da próxima migração (o plano grátis não oferece backup para baixar)."],
+["Congelar funções novas até a 009 ficar arrumada","","Recomendação dos 4 estudos."],
+["009u em fatias pequenas, cada uma publicável sozinha","","Ordem: dinheiro e confiança, fundação visual, moldura, listas, Início e Caderno."],
+["Inverter: 011 (financeiro) antes da 010 (desafios)","","Já há dados financeiros; os desafios dependem de medidas que ainda erram."],
+["Menu de 9 para 6 itens","","Ex.: Dinheiro = Financeiro + Ferramentas; Parceiros dentro de Ativação; Mensagens fora do menu."],
+["Fonte do texto","","Recomendada: Source Sans 3 (Manrope nos títulos), confirmada em prints A/B antes."],
+["Cores com papel fixo","","Âmbar só para \"precisa de você\"; areia só nas telas de diário (Caderno); filas em fundo quase neutro."],
+["Barra embaixo no celular: quais 4 destinos","",""],
+["Data de corte da planilha","","A partir dela, a planilha vira só leitura e tudo nasce no app."],
+["Piloto da extensão","","Quem são as 2 ou 3 pessoas e se a liderança/TI precisa autorizar."],
+["Suporte vê cadastros dos outros (S7)","","Manter (ajuda o trabalho) ou fechar."],
+["Encerramento de parceria com prova (M5)","","Prova obrigatória, data e canal de contestação na mensagem, talvez segundo moderador; textos com o jurídico."],
+["Placar só do dono × \"cada um vê os próprios números\"","","As duas regras se contradizem hoje."],
+["Regra de corte por uso e retenção","","30 dias sem uso = guardado; avisos lidos apagados após 90 dias."],
+["Relatórios no repositório público","","Manter em docs/revisoes/ ou guardar só no link privado."],
+["Print de uso do Supabase","","Para fechar a parte de tráfego com números reais."]];
+function decisoes(){return el("div",{class:"dec"},DEC.map(([t,u,p])=>el("div",{},el("h3",{},t,u?el("span",{class:"urg",text:u}):null),p?el("p",{text:p}):null)))}
 const PL=[["Operação (a1, robô em 25 fluxos)",[["Cliques para registrar um bloqueio","5 a 6"],["Cliques para registrar um adicional","10"],["Formulários com o cursor fora do 1º campo","5 de 6"],["Tempo estimado para enviar um cadastro","~22 s"]]],
 ["Banco (a2, 1 ano fictício)",[["Resumo a cada recarga (antes → corrigido)","17,5 s → 0,4 s"],["Resumo semanal (antes → com índice)","6,4 s → 0,2 s"],["Registros da equipe (antes → limitado)","1,4 s → 0,05 s"],["Histórico da ativação por carga","13,7 MB"],["Tratativas concluídas (moderador)","45,7 MB"]]],
 ["Fluidez (a3)",[["JS carregado na entrada","631 KB"],["Usado na tela inicial","22%"],["Redesenho da tela de Tarefas","92 a 270 ms"],["Elementos na tela de Tarefas","11,8 mil"],["Maior pulo de layout","0,58"]]],
@@ -224,7 +284,7 @@ function numeros(){const ach=D.filter(i=>i.tipo==="achado").length;$("#numeros")
 function desenhar(){document.querySelectorAll(".abas button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===vista)));
  $("#filtros").hidden=!(vista==="mapa"||vista==="telas"||vista==="mente");
  const l=filtrados();$("#cont").textContent=`${l.length} de ${D.length}`;
- $("#vista").replaceChildren(vista==="mente"?mente():vista==="mapa"?mapa():vista==="telas"?telas():vista==="decisoes"?decisoes():placar())}
+ $("#vista").replaceChildren(vista==="mente"?mente():vista==="mapa"?mapa():vista==="telas"?telas():vista==="decisoes"?decisoes():vista==="seguir"?seguir():placar())}
 document.querySelectorAll(".abas button").forEach(b=>b.addEventListener("click",()=>{vista=b.dataset.v;try{localStorage.setItem("mapa009-v",vista)}catch(e){}desenhar()}));
 ["#f-prio","#f-onda","#f-tipo","#f-ag"].forEach(s=>$(s).addEventListener("change",desenhar));$("#f-q").addEventListener("input",desenhar);
 numeros();desenhar();
