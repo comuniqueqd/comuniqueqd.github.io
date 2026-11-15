@@ -59,13 +59,37 @@ h1{font-size:clamp(24px,3.6vw,32px);font-weight:800}
 .dec .voce{font:600 11.5px var(--b);background:var(--ambar);color:#14352B;border-radius:999px;padding:1px 8px}
 .dec p{margin:0;color:var(--muted);font-size:13.5px}
 .nota{color:var(--muted);font-size:12.5px;margin-top:18px;max-width:80ch}
+
+/* mapa mental (radial, estilo das imagens de referência) */
+.mente{position:relative;height:min(78vh,820px);border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;touch-action:none;cursor:grab}
+.mente.arrastando{cursor:grabbing}
+.mente .tela-m{position:absolute;left:0;top:0;width:2600px;height:2600px;transform-origin:0 0}
+.mente svg{position:absolute;inset:0;width:2600px;height:2600px;overflow:visible}
+.mente line{stroke:var(--muted);stroke-opacity:.55;stroke-width:1.5}
+.mente line.forte{stroke-width:2.5;stroke-opacity:.8}
+.no{position:absolute;transform:translate(-50%,-50%);border-radius:12px;border:2px solid transparent;font:600 19px var(--b);text-align:center;padding:10px 18px;max-width:250px;line-height:1.3;cursor:pointer;user-select:none;box-shadow:0 1px 2px rgb(20 53 43/.12)}
+.no:focus-visible{outline:3px solid var(--ambar);outline-offset:3px}
+.no small{display:block;font:500 15px var(--b);opacity:.85;margin-top:2px}
+.no.centro{background:#14352B;color:#F4EFE6;font:800 40px var(--t);padding:24px 46px;border-color:#0B1F19;max-width:none;cursor:default}
+.no.obj{background:#1F6F4C;color:#fff;border-color:#155238;font:700 22px var(--t);max-width:280px}
+.no.tel{background:#DCEFE4;color:#14352B;border-color:#7FBF9C}
+.no.tel.aberto{background:#E8A33D;border-color:#B7791F;color:#14352B}
+.no.it{background:var(--surface);color:var(--fg);border-color:var(--line);font:500 16px var(--b);text-align:left;max-width:260px;padding:8px 12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.no.it .ponto{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+:root[data-theme="dark"] .no.tel:not(.aberto){background:#1D3A2F;color:#E8EFE9;border-color:#2F6E57}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .no.tel:not(.aberto){background:#1D3A2F;color:#E8EFE9;border-color:#2F6E57}}
+.controles{position:absolute;right:10px;top:10px;display:flex;gap:6px;z-index:2}
+.controles button{font:600 14px var(--b);min-width:40px;min-height:40px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.dica{position:absolute;left:12px;bottom:10px;z-index:2;font-size:12px;color:var(--muted);background:var(--surface);padding:4px 8px;border-radius:6px;border:1px solid var(--line)}
+.painel-det{margin-top:12px}
 </style>
 <div class="pg">
 <h1>Mapa da Varredura 009</h1>
 <p class="sub">Tudo o que os 8 especialistas acharam e sugeriram, organizado por objetivo e por tela, com a prioridade revisada pelo revisor do contra e a onda em que cada coisa pode entrar. A classificação de objetivo, tela e onda é uma proposta minha: você decide.</p>
 <div class="numeros" id="numeros"></div>
 <div class="abas" role="group" aria-label="Visão">
- <button type="button" data-v="mapa" aria-pressed="true">Mapa de objetivos</button>
+ <button type="button" data-v="mente" aria-pressed="true">Mapa mental</button>
+ <button type="button" data-v="mapa" aria-pressed="false">Mapa de objetivos</button>
  <button type="button" data-v="telas" aria-pressed="false">Por tela</button>
  <button type="button" data-v="decisoes" aria-pressed="false">Precisa de você</button>
  <button type="button" data-v="placar" aria-pressed="false">Placar de base</button>
@@ -99,7 +123,7 @@ const PR={"alta":3,"crítica":4,"média":2,"baixa":1};
 const $=(s)=>document.querySelector(s);
 const el=(t,a={},...k)=>{const n=document.createElement(t);for(const[x,v]of Object.entries(a)){if(v==null||v===false)continue;if(x==="text")n.textContent=v;else if(x==="class")n.className=v;else if(x.startsWith("on"))n.addEventListener(x.slice(2),v);else n.setAttribute(x,v)}for(const c of k.flat(Infinity))if(c!=null&&c!==false)n.append(c);return n};
 const sel=$("#f-ag");for(const[k,v]of Object.entries(AG))sel.append(el("option",{value:k,text:v}));
-let vista="mapa";try{vista=localStorage.getItem("mapa009-v")||"mapa"}catch(e){}
+let vista="mente";try{vista=localStorage.getItem("mapa009-v")||"mente"}catch(e){}
 const norm=(s)=>String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
 function filtrados(){const p=$("#f-prio").value,o=$("#f-onda").value,t=$("#f-tipo").value,a=$("#f-ag").value,q=norm($("#f-q").value);
  return D.filter(i=>(!p||i.prio===p)&&(!o||String(i.onda)===o)&&(!t||i.tipo===t)&&(!a||i.ag===a)&&(!q||norm([i.id,i.titulo,i.onde,i.sugestao,TEL[i.tela],AG[i.ag]].join(" ")).includes(q)))
@@ -118,6 +142,7 @@ function linha(i){
  const tog=()=>{det.hidden=!det.hidden;it.setAttribute("aria-expanded",String(!det.hidden))};
  it.addEventListener("click",tog);it.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tog()}});
  return it}
+const linha2=(i)=>{const n=linha(i);n.querySelector('.det').hidden=false;n.setAttribute('aria-expanded','true');return n};
 function agrupar(lista,chave){const m=new Map();for(const i of lista){if(!m.has(i[chave]))m.set(i[chave],[]);m.get(i[chave]).push(i)}return m}
 function mapa(){const l=filtrados();const m=agrupar(l,"objetivo");
  return el("div",{class:"mapa"},OBJ.filter(([k])=>m.has(k)).map(([k,nome,desc])=>{const its=m.get(k);const g=agrupar(its,"tela");
@@ -129,6 +154,54 @@ function telas(){const l=filtrados();const m=agrupar(l,"tela");
   return el("section",{class:"ramo","aria-label":TEL[k]},el("header",{},el("h2",{},TEL[k],el("small",{text:`${its.length} · ${its.filter(i=>i.onda===1).length} agora`}))),
    el("div",{class:"galho"},OBJ.filter(([o])=>g.has(o)).map(([o,nome])=>[el("h3",{},el("span",{text:nome}),el("span",{text:String(g.get(o).length)})),g.get(o).map(linha)])))}),
   l.length?null:el("p",{class:"vazio",text:"Nada com esses filtros."}))}
+
+// ---------- mapa mental radial ----------
+let abertas=new Set(),zoom=null,foco=null;
+const C=1300;
+function mente(){
+ const l=filtrados();const porObj=agrupar(l,"objetivo");
+ const objs=OBJ.filter(([k])=>porObj.has(k));
+ const caixa=el("div",{class:"mente"});const tela=el("div",{class:"tela-m"});
+ const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");tela.append(svg);caixa.append(tela);
+ const linha=(x1,y1,x2,y2,forte)=>{const ln=document.createElementNS("http://www.w3.org/2000/svg","line");ln.setAttribute("x1",x1);ln.setAttribute("y1",y1);ln.setAttribute("x2",x2);ln.setAttribute("y2",y2);if(forte)ln.setAttribute("class","forte");svg.append(ln)};
+ const no=(x,y,cls,kids,attrs={})=>{const n=el("div",Object.assign({class:"no "+cls,style:`left:${x}px;top:${y}px`},attrs),kids);tela.append(n);return n};
+ const pol=(r,a)=>[C+r*Math.cos(a),C+r*Math.sin(a)];
+ no(C,C,"centro",["Comunique"]);
+ const det=el("div",{class:"painel-det"});
+ // setor de cada objetivo proporcional ao número de telas (mais um mínimo)
+ const pesos=objs.map(([k])=>agrupar(porObj.get(k),"tela").size+1.2),tot=pesos.reduce((a,b)=>a+b,0)||1;
+ let ang=-Math.PI/2-Math.PI*2*pesos[0]/tot/2;
+ objs.forEach(([k,nome],oi)=>{
+  const set=Math.PI*2*pesos[oi]/tot,meio=ang+set/2;const its=porObj.get(k);
+  const[ox,oy]=pol(430,meio);linha(C,C,ox,oy,true);
+  no(ox,oy,"obj",[nome,el("small",{text:`${its.length} itens`})]);
+  const tl=[...agrupar(its,"tela").entries()].sort((a,b)=>b[1].length-a[1].length);
+  tl.forEach(([t,ii],ti)=>{
+   const a=ang+set*(ti+.5)/tl.length;const[tx,ty]=pol(tl.length>6?[740,900,1060][ti%3]:tl.length>4?(ti%2?900:740):780,a);linha(ox,oy,tx,ty);
+   const chave=k+"|"+t,aberta=abertas.has(chave);
+   const n=no(tx,ty,"tel"+(aberta?" aberto":""),[TEL[t],el("small",{text:`${ii.length} ${ii.length===1?"item":"itens"}${aberta?" · fechar":""}`})],{tabindex:"0",role:"button","aria-expanded":String(aberta)});
+   const tog=()=>{if(aberta)abertas.delete(chave);else{abertas.add(chave);foco={x:tx,y:ty,a}}desenhar()};
+   n.addEventListener("click",tog);n.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tog()}});
+   if(aberta){const passo=Math.min(0.105,Math.max(0.05,set/Math.max(ii.length,1)));const ini=a-passo*(ii.length-1)/2;
+    ii.forEach((i,ix)=>{const aa=ini+passo*ix;const r=(tl.length>6?1220:1100)+(ix%2?160:0);const[ix_,iy]=pol(r,aa);linha(tx,ty,ix_,iy);
+     const cor=i.prio==="alta"?"var(--alta)":i.prio==="média"?"var(--media)":"var(--baixa)";
+     const ni=no(ix_,iy,"it",[el("span",{class:"ponto",style:`background:${cor}`,"aria-hidden":"true"}),`${i.id} · ${i.titulo}`],{tabindex:"0",role:"button",title:`${i.prio} · ${ONDA[i.onda]} · ${i.titulo}`});
+     const ver=()=>{det.replaceChildren(el("div",{class:"lista"},linha2(i)))};
+     ni.addEventListener("click",ver);ni.addEventListener("keydown",(e)=>{if(e.key==="Enter"){e.preventDefault();ver()}})})}
+  });
+  ang+=set});
+ // zoom e arrastar (estado guardado entre redesenhos)
+ const ctr=el("div",{class:"controles"},el("button",{type:"button","aria-label":"Aproximar",text:"+",onclick:()=>z(1.2)}),el("button",{type:"button","aria-label":"Afastar",text:"−",onclick:()=>z(1/1.2)}),el("button",{type:"button",text:"Centralizar",onclick:()=>{zoom=null;aplicar(true)}}));
+ caixa.append(ctr,el("div",{class:"dica",text:"Clique numa tela para abrir os itens. Arraste para mover; roda do mouse para zoom."}));
+ const aplicar=(ajustar)=>{if(ajustar||!zoom){const w=caixa.clientWidth||1000,h=caixa.clientHeight||700;const sc=Math.min(w,h)/2150;zoom={s:sc,x:w/2-C*sc,y:h/2-C*sc}}tela.style.transform=`translate(${zoom.x}px,${zoom.y}px) scale(${zoom.s})`};
+ const z=(f,cx,cy)=>{const w=caixa.clientWidth,h=caixa.clientHeight;cx??=w/2;cy??=h/2;zoom.x=cx-(cx-zoom.x)*f;zoom.y=cy-(cy-zoom.y)*f;zoom.s*=f;aplicar()};
+ caixa.addEventListener("wheel",(e)=>{e.preventDefault();const r=caixa.getBoundingClientRect();z(e.deltaY<0?1.12:1/1.12,e.clientX-r.left,e.clientY-r.top)},{passive:false});
+ let arr=null;caixa.addEventListener("pointerdown",(e)=>{if(e.target.closest(".no,.controles"))return;arr={x:e.clientX,y:e.clientY,zx:zoom.x,zy:zoom.y};caixa.classList.add("arrastando");caixa.setPointerCapture(e.pointerId)});
+ caixa.addEventListener("pointermove",(e)=>{if(!arr)return;zoom.x=arr.zx+e.clientX-arr.x;zoom.y=arr.zy+e.clientY-arr.y;aplicar()});
+ caixa.addEventListener("pointerup",()=>{arr=null;caixa.classList.remove("arrastando")});
+ requestAnimationFrame(()=>{if(foco){const w=caixa.clientWidth,h=caixa.clientHeight;const sc=Math.min(0.75,Math.min(w,h)/900);const fx=foco.x+Math.cos(foco.a)*230,fy=foco.y+Math.sin(foco.a)*230;zoom={s:sc,x:w/2-fx*sc,y:h/2-fy*sc};foco=null;aplicar()}else aplicar(false)});
+ return el("div",{},caixa,det,l.length?null:el("p",{class:"vazio",text:"Nada com esses filtros."}))}
+
 const DEC=[["Login por e-mail no Supabase (S1)",true,"Conferir em Authentication → Sign In / Providers: só Google ligado; Email, Phone e Anonymous desligados. Depois eu ponho a trava no banco (conta precisa ter identidade Google)."],
 ["O suporte vê cadastros dos outros na Consulta, no Ver cadastro e na busca (S7)",true,"Manter assim porque ajuda o trabalho, ou fechar para o suporte ver só os que enviou?"],
 ["Encerramento de parceria com prova e canal de contestação (M5)",true,"Decisões da Justiça anularam desativações sem prova. Pedir anexo antes de encerrar e pôr data e canal de contestação na mensagem. O texto deve passar pelo jurídico."],
@@ -149,9 +222,9 @@ function placar(){return el("div",{class:"placar"},PL.map(([t,l])=>el("section",
 function numeros(){const ach=D.filter(i=>i.tipo==="achado").length;$("#numeros").replaceChildren(
  ...[[D.length,"itens"],[ach,"achados"],[D.length-ach,"sugestões"],[D.filter(i=>i.prio==="alta").length,"altos"],[D.filter(i=>i.onda===1).length,"para agora"],[29,"altos revistos, 0 derrubados"]].map(([n,t])=>el("div",{},el("b",{text:String(n)}),el("span",{text:t}))))}
 function desenhar(){document.querySelectorAll(".abas button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===vista)));
- $("#filtros").hidden=!(vista==="mapa"||vista==="telas");
+ $("#filtros").hidden=!(vista==="mapa"||vista==="telas"||vista==="mente");
  const l=filtrados();$("#cont").textContent=`${l.length} de ${D.length}`;
- $("#vista").replaceChildren(vista==="mapa"?mapa():vista==="telas"?telas():vista==="decisoes"?decisoes():placar())}
+ $("#vista").replaceChildren(vista==="mente"?mente():vista==="mapa"?mapa():vista==="telas"?telas():vista==="decisoes"?decisoes():placar())}
 document.querySelectorAll(".abas button").forEach(b=>b.addEventListener("click",()=>{vista=b.dataset.v;try{localStorage.setItem("mapa009-v",vista)}catch(e){}desenhar()}));
 ["#f-prio","#f-onda","#f-tipo","#f-ag"].forEach(s=>$(s).addEventListener("change",desenhar));$("#f-q").addEventListener("input",desenhar);
 numeros();desenhar();
