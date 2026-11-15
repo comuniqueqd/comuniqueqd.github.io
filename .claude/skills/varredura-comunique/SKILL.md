@@ -52,6 +52,7 @@ Esforço: **pequeno** (até ~1 h, um arquivo), **médio** (um dia, poucos arquiv
 6. **Consolidar:** `python3 .claude/skills/varredura-comunique/scripts/consolidar.py <scratchpad>/varredura docs/revisoes/<versao>` → `mapa.json`, `placar.json` e a comparação com a rodada anterior; atualizar o mapa privado (artifact) com as visões Mapa mental, Objetivos, Telas, Como seguir, Precisa de você e Placar (antes × depois).
 7. **Retrospectiva (obrigatória, sempre, nos dois modos):** responder por escrito ao usuário, com base no que aconteceu na rodada:
    - **Algum agente ficou de fora?** (tema sem dono, achado que caiu entre dois agentes, área nova do app)
+   - **Algum agente pode ser incluído no projeto?** Pensar além da varredura: agentes que trabalhem no dia a dia do Comunique (ex.: um que roda a varredura leve toda semana sozinho, um que prepara o lançamento de cada versão com novidades, tour e materiais, um que testa a extensão nas telas reais, um que acompanha os números do Supabase) e skills ou plugins novos que valham a pena. Para cada candidato: para que serve, quando roda (sob pedido, a cada versão, agendado), o custo (uso e manutenção) e se precisa de algo do usuário.
    - **Algum processo ficou de fora?** (preparação, régua, registro, lotes, revisão, consolidação, o que deu retrabalho ou travou)
    - **Alguma ideia ficou de fora?** (o que os agentes sugeriram fora da missão, o que o mercado mostrou, o que o usuário pediu e não entrou)
    Propor as mudanças na receita; o que o usuário aprovar entra neste arquivo e no **Histórico da receita** abaixo.
@@ -59,3 +60,4 @@ Esforço: **pequeno** (até ~1 h, um arquivo), **médio** (um dia, poucos arquiv
 
 ## Histórico da receita
 - **v1 (15/11/2026, depois da varredura da 009):** 9 agentes viraram 12 (a10 Dados reais, a11 Extensão, a12 Textos e acessibilidade); lotes de até 5; régua de prioridade comum (o revisor ajustou 19 de 29 altos na 009); registro comum com `alerta` (o problema do schema.sql teve de ser avisado à mão); objetivo e tela marcados na origem (na 009 o orquestrador classificou por palpite); placar comparado; retrospectiva obrigatória (pedido do usuário).
+- **v1.1 (15/11/2026):** a retrospectiva também pergunta se algum agente pode ser incluído no projeto como um todo (agentes do dia a dia, agendados, skills e plugins), não só na varredura (pedido do usuário).
