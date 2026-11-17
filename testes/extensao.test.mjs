@@ -80,9 +80,16 @@ try {
     if (u.includes("/entregadores/outro5678")) return r.fulfill({ contentType: "text/html", body: telaQL("outro5678", "Nome Diferente", "Lagarto - SE", true) });
     return r.fulfill({ contentType: "text/html", body: "<!doctype html><html><body><h1>Estabelecimentos</h1><aside><a>Lista</a><a>Aprovação</a></aside></body></html>" });
   });
-  await ctx.route("https://app.crisp.chat/**", (r) => r.fulfill({ contentType: "text/html", body: `<!doctype html><html><head><meta charset="utf-8"></head><body>
-    <aside><div><span>DT</span><div><b>Beltrano Teste da Silva</b><a>beltrano@exemplo.com</a><span>Recife, PE</span></div><button>Ver Perfil de Beltrano</button></div>
-    <h3>Dados personalizados</h3><div><div><span>entregador_id</span><span>fff111eee222</span></div><div><span>cidade</span><span>Patos - PB</span></div></div></aside></body></html>` }));
+  // 1.2.2: o Crisp real nem sempre tem o botão "Ver Perfil de …": variações em inglês, sem botão (nome vem da ficha)
+  const telaCrisp = (id, cabeca, botao) => `<!doctype html><html><head><meta charset="utf-8"></head><body>
+    <aside><div><span>DT</span><div>${cabeca}<a>contato@exemplo.com</a><span>Recife, PE</span></div>${botao}</div>
+    <h3>Dados personalizados</h3><div><div><span>entregador_id</span><span>${id}</span></div><div><span>cidade</span><span>Patos - PB</span></div></div></aside></body></html>`;
+  await ctx.route("https://app.crisp.chat/**", (r) => {
+    const u = r.request().url();
+    if (u.includes("/ingles/")) return r.fulfill({ contentType: "text/html", body: telaCrisp("ccc333ddd444", "<b>Ciclano Exemplo Souza</b>", '<div role="button">View profile of Ciclano</div>') });
+    if (u.includes("/sembotao/")) return r.fulfill({ contentType: "text/html", body: telaCrisp("semnome999", "<b>Visitante</b>", "") });
+    return r.fulfill({ contentType: "text/html", body: telaCrisp("fff111eee222", "<b>Beltrano Teste da Silva</b>", "<button>Ver Perfil de Beltrano</button>") });
+  });
   await ctx.route("https://comuniqueqd.github.io/**", (r) => r.fulfill({ contentType: "text/html", body: "<!doctype html><title>Comunique</title>" }));
 
   // a aba de cada tela: o service worker pergunta a cada aba e fica com a que responde o ID esperado
@@ -113,6 +120,11 @@ try {
   const cr = await ctx.newPage(); await cr.goto("https://app.crisp.chat/website/x/inbox/"); await cr.waitForTimeout(400);
   ok(JSON.stringify((await lerAba(await abaDe("fff111eee222")))?.entregador) === JSON.stringify({ id: "fff111eee222", nome: "Beltrano Teste da Silva", cidade: "Patos - PB" }),
     "Crisp: lê ID, nome completo e cidade dos dados personalizados");
+  const cr2 = await ctx.newPage(); await cr2.goto("https://app.crisp.chat/website/x/ingles/"); await cr2.waitForTimeout(400);
+  ok((await lerAba(await abaDe("ccc333ddd444")))?.entregador?.nome === "Ciclano Exemplo Souza", "1.2.2 Crisp: acha o nome com o botão em inglês e em elemento que não é <button>");
+  const cr3 = await ctx.newPage(); await cr3.goto("https://app.crisp.chat/website/x/sembotao/"); await cr3.waitForTimeout(400);
+  const abaSemBotao = await abaDe("semnome999");
+  ok((await lerAba(abaSemBotao))?.entregador?.nome === "", "1.2.2 Crisp sem o botão: o leitor não inventa nome (não pega o 'Visitante')");
   const outra = await ctx.newPage(); await outra.goto("https://admin.querolog.io/estabelecimentos"); await outra.waitForTimeout(400);
   const abaOutra = await abaDe("admin.querolog.io");
   ok((await lerAba(abaOutra))?.entregador === null, "tela sem ID: o leitor responde que não há entregador");
@@ -203,6 +215,13 @@ try {
   await painelDe(await abaDe("outro5678"));
   await abrirForm("Novo bloqueio");
   ok(await p.locator("#caixa-form .alerta", { hasText: "Nome Oficial" }).isVisible(), "ID com outro nome no Comunique: o formulário avisa");
+  // 1.2.2: Crisp sem nome na tela: o painel usa o nome da ficha do Comunique e diz de onde veio
+  await db.query("insert into entregadores (id_app, nome, cidade) values ('semnome999', 'Nome Da Ficha', 'LAGARTO - SE') on conflict do nothing");
+  await painelDe(abaSemBotao);
+  const viuFicha = await p.locator("#tela", { hasText: "nome da ficha do Comunique" }).waitFor({ timeout: 5000 }).then(() => true).catch(() => false);
+  ok(viuFicha && await p.locator("#tela", { hasText: "Nome Da Ficha" }).isVisible(), "1.2.2 Crisp sem nome: o painel mostra o nome da ficha e avisa a origem");
+  await abrirForm("Novo bloqueio");
+  ok((await campos())[1] === "Nome Da Ficha" && await p.locator("#caixa-form .alerta", { hasText: "ficha do Comunique" }).isVisible(), "1.2.2 Crisp sem nome: o formulário vem com o nome da ficha e o aviso");
   await painelDe(abaOutra);
   ok(await p.locator("#tela", { hasText: "Não encontrei ID" }).isVisible(), "tela sem ID: o painel avisa");
   await abrirForm("Novo bloqueio");

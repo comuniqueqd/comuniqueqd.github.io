@@ -65,6 +65,8 @@ async function abrirForm(acao) {
       const b = await Api.rpc("busca_rapida", { p_q: dados.id });
       const f = (b?.entregadores || []).find((x) => String(x.id_app).toLowerCase() === dados.id.toLowerCase());
       if (f && dados.nome && f.nome && norm(f.nome) !== norm(dados.nome)) dados.aviso = `No Comunique este ID está como “${f.nome}”. Confira antes de gravar.`;
+      // a tela não mostrou o nome (ex.: Crisp): usa o da ficha e avisa de onde veio
+      if (f && !dados.nome && f.nome && acao !== "entregador") { dados.nome = f.nome; dados.aviso = `Nome trazido da ficha do Comunique (${f.nome}). Confira antes de gravar.`; }
       if (f && acao === "entregador") dados.aviso = `Este ID já tem ficha no Comunique (${f.nome || "sem nome"}).`;
     } catch (_) {}
   }
@@ -115,7 +117,16 @@ async function telaAtual() {
   if (!r) return box.replaceChildren();
   if (!r.entregador) return box.replaceChildren(el("div", { class: "tela vazia", text: "Não encontrei ID de entregador nesta tela." }));
   const e = r.entregador;
-  box.replaceChildren(el("div", { class: "tela" }, el("span", { class: "grupo", text: "Nesta tela" }), el("b", { text: e.nome || "Nome não encontrado" }),
+  // sem nome na tela: procura na ficha do Comunique pelo ID
+  let daFicha = false;
+  if (!e.nome) {
+    try {
+      const b = await Api.rpc("busca_rapida", { p_q: e.id });
+      const f = (b?.entregadores || []).find((x) => String(x.id_app).toLowerCase() === e.id.toLowerCase());
+      if (f?.nome) { e.nome = f.nome; e.cidade = e.cidade || f.cidade || ""; daFicha = true; }
+    } catch (_) {}
+  }
+  box.replaceChildren(el("div", { class: "tela" }, el("span", { class: "grupo", text: daFicha ? "Nesta tela (nome da ficha do Comunique)" : "Nesta tela" }), el("b", { text: e.nome || "Nome não encontrado" }),
     el("span", { class: "sub meta", text: [e.id, e.cidade].filter(Boolean).join(" · ") }),
     el("button", { class: "btn", type: "button", onclick: () => abrir("#ficha/" + encodeURIComponent(e.id)) }, "Ver ficha no Comunique")));
 }

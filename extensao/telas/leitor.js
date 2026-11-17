@@ -76,9 +76,14 @@
     "app.crisp.chat": () => {
       const id = depoisDoRotulo("entregador_id");
       if (!id) return null;
-      // o botão "Ver Perfil de <primeiro nome>" diz por onde o nome começa; o nome completo é o texto que começa igual
-      const ver = [...document.querySelectorAll("button, a")].find((b) => /^Ver Perfil de /i.test(limpo(b.textContent)));
-      const primeiro = limpo(ver?.textContent).replace(/^Ver Perfil de /i, "");
+      // 1.2.2: 1º o nome nos dados personalizados, se a equipe cadastrar ("nome" ou "nome_entregador")
+      const doDado = depoisDoRotulo("nome_entregador") || depoisDoRotulo("nome");
+      if (doDado && /[A-Za-zÀ-ú]{2}/.test(doDado) && !doDado.includes("@")) return { id, nome: doDado, cidade: depoisDoRotulo("cidade") };
+      // 2º o botão "Ver Perfil de <primeiro nome>" diz por onde o nome começa; o nome completo é o texto que começa igual.
+      // Aceita variações (ver perfil / view profile, com ou sem "de"/"of") e qualquer elemento clicável
+      const VER = /^(ver\s+perfil(\s+de)?|view\s+profile(\s+of)?)\s+/i;
+      const ver = [...document.querySelectorAll('button, a, [role="button"]')].find((b) => VER.test(limpo(b.textContent)));
+      const primeiro = limpo(ver?.textContent).replace(VER, "");
       let nome = primeiro;
       if (primeiro) for (const n of document.querySelectorAll("body *")) {
         if (n.childElementCount || n.closest("button, a")) continue;

@@ -1,7 +1,7 @@
 # Chrome Web Store: Comunique
 
 Tudo o que o painel do desenvolvedor da Chrome Web Store pede, pronto para copiar.
-Última atualização: 14/11/2026 · versão 1.2.1
+Última atualização: 17/11/2026 · versão 1.2.2
 
 ## Antes de enviar (uma vez só)
 
@@ -88,6 +88,7 @@ As imagens são geradas por `testes/prints-extensao.mjs`, só com dados fictíci
 | Versão | Data | O que mudou |
 |---|---|---|
 | 1.2.1 | 14/11/2026 | Abas abertas antes da atualização: o leitor novo entra sozinho (sem recarregar a página) e tira o cartão antigo; botão "↻ Ler a tela de novo" no formulário. |
+| 1.2.2 | 17/11/2026 | Crisp: o nome não aparecia. O leitor procura primeiro "nome"/"nome_entregador" nos dados personalizados e aceita variações do botão de perfil ("Ver perfil", "View profile", elemento que não é botão); sem nome na tela, o painel usa o nome da ficha do Comunique e avisa a origem. |
 | 1.2.0 | 14/11/2026 | Tudo no painel lateral: os botões leem a tela aberta e registram ali mesmo (bloqueio com motivo e prévia, ativação, adicional, cadastrar, calculadora de bairro com registro do ajuste, pedir ajuda); "Eu ajudo" aceita pedidos da equipe; o cartão na página saiu; nome lido do caminho "Lista / Nome" mesmo com outros "Lista" na tela. |
 | 1.1.0 | 14/11/2026 | Os botões do cartão gravam direto (com conferência): ficha, ativação, bloqueio com prévia e adicional com valores; aviso de ID com outro nome no Comunique; o painel lateral diz "não encontrei ID de entregador nesta tela". |
 | 1.0.0 | 14/11/2026 | Primeira versão: avisos no ícone, notificações (avisos e pedidos de ajuda), painel lateral com busca e atalhos, "Ver no Comunique" no botão direito, cartão com botões no Quero Log e no Crisp. |
