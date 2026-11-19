@@ -67,7 +67,7 @@
         fld("Enviado", `${dt(c.enviado_em)} (há ${env.txt})`),
         staff() ? fld("Enviado por", c.enviado_por === S.me.id ? "Você" : c.enviado_por_nome) : null),
       App.u.previsao(c, "cadastro", c.id, staff()),
-      c.historico ? resumoHistorico(c.historico, c.id_app) : null,
+      c.historico && !soDesteCadastro(c.historico, c) ? resumoHistorico(c.historico, c.id_app) : null,
       contato ? el("div", { class: "motivo" }, el("b", { text: `Reprovado por ${c.decidido_por_nome} em ${dt(c.decidido_em)}: ` }), c.motivo, c.detalhe ? " — " + c.detalhe : "") : null,
       c.observacao ? el("div", { class: "obs", text: c.observacao }) : null,
       el("div", { class: "actions" },
@@ -150,6 +150,11 @@
   const botaoRevisar = (c, discreto) => el("button", { class: "revisar-cad" + (discreto ? " discreto" : ""), type: "button", title: "Revisar: " + c.revisar,
     onclick: (e) => { e.stopPropagation(); App.abrirCadastro(c.id); } }, discreto ? "revisar" : [App.ic("alerta"), "revisar: " + c.revisar]);
 
+  // 009u (AP-04): a ficha que o próprio cadastro criou (gatilho da 009h) não é "ID que já existe":
+  // sem bloqueio, leve, comentário nem encerramento e com o mesmo nome, o quadrinho não aparece
+  const semAcento = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+  const soDesteCadastro = (h, c) => !h.bloqueios && !h.leves && !h.comentarios && !h.encerrado && !h.bloqueado_agora
+    && (!h.nome || semAcento(h.nome) === semAcento(c.nome));
   // resumo do que o sistema já sabe do ID (ficha, bloqueios, leves, comentários)
   function resumoHistorico(h, idApp) {
     const partes = [];

@@ -51,10 +51,18 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009t";
+  const VERSAO = "009u";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009u", tema: "Tudo conferido", itens: [
+      ["De quem é esse ID?", "No Registrar adicional, ao digitar o ID aparece o nome e a cidade da ficha. Se o ID não tem ficha, o Comunique pede o nome em vez de adivinhar."],
+      ["Menos alarme falso", "Na revisão de um cadastro, o quadrinho de histórico não aparece mais quando o único registro do ID é o próprio cadastro."],
+      ["Atividades com número", "O menu Atividades mostra quantas pendências estão com você, como os outros menus."],
+      ["Novidades numa linha", "Esta faixa agora ocupa uma linha só, com a última atualização. Clique nela para ver o histórico."],
+      ["CPF fora dos textos", "Se alguém escrever um CPF num comentário, observação ou aviso, ele é trocado por \"[CPF removido]\" ao salvar."],
+      ["Cores ajustadas", "No tema escuro, a Tratativa, os acordos vencidos e o foco do teclado no topo ficaram fáceis de ler, e os links ganharam cor própria."],
+    ] },
     { versao: "009t", tema: "Extensão do Comunique", itens: [
       ["Comunique no Chrome", "Saiu a extensão do Comunique: o número de avisos no ícone, notificação de pedido de ajuda, o Comunique no painel lateral e atalhos para as telas mais usadas."],
       ["Um clique do painel para o Comunique", "Na tela do entregador no Quero Log e no Crisp, a extensão mostra os botões Cadastrar, Nova ativação, Bloquear e Adicional, que abrem o formulário já com o ID, o nome e a cidade. Você confere e salva."],
@@ -205,7 +213,7 @@
     if (visto === VERSAO) return setTimeout(iniciarTour, 600);  // 009n: janela já vista: o tour pode aparecer
     const d = janela("O que há de novo",
       ...VERSOES.map((v, i) => el("div", { class: "bloco-versao" + (i ? " antiga" : "") },
-        el("h4", {}, el("span", { class: "tag", text: v.versao }), " ", v.tema),
+        el("h4", { text: i ? v.tema : `Agora: ${v.tema}` }),   // 009u: sem os códigos internos das versões
         el("ol", { class: "novidades" }, v.itens.map(([t, x]) => el("li", {}, el("b", { text: t + ": " }), x))))),
       el("div", { class: "actions" }, el("button", { class: "btn primary", type: "button", onclick: () => { marcarVisto(); d.close(); } }, "Entendi")));
     d.addEventListener("close", marcarVisto);  // o e o Esc também contam como visto

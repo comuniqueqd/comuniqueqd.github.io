@@ -18,9 +18,26 @@
   // ---------- registrar adicional ----------
   const form = $("#fi-form"), erro = $("#fi-erro");
   const radio = (nome) => form.querySelector(`input[name="${nome}"]:checked`)?.value || null;
-  $("#fi-id").addEventListener("input", (e) => (e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, "")));
+  $("#fi-id").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/[^A-Za-z0-9]/g, ""); procurarDono(); });
+  // 009u (A4): ao digitar o ID, diz de quem é (nome e cidade da ficha) ou avisa que não há ficha
+  let donoTimer = 0, dono = null;
+  function procurarDono() {
+    clearTimeout(donoTimer);
+    const id = $("#fi-id").value.trim(), linha = $("#fi-quem");
+    dono = null;
+    if (id.length < 4) { linha.replaceChildren(); return; }
+    donoTimer = setTimeout(async () => {
+      let r = null;
+      try { r = await rpc("quem_e", { p_id_app: id }); } catch (_) { linha.replaceChildren(); return; }   // banco sem a 009u
+      if ($("#fi-id").value.trim() !== id) return;
+      dono = r;
+      linha.replaceChildren(r?.nome
+        ? el("span", { text: `${r.nome}${r.cidade ? " · " + r.cidade : ""}` })
+        : el("span", { class: "alerta-revisar", text: "ID sem ficha: preencha o nome." }));
+    }, 350);
+  }
   form.addEventListener("input", () => { erro.hidden = true; renderPrevia(); });
-  form.addEventListener("reset", () => { erro.hidden = true; setTimeout(() => { renderPrevia(); $("#fi-id").focus(); }); });
+  form.addEventListener("reset", () => { erro.hidden = true; dono = null; $("#fi-quem").replaceChildren(); setTimeout(() => { renderPrevia(); $("#fi-id").focus(); }); });
   // adicional rápido: combinado = entrega + x
   $("#fi-rapidos").replaceChildren(el("span", { class: "meta", text: "Adicional rápido:" }), ...[2, 3, 5, 10].map((x) =>
     el("button", { class: "chip", type: "button", onclick: () => {
@@ -44,6 +61,7 @@
     const falha = (t) => { erro.textContent = t; erro.hidden = false; };
     const e = valor($("#fi-entrega").value), p = valor($("#fi-valor-pedido").value), c = valor($("#fi-combinado").value);
     if ($("#fi-id").value.trim().length < 4) return falha("Digite o ID do entregador.");
+    if (dono && !dono.nome && !$("#fi-nome").value.trim()) { $("#fi-nome").focus(); return falha("Este ID não tem ficha: preencha o nome do entregador."); }
     if (!radio("fi-origem")) return falha("Escolha de onde veio o pedido (QD ou outros).");
     if (!radio("fi-mercado")) return falha("Diga se o pedido é de mercado.");
     if (!$("#fi-motivo").value) return falha("Escolha o motivo do adicional.");

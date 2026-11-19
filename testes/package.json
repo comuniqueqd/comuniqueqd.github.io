@@ -26,6 +26,7 @@
     "test:ficha": "node ficha.test.mjs",
     "test:bairros": "node bairros.test.mjs",
     "test:semcpf": "node semcpf.test.mjs",
+    "test:mesa": "node mesa.test.mjs",
     "test:extensao": "node extensao.test.mjs"
   },
   "devDependencies": {

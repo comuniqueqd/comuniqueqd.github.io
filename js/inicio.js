@@ -144,10 +144,12 @@
 
     // faixa da versão nova: os destaques e o botão para rever a janela "O que há de novo"
     const nv = App.novidades;
-    $("#inicio-novidades").replaceChildren(nv ? el("div", { class: "faixa-novidades" },
-      el("b", { text: `Novidades: ${nv.NOVIDADES.tema}` }),
-      el("span", { text: nv.NOVIDADES.versoes[0].itens.map(([t]) => t).join(" · ") + ` · e mais: ${nv.NOVIDADES.versoes.slice(1).map((v) => v.versao).join(" e ")}` }),
-      el("button", { class: "btn small", type: "button", onclick: () => nv.mostrar() }, "Ver o que há de novo")) : "");
+    // 009u (pedido do usuário): só a última atualização, numa linha; o clique abre o histórico completo
+    $("#inicio-novidades").replaceChildren(nv ? el("button", { class: "faixa-novidades curta", type: "button", onclick: () => nv.mostrar(),
+        "aria-label": `Novidade: ${nv.NOVIDADES.tema}. Ver o histórico de novidades` },
+      el("b", { text: `Novidade: ${nv.NOVIDADES.tema}` }),
+      el("span", { text: nv.NOVIDADES.versoes[0].itens.map(([t]) => t).join(" · ") }),
+      el("span", { class: "meta", style: "flex:0 0 auto", text: "Ver histórico" })) : "");
   }
 
   App.modulo({

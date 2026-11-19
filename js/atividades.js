@@ -405,6 +405,7 @@
     render(aba) { ({ sugeridas: renderSugeridas, pendencias: renderPendencias })[aba]?.(); },
     contadores() {
       App.contador("c-at-pend", totalPendencias() || 0);
+      App.contador("c-at-menu", totalPendencias() || 0);   // 009u: o número também no item Atividades do menu
       App.contador("c-at-sug", S.resumo?.atividades?.para_aceitar || 0);
     },
     totalPendencias,

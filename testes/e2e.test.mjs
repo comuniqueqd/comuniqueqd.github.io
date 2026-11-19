@@ -53,6 +53,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009g-tarefas-compartilh
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009h-entregador-pelo-lancamento.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009p-bairros-parecidos.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009s-sem-cpf.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009u-sem-cpf-nos-textos.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -111,7 +112,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009t"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009u"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -293,9 +294,10 @@ try {
   ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
-  ok(await s.isVisible(".faixa-novidades >> text=Comunique no Chrome") && await s.isVisible(".faixa-novidades >> text=e mais: 009s e 009r e 009q e 009p e 009o e 009n e 009m e 009l e 009k e 009j e 009g e 009f e 009e e 009d3 e 009d2 e 009d e 009c e 009b e 008d e 008c e 008b e 008"), "tela inicial mostra a faixa das novidades, ligando 009t, 009s, 009r, 009q, 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008");
-  await s.click(".faixa-novidades button");
-  ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "o botão da faixa reabre O que há de novo");
+  { const fx = await s.$eval("button.faixa-novidades.curta", (b) => ({ txt: b.textContent, h: b.getBoundingClientRect().height }));
+    ok(fx.txt.includes("Novidade: Tudo conferido") && fx.txt.includes("Ver histórico") && !/009[a-z]/.test(fx.txt) && fx.h < 70, "009u: a faixa de novidades é uma linha só, com a última atualização e sem os códigos: " + JSON.stringify(fx)); }
+  await s.click("button.faixa-novidades");
+  ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "clicar na faixa abre o histórico (O que há de novo)");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
   // 009i (Modern Web Guidance)
   { const r = await s.evaluate(() => {
@@ -693,6 +695,10 @@ try {
   ok(await s.isVisible("#at-sug-lista .card:has-text('Sabor') >> text=esperando há"), "cartão mostra há quanto tempo espera");
   await s.screenshot({ path: path.join(PRINTS, "c2-sugeridas.png"), fullPage: true });
   await ir(m, "#atividades/pendencias"); await m.reload();
+  { await esperar(m, "#c-at-pend");
+    const c = await m.evaluate(() => ({ menu: document.querySelector("#c-at-menu"), aba: document.querySelector("#c-at-pend") })
+      ? { menu: document.querySelector("#c-at-menu").hidden ? "0" : document.querySelector("#c-at-menu").textContent, aba: document.querySelector("#c-at-pend").hidden ? "0" : document.querySelector("#c-at-pend").textContent } : null);
+    ok(c && c.menu === c.aba, "009u: o item Atividades do menu mostra o mesmo número de pendências da Minha fila: " + JSON.stringify(c)); }
   ok(await esperar(m, "#at-lista >> text=Ligar para o restaurante Sabor"), "pessoa sugerida vê a atividade nas pendências");
   ok((await m.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).join() === "pendencias,sugeridas" && (await texto(m, "nav.tabs a[data-view=pendencias]")).startsWith("Minha fila")
       && await m.isVisible("#at-lista .tarefa-card:has-text('Ligar para o restaurante Sabor') >> text=Eu faço"), "009m: Atividades = Minha fila (com o cartão completo da tarefa) e Tarefas");
@@ -835,7 +841,8 @@ try {
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
-  ok(JSON.stringify(await n7.$$eval("dialog.janela .bloco-versao .tag", (l) => l.map((x) => x.textContent))) === JSON.stringify(["009t", "009s", "009r", "009q", "009p", "009o", "009n", "009m", "009l", "009k", "009j", "009g", "009f", "009e", "009d3", "009d2", "009d", "009c", "009b", "008d", "008c", "008b", "008"]), "as novidades de 009t, 009s, 009r, 009q, 009p, 009o, 009n, 009m, 009l, 009k, 009j, 009g, 009f, 009e, 009d3, 009d2, 009d, 009c, 009b, 008d, 008c, 008b e 008 aparecem juntas, da mais nova para a mais antiga");
+  { const hs = await n7.$$eval("dialog.janela .bloco-versao h4", (l) => l.map((x) => x.textContent));
+    ok(hs.length === 24 && hs[0] === "Agora: Tudo conferido" && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
@@ -1031,7 +1038,12 @@ try {
   ok(await esperar(a8, "#c-fin:not([hidden]):has-text('1')"), "menu Financeiro mostra 1 pendente");
   ok(await esperar(a8, "#v-fe-calc a.fin-pend"), "a calculadora mostra o atalho para os pendentes");
   await ir(a8, "#financeiro/adicional");
-  await a8.fill("#fi-id", "mal00001"); await a8.check("input[name=fi-origem][value=qd]"); await a8.check("input[name=fi-mercado][value=nao]");
+  await a8.fill("#fi-id", "zzsemficha9");
+  ok(await esperar(a8, "#fi-quem:has-text('ID sem ficha')"), "009u: ID sem ficha no adicional pede o nome");
+  await a8.fill("#fi-id", "mal00001");
+  { const q = await a8.waitForFunction(() => { const t = document.querySelector("#fi-quem")?.textContent || ""; return t && !t.includes("sem ficha") ? t : null; }, null, { timeout: 5000 }).then((h) => h.jsonValue()).catch(() => "");
+    ok(!!q, "009u: com ficha, o adicional mostra de quem é o ID: " + q); }
+  await a8.check("input[name=fi-origem][value=qd]"); await a8.check("input[name=fi-mercado][value=nao]");
   await a8.selectOption("#fi-motivo", "Chuva"); await a8.fill("#fi-entrega", "6"); await a8.fill("#fi-valor-pedido", "80");
   await a8.click("#fi-rapidos button:has-text('+ R$ 5')");
   ok((await a8.inputValue("#fi-combinado")) === "11,00" && await esperar(a8, "#fi-previa strong:has-text('R$ 5,00')"), "adicional rápido: combinado = entrega + R$ 5, prévia de R$ 5,00");

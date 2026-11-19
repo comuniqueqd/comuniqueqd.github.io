@@ -23,7 +23,7 @@
     --marca: #0B1813; --marca-forte: #08120E; --marca-ink: #F4EFE6;
     --bg: #0F1C17; --surface: #16261F; --ink: #EDE7DB; --muted: #A7B4AC; --line: #273A31;
     --accent: #6CCB9A; --accent-ink: #0F1C17; --accent-soft: #19352A;
-    --ok: #5fd08e; --ok-soft: #15301f; --bad: #ff8a80; --bad-soft: #3a1a18; --warn: #f0c060; --warn-soft: #35290f;
+    --ok: #5fd08e; --ok-soft: #15301f; --bad: #ff8a80; --bad-soft: #3a1a18; --bad-forte: #a8231b; --warn: #f0c060; --warn-soft: #35290f;
     --gray: #A3ADA7; --gray-soft: #22322B;
     color-scheme: dark;
   }
@@ -32,7 +32,7 @@
   --marca: #0B1813; --marca-forte: #08120E; --marca-ink: #F4EFE6;
   --bg: #0F1C17; --surface: #16261F; --ink: #EDE7DB; --muted: #A7B4AC; --line: #273A31;
   --accent: #6CCB9A; --accent-ink: #0F1C17; --accent-soft: #19352A;
-  --ok: #5fd08e; --ok-soft: #15301f; --bad: #ff8a80; --bad-soft: #3a1a18; --warn: #f0c060; --warn-soft: #35290f;
+  --ok: #5fd08e; --ok-soft: #15301f; --bad: #ff8a80; --bad-soft: #3a1a18; --bad-forte: #a8231b; --warn: #f0c060; --warn-soft: #35290f;
   --gray: #A3ADA7; --gray-soft: #22322B;
   color-scheme: dark;
 }
@@ -458,7 +458,7 @@ tr.detalhe-hist > td { background: var(--bg); }
 #bq-t-hist td.nowrap-data { white-space: nowrap; }
 #bq-t-hist td.acoes-hist { text-align: right; }
 #bq-t-hist td.acoes-hist > * { display: block; margin: 0 0 4px auto; white-space: nowrap; }
-.detalhe-bloqueio .trat-completa { padding: 6px 10px; border-left: 3px solid var(--line); background: var(--panel, #fff); border-radius: 4px; }
+.detalhe-bloqueio .trat-completa { padding: 6px 10px; border-left: 3px solid var(--line); background: var(--bg); border-radius: 4px; }
 
 /* 008d5: cidades do operador ao lado do nome */
 #eq-t-operadores td.op-cidades { min-width: 220px; }
@@ -558,12 +558,12 @@ dialog.janela:has(#ag-turno-texto) { width: min(720px, 94vw); }
 .lembrete-turno { bottom: 70px; }
 
 /* acordos com parceiros (009d) */
-.acordo-vencido { display: flex; align-items: center; gap: 14px; background: var(--bad); color: #fff; border-radius: var(--radius); padding: 14px 18px; margin: 0 0 12px;
+.acordo-vencido { display: flex; align-items: center; gap: 14px; background: var(--bad-forte, var(--bad)); color: #fff; border-radius: var(--radius); padding: 14px 18px; margin: 0 0 12px;
   box-shadow: 0 0 0 3px var(--bad-soft); animation: acordo-pulso 2s ease-in-out infinite; }
 .acordo-vencido .acordo-icone { font-size: 28px; }
 .acordo-vencido .acordo-corpo { display: grid; gap: 2px; flex: 1; min-width: 0; }
 .acordo-vencido b { font-size: 16px; }
-.acordo-vencido .btn { background: #fff; color: var(--bad); border-color: #fff; font-weight: 700; white-space: nowrap; }
+.acordo-vencido .btn { background: #fff; color: var(--bad-forte, var(--bad)); border-color: #fff; font-weight: 700; white-space: nowrap; }
 @keyframes acordo-pulso { 50% { box-shadow: 0 0 0 7px var(--bad-soft); } }
 @media (prefers-reduced-motion: reduce) { .acordo-vencido { animation: none; } }
 @media (max-width: 600px) { .acordo-vencido { flex-wrap: wrap; } }
@@ -937,3 +937,13 @@ svg.ic { width: 1.15em; height: 1.15em; flex: none; vertical-align: -0.2em; fill
 .tema svg.ic { margin: 0; }
 .funcao-icone svg.ic { width: 24px; height: 24px; margin: 0; color: var(--fcor, var(--accent)); }
 .acordo-icone svg.ic { width: 28px; height: 28px; margin: 0; }
+
+/* 009u: correções da revisão da identidade */
+header.top :focus-visible { outline-color: var(--ambar); }          /* o verde do foco sumia no cabeçalho floresta (2,41:1) */
+:where(main, dialog) a:not([class]) { color: var(--accent); }       /* links do texto saíam no azul do navegador */
+.faixa-novidades.curta { padding: 8px 14px; margin: 0 0 12px; gap: 8px; cursor: pointer; }
+.faixa-novidades.curta b { white-space: nowrap; }
+.faixa-novidades.curta span { flex: 1 1 200px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.faixa-novidades.curta { width: 100%; flex-wrap: nowrap; text-align: left; font: inherit; color: inherit; border-style: solid; }
+.faixa-novidades.curta:hover { border-color: var(--accent); }
+@media (max-width: 600px) { .faixa-novidades.curta span:not(.meta) { display: none; } .faixa-novidades.curta b { white-space: normal; flex: 1; } }
