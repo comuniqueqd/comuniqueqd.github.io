@@ -256,7 +256,7 @@
   "nota": "Reproduzido: 6,6 s → 0,2 s. Só a aba Resumo das Análises chama, e as semanas fechadas ficam guardadas (analises.js:263). A semana atual roda 2 vezes na primeira abertura. O índice parcial é barato: fazer junto com o AT1.",
   "junto": "",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): Índice parcial bloqueios_gerou_bloqueio_idx.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): Índice parcial bloqueios_gerou_bloqueio_idx.",
   "versao": "009x"
  },
  {
@@ -294,7 +294,7 @@
   "nota": "listar_tarefas e listar_atividades não têm limit. listar_cadastros('todos') também não: o limit que aparece é de uma subconsulta. Chamadas em ativacao.js:350, bloqueios.js:1000 e atividades.js:400. É **o mesmo** que o A3-03 (e parte do A3-10).",
   "junto": "A3-03",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): Histórico da ativação em páginas de 100 (listar_cadastros_pagina), tratativas concluídas de 100 em 100 (listar_tarefas_concluidas) e Atividades com as 50 concluídas mais recentes.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): Histórico da ativação em páginas de 100 (listar_cadastros_pagina), tratativas concluídas de 100 em 100 (listar_tarefas_concluidas) e Atividades com as 50 concluídas mais recentes.",
   "versao": "009x"
  },
  {
@@ -332,7 +332,7 @@
   "nota": "",
   "junto": "",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): Análises guardam os números por 5 min (com 'Números de HH:MM · Atualizar').",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): Análises guardam os números por 5 min (com 'Números de HH:MM · Atualizar').",
   "versao": "009x"
  },
  {
@@ -586,7 +586,7 @@
   "nota": "É o mesmo que o AT4: juntar.",
   "junto": "AT4",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): Junto com o AT4.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): Junto com o AT4.",
   "versao": "009x"
  },
  {
@@ -606,7 +606,7 @@
   "nota": "ativacao.js:17 (render = App.render) e :336. O campo está fora de .protege-foco de propósito (dentro dele o filtro não funcionaria enquanto se digita). Debounce + render só da seção. Cresce junto com o AT4.",
   "junto": "",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): Filtro do Histórico espera 300 ms e busca no banco.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): Filtro do Histórico espera 300 ms e busca no banco.",
   "versao": "009x"
  },
  {
@@ -626,7 +626,7 @@
   "nota": "",
   "junto": "",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): Pendentes do Financeiro já carregam numa linha só; bloco da semana dos parceiros reserva o lugar.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): Pendentes do Financeiro já carregam numa linha só; bloco da semana dos parceiros reserva o lugar.",
   "versao": "009x"
  },
  {
@@ -1534,7 +1534,7 @@
   "nota": "Conferi 4 de 10: aguardar_terceiro, json_atividade, previa_bloqueio e enviar_cadastro não estão em nenhum supabase/*.sql, nem ignorando espaços. Como controle, listar_cadastros e resumo_e_avisos estão. É o mesmo assunto do AT10 e do S10 (remendos via pg_get_functiondef).",
   "junto": "A7-02",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): supabase/funcoes/ com 12 funções e teste.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): supabase/funcoes/ com 12 funções e teste.",
   "versao": "009x"
  },
  {
@@ -1572,7 +1572,7 @@
   "nota": "Reproduzido: test:financeiro dá 8/11 num banco completo (\"salvar_bairro … is not unique\"). Só afeta testes e desenvolvimento, não a produção. O conserto (apagar toda função de public com cascade) **precisa deixar de fora as funções de extensões** (pg_depend com deptype = 'e'; no Supabase pod",
   "junto": "",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): schema.sql apaga todas as funções.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): schema.sql apaga todas as funções.",
   "versao": "009x"
  },
  {
@@ -3091,7 +3091,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Consequência direta do AT6: sem isso, alguém registra algo e não entende por que o número não mudou. | Revisor: Já feito no rascunho da 009x (AT6). Nada a revisar. | Revisor: Já feito no rascunho da 009x (AT6). Nada a revisar.",
   "junto": "AT6",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada).",
+  "situacao": "Feito na 009x (publicada em 20/11/2026).",
   "feito": "009x",
   "versao": "009x"
  },
@@ -4011,7 +4011,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Reproduzido no banco teste_e2: o moderador cria 'Para a Mona' (sugerida só para a monitora) e a suporte cria uma tarefa aberta. Para a suporte: abertas_para_pegar = 1, mas o grupo 'Abertas' mostra só a tarefa que ela mesma criou (que não conta); a tarefa contada ela não vê nos primeiros 10 min (atividade_aberta_para_mim). Resultado: o menu Atividades e a aba Tarefas mostram '1' e a pessoa não acha nada para pegar. | Revisor: Reproduzido no teste_rev: com uma tarefa sugerida só para a monitora e outra criada pela própria suporte, a suporte recebe abertas_para_pegar = 1 e a lista dela mostra só a tarefa que ela criou (que não conta). O número que o usuário pediu na 009v aponta para algo que a pessoa não vê. Correção de uma linha no 009v.",
   "junto": "U6, U2",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): número de tarefas em aberto só com o que a pessoa vê.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): número de tarefas em aberto só com o que a pessoa vê.",
   "feito": "009x",
   "versao": "009x"
  },
@@ -4031,7 +4031,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Reproduzido: suporte aceita 'Aprovar 5 entregadores · LAGARTO', monitora entra junto. A tarefa aparece na Minha fila das duas (sou_participante), mas minhas_em_andamento = 1 para quem aceitou e 0 para quem entrou junto: o número do menu e da tela inicial não conta essa tarefa. verificar_tarefas avisa o atraso só a aceita_por. O CLAUDE.md já anota que placar e painel creditam só o primeiro; o número da fila e o aviso não estavam anotados. | Revisor: Reproduzido: suporte aceita 'Aprovar entregadores', monitora entra junto; minhas_em_andamento = 1 para a suporte e 0 para a monitora. verificar_tarefas também só avisa aceita_por. Trocar por participa(a) é pequeno.",
   "junto": "",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): quem entra junto conta a tarefa.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): quem entra junto conta a tarefa.",
   "feito": "009x",
   "versao": "009x"
  },
@@ -4051,7 +4051,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Reproduzido: Mona é responsável por LAGARTO e recebe uma tratativa; o moderador tira o módulo de bloqueios dela com salvar_membro. A tratativa continua com responsavel_email = Mona e a cidade continua com Mona como responsável; o moderador vê 'Mona Monitora' como dona, mas ela já não abre a tela de Tratativas. Só depois de remover o membro o FK zera o e-mail (e mesmo assim as atividades aceitas por ela seguem 'em andamento' para sempre, porque aceita_por é uuid sem FK). Trabalho parado sem ninguém perceber até o aviso de atraso de 32 h. | Revisor: Reproduzido: depois de salvar_membro tirar o módulo de bloqueios da Mona, a tratativa e a cidade continuam no e-mail dela, ela recebe 'Você não tem acesso ao módulo de bloqueios' e o moderador vê 'Mona Monitora' como dona. Ajuste: o conserto mínimo é chamar reatribuir_tarefas() e limpar cidades.responsavel_email dentro de salvar_membro/remover_membro (pequeno); a janela 'passar para…' fica para depois.",
   "junto": "",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): gatilho em membros reatribui cidades e tratativas.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): gatilho em membros reatribui cidades e tratativas.",
   "feito": "009x",
   "versao": "009x"
  },
@@ -4071,7 +4071,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Reproduzido: tratativa registrada por 'Suzana Suporte' e concluída. listar_tarefas_concluidas(p_busca 'Suzana') = 0 itens; 'Carlos' (entregador) = 1. Nas pendentes, a busca da tela acha por quem registrou e pelo responsável (buscaB), então a mesma busca funciona numa aba e não na outra. Como a lista que volta do banco já vem filtrada, l.length = 0 cai na linha 403 e a tela diz 'Nenhuma tratativa concluída ainda', como se não existisse nenhuma. | Revisor: Reproduzido: listar_tarefas_concluidas com busca 'Suzana' (quem registrou) devolve 0; com 'Carlos' (entregador) devolve 1. É da 009x, ainda não publicada: corrigir antes de publicar.",
   "junto": "AT4",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): busca por quem registrou e mensagem \"Nada com esse filtro\".",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): busca por quem registrou e mensagem \"Nada com esse filtro\".",
   "feito": "009x",
   "versao": "009x"
  },
@@ -4091,7 +4091,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Reproduzido: aprovação de cadastros com IDs '48291377' e 'abcdefgh' gerou 'Seu cadastro Jose Teste 48 (ID 48291377) foi aprovado…' com id_app nulo; com 'ab12cd34' o código sai e id_app é preenchido. O banco aceita IDs só de números ou só de letras (check '^[A-Za-z0-9]{4,40}$'). Depende de como são os IDs reais (não verifiquei). | Revisor: Reproduzido: IDs '48291377' e 'abcdefgh' deixam o código no aviso e id_app nulo; 'ab12cd34' funciona. Prioridade baixa porque os IDs reais vistos (ex.: 6aeff32c5ac2) misturam letras e números quase sempre; mas o conserto (avisar_decisao passar c.id_app) é pequeno e acaba com o adivinhar.",
   "junto": "U4, U7",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): id_app vem do link do cadastro.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): id_app vem do link do cadastro.",
   "feito": "009x",
   "versao": "009x"
  },
@@ -4111,7 +4111,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Reproduzido inserindo avisos: 'Mateus Lopes pediu ajuda: moto do entregador (QWE1A23) parada no posto' virou '…moto do entregador parada no posto' com id_app = 'qwe1a23'. aviso_sem_id('Ajuda: cliente com ID 4f9a2b no pedido') devolve '…cliente com sem nome no pedido'; 'Aviso geral de X: NATAL25' vira 'sem nome'. No pedido de ajuda o código costuma ser justamente a informação útil. | Revisor: Reproduzido: aviso_sem_id('… moto do entregador (QWE1A23) parada') tira a placa, e 'Aviso geral de X: NATAL25' vira 'Aviso geral de X: sem nome'. O gatilho muda texto escrito pela equipe em ajuda e aviso geral, justo onde o código é a informação. Limitar às categorias sobre entregador.",
   "junto": "U4",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): limpeza só em avisos sobre entregador.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): limpeza só em avisos sobre entregador.",
   "feito": "009x",
   "versao": "009x"
  },
@@ -4207,7 +4207,7 @@
   "veredito": "CONFIRMADO",
   "nota": "O comentário da 009x diz 'o redesenho é só da lista', mas App.carregar termina em App.render() (todas as seções) e dispara listar_cadastros('pendentes'), que chama historico_resumo por linha (SP-02), e resumo_e_avisos. Cada busca digitada vira 3 RPCs; o mesmo vale para o 'Ver mais' das tratativas e das atividades. | Revisor: Conferido: filtrarHist chama App.carregar (ativacao.js:259), que busca resumo_e_avisos, listar_cadastros('pendentes') e redesenha tudo (base.js:485-520). O A3-04 está marcado como feito no rascunho da 009x, mas só ganhou a espera de 300 ms; corrigir antes de publicar.",
   "junto": "A3-04, AT4, SP-02",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): busca e páginas redesenham só a lista.",
+  "situacao": "Feito na 009x (publicada em 20/11/2026): busca e páginas redesenham só a lista.",
   "feito": "009x",
   "versao": "009x"
  },
