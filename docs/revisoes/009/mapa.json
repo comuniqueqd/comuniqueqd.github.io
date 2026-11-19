@@ -14,7 +14,8 @@
   "onda": 2,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "js/base.js:441-444 só põe o foco no h2, e só quando o link foi recriado. Custa 1 clique por registro: é atrito, não defeito. O conserto (data-foco no trocar()) não pode tirar o foco do h2 em telas sem formulário, senão perde o anúncio para o leitor de tela. Junto com AP-16.",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -31,7 +32,8 @@
   "onda": 1,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Confere: busca.js:50 só trata Esc, e não há Ctrl+K. É funcionalidade nova, não defeito. É **o mesmo** que o M3 do a8.",
-  "junto": "M3"
+  "junto": "M3",
+  "versao": "009z"
  },
  {
   "ag": "a1",
@@ -48,7 +50,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -67,7 +70,8 @@
   "nota": "Agravante que o a1 não citou: registrar_adicional preenche nome e cidade pela ficha quando ficam em branco (dados_conhecidos). Então um ID trocado grava **o nome de outro entregador sem avisar**. É dinheiro: fica alta.",
   "junto": "",
   "feito": "009u",
-  "situacao": "Feito na 009u: ao digitar o ID, o adicional mostra nome e cidade da ficha (quem_e); sem ficha, pede o nome."
+  "situacao": "Feito na 009u: ao digitar o ID, o adicional mostra nome e cidade da ficha (quem_e); sem ficha, pede o nome.",
+  "versao": "009u"
  },
  {
   "ag": "a1",
@@ -84,7 +88,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -103,7 +108,8 @@
   "nota": "Os cartões de ajuda são desenhados só em #inicio-rapidos (inicio.js:57, agora.js:174). Fora dali só toca o som. A notificação do sistema (sons.js:70) só aparece com a aba escondida.",
   "junto": "",
   "feito": "decidido",
-  "situacao": "Decisão do usuário (19/11/2026): o pedido de ajuda continua só na tela inicial."
+  "situacao": "Decisão do usuário (19/11/2026): o pedido de ajuda continua só na tela inicial.",
+  "versao": "decidido"
  },
  {
   "ag": "a1",
@@ -120,7 +126,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -137,7 +144,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "011"
  },
  {
   "ag": "a1",
@@ -154,7 +162,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -171,7 +180,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -188,7 +198,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -205,7 +216,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a2",
@@ -224,7 +236,8 @@
   "nota": "Reproduzido: 16,3 s → 0,36 s, md5 igual. A correção restringe bapos aos aprovados há 30 dias ou menos, que é exatamente onde bloq_apos é usado (só em motivos), então é equivalente. Com o volume de hoje custa milissegundos: o risco é de crescimento. Pesa mais com o AT7: a extensão chama resumo",
   "junto": "",
   "feito": "009u",
-  "situacao": "Feito na 009u: CTE agregado (bapos); mesmo resultado, resumo da tela inicial em 91 ms com 4.000 bloqueios."
+  "situacao": "Feito na 009u: CTE agregado (bapos); mesmo resultado, resumo da tela inicial em 91 ms com 4.000 bloqueios.",
+  "versao": "009u"
  },
  {
   "ag": "a2",
@@ -243,7 +256,8 @@
   "nota": "Reproduzido: 6,6 s → 0,2 s. Só a aba Resumo das Análises chama, e as semanas fechadas ficam guardadas (analises.js:263). A semana atual roda 2 vezes na primeira abertura. O índice parcial é barato: fazer junto com o AT1.",
   "junto": "",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): Índice parcial bloqueios_gerou_bloqueio_idx."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): Índice parcial bloqueios_gerou_bloqueio_idx.",
+  "versao": "009x"
  },
  {
   "ag": "a2",
@@ -260,7 +274,8 @@
   "onda": 2,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Confere: os gatilhos marcar_mudanca_* estão em notificacoes, passagens_lidas, preferencias_aviso e seguindo. Mas os 6 avisos de um bloqueio nascem na **mesma transação** do bloqueio, que já mudaria o número de qualquer jeito. O que se ganha tirando os gatilhos é só \"marcar como lido\", pref",
-  "junto": "A3-01"
+  "junto": "A3-01",
+  "versao": "009z"
  },
  {
   "ag": "a2",
@@ -279,7 +294,8 @@
   "nota": "listar_tarefas e listar_atividades não têm limit. listar_cadastros('todos') também não: o limit que aparece é de uma subconsulta. Chamadas em ativacao.js:350, bloqueios.js:1000 e atividades.js:400. É **o mesmo** que o A3-03 (e parte do A3-10).",
   "junto": "A3-03",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): Histórico da ativação em páginas de 100 (listar_cadastros_pagina), tratativas concluídas de 100 em 100 (listar_tarefas_concluidas) e Atividades com as 50 concluídas mais recentes."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): Histórico da ativação em páginas de 100 (listar_cadastros_pagina), tratativas concluídas de 100 em 100 (listar_tarefas_concluidas) e Atividades com as 50 concluídas mais recentes.",
+  "versao": "009x"
  },
  {
   "ag": "a2",
@@ -296,7 +312,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009z"
  },
  {
   "ag": "a2",
@@ -315,7 +332,8 @@
   "nota": "",
   "junto": "",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): Análises guardam os números por 5 min (com 'Números de HH:MM · Atualizar')."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): Análises guardam os números por 5 min (com 'Números de HH:MM · Atualizar').",
+  "versao": "009x"
  },
  {
   "ag": "a2",
@@ -332,7 +350,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "ext"
  },
  {
   "ag": "a2",
@@ -349,7 +368,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009z"
  },
  {
   "ag": "a2",
@@ -366,7 +386,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a2",
@@ -383,7 +404,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a2",
@@ -400,7 +422,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a2",
@@ -417,7 +440,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a2",
@@ -434,7 +458,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a2",
@@ -451,7 +476,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a2",
@@ -468,7 +494,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a2",
@@ -485,7 +512,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a2",
@@ -502,7 +530,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a3",
@@ -519,7 +548,8 @@
   "onda": 2,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "base.js:561 chama App.render() mesmo com o número igual. Isso só acontece com a pessoa mexendo no mouse ou teclado (mexeuEm) e só refaz o módulo atual. Hoje, com poucos dados, custa pouco. Com AT4/A3-03 resolvidos, o custo cai junto. Precisa de algum redesenho para os textos \"há X min\".",
-  "junto": "AT3"
+  "junto": "AT3",
+  "versao": "009z"
  },
  {
   "ag": "a3",
@@ -536,7 +566,8 @@
   "onda": 2,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Confere: .protege-foco protege só INPUT, TEXTAREA e SELECT (base.js:576). Afeta quem usa teclado ou leitor de tela, e o A3-01 resolve a maior parte. É um problema **diferente** do A1, embora mexa no mesmo trocar()/render().",
-  "junto": ""
+  "junto": "",
+  "versao": "009z"
  },
  {
   "ag": "a3",
@@ -555,7 +586,8 @@
   "nota": "É o mesmo que o AT4: juntar.",
   "junto": "AT4",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): Junto com o AT4."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): Junto com o AT4.",
+  "versao": "009x"
  },
  {
   "ag": "a3",
@@ -574,7 +606,8 @@
   "nota": "ativacao.js:17 (render = App.render) e :336. O campo está fora de .protege-foco de propósito (dentro dele o filtro não funcionaria enquanto se digita). Debounce + render só da seção. Cresce junto com o AT4.",
   "junto": "",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): Filtro do Histórico espera 300 ms e busca no banco."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): Filtro do Histórico espera 300 ms e busca no banco.",
+  "versao": "009x"
  },
  {
   "ag": "a3",
@@ -593,7 +626,8 @@
   "nota": "",
   "junto": "",
   "feito": "009x",
-  "situacao": "Feito no rascunho da 009x (ainda não publicada): Pendentes do Financeiro já carregam numa linha só; bloco da semana dos parceiros reserva o lugar."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): Pendentes do Financeiro já carregam numa linha só; bloco da semana dos parceiros reserva o lugar.",
+  "versao": "009x"
  },
  {
   "ag": "a3",
@@ -610,7 +644,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009z"
  },
  {
   "ag": "a3",
@@ -627,7 +662,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009z"
  },
  {
   "ag": "a3",
@@ -644,7 +680,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009z"
  },
  {
   "ag": "a3",
@@ -661,7 +698,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a3",
@@ -678,7 +716,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009z"
  },
  {
   "ag": "a3",
@@ -695,7 +734,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a3",
@@ -712,7 +752,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a4",
@@ -729,7 +770,8 @@
   "onda": 1,
   "veredito": "CONFIRMADO",
   "nota": "O print cortes2/claro-320-ativacao-pendentes.png (cópia reduzida em a9/ap01.png) mostra cerca de 470 px de menu antes do conteúdo.",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -746,7 +788,8 @@
   "onda": 2,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "O fato confere: há border-left em vários cartões. A prioridade vem de um detector de \"cara de IA\", não de um defeito, e o recomeço já foi decidido pelo dono (Mesa + Caderno). Entra no recomeço; não é item à parte.",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -763,7 +806,8 @@
   "onda": 1,
   "veredito": "CONFIRMADO",
   "nota": "O print confirma: nome 2×, ID 2×. Em 320 px dá cerca de 650 px por cartão.",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -782,7 +826,8 @@
   "nota": "Reproduzido em ap04.sql: enviar_cadastro('novoid9999', … 'Fulano Novo De Teste') → o gatilho cadastro_cria_ficha_ins cria a ficha → listar_cadastros('pendentes') traz historico com nome → o cartão diz \"Este ID já existe no Comunique\". Subo para alta porque o aviso existe para pegar ID re",
   "junto": "",
   "feito": "009u",
-  "situacao": "Feito na 009u: o quadrinho some quando o único registro do ID é o próprio cadastro."
+  "situacao": "Feito na 009u: o quadrinho some quando o único registro do ID é o próprio cadastro.",
+  "versao": "009u"
  },
  {
   "ag": "a4",
@@ -799,7 +844,8 @@
   "onda": 1,
   "veredito": "CONFIRMADO",
   "nota": "Recalculei: --line/surface 1,34 (claro) e 1,30 (escuro); surface/bg 1,07; --marca/bg no escuro 1,04 (o cabeçalho usa --marca, estilo.css:813).",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -816,7 +862,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -833,7 +880,8 @@
   "onda": 2,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "É consistência, não defeito. Entra no recomeço e no DESIGN.md (PR-07).",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -850,7 +898,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -867,7 +916,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -884,7 +934,8 @@
   "onda": 2,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Confere. Hoje são **23** códigos de versão na faixa, não 22. É **o mesmo** que o A5 (a1) e o M8 (a8): juntar.",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -901,7 +952,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -918,7 +970,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -935,7 +988,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -952,7 +1006,8 @@
   "onda": 2,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Ver o detalhe abaixo da tabela.",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -969,7 +1024,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -986,7 +1042,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -1003,7 +1060,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -1020,7 +1078,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -1037,7 +1096,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -1054,7 +1114,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -1071,7 +1132,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -1088,7 +1150,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -1105,7 +1168,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a4",
@@ -1122,7 +1186,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "009y"
  },
  {
   "ag": "a5",
@@ -1139,7 +1204,8 @@
   "onda": 2,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Reproduzido: \"1 cadastro aprovado, progresso = 2\". Em aprovacoes_de basta *algum* evento aprovado de quem pegou + o cadastro aprovado agora. Só acontece com aprovar → desfazer → outra pessoa aprova, o que é raro, e mexe só em tarefa e meta. O conserto proposto (último evento por cadastro, ou de",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a5",
@@ -1156,7 +1222,8 @@
   "onda": 2,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Reproduzido: no_prazo = falso, pausa_seg = 10800. Mexe só na estatística (% no prazo do Painel e do Placar, que só o admin vê). O aviso de atraso não muda, porque a tarefa já foi concluída. O conserto de 1 linha no concluir_atividade está certo.",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a5",
@@ -1173,7 +1240,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": "A7-05"
+  "junto": "A7-05",
+  "versao": "009z"
  },
  {
   "ag": "a5",
@@ -1190,7 +1258,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a5",
@@ -1207,7 +1276,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a5",
@@ -1224,7 +1294,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a5",
@@ -1241,7 +1312,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "011"
  },
  {
   "ag": "a6",
@@ -1260,7 +1332,8 @@
   "nota": "Ver o detalhe abaixo da tabela.",
   "junto": "",
   "situacao": "Usuário rodou a 009u e desligou os provedores (19/11/2026). Falta só a trava no banco (F1).",
-  "feito": "decidido"
+  "feito": "decidido",
+  "versao": "decidido"
  },
  {
   "ag": "a6",
@@ -1277,7 +1350,8 @@
   "onda": 1,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "É defesa extra: o próprio a6 achou 0 innerHTML, 0 eval e 1 href filtrado. require-trusted-types-for com o GIS de verdade não foi testado (o CLAUDE.md já pede isso). Fazer em branch com o login real antes da main.",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -1296,7 +1370,8 @@
   "nota": "Confere: só existe o gatilho aaa_cadastro_sem_cpf (coluna cadastros.cpf), e nenhuma função ou gatilho limpa texto. O **telefone** de \"Fazer contato\" foi decisão do dono (\"pode guardar, ajustar depois\", no CLAUDE.md), então não é defeito novo. O CPF contradiz a política publicada: fica alta.",
   "junto": "",
   "feito": "009u",
-  "situacao": "Feito na 009u: gatilho aab_sem_cpf troca CPF por \"[CPF removido]\" em todo texto livre (telefone fica, decisão do usuário)."
+  "situacao": "Feito na 009u: gatilho aab_sem_cpf troca CPF por \"[CPF removido]\" em todo texto livre (telefone fica, decisão do usuário).",
+  "versao": "009u"
  },
  {
   "ag": "a6",
@@ -1313,7 +1388,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "Base legal: LGPD arts. 15 e 16 (fim do tratamento e eliminação; guardar só por obrigação legal ou anonimizado).",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -1330,7 +1406,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -1347,7 +1424,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -1364,7 +1442,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -1381,7 +1460,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -1398,7 +1478,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -1415,7 +1496,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -1432,7 +1514,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a7",
@@ -1449,7 +1532,10 @@
   "onda": 1,
   "veredito": "CONFIRMADO",
   "nota": "Conferi 4 de 10: aguardar_terceiro, json_atividade, previa_bloqueio e enviar_cadastro não estão em nenhum supabase/*.sql, nem ignorando espaços. Como controle, listar_cadastros e resumo_e_avisos estão. É o mesmo assunto do AT10 e do S10 (remendos via pg_get_functiondef).",
-  "junto": "A7-02"
+  "junto": "A7-02",
+  "feito": "009x",
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): supabase/funcoes/ com 12 funções e teste.",
+  "versao": "009x"
  },
  {
   "ag": "a7",
@@ -1466,7 +1552,8 @@
   "onda": 2,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "O plano é bom, com dois furos: (1) pg_dump --schema-only não leva as **linhas semeadas** (infracoes, tipos_tarefa, modelos_mensagem, parametros_*, cidades) e leva os esboços de auth/papéis do supabase-local.sql, que não podem ir para o \"atual\"; (2) a comparação de catálogo precisa incluir esse",
-  "junto": ""
+  "junto": "",
+  "versao": "009z"
  },
  {
   "ag": "a7",
@@ -1483,7 +1570,10 @@
   "onda": 2,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Reproduzido: test:financeiro dá 8/11 num banco completo (\"salvar_bairro … is not unique\"). Só afeta testes e desenvolvimento, não a produção. O conserto (apagar toda função de public com cascade) **precisa deixar de fora as funções de extensões** (pg_depend com deptype = 'e'; no Supabase pod",
-  "junto": ""
+  "junto": "",
+  "feito": "009x",
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): schema.sql apaga todas as funções.",
+  "versao": "009x"
  },
  {
   "ag": "a7",
@@ -1500,7 +1590,8 @@
   "onda": 1,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Rodei o tarefas.test adaptado: 6/12. Das falhas, \"Ativar\" → \"Aprovar\" (009e), a mensagem do aguardar_terceiro e \"o progresso conta sozinho\" (009e recusa avancar_tarefa) são **mudanças de regra esperadas**. \"Só dá para concluir uma atividade aceita\", o checklist e a @menção parecem **cascata** ",
-  "junto": ""
+  "junto": "",
+  "versao": "009z"
  },
  {
   "ag": "a7",
@@ -1517,7 +1608,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": "A5-3"
+  "junto": "A5-3",
+  "versao": "009z"
  },
  {
   "ag": "a7",
@@ -1534,7 +1626,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "ext"
  },
  {
   "ag": "a7",
@@ -1551,7 +1644,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "011"
  },
  {
   "ag": "a7",
@@ -1568,7 +1662,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "ext"
  },
  {
   "ag": "a7",
@@ -1585,7 +1680,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a7",
@@ -1602,7 +1698,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "009z"
  },
  {
   "ag": "a7",
@@ -1619,7 +1716,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "ext"
  },
  {
   "ag": "a7",
@@ -1636,7 +1734,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a8",
@@ -1653,7 +1752,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a8",
@@ -1670,7 +1770,8 @@
   "onda": 1,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "009z"
  },
  {
   "ag": "a8",
@@ -1687,7 +1788,8 @@
   "onda": 1,
   "veredito": "",
   "nota": "",
-  "junto": "A2"
+  "junto": "A2",
+  "versao": "009z"
  },
  {
   "ag": "a8",
@@ -1704,7 +1806,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a8",
@@ -1721,7 +1824,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a8",
@@ -1738,7 +1842,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a8",
@@ -1755,7 +1860,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a8",
@@ -1772,7 +1878,8 @@
   "onda": 2,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a8",
@@ -1789,7 +1896,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a8",
@@ -1806,7 +1914,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "ext"
  },
  {
   "ag": "a8",
@@ -1823,7 +1932,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a8",
@@ -1840,7 +1950,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a8",
@@ -1857,7 +1968,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "011"
  },
  {
   "ag": "a8",
@@ -1874,7 +1986,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a8",
@@ -1891,7 +2004,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a1",
@@ -1908,7 +2022,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -1925,7 +2040,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -1942,7 +2058,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -1959,7 +2076,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -1976,7 +2094,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -1993,7 +2112,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -2010,7 +2130,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a1",
@@ -2027,7 +2148,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a3",
@@ -2044,7 +2166,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a3",
@@ -2061,7 +2184,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a3",
@@ -2078,7 +2202,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a3",
@@ -2095,7 +2220,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a3",
@@ -2112,7 +2238,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a3",
@@ -2129,7 +2256,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a3",
@@ -2146,7 +2274,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a3",
@@ -2163,7 +2292,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a3",
@@ -2180,7 +2310,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a5",
@@ -2197,7 +2328,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a5",
@@ -2214,7 +2346,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a5",
@@ -2231,7 +2364,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a5",
@@ -2248,7 +2382,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a5",
@@ -2265,7 +2400,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a5",
@@ -2282,7 +2418,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a5",
@@ -2299,7 +2436,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "010"
  },
  {
   "ag": "a6",
@@ -2316,7 +2454,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -2333,7 +2472,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -2350,7 +2490,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -2367,7 +2508,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -2384,7 +2526,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -2401,7 +2544,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -2418,7 +2562,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -2435,7 +2580,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a6",
@@ -2452,7 +2598,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "012"
  },
  {
   "ag": "a7",
@@ -2469,7 +2616,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "ext"
  },
  {
   "ag": "a7",
@@ -2486,7 +2634,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a7",
@@ -2503,7 +2652,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a7",
@@ -2520,7 +2670,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "ext"
  },
  {
   "ag": "a7",
@@ -2537,7 +2688,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "ext"
  },
  {
   "ag": "a7",
@@ -2554,7 +2706,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "a7",
@@ -2571,7 +2724,8 @@
   "onda": 3,
   "veredito": "",
   "nota": "",
-  "junto": ""
+  "junto": "",
+  "versao": "depois"
  },
  {
   "ag": "leis",
@@ -2590,7 +2744,8 @@
   "sugestao": "Pedido de revisão no bloqueio: quem pediu (canal), quando, quem revisou (pessoa), decisão e motivo, gravado em eventos_bloqueio. A mensagem de restrição passa a dizer como pedir revisão. Os critérios já existem (infracoes.explicacao); garantir que o texto enviado traga a regra aplicada. Confirmar com o jurídico da empresa se o registro por uma pessoa já descaracteriza a decisão 'unicamente automatizada'.",
   "nota": "Fonte: Lei 13.709/2018, art. 20 e § 1º (texto compilado). Leitura técnica, não parecer jurídico.",
   "feito": "decidido",
-  "situacao": "Decisão do usuário (19/11/2026): conferir a restrição não é responsabilidade do Comunique. O app só registra como a equipe age, agiu ou agirá; nada ali é oficial."
+  "situacao": "Decisão do usuário (19/11/2026): conferir a restrição não é responsabilidade do Comunique. O app só registra como a equipe age, agiu ou agirá; nada ali é oficial.",
+  "versao": "decidido"
  },
  {
   "ag": "leis",
@@ -2607,7 +2762,8 @@
   "onda": 2,
   "onde": "O controlador e o operador devem manter registro das operações de tratamento, em especial quando a base é o legítimo interesse (provável no Comunique: gestão da operação com entregadores).",
   "sugestao": "Um documento curto (docs/privacidade/registro.md): que dados (ID, nome, cidade, comentários, valores), para quê, base legal, quem acessa por papel, onde ficam (Supabase, região), quanto tempo ficam (liga com S4) e quem é o controlador (a empresa). Serve também para responder pedidos de titulares (art. 18) e para a página de privacidade (S5).",
-  "nota": "Fonte: Lei 13.709/2018, arts. 37 e 18."
+  "nota": "Fonte: Lei 13.709/2018, arts. 37 e 18.",
+  "versao": "012"
  },
  {
   "ag": "leis",
@@ -2624,7 +2780,8 @@
   "onda": 2,
   "onde": "Em incidente que possa causar risco ou dano relevante, o controlador comunica a autoridade e os titulares, com natureza dos dados, titulares afetados, medidas de segurança, riscos e o que será feito (art. 48, § 1º). Não há roteiro escrito nem backup combinado.",
   "sugestao": "Roteiro de uma página: como perceber (acesso estranho, dado vazado), quem avisar na empresa e em quanto tempo, como trocar chaves no Supabase, como restaurar backup (liga com o backup pendente) e o modelo de comunicado. Ensaiar uma vez.",
-  "nota": "Fonte: Lei 13.709/2018, arts. 46 e 48."
+  "nota": "Fonte: Lei 13.709/2018, arts. 46 e 48.",
+  "versao": "012"
  },
  {
   "ag": "leis",
@@ -2641,7 +2798,8 @@
   "onda": 2,
   "onde": "O art. 41 pede a identidade e o contato do encarregado divulgados publicamente. A Lei 15.352/2026 transformou a ANPD em Agência Nacional de Proteção de Dados.",
   "sugestao": "Na revisão da privacidade (S5): indicar o encarregado da empresa (o controlador é a empresa, não o Comunique), o canal para pedidos de titulares e escrever 'Agência Nacional de Proteção de Dados (ANPD)'.",
-  "nota": "Fontes: Lei 13.709/2018, art. 41; Lei 15.352/2026."
+  "nota": "Fontes: Lei 13.709/2018, art. 41; Lei 15.352/2026.",
+  "versao": "012"
  },
  {
   "ag": "pedido",
@@ -2660,7 +2818,8 @@
   "nota": "",
   "junto": "",
   "feito": "009u",
-  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026)."
+  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026).",
+  "versao": "009u"
  },
  {
   "ag": "pedido",
@@ -2679,7 +2838,8 @@
   "nota": "",
   "junto": "",
   "feito": "009u",
-  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026)."
+  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026).",
+  "versao": "009u"
  },
  {
   "ag": "pedido",
@@ -2698,7 +2858,8 @@
   "nota": "",
   "junto": "",
   "feito": "009u",
-  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026)."
+  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026).",
+  "versao": "009u"
  },
  {
   "ag": "pedido",
@@ -2717,7 +2878,8 @@
   "nota": "",
   "junto": "",
   "feito": "009u",
-  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026)."
+  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026).",
+  "versao": "009u"
  },
  {
   "ag": "pedido",
@@ -2736,7 +2898,8 @@
   "nota": "",
   "junto": "",
   "feito": "009u",
-  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026)."
+  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026).",
+  "versao": "009u"
  },
  {
   "ag": "claude",
@@ -2754,7 +2917,8 @@
   "veredito": "",
   "nota": "",
   "junto": "",
-  "situacao": "Ideia para o futuro (19/11/2026), ainda não aprovada."
+  "situacao": "Ideia para o futuro (19/11/2026), ainda não aprovada.",
+  "versao": "012"
  },
  {
   "ag": "claude",
@@ -2772,7 +2936,8 @@
   "veredito": "",
   "nota": "",
   "junto": "",
-  "situacao": "Ideia para o futuro (19/11/2026), ainda não aprovada."
+  "situacao": "Ideia para o futuro (19/11/2026), ainda não aprovada.",
+  "versao": "012"
  },
  {
   "ag": "claude",
@@ -2790,7 +2955,8 @@
   "veredito": "",
   "nota": "",
   "junto": "",
-  "situacao": "Adiado pelo usuário em 19/11/2026 (fica para depois da 009x)."
+  "situacao": "Adiado pelo usuário em 19/11/2026 (fica para depois da 009x).",
+  "versao": "012"
  },
  {
   "ag": "claude",
@@ -2808,7 +2974,8 @@
   "veredito": "",
   "nota": "",
   "junto": "",
-  "situacao": "Ideia para o futuro (19/11/2026), ainda não aprovada."
+  "situacao": "Ideia para o futuro (19/11/2026), ainda não aprovada.",
+  "versao": "009z"
  },
  {
   "ag": "claude",
@@ -2826,7 +2993,8 @@
   "veredito": "",
   "nota": "",
   "junto": "",
-  "situacao": "Ideia para o futuro (19/11/2026), ainda não aprovada."
+  "situacao": "Ideia para o futuro (19/11/2026), ainda não aprovada.",
+  "versao": "depois"
  },
  {
   "ag": "pedido",
@@ -2845,7 +3013,8 @@
   "nota": "",
   "junto": "",
   "feito": "009v",
-  "situacao": "Feito na 009v (pedido do usuário em 19/11/2026)."
+  "situacao": "Feito na 009v (pedido do usuário em 19/11/2026).",
+  "versao": "009v"
  },
  {
   "ag": "pedido",
@@ -2864,7 +3033,8 @@
   "nota": "",
   "junto": "",
   "feito": "009v",
-  "situacao": "Feito na 009v (pedido do usuário em 19/11/2026)."
+  "situacao": "Feito na 009v (pedido do usuário em 19/11/2026).",
+  "versao": "009v"
  },
  {
   "ag": "pedido",
@@ -2883,7 +3053,8 @@
   "nota": "",
   "junto": "",
   "feito": "009w",
-  "situacao": "Feito na 009w (pedido do usuário em 19/11/2026)."
+  "situacao": "Feito na 009w (pedido do usuário em 19/11/2026).",
+  "versao": "009w"
  },
  {
   "ag": "claude",
@@ -2901,7 +3072,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Depois de registrar uma restrição, a pessoa vai ao Quero Log aplicar e precisa procurar o entregador de novo. Ideia nascida ao reler OP-2 e o leitor da extensão. | Revisor: Conferido: o leitor da extensão já usa admin.querolog.io/entregadores/<id> (leitor.js:46). Um link na ficha e no resultado do bloqueio é pequeno e corta redigitação; confirmar antes que o ID é o mesmo. | Revisor: Conferido: o leitor da extensão já usa admin.querolog.io/entregadores/<id> (leitor.js:46). Um link na ficha e no resultado do bloqueio é pequeno e corta redigitação; confirmar antes que o ID é o mesmo.",
   "junto": "OP-2, MK-1",
-  "situacao": "Ideia de 20/11/2026, ainda não aprovada."
+  "situacao": "Ideia de 20/11/2026, ainda não aprovada.",
+  "versao": "009z"
  },
  {
   "ag": "claude",
@@ -2920,7 +3092,8 @@
   "nota": "Consequência direta do AT6: sem isso, alguém registra algo e não entende por que o número não mudou. | Revisor: Já feito no rascunho da 009x (AT6). Nada a revisar. | Revisor: Já feito no rascunho da 009x (AT6). Nada a revisar.",
   "junto": "AT6",
   "situacao": "Feito no rascunho da 009x (ainda não publicada).",
-  "feito": "009x"
+  "feito": "009x",
+  "versao": "009x"
  },
  {
   "ag": "claude",
@@ -2938,7 +3111,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Com as listas em páginas (009x), quem abre um cadastro na página 4, vai à ficha e volta cai de novo na página 1. | Revisor: Útil para quem volta ao Histórico, mas o caminho por sessionStorage é simples. Baixa. | Revisor: Útil para quem volta ao Histórico, mas o caminho por sessionStorage é simples. Baixa.",
   "junto": "AT4",
-  "situacao": "Ideia de 20/11/2026, ainda não aprovada."
+  "situacao": "Ideia de 20/11/2026, ainda não aprovada.",
+  "versao": "010"
  },
  {
   "ag": "claude",
@@ -2956,7 +3130,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Hoje a busca procura cadastros, fichas, comentários e avisos. Pedido de ajuda e acordos chegam pelo nome do estabelecimento, que a busca não conhece. | Revisor: Conferido: busca_rapida (008) procura em fichas, cadastros, comentários e avisos, não em parceiros, acordos ou tarefas. Começar por parceiros e acordos, como sugerido; junto de LG-5. | Revisor: Conferido: busca_rapida (008) procura em fichas, cadastros, comentários e avisos, não em parceiros, acordos ou tarefas. Começar por parceiros e acordos, como sugerido; junto de LG-5.",
   "junto": "A2, M3",
-  "situacao": "Ideia de 20/11/2026, ainda não aprovada."
+  "situacao": "Ideia de 20/11/2026, ainda não aprovada.",
+  "versao": "010"
  },
  {
   "ag": "claude",
@@ -2974,7 +3149,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Com o id_app agora preenchido em todos os avisos (009u/009v), agrupar ficou possível. | Revisor: Medir primeiro, como o próprio item diz. Ataca o mesmo ruído que AN-11, e de forma mais direta. | Revisor: Medir primeiro, como o próprio item diz. Ataca o mesmo ruído que AN-11, e de forma mais direta.",
   "junto": "U4, U7",
-  "situacao": "Ideia de 20/11/2026, ainda não aprovada."
+  "situacao": "Ideia de 20/11/2026, ainda não aprovada.",
+  "versao": "010"
  },
  {
   "ag": "claude",
@@ -2992,7 +3168,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Pilar 1: a comunicação vira registro e o registro volta para quem precisa. Hoje a passagem de turno depende de alguém escrever. | Revisor: Já existe resumo_do_dia no topo da tira do sino (008d) e a passagem de turno; antes de um terceiro resumo, ver se basta mostrar o resumo_do_dia na tela inicial ao voltar. | Revisor: Já existe resumo_do_dia no topo da tira do sino (008d) e a passagem de turno; antes de um terceiro resumo, ver se basta mostrar o resumo_do_dia na tela inicial ao voltar.",
   "junto": "MK-6",
-  "situacao": "Ideia de 20/11/2026, ainda não aprovada."
+  "situacao": "Ideia de 20/11/2026, ainda não aprovada.",
+  "versao": "010"
  },
  {
   "ag": "claude",
@@ -3010,7 +3187,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Nasceu da paginação da 009x: com só as 50 mais recentes na tela, achar uma tarefa antiga sem filtro ficou mais difícil. | Revisor: Filtros nas concluídas, no banco. Vai junto de PB-9 (total certo no título). | Revisor: Filtros nas concluídas, no banco. Vai junto de PB-9 (total certo no título).",
   "junto": "AT4",
-  "situacao": "Ideia de 20/11/2026, ainda não aprovada."
+  "situacao": "Ideia de 20/11/2026, ainda não aprovada.",
+  "versao": "010"
  },
  {
   "ag": "e1",
@@ -3028,7 +3206,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Hoje a decisão termina num toast e a pessoa (muitas vezes o suporte que enviou) escreve à mão no Crisp/Blip o que faltou. A lista de motivos de reprovação é fechada, então cada motivo tem uma resposta padrão natural. Quem usa: quem decide e quem enviou o cadastro. | Revisor: Conferido: decidir() (js/ativacao.js:103) termina num toast e não há nenhum modelo de ativação em modelos_mensagem (só grupos bloqueio, entregador, cidade, parceiro). Os motivos de reprovação são uma lista curta (schema.sql:138), então cada um tem resposta padrão. Fluxo diário; o esforço real inclui o usuário aprovar 7 textos novos.",
   "junto": "MK-2",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "009z"
  },
  {
   "ag": "e1",
@@ -3046,7 +3225,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "O passo de fora (aplicar no Quero Log) é o que mais pode ser esquecido e hoje não deixa rastro: o Comunique diz 'bloqueado' mesmo se o entregador continua rodando. O padrão 'pendente até marcar' já foi aprovado pelo usuário no Financeiro (009b). | Revisor: Fato certo: o resultado só diz 'Aplique X de bloqueio' e nada registra que foi aplicado. Mas é um clique a mais por bloqueio, contra o pilar 'menos trabalho'; o próprio resultado diz 'O sistema retira sozinho nesse horário' (bloqueios.js:559), então só a aplicação precisa de rastro. Testar antes com a equipe se esquecer de aplicar acontece de verdade.",
   "junto": "OP-2",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "009z"
  },
  {
   "ag": "e1",
@@ -3064,7 +3244,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "O app já calcula 'saem_hoje' e 'saem_hoje_por_hora', mas só como gráfico nas Análises. A liberação no fim do prazo é o momento natural de reengajar o entregador e hoje não tem mensagem. Dúvida aberta: o Quero Log libera sozinho no fim do prazo? | Revisor: O texto do resultado (bloqueios.js:544 e 559) já diz que o sistema retira sozinho no fim do prazo, o que responde a dúvida do próprio item: o 'Liberei no Quero Log' não é necessário. Sobra o que vale: um modelo 'fim da restrição' e o bloco 'saem hoje' em Bloqueados agora.",
   "junto": "NF-2",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "010"
  },
  {
   "ag": "e1",
@@ -3082,7 +3263,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Hoje uma tratativa em que o entregador não atende fica 'atrasada' e acusa a pessoa, sem mostrar o esforço feito (pilar 1). Inspiração: 'Send & Snooze' do Front, que reabre a conversa só se o outro não respondeu (getmacha.com/blog/front-snooze-explained; community.front.com/workflows-discussion-47/rule-to-automatically-follow-up-when-there-has-been-no-response-to-an-update-2251). | Revisor: Conferido: a caixa da tratativa só tem a nota e 'Confirmar' (bloqueios.js:231-244); tentativa sem resposta não deixa rastro e a tarefa só aparece como atrasada. Mostra o esforço (pilar 1) e casa com AN-10 (resultado da tratativa em lista): fazer os dois juntos.",
   "junto": "MK-2, MK-6, A5-4",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "010"
  },
  {
   "ag": "e1",
@@ -3100,7 +3282,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Não existe prazo nem aviso para aguardando_contato (nenhuma referência de intervalo nas migrações). Esses cadastros somam no contador de Pendentes do suporte (ativacao.js:407) e viram ruído permanente. | Revisor: Parte do fato está errada: o cartão já mostra 'aguardando contato há X' com destaque de velho (ativacao.js:64). O que falta é a ação de um clique ('Encerrar: sem retorno', em lote), que depende de NF-1 para a mensagem de cobrança. AN-12 mostra o mesmo por cidade.",
   "junto": "NF-1, M7",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "010"
  },
  {
   "ag": "e1",
@@ -3118,7 +3301,8 @@
   "veredito": "CONFIRMADO",
   "nota": "O texto já foi escrito e aprovado (com aviso de PDF e áudio, 009c2), mas fica escondido em Ferramentas → Mensagens; a pessoa precisa trocar de tela e redigitar o nome do estabelecimento que acabou de digitar. | Revisor: Conferido: registrar_parceiro termina num toast (parceiros.js:27-32) e o modelo parceiro_ativacao existe no banco. É uma linha de código. Fica este id; LG-2 é a mesma proposta.",
   "junto": "MK-2",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e1",
@@ -3136,7 +3320,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Hoje o acordo só aparece quando já venceu e é de todos, então de ninguém. Combinado que ninguém lembra é exatamente o caso do pilar 1. Ligar o acordo ao cadastro de parceiros (escolher da lista) evita estabelecimento escrito de dois jeitos. | Revisor: Conferido: acordos só aparecem depois de vencidos, para todos, e não há verificar_acordos nem aviso na véspera em nenhuma migração. Fica este id (mais completo: véspera, dono e 'Renovar'); LG-4 é a mesma coisa.",
   "junto": "",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e1",
@@ -3154,7 +3339,8 @@
   "veredito": "CONFIRMADO",
   "nota": "A tela Atenção identifica quem está a uma leve do limite, mas não leva a nenhuma ação; quem quer agir abre a ficha, depois Atividades, depois Ferramentas. Ligar 'atenção + de olho + tarefa + mensagem' transforma o alerta em trabalho registrado e medido. | Revisor: Conferido: renderAtencao (bloqueios.js:981-995) só lista, sem ação. O 'De olho' na linha é barato; o 'Orientar' com mensagem nova depende de texto aprovado pelo usuário. Junto de OP-1 e LG-8.",
   "junto": "OP-1",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "010"
  },
  {
   "ag": "e1",
@@ -3172,7 +3358,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "No atendimento é comum prometer 'te dou retorno amanhã'; hoje isso fica na memória ou no Crisp. É a forma mais leve de transformar a promessa em tarefa sem preencher formulário (pilar 1). Diferente de MK-6 (adiar algo que já existe): aqui nasce o lembrete a partir da conversa. | Revisor: comentar_entregador não tem data, e o caso 'te dou retorno amanhã' é real. Mas é quase o MK-6 (adiar/lembrar) aplicado à ficha; propor como a primeira entrega do MK-6, e baixar para média (coluna nova + rotina + item novo na Minha fila não é pequeno).",
   "junto": "MK-6, MK-1",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "009z"
  },
  {
   "ag": "e1",
@@ -3191,7 +3378,8 @@
   "nota": "A conversa que precisa de outra pessoa hoje é repassada por mensagem solta (WhatsApp, voz). A extensão já resolve bloqueio, adicional e ajuda no painel; falta o caso mais comum de suporte, 'isso precisa de alguém'. O link da conversa evita redigitar o contexto. | Revisor: Mesma ideia de LG-13 (nova tarefa a partir do painel da extensão). O primeiro passo está errado: a lista PERMITIDAS do sw.js não é mais usada desde a 1.2 (o painel chama Api.rpc direto; ver S9). Guardar daqui só o 'link da conversa no campo de detalhes'.",
   "junto": "MK-1",
   "situacao": "Revisor do contra: duplicado de lg-13. Mesma ideia de LG-13 (nova tarefa a partir do painel da extensão). O primeiro passo está errado: a lista PERMITIDAS do sw.js não é mais usada desde a 1.2 (o painel chama Api.rpc direto; ver S9). Guardar daqui só o 'link da conversa no campo de detalhes'.",
-  "feito": "decidido"
+  "feito": "decidido",
+  "versao": "decidido"
  },
  {
   "ag": "e1",
@@ -3209,7 +3397,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Hoje a tarefa diz o problema mas não ajuda a resolver: a pessoa procura os contatos em outro lugar e escreve a mensagem do zero. O Comunique não sabe quem está online (e não deve tentar, ver MK-5), mas sabe quem pode trabalhar. | Revisor: A ficha (tabela entregadores) não guarda telefone nem se a pessoa está rodando: a lista de 'quem chamar' não dá para chamar ninguém sem ir a outro sistema. O esforço está subestimado. O que vale e é pequeno: o cartão de Procurar entregador abrir o modelo engajamento_cidade, que já existe.",
   "junto": "MK-5",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "010"
  },
  {
   "ag": "e1",
@@ -3228,7 +3417,8 @@
   "nota": "As leves são registradas em série e o aviso ao entregador é o que dá sentido a elas (avisar antes de punir). Verificar no navegador se o botão já aparece para leves: pela leitura de bloqueios.js:490 o resultado da leve não mostra a mensagem como ação principal. | Revisor: Já existe: o resultado da leve tem 'Gerar mensagem' com a contagem de leves (bloqueios.js:552) e 'Registrar outra' devolve o foco ao ID (bloqueios.js:553). O próprio autor pediu para conferir; conferido, não há o que fazer.",
   "junto": "OP-2, P8",
   "situacao": "Derrubado pelo revisor do contra. Já existe: o resultado da leve tem 'Gerar mensagem' com a contagem de leves (bloqueios.js:552) e 'Registrar outra' devolve o foco ao ID (bloqueios.js:553). O próprio autor pediu para conferir; conferido, não há o que fazer.",
-  "feito": "decidido"
+  "feito": "decidido",
+  "versao": "decidido"
  },
  {
   "ag": "e3",
@@ -3246,7 +3436,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Os dados já existem (tarefas.criada_em/concluida_em/status + bloqueios por lower(id_app)). A eficácia de hoje só olha o tamanho da punição, nunca o contato. Consulta provada no banco teste_e3 com 300 bloqueios fictícios: 4 ms, usa o índice bloqueios_id_app. Com poucos casos a diferença pode ser ruído: mostrar só com 30+ bloqueios em cada grupo. | Revisor: Os dados existem, mas só bloqueios de 10 h ou mais têm tratativa, e as infrações mais graves é que recebem tratativa: comparar 'no prazo × fora' mistura gravidade com contato. Com o volume de hoje os grupos não chegam a 30 tão cedo. Fazer depois de AN-10, que dá o resultado do contato.",
   "junto": "AN-10",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e3",
@@ -3264,7 +3455,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Pergunta do pilar 3 ('quais cidades perdem entregador logo depois de ativar'). LIMITE: o Comunique não guarda se o entregador continua rodando (corridas, último acesso); 'perder' só pode ser medido por encerramento ou restrição. Quem sai sem infração é invisível. Custo: um lateral por aprovado com índice bloqueios_id_app, barato no tamanho atual (banco 33 MB). | Revisor: ativacao_ao_bloqueio só tem meses e total; o CTE do primeiro bloqueio já existe. O limite que o autor aponta (quem para de rodar sem infração não aparece) precisa ir escrito na tela.",
   "junto": "",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e3",
@@ -3282,7 +3474,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "resumo_financeiro agrupa por cidade, motivo, origem e por QUEM REGISTROU, nunca por entregador. Consulta provada no teste_e3 (400 adicionais fictícios): 1,8 ms. O MK-4 pede 'entregadores muito acima da mediana' no painel 011; aqui o novo é o número de concentração (fácil de acompanhar semana a semana) e a linha na ficha, onde a decisão acontece. | Revisor: Conferido: resumo_financeiro agrupa por cidade, motivo, origem e quem registrou, nunca por entregador. A parte 'quem mais recebe' é o MK-4 (011); o novo aqui é a linha na ficha, que é onde vale. Entrar junto com o MK-4, não antes.",
   "junto": "MK-4",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e3",
@@ -3300,7 +3493,8 @@
   "veredito": "CONFIRMADO",
   "nota": "As 009b, 009d e 009e criaram dados novos que nunca entraram no resumo. Menos telas: a comparação semana × semana vem de graça. Barato: as quatro tabelas são pequenas e há índice por data em lançamentos. | Revisor: Conferido: resumo_semanal só está na 005 e nunca foi refeito; financeiro, parceiros, acordos e ajuda ficaram de fora. Barato e serve a reunião semanal.",
   "junto": "M9",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e3",
@@ -3319,7 +3513,8 @@
   "nota": "Completa o M9 com o método: mediana (não média, que um dia ruim distorce) e piso de volume. A operação tem 30 cidades de tamanhos muito diferentes; com média simples, Tobias Barreto e Recife disparariam juntos. | Revisor: É o M9 (alerta por limite nas Análises) com o método melhor (mediana de 8 semanas e mínimo de 5 casos). Levar o método para dentro do M9.",
   "junto": "M9",
   "situacao": "Revisor do contra: duplicado de m9. É o M9 (alerta por limite nas Análises) com o método melhor (mediana de 8 semanas e mínimo de 5 casos). Levar o método para dentro do M9.",
-  "feito": "decidido"
+  "feito": "decidido",
+  "versao": "decidido"
  },
  {
   "ag": "e3",
@@ -3337,7 +3532,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Sem isso, a AN-7 sai errada justo nos casos que importam (ninguém pegou). Encontrado lendo o código; o teste test:ajuda deve ganhar o caso 'renovar não muda criado_em'. | Revisor: Reproduzido: um pedido de 20 min renovado volta a ter 0 min (renovar_ajuda grava criado_em = now(), 009d:129). É dado perdido que não se recupera depois; o conserto é pequeno.",
   "junto": "AN-7",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "009z"
  },
  {
   "ag": "e3",
@@ -3355,7 +3551,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Consulta provada no teste_e3 (120 pedidos fictícios): menos de 1 ms. Depende da AN-6 para o tempo até aceitar ser verdadeiro. | Revisor: Faz sentido, mas com uma equipe de cerca de 11 pessoas os pedidos de ajuda são poucos e o mapa dia × hora fica quase vazio por meses. Depende de AN-6.",
   "junto": "AN-6",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e3",
@@ -3373,7 +3570,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Hoje o acordo vencido só aparece em vermelho na tela inicial; não há histórico de quanto atrasou. Cidade do acordo é texto livre (009d: check só de tamanho), então 'Lagarto' e 'LAGARTO - SE' contam separado: padronizar para o formato CIDADE - UF antes desta análise. | Revisor: Volume de acordos é muito pequeno para análise por cidade. O achado útil é outro: acordos.cidade é texto livre; padronizar a cidade entra no LG-5.",
   "junto": "NF-7",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e3",
@@ -3391,7 +3589,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Hoje 'Conversão das infrações leves' só mede quem acumulou leves até o limite, não se a leve antecipa outra infração. Dado existe em bloqueios (leve, infracao, inicio, lower(id_app)). Barato com o índice bloqueios_id_app. | Revisor: Conferido: a conversão das leves só conta quem chegou ao limite. A pergunta 'a leve avisa antes?' é boa e barata com o índice por ID.",
   "junto": "",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e3",
@@ -3409,7 +3608,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "DADO NÃO GUARDADO hoje. Sem ele, eficácia da tratativa e 'punições desfeitas' (008c, liberacoes) só contam, nunca explicam. Liga com NF-4 ('Tentei, sem resposta') e A5-S2 ('foi engano' não deveria contar como ocorrência). | Revisor: Conferido: concluir_tratativa e liberar_bloqueio só têm texto livre. A parte da liberação ('foi engano, não conta') é o A5-S2; a parte da tratativa fecha com NF-4 (o 'não respondeu' é a mesma coisa). Fazer NF-4 + AN-10 como uma entrega.",
   "junto": "NF-4, A5-S2, AN-1",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e3",
@@ -3427,7 +3627,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Hoje não há como saber se um aviso foi lido ou só limpo em lote: DADO NÃO GUARDADO (clique no aviso). A 008b fez moderadores receberem tudo; esta é a forma de medir se isso virou ruído. Barato: índice notificacoes_para já existe. | Revisor: Fato certo (lida em lote não diferencia). Mas mede ruído com uma coluna nova e conta por categoria; antes, o C-5 (agrupar avisos do mesmo entregador) ataca o ruído direto. Baixa.",
   "junto": "",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "010"
  },
  {
   "ag": "e3",
@@ -3445,7 +3646,8 @@
   "veredito": "CONFIRMADO",
   "nota": "status_desde já existe e tem índice (cadastros_status). Complementa o NF-5 (cobrar o cadastro velho): o NF-5 avisa caso a caso; este mostra o padrão por cidade. | Revisor: status_desde existe e tem índice. Complementa NF-5 por cidade; fazer só se NF-5 entrar.",
   "junto": "NF-5",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e3",
@@ -3463,7 +3665,8 @@
   "veredito": "CONFIRMADO",
   "nota": "As duas tabelas usam o mesmo formato de cidade 'CIDADE - UF'. A 009g já cria a tarefa de +5 entregadores a cada parceiro; esta análise mostra se a meta acompanha. DADO NÃO GUARDADO: volume de pedidos por cidade (a demanda real), que seria o número certo para comparar. | Revisor: A 009g já cria +5 entregadores a cada parceiro; esta análise só confere se a meta acompanha. Baixo valor até haver volume de parceiros.",
   "junto": "",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e3",
@@ -3481,7 +3684,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "itens guarda o id de cada tarefa, então dá para cruzar sem coluna nova. Junta com M4 (botão 'Recebi'), que traria a hora em que quem entra leu. | Revisor: Cruzar os itens da passagem com tarefas concluídas é possível, mas o M4 ('Recebi') é o primeiro passo e mais útil. Depois do M4.",
   "junto": "M4",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "010"
  },
  {
   "ag": "e3",
@@ -3500,7 +3704,8 @@
   "nota": "DADO NÃO GUARDADO: hora da ocorrência. bloqueios.inicio é também o início da restrição, então não dá para reaproveitar. Evita uma leitura errada ('infração acontece mais às 10h') que os números induzem. | Revisor: A tela já diz o certo: o mapa se chama 'Quando a equipe registra' e o texto explica que são bloqueios, leves e cadastros da equipe (js/analises.js:147). Não induz a leitura errada que o item descreve.",
   "junto": "",
   "situacao": "Derrubado pelo revisor do contra. A tela já diz o certo: o mapa se chama 'Quando a equipe registra' e o texto explica que são bloqueios, leves e cadastros da equipe (js/analises.js:147). Não induz a leitura errada que o item descreve.",
-  "feito": "decidido"
+  "feito": "decidido",
+  "versao": "decidido"
  },
  {
   "ag": "e4",
@@ -3518,7 +3723,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "No site o 'Gerar mensagem' existe no resultado (js/bloqueios.js:564), mas a extensão, que foi feita para não sair da tela de trabalho, não tem. É justamente no Crisp que a mensagem é colada. | Revisor: Conferido: o painel termina em 'Bloqueio registrado: aplique X' (formularios.js:129), sem mensagem. Prioridade média porque a extensão ainda não foi publicada nem é usada pela equipe; tirar varsMensagem para arquivo comum é o esforço real (junto de A7-08).",
   "junto": "OP-2, MK-1, MK-2, C-1",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "ext"
  },
  {
   "ag": "e4",
@@ -3537,7 +3743,8 @@
   "nota": "O modelo foi pedido pelo usuário na 009 (mensagem de primeiro contato com parceiro) e hoje só é achado indo até Ferramentas → Mensagens e escolhendo o grupo à mão. | Revisor: Mesma proposta de NF-6 (botão da mensagem parceiro_ativacao depois de ativar o parceiro). Fica NF-6.",
   "junto": "MK-2",
   "situacao": "Revisor do contra: duplicado de nf-6. Mesma proposta de NF-6 (botão da mensagem parceiro_ativacao depois de ativar o parceiro). Fica NF-6.",
-  "feito": "decidido"
+  "feito": "decidido",
+  "versao": "decidido"
  },
  {
   "ag": "e4",
@@ -3555,7 +3762,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Hoje a pessoa precisa abrir o Histórico, achar o registro e gerar a mensagem lá, depois voltar a Tratativas para concluir. É o caso 'macro' descrito no MK-2 aplicado ao lugar onde ele mais rende. | Revisor: Conferido: botaoMensagem só aparece no resultado e no Histórico (bloqueios.js:552, 564, 871), não na tratativa. Ajuste: a mensagem de restrição normalmente já foi mandada por quem registrou; na tratativa o útil é uma mensagem de orientação/contato, não a mesma. Pequeno; fazer junto de NF-4.",
   "junto": "MK-2, OP-2",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "009z"
  },
  {
   "ag": "e4",
@@ -3574,7 +3782,8 @@
   "nota": "O cartão vermelho na tela inicial de todos tende a virar paisagem ('alguém vai fazer'). ajustar_acordo já avisa quem registrou quando outro fez o ajuste (009d:389), então o caminho de aviso existe. | Revisor: Mesma coisa que NF-7 (aviso a quem registrou o acordo). O 'acordos_amanha' no panorama do turno é um detalhe a levar para NF-7.",
   "junto": "",
   "situacao": "Revisor do contra: duplicado de nf-7. Mesma coisa que NF-7 (aviso a quem registrou o acordo). O 'acordos_amanha' no panorama do turno é um detalhe a levar para NF-7.",
-  "feito": "decidido"
+  "feito": "decidido",
+  "versao": "decidido"
  },
  {
   "ag": "e4",
@@ -3592,7 +3801,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Os dois módulos guardam estabelecimento + cidade, mas nada liga um ao outro; acordo com 'Mercado X' e parceiro 'MERCADO X LTDA' viram duas coisas. | Revisor: Conferido: acordos e parceiros guardam estabelecimento e cidade em texto livre sem ligação. Um datalist é pequeno; o parceiro_id é médio. Leva junto a padronização da cidade dos acordos (AN-8). Junto de C-4.",
   "junto": "C-4",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e4",
@@ -3610,7 +3820,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Ajuste repetido pode ser bairro com nome confuso para o cliente (vira apelido, 009p) ou valor errado na tabela; os dois se resolvem nas Tarifas, mas hoje ninguém é chamado. | Revisor: pares_bairros já é calculado e mostrado sem ação. Com a 009p (bairros parecidos) parte dos pares já se resolve sozinha; o botão na lista é barato.",
   "junto": "MK-4",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e4",
@@ -3628,7 +3839,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Pagamento feito só pela tarefa não aparece no Financeiro, e as análises de gasto (011) ficam com buraco. | Revisor: Pagamento ao entregador nem sempre é um adicional (pode ser repasse atrasado); jogar tudo no Financeiro como adicional pode sujar o resumo. Perguntar ao usuário antes.",
   "junto": "MK-4",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e4",
@@ -3646,7 +3858,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Os modelos do grupo entregador (engajamento etc.) existem, mas só na aba Ferramentas → Mensagens. | Revisor: Conferido: o cartão de contato_entregador só leva à ficha. Útil, mas junto de OP-1 (ações na ficha) e NF-8, que mexem no mesmo lugar.",
   "junto": "OP-1, MK-2",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "010"
  },
  {
   "ag": "e4",
@@ -3664,7 +3877,8 @@
   "veredito": "CONFIRMADO",
   "nota": "A leve pede menos dados que a normal (nome e cidade vêm da ficha), então é a que mais combina com o painel. | Revisor: Conferido: formularios.js:98 filtra !i.leve, então leve não sai do painel (a linha citada, 113, está um pouco errada). Média porque a extensão ainda não está em uso.",
   "junto": "LG-1",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "ext"
  },
  {
   "ag": "e4",
@@ -3682,7 +3896,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Aviso geral serve para 'todos precisam saber agora'; quem está no Crisp e não no site não vê. | Revisor: Conferido: painel.js:141 só mostra tipo 'ajuda'; aviso geral, pendência e acordo já chegam no mesmo resumo. Tirar o filtro é pequeno.",
   "junto": "",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "ext"
  },
  {
   "ag": "e4",
@@ -3700,7 +3915,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Decisão do usuário na 1.2: 'os botões não devem abrir o Comunique; tudo resolvido na janelinha'. Esses três ficaram de fora. | Revisor: Conferido: 'Cadastrar este ID' (painel.js:109) e o menu do botão direito abrem o site. Só o 'Cadastrar este ID' fere a decisão da 1.2 (é um formulário); 'Ver ficha' abrir o site é esperado, porque a ficha só existe no site.",
   "junto": "MK-1",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "ext"
  },
  {
   "ag": "e4",
@@ -3718,7 +3934,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "No Crisp a pessoa troca de conversa várias vezes por minuto; hoje o formulário segue com os dados antigos até alguém clicar em 'Ler a tela de novo'. | Revisor: Fato certo, mas o primeiro passo não pega o caso principal: o Crisp troca de conversa sem recarregar a página, então onUpdated com status 'complete' não dispara e nem o 'Nesta tela' muda. O leitor precisa avisar quando a URL muda (history/MutationObserver). Esforço médio, não pequeno.",
   "junto": "",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "ext"
  },
  {
   "ag": "e4",
@@ -3736,7 +3953,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Pilar 1 do Comunique (comunicação vira tarefa e esforço medido): o atendimento no Crisp é onde mais comunicação acontece e hoje não vira número. | Revisor: Fica este id (NF-10 é a mesma ideia). Pilar 1 no lugar onde mais conversa acontece; só contato_entregador em modo 'registro' é um bom começo. Duplicar CAMPOS entra no A7-08.",
   "junto": "LG-8",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "ext"
  },
  {
   "ag": "e4",
@@ -3755,7 +3973,8 @@
   "nota": "As ligações LG-1, LG-9 e LG-13 aumentam o código repetido; vale resolver junto. | Revisor: O A7-08 já propõe um extensao/comum.js copiado pelo empacotar.py e um teste que falha se as cópias divergirem. Acrescentar ao A7-08 os motivos do adicional e o acharBairro.",
   "junto": "A7-08",
   "situacao": "Revisor do contra: duplicado de a7-08. O A7-08 já propõe um extensao/comum.js copiado pelo empacotar.py e um teste que falha se as cópias divergirem. Acrescentar ao A7-08 os motivos do adicional e o acharBairro.",
-  "feito": "decidido"
+  "feito": "decidido",
+  "versao": "decidido"
  },
  {
   "ag": "e4",
@@ -3773,7 +3992,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "O envio da 1.0 foi cancelado em 14/11 para ajustar; desde então houve 1.1, 1.2, 1.2.1 e 1.2.2 sem envio. Cada envio precisa subir a versão do manifesto. | Revisor: Conferido: manifest 1.2.2 sem 'key' e zips só até 1.2.1; o ramo rpc/PERMITIDAS do sw.js está mesmo sem uso (S9). É mais lista de tarefas do envio que achado; a decisão de enviar é do usuário. O passo que mais importa é o (6), testar nas telas reais, e ele depende de alguém da equipe.",
   "junto": "AP-14, S9, SP-04, MK-1",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "ext"
  },
  {
   "ag": "e2",
@@ -3791,7 +4011,9 @@
   "veredito": "CONFIRMADO",
   "nota": "Reproduzido no banco teste_e2: o moderador cria 'Para a Mona' (sugerida só para a monitora) e a suporte cria uma tarefa aberta. Para a suporte: abertas_para_pegar = 1, mas o grupo 'Abertas' mostra só a tarefa que ela mesma criou (que não conta); a tarefa contada ela não vê nos primeiros 10 min (atividade_aberta_para_mim). Resultado: o menu Atividades e a aba Tarefas mostram '1' e a pessoa não acha nada para pegar. | Revisor: Reproduzido no teste_rev: com uma tarefa sugerida só para a monitora e outra criada pela própria suporte, a suporte recebe abertas_para_pegar = 1 e a lista dela mostra só a tarefa que ela criou (que não conta). O número que o usuário pediu na 009v aponta para algo que a pessoa não vê. Correção de uma linha no 009v.",
   "junto": "U6, U2",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): número de tarefas em aberto só com o que a pessoa vê.",
+  "feito": "009x",
+  "versao": "009x"
  },
  {
   "ag": "e2",
@@ -3809,7 +4031,9 @@
   "veredito": "CONFIRMADO",
   "nota": "Reproduzido: suporte aceita 'Aprovar 5 entregadores · LAGARTO', monitora entra junto. A tarefa aparece na Minha fila das duas (sou_participante), mas minhas_em_andamento = 1 para quem aceitou e 0 para quem entrou junto: o número do menu e da tela inicial não conta essa tarefa. verificar_tarefas avisa o atraso só a aceita_por. O CLAUDE.md já anota que placar e painel creditam só o primeiro; o número da fila e o aviso não estavam anotados. | Revisor: Reproduzido: suporte aceita 'Aprovar entregadores', monitora entra junto; minhas_em_andamento = 1 para a suporte e 0 para a monitora. verificar_tarefas também só avisa aceita_por. Trocar por participa(a) é pequeno.",
   "junto": "",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): quem entra junto conta a tarefa.",
+  "feito": "009x",
+  "versao": "009x"
  },
  {
   "ag": "e2",
@@ -3827,7 +4051,9 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Reproduzido: Mona é responsável por LAGARTO e recebe uma tratativa; o moderador tira o módulo de bloqueios dela com salvar_membro. A tratativa continua com responsavel_email = Mona e a cidade continua com Mona como responsável; o moderador vê 'Mona Monitora' como dona, mas ela já não abre a tela de Tratativas. Só depois de remover o membro o FK zera o e-mail (e mesmo assim as atividades aceitas por ela seguem 'em andamento' para sempre, porque aceita_por é uuid sem FK). Trabalho parado sem ninguém perceber até o aviso de atraso de 32 h. | Revisor: Reproduzido: depois de salvar_membro tirar o módulo de bloqueios da Mona, a tratativa e a cidade continuam no e-mail dela, ela recebe 'Você não tem acesso ao módulo de bloqueios' e o moderador vê 'Mona Monitora' como dona. Ajuste: o conserto mínimo é chamar reatribuir_tarefas() e limpar cidades.responsavel_email dentro de salvar_membro/remover_membro (pequeno); a janela 'passar para…' fica para depois.",
   "junto": "",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): gatilho em membros reatribui cidades e tratativas.",
+  "feito": "009x",
+  "versao": "009x"
  },
  {
   "ag": "e2",
@@ -3845,7 +4071,9 @@
   "veredito": "CONFIRMADO",
   "nota": "Reproduzido: tratativa registrada por 'Suzana Suporte' e concluída. listar_tarefas_concluidas(p_busca 'Suzana') = 0 itens; 'Carlos' (entregador) = 1. Nas pendentes, a busca da tela acha por quem registrou e pelo responsável (buscaB), então a mesma busca funciona numa aba e não na outra. Como a lista que volta do banco já vem filtrada, l.length = 0 cai na linha 403 e a tela diz 'Nenhuma tratativa concluída ainda', como se não existisse nenhuma. | Revisor: Reproduzido: listar_tarefas_concluidas com busca 'Suzana' (quem registrou) devolve 0; com 'Carlos' (entregador) devolve 1. É da 009x, ainda não publicada: corrigir antes de publicar.",
   "junto": "AT4",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): busca por quem registrou e mensagem \"Nada com esse filtro\".",
+  "feito": "009x",
+  "versao": "009x"
  },
  {
   "ag": "e2",
@@ -3863,7 +4091,9 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Reproduzido: aprovação de cadastros com IDs '48291377' e 'abcdefgh' gerou 'Seu cadastro Jose Teste 48 (ID 48291377) foi aprovado…' com id_app nulo; com 'ab12cd34' o código sai e id_app é preenchido. O banco aceita IDs só de números ou só de letras (check '^[A-Za-z0-9]{4,40}$'). Depende de como são os IDs reais (não verifiquei). | Revisor: Reproduzido: IDs '48291377' e 'abcdefgh' deixam o código no aviso e id_app nulo; 'ab12cd34' funciona. Prioridade baixa porque os IDs reais vistos (ex.: 6aeff32c5ac2) misturam letras e números quase sempre; mas o conserto (avisar_decisao passar c.id_app) é pequeno e acaba com o adivinhar.",
   "junto": "U4, U7",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): id_app vem do link do cadastro.",
+  "feito": "009x",
+  "versao": "009x"
  },
  {
   "ag": "e2",
@@ -3881,7 +4111,9 @@
   "veredito": "CONFIRMADO",
   "nota": "Reproduzido inserindo avisos: 'Mateus Lopes pediu ajuda: moto do entregador (QWE1A23) parada no posto' virou '…moto do entregador parada no posto' com id_app = 'qwe1a23'. aviso_sem_id('Ajuda: cliente com ID 4f9a2b no pedido') devolve '…cliente com sem nome no pedido'; 'Aviso geral de X: NATAL25' vira 'sem nome'. No pedido de ajuda o código costuma ser justamente a informação útil. | Revisor: Reproduzido: aviso_sem_id('… moto do entregador (QWE1A23) parada') tira a placa, e 'Aviso geral de X: NATAL25' vira 'Aviso geral de X: sem nome'. O gatilho muda texto escrito pela equipe em ajuda e aviso geral, justo onde o código é a informação. Limitar às categorias sobre entregador.",
   "junto": "U4",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): limpeza só em avisos sobre entregador.",
+  "feito": "009x",
+  "versao": "009x"
  },
  {
   "ag": "e2",
@@ -3899,7 +4131,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Pela leitura do código: o cartão da tela inicial mostra totalPendencias (que inclui para_aceitar) e para_aceitar; o menu mostra fila − para_aceitar + abertas_para_pegar; a aba Minha fila mostra totalPendencias; a aba Tarefas mostra abertas_para_pegar. No cenário do PB-1, a monitora vê 2, 2 e 2 em lugares diferentes com significados diferentes. | Revisor: Conferido pela leitura (inicio.js e atividades.js:421-425): três contas diferentes. Resolver junto com PB-1, que muda a mesma conta.",
   "junto": "U2, U6, PB-1",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "010"
  },
  {
   "ag": "e2",
@@ -3917,7 +4150,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Pela leitura: 'este' conta de terça até agora e 'anterior' conta a semana passada inteira (terça a segunda). Numa quarta-feira, a frase quase sempre diz 'X a menos que na semana passada (−80%)' mesmo com ritmo igual ou melhor. É a primeira coisa que aparece na aba Ativações e serve de termômetro para a equipe. | Revisor: Conferido: resumoSemana (parceiros.js:74-78) conta 'este' de terça até hoje e 'anterior' a semana passada inteira; a frase do topo diz '-80%' numa quarta com ritmo igual. Duas linhas. Junto de PX4 (mover o cálculo para o banco).",
   "junto": "PX4",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "011"
  },
  {
   "ag": "e2",
@@ -3935,7 +4169,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Pela leitura: depois da 009x o grupo de concluídas mostra 50 (ou 100 nas tratativas) mesmo havendo mais, e esse número parece o total do período. | Revisor: Conferido: o grupo mostra a quantidade carregada (50) como se fosse o total. Da 009x; cosmético.",
   "junto": "AT4, A3-03",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "009z"
  },
  {
   "ag": "e2",
@@ -3953,7 +4188,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Pela leitura: histPag só volta a 1 quando os filtros mudam; se o total diminui (exclusão, ou alguém desfaz/encerra com o filtro de situação ligado), a tela mostra 'Nenhum cadastro encontrado.' com 'Página 3 de 2' e 'Próxima' habilitado (a condição é h.pagina === paginas). O CSV agora chama listar_cadastros_pagina com p_por 5000 e só a 1ª página. | Revisor: Conferido: o botão Próxima usa h.pagina === paginas e histPag só volta a 1 quando muda o filtro; o CSV pede uma página de 5.000. Caso raro (moderador excluindo na última página); o aviso do CSV é que vale.",
   "junto": "AT4",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "009z"
  },
  {
   "ag": "e2",
@@ -3971,7 +4207,9 @@
   "veredito": "CONFIRMADO",
   "nota": "O comentário da 009x diz 'o redesenho é só da lista', mas App.carregar termina em App.render() (todas as seções) e dispara listar_cadastros('pendentes'), que chama historico_resumo por linha (SP-02), e resumo_e_avisos. Cada busca digitada vira 3 RPCs; o mesmo vale para o 'Ver mais' das tratativas e das atividades. | Revisor: Conferido: filtrarHist chama App.carregar (ativacao.js:259), que busca resumo_e_avisos, listar_cadastros('pendentes') e redesenha tudo (base.js:485-520). O A3-04 está marcado como feito no rascunho da 009x, mas só ganhou a espera de 300 ms; corrigir antes de publicar.",
   "junto": "A3-04, AT4, SP-02",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Feito no rascunho da 009x (ainda não publicada): busca e páginas redesenham só a lista.",
+  "feito": "009x",
+  "versao": "009x"
  },
  {
   "ag": "e2",
@@ -3989,7 +4227,8 @@
   "veredito": "CONFIRMADO",
   "nota": "Pela leitura: com a linha aberta, o tique atualiza a etiqueta de situação (ex.: 'Aprovado'), mas a linha do tempo embaixo continua sem a aprovação até recarregar a página. A pessoa vê duas versões da mesma coisa. | Revisor: Conferido: S.eventos só é apagado nas ações da própria pessoa (ativacao.js:109, 184, 301). Raro (duas pessoas no mesmo cadastro com a linha aberta).",
   "junto": "",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "depois"
  },
  {
   "ag": "e2",
@@ -4007,6 +4246,7 @@
   "veredito": "CONFIRMADO",
   "nota": "O botão 'Histórico de atualizações' (009w) abre a lista cumulativa; o bloco da 009u ainda diz 'Esta faixa agora ocupa uma linha só… Clique nela', e a faixa não existe mais. O item 'Atividades com número' diz 'pendências com você', mas a 009v somou as tarefas em aberto. | Revisor: Conferido: o bloco 009u do js/busca.js ainda diz 'Esta faixa agora ocupa uma linha só… Clique nela', e a faixa saiu na 009w. Texto, cinco minutos.",
   "junto": "U8, U1",
-  "situacao": "Estudo de nov/2026, ainda não aprovado."
+  "situacao": "Estudo de nov/2026, ainda não aprovado.",
+  "versao": "010"
  }
 ]
