@@ -1007,7 +1007,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Ver o detalhe abaixo da tabela.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y",
+  "situacao": "Em parte: as telas e os avisos já estão sem emoji (009u, 009x2). Falta refazer as imagens da loja da extensão."
  },
  {
   "ag": "a4",
@@ -1606,10 +1607,12 @@
   "objetivo": "base",
   "tela": "bloqueios",
   "onda": 2,
-  "veredito": "",
+  "veredito": "DUPLICADO DE A5-3",
   "nota": "",
   "junto": "A5-3",
-  "versao": "009z"
+  "versao": "009z",
+  "feito": "decidido",
+  "situacao": "Revisão do mapa (20/11/2026): é o mesmo item que A5-3, que continua aberto."
  },
  {
   "ag": "a7",
@@ -1627,7 +1630,7 @@
   "veredito": "",
   "nota": "",
   "junto": "",
-  "versao": "ext"
+  "versao": "009z"
  },
  {
   "ag": "a7",
@@ -1642,10 +1645,12 @@
   "objetivo": "base",
   "tela": "financeiro",
   "onda": 3,
-  "veredito": "",
+  "veredito": "DUPLICADO DE A5-7",
   "nota": "",
   "junto": "",
-  "versao": "011"
+  "versao": "011",
+  "feito": "decidido",
+  "situacao": "Revisão do mapa (20/11/2026): é o mesmo item que A5-7, que continua aberto."
  },
  {
   "ag": "a7",
@@ -1663,7 +1668,7 @@
   "veredito": "",
   "nota": "",
   "junto": "",
-  "versao": "ext"
+  "versao": "009z"
  },
  {
   "ag": "a7",
@@ -1717,7 +1722,7 @@
   "veredito": "",
   "nota": "",
   "junto": "",
-  "versao": "ext"
+  "versao": "009z"
  },
  {
   "ag": "a7",
@@ -1879,7 +1884,8 @@
   "veredito": "",
   "nota": "",
   "junto": "",
-  "versao": "010"
+  "versao": "010",
+  "situacao": "Em parte: a faixa de novidades virou o botão \"Histórico de atualizações\" (009w). Falta a tela inicial mais enxuta (junto do AP-10, na 009y)."
  },
  {
   "ag": "a8",
@@ -1902,7 +1908,7 @@
  {
   "ag": "a8",
   "id": "MK-1",
-  "titulo": "Extensão 1.3: painel lateral \"contextual\" como o HubSpot no Gmail",
+  "titulo": "Extensão 1.4: painel lateral \"contextual\" como o HubSpot no Gmail",
   "prio": "média",
   "prio_orig": "",
   "esforco": "médio",
@@ -1951,7 +1957,7 @@
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
   "junto": "",
-  "versao": "depois"
+  "versao": "010"
  },
  {
   "ag": "a8",
@@ -2617,7 +2623,7 @@
   "veredito": "",
   "nota": "",
   "junto": "",
-  "versao": "ext"
+  "versao": "009z"
  },
  {
   "ag": "a7",
@@ -2689,7 +2695,7 @@
   "veredito": "",
   "nota": "",
   "junto": "",
-  "versao": "ext"
+  "versao": "009z"
  },
  {
   "ag": "a7",
@@ -2971,11 +2977,12 @@
   "objetivo": "rapidez",
   "tela": "geral",
   "onda": 2,
-  "veredito": "",
+  "veredito": "DUPLICADO DE A7-11",
   "nota": "",
   "junto": "",
-  "situacao": "Ideia para o futuro (19/11/2026), ainda não aprovada.",
-  "versao": "009z"
+  "situacao": "Revisão do mapa (20/11/2026): é o mesmo item que A7-11, que continua aberto.",
+  "versao": "009z",
+  "feito": "decidido"
  },
  {
   "ag": "claude",
