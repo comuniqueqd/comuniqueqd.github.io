@@ -51,10 +51,13 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009v";
+  const VERSAO = "009w";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009w", tema: "Tela inicial mais limpa", itens: [
+      ["Histórico de atualizações", "A faixa de novidades saiu da tela inicial. No lugar dela fica o botão \"Histórico de atualizações\", que mostra tudo o que mudou em cada versão."],
+    ] },
     { versao: "009v", tema: "Tarefas à vista", itens: [
       ["Tarefas em aberto com número", "O menu Atividades e a aba Tarefas mostram quantas tarefas estão em aberto, esperando alguém pegar (as que você mesmo criou não contam)."],
     ] },

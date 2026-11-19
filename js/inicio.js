@@ -142,14 +142,10 @@
         numero(S.notif?.nao_lidas, "avisos novos"))));
     $("#modulos-grid").replaceChildren(...cards);
 
-    // faixa da versão nova: os destaques e o botão para rever a janela "O que há de novo"
+    // 009w (pedido do usuário): no lugar da faixa, só um botão discreto que abre o histórico ("O que há de novo")
     const nv = App.novidades;
-    // 009u (pedido do usuário): só a última atualização, numa linha; o clique abre o histórico completo
-    $("#inicio-novidades").replaceChildren(nv ? el("button", { class: "faixa-novidades curta", type: "button", onclick: () => nv.mostrar(),
-        "aria-label": `Novidade: ${nv.NOVIDADES.tema}. Ver o histórico de novidades` },
-      el("b", { text: `Novidade: ${nv.NOVIDADES.tema}` }),
-      el("span", { text: nv.NOVIDADES.versoes[0].itens.map(([t]) => t).join(" · ") }),
-      el("span", { class: "meta", style: "flex:0 0 auto", text: "Ver histórico" })) : "");
+    $("#inicio-novidades").replaceChildren(nv ? el("button", { class: "btn small historico-versoes", type: "button", onclick: () => nv.mostrar(),
+      title: `Última: ${nv.NOVIDADES.tema}` }, App.ic("tempo"), "Histórico de atualizações") : "");
   }
 
   App.modulo({

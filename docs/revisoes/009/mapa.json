@@ -2851,5 +2851,24 @@
   "junto": "",
   "feito": "009v",
   "situacao": "Feito na 009v (pedido do usuário em 19/11/2026)."
+ },
+ {
+  "ag": "pedido",
+  "id": "U8",
+  "titulo": "Faixa de Novidades ocupando a tela inicial",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "achado",
+  "onde": "",
+  "sugestao": "Virou o botão discreto \"Histórico de atualizações\", que abre a janela O que há de novo.",
+  "objetivo": "menos",
+  "tela": "inicio",
+  "onda": 1,
+  "veredito": "",
+  "nota": "",
+  "junto": "",
+  "feito": "009w",
+  "situacao": "Feito na 009w (pedido do usuário em 19/11/2026)."
  }
 ]
