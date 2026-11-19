@@ -115,7 +115,6 @@ h1{font-size:clamp(24px,3.6vw,32px);font-weight:800}
 <div class="numeros" id="numeros"></div>
 <div class="abas" role="group" aria-label="Visão">
  <button type="button" data-v="existe" aria-pressed="false">O que existe hoje</button>
- <button type="button" data-v="estudo" aria-pressed="false">Estudo de nov/2026</button>
  <button type="button" data-v="mente" aria-pressed="true">Mapa mental</button>
  <button type="button" data-v="mapa" aria-pressed="false">Mapa de objetivos</button>
  <button type="button" data-v="telas" aria-pressed="false">Por tela</button>
@@ -307,19 +306,13 @@ function existe(){
     f.desde?el("p",{class:"nota",text:/in[ií]cio/i.test(f.desde)?"Existe desde o início":"Desde a "+f.desde}):null)))));
  const rot=INV.rotinas&&INV.rotinas.length?el("section",{class:"inv-area"},el("h2",{text:"Rotinas que rodam sozinhas"}),el("ul",{},INV.rotinas.map(r=>el("li",{},el("b",{text:r.nome}),` · ${r.faz}`,r.quando?` (${r.quando})`:"")))):null;
  return el("div",{},el("p",{class:"nota",text:`Tudo o que o Comunique tem hoje, área por área. Montado a partir do código em ${INV.gerado_em||"nov/2026"}. Clique numa ferramenta para ver os detalhes.`}),nums,...INV.areas.map(area),rot)}
-function estudo(){
- const grupos=[["e1","Funções novas para o dia a dia"],["e2","Problemas e atritos"],["e3","Dados e análises"],["e4","Ferramentas que conversam entre si"],["claude","Sugestões do Claude (ao revisar o mapa)"]];
- const PRv={alta:3,"média":2,baixa:1};
- return el("div",{},el("p",{class:"nota",text:"Estudo feito em nov/2026 por um time de agentes, depois da varredura da 009. Ficaram de fora LGPD, leis, compliance e backup, a pedido. Cada item também aparece no Mapa de objetivos e no Por tela."}),
-  ...grupos.map(([g,t])=>{const l=D.filter(i=>i.ag===g).sort((a,b)=>(PRv[b.prio]||0)-(PRv[a.prio]||0)||a.onda-b.onda);
-   return el("section",{class:"inv-area"},el("h2",{text:`${t} (${l.length})`}),l.length?el("div",{},l.map(linha)):el("p",{class:"vazio",text:"Ainda em estudo."}))}))}
 function placar(){return el("div",{class:"placar"},PL.map(([t,l])=>el("section",{},el("h2",{text:t}),el("dl",{},l.map(([a,b])=>[el("dt",{text:a}),el("dd",{text:b})])))))}
 function numeros(){const ach=D.filter(i=>i.tipo==="achado").length;$("#numeros").replaceChildren(
  ...[[D.length,"itens"],[ach,"achados"],[D.length-ach,"sugestões"],[D.filter(i=>i.prio==="alta").length,"altos"],[D.filter(i=>i.onda===1&&!i.feito).length,"para agora"],[D.filter(i=>i.feito).length,"feitos ou decididos"],[29,"altos revistos, 0 derrubados"]].map(([n,t])=>el("div",{},el("b",{text:String(n)}),el("span",{text:t}))))}
 function desenhar(){document.querySelectorAll(".abas button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===vista)));
  $("#filtros").hidden=!(vista==="mapa"||vista==="telas"||vista==="mente");
  const l=filtrados();$("#cont").textContent=`${l.length} de ${D.length}`;
- $("#vista").replaceChildren(vista==="existe"?existe():vista==="estudo"?estudo():vista==="mente"?mente():vista==="mapa"?mapa():vista==="telas"?telas():vista==="decisoes"?decisoes():vista==="seguir"?seguir():placar())}
+ $("#vista").replaceChildren(vista==="existe"?existe():vista==="mente"?mente():vista==="mapa"?mapa():vista==="telas"?telas():vista==="decisoes"?decisoes():vista==="seguir"?seguir():placar())}
 document.querySelectorAll(".abas button").forEach(b=>b.addEventListener("click",()=>{vista=b.dataset.v;try{localStorage.setItem("mapa009-v",vista)}catch(e){}desenhar()}));
 ["#f-sit","#f-prio","#f-onda","#f-tipo","#f-ag"].forEach(s=>$(s).addEventListener("change",desenhar));$("#f-q").addEventListener("input",desenhar);
 numeros();desenhar();
