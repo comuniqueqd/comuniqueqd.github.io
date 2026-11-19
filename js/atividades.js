@@ -405,8 +405,10 @@
     render(aba) { ({ sugeridas: renderSugeridas, pendencias: renderPendencias })[aba]?.(); },
     contadores() {
       App.contador("c-at-pend", totalPendencias() || 0);
-      App.contador("c-at-menu", totalPendencias() || 0);   // 009u: o número também no item Atividades do menu
-      App.contador("c-at-sug", S.resumo?.atividades?.para_aceitar || 0);
+      // 009v: as tarefas em aberto (sem dono, não criadas por mim) também contam; sem a 009v no banco, fica o para_aceitar
+      const at = S.resumo?.atividades || {}, abertas = at.abertas_para_pegar ?? at.para_aceitar ?? 0;
+      App.contador("c-at-menu", (totalPendencias() || 0) - (at.para_aceitar || 0) + abertas);   // 009u: o número também no menu
+      App.contador("c-at-sug", abertas);
     },
     totalPendencias,
   });

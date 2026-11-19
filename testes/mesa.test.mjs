@@ -65,6 +65,7 @@ const antes = await rpc(admin, "entregadores_atencao");
 
 // a 009u, duas vezes (pode rodar de novo)
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009u-sem-cpf-nos-textos.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009v-tarefas-abertas.sql"));
 
 await t("AT1: entregadores_atencao() nova devolve exatamente o mesmo que a antiga", async () => {
   const depois = await rpc(admin, "entregadores_atencao");
@@ -113,8 +114,38 @@ await t("avisos sem o código do entregador: o nome fica, o código sai, sem nom
   const l = (await db.query("select texto, id_app from notificacoes where para = $1 order by id desc limit 4", [para])).rows.reverse();
   igual(l, [{ texto: "Suporte registrou um bloqueio: Fulano de Tal · Atraso · LAGARTO - SE", id_app: "mesa0001" },
     { texto: "Seu cadastro sem nome foi aprovado por Monitor.", id_app: "abc99999" },
-    { texto: "Suporte enviou um cadastro: sem nome · LAGARTO - SE", id_app: null },
+    { texto: "Suporte enviou um cadastro: sem nome · LAGARTO - SE", id_app: "xyz12345" },
     { texto: "Suporte agradeceu por: Ligar (2 vezes)", id_app: null }]);
+});
+
+await t("009v: quando há tarefa aberta criada por outra pessoa, então ela conta em abertas_para_pegar (a minha não conta)", async () => {
+  const outro = pessoa("outro.mesa@x.com", "Outro Mesa");
+  await db.query("insert into membros (email, nome, papel) values ($1, $2, 'suporte') on conflict do nothing", [outro.email, outro.nome]);
+  await rpc(outro, "entrar");
+  const antes = (await rpc(admin, "resumo_inicio")).atividades.abertas_para_pegar;
+  await rpc(outro, "sugerir_atividade", { p_titulo: "Aberta do outro" });
+  await rpc(admin, "sugerir_atividade", { p_titulo: "Aberta minha" });
+  const r = (await rpc(admin, "resumo_inicio")).atividades;
+  igual(r.abertas_para_pegar, antes + 1, "abertas_para_pegar");
+  igual(r.para_aceitar <= r.abertas_para_pegar, true, "para_aceitar é parte das abertas");
+});
+
+await t("009v: aviso que só trazia o ID mostra o nome do cadastro (e 'sem nome' só quando não há nome)", async () => {
+  await rpc(admin, "enviar_cadastro", { p_id_app: "6aeff32c5ac2", p_cpf: null, p_cidade: "LAGARTO - SE", p_nome: "Paulo Mauricio da Silva" });
+  const para = (await um("select user_id from membros where email = $1", [admin.email])).user_id;
+  await db.query(`insert into notificacoes (para, texto) values ($1, 'Cadastro novo em LAGARTO - SE: ID 6aeff32c5ac2, enviado por Maria.'),
+    ($1, 'Seu cadastro ID 6aeff32c5ac2 foi aprovado por Monitor.'), ($1, 'Cadastro novo em LAGARTO - SE: ID zz9sem9nome, enviado por Maria.')`, [para]);
+  const l = (await db.query("select texto from notificacoes where para = $1 order by id desc limit 3", [para])).rows.map((x) => x.texto).reverse();
+  igual(l, ["Cadastro novo em LAGARTO - SE: Paulo Mauricio da Silva, enviado por Maria.", "Seu cadastro Paulo Mauricio da Silva foi aprovado por Monitor.",
+    "Cadastro novo em LAGARTO - SE: sem nome, enviado por Maria."]);
+});
+await t("009v: os avisos que a 009u deixou com 'sem nome' ganham o nome ao rodar a 009v", async () => {
+  const para = (await um("select user_id from membros where email = $1", [admin.email])).user_id;
+  await db.query("alter table notificacoes disable trigger aac_aviso_sem_id");
+  await db.query("insert into notificacoes (para, texto, id_app) values ($1, 'Cadastro novo em LAGARTO - SE: sem nome, enviado por Maria.', '6aeff32c5ac2')", [para]);
+  await db.query("alter table notificacoes enable trigger aac_aviso_sem_id");
+  await db.query(arquivo("../supabase/009v-tarefas-abertas.sql"));
+  igual((await um("select texto from notificacoes where para = $1 order by id desc limit 1", [para])).texto, "Cadastro novo em LAGARTO - SE: Paulo Mauricio da Silva, enviado por Maria.");
 });
 
 console.log(`\n${n - falhas}/${n} ok`);

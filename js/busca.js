@@ -51,10 +51,13 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009u";
+  const VERSAO = "009v";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009v", tema: "Tarefas à vista", itens: [
+      ["Tarefas em aberto com número", "O menu Atividades e a aba Tarefas mostram quantas tarefas estão em aberto, esperando alguém pegar (as que você mesmo criou não contam)."],
+    ] },
     { versao: "009u", tema: "Tudo conferido", itens: [
       ["De quem é esse ID?", "No Registrar adicional, ao digitar o ID aparece o nome e a cidade da ficha. Se o ID não tem ficha, o Comunique pede o nome em vez de adivinhar."],
       ["Menos alarme falso", "Na revisão de um cadastro, o quadrinho de histórico não aparece mais quando o único registro do ID é o próprio cadastro."],

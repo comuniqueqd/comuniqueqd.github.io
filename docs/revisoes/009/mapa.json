@@ -2813,5 +2813,43 @@
   "nota": "",
   "junto": "",
   "situacao": "Ideia para o futuro (19/11/2026), ainda não aprovada."
+ },
+ {
+  "ag": "pedido",
+  "id": "U6",
+  "titulo": "Tarefas em aberto sem número em Atividades",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "achado",
+  "onde": "",
+  "sugestao": "abertas_para_pegar no resumo; aba Tarefas e menu Atividades mostram as tarefas esperando alguém.",
+  "objetivo": "menos",
+  "tela": "tarefas",
+  "onda": 1,
+  "veredito": "",
+  "nota": "",
+  "junto": "",
+  "feito": "009v",
+  "situacao": "Feito na 009v (pedido do usuário em 19/11/2026)."
+ },
+ {
+  "ag": "pedido",
+  "id": "U7",
+  "titulo": "Aviso de cadastro novo dizia \"sem nome\" com nome no cadastro",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "achado",
+  "onde": "",
+  "sugestao": "O aviso antigo só trazia o ID; sem o código, agora entra o nome (nome_do_id) e os já gravados foram corrigidos.",
+  "objetivo": "menos",
+  "tela": "avisos",
+  "onda": 1,
+  "veredito": "",
+  "nota": "",
+  "junto": "",
+  "feito": "009v",
+  "situacao": "Feito na 009v (pedido do usuário em 19/11/2026)."
  }
 ]

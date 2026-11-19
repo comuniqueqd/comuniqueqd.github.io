@@ -54,6 +54,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009h-entregador-pelo-la
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009p-bairros-parecidos.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009s-sem-cpf.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009u-sem-cpf-nos-textos.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009v-tarefas-abertas.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -112,7 +113,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009u"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009v"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -295,7 +296,7 @@ try {
   ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
   { const fx = await s.$eval("button.faixa-novidades.curta", (b) => ({ txt: b.textContent, h: b.getBoundingClientRect().height }));
-    ok(fx.txt.includes("Novidade: Tudo conferido") && fx.txt.includes("Ver histórico") && !/009[a-z]/.test(fx.txt) && fx.h < 70, "009u: a faixa de novidades é uma linha só, com a última atualização e sem os códigos: " + JSON.stringify(fx)); }
+    ok(fx.txt.includes("Novidade: Tarefas à vista") && fx.txt.includes("Ver histórico") && !/009[a-z]/.test(fx.txt) && fx.h < 70, "009u: a faixa de novidades é uma linha só, com a última atualização e sem os códigos: " + JSON.stringify(fx)); }
   await s.click("button.faixa-novidades");
   ok(await esperar(s, "dialog.janela >> text=O que há de novo"), "clicar na faixa abre o histórico (O que há de novo)");
   await s.screenshot({ path: path.join(PRINTS, "a0-inicio-novidades.png") });
@@ -707,9 +708,9 @@ try {
   await s.screenshot({ path: path.join(PRINTS, "c2-sugeridas.png"), fullPage: true });
   await ir(m, "#atividades/pendencias"); await m.reload();
   { await esperar(m, "#c-at-pend");
-    const c = await m.evaluate(() => ({ menu: document.querySelector("#c-at-menu"), aba: document.querySelector("#c-at-pend") })
-      ? { menu: document.querySelector("#c-at-menu").hidden ? "0" : document.querySelector("#c-at-menu").textContent, aba: document.querySelector("#c-at-pend").hidden ? "0" : document.querySelector("#c-at-pend").textContent } : null);
-    ok(c && c.menu === c.aba, "009u: o item Atividades do menu mostra o mesmo número de pendências da Minha fila: " + JSON.stringify(c)); }
+    const c = await m.evaluate(() => { const n = (id) => { const x = document.querySelector(id); return x.hidden ? 0 : Number(x.textContent); };
+      const at = App.S.resumo.atividades; return { menu: n("#c-at-menu"), fila: n("#c-at-pend"), tarefas: n("#c-at-sug"), para_aceitar: at.para_aceitar, abertas: at.abertas_para_pegar }; });
+    ok(typeof c.abertas === "number" && c.tarefas === c.abertas && c.menu === c.fila - c.para_aceitar + c.abertas, "009v: Atividades mostra as pendências e as tarefas em aberto, sem contar duas vezes: " + JSON.stringify(c)); }
   ok(await esperar(m, "#at-lista >> text=Ligar para o restaurante Sabor"), "pessoa sugerida vê a atividade nas pendências");
   ok((await m.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).join() === "pendencias,sugeridas" && (await texto(m, "nav.tabs a[data-view=pendencias]")).startsWith("Minha fila")
       && await m.isVisible("#at-lista .tarefa-card:has-text('Ligar para o restaurante Sabor') >> text=Eu faço"), "009m: Atividades = Minha fila (com o cartão completo da tarefa) e Tarefas");
@@ -853,7 +854,7 @@ try {
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
   { const hs = await n7.$$eval("dialog.janela .bloco-versao h4", (l) => l.map((x) => x.textContent));
-    ok(hs.length === 24 && hs[0] === "Agora: Tudo conferido" && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
+    ok(hs.length === 25 && hs[0] === "Agora: Tarefas à vista" && hs.includes("Tudo conferido") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
