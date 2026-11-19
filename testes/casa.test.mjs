@@ -35,6 +35,7 @@ const verdade = (c, msg) => { if (!c) throw new Error(msg); };
 const um = async (sql, p = []) => (await db.query(sql, p)).rows[0];
 
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x-casa-em-ordem.sql"));   // pode rodar de novo
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x2-avisos-sem-codigo.sql"));
 
 await rpc(admin, "entrar");
 await db.query("update membros set papel_bloqueios = 'moderador' where email = $1", [admin.email]);
@@ -182,6 +183,15 @@ await t("PB-5: aviso de cadastro com ID só de números também perde o código 
   const c = (await um("insert into cadastros (id_app, nome, cidade, status, enviado_por) values ('48291377', 'Jose Numeros', 'LAGARTO - SE', 'aprovado', $1) returning id", [uSup])).id;
   await db.query("insert into notificacoes (para, texto, link) values ($1, 'Seu cadastro Jose Numeros (ID 48291377) foi aprovado por Monitor.', $2)", [uSup, "#cadastro/" + c]);
   igual(await um("select texto, id_app from notificacoes where link = $1", ["#cadastro/" + c]), { texto: "Seu cadastro Jose Numeros foi aprovado por Monitor.", id_app: "48291377" });
+});
+
+await t("009x2: aviso pessoal sobre cadastro (link #ativacao/meus) perde o código; aviso não começa com emoji", async () => {
+  await db.query("insert into cadastros (id_app, nome, cidade, status, enviado_por) values ('pess0001', 'Pessoa Pessoal', 'LAGARTO - SE', 'aprovado', $1) on conflict do nothing", [uSup]);
+  await db.query(`insert into notificacoes (para, texto, link) values ($1, 'Seu cadastro ID pess0001 foi aprovado por Monitor.', '#ativacao/meus'),
+    ($1, 'Suporte: cadastro para completar (ID pess0001).', '#atividades/sugeridas'), ($1, '✅ Mateus revisou "Ligar": tudo certo.', '#atividades/sugeridas')`, [uSup]);
+  const l = (await db.query("select texto, id_app from notificacoes where para = $1 order by id desc limit 3", [uSup])).rows.reverse();
+  igual(l, [{ texto: "Seu cadastro Pessoa Pessoal foi aprovado por Monitor.", id_app: "pess0001" },
+    { texto: "Suporte: cadastro para completar.", id_app: "pess0001" }, { texto: 'Mateus revisou "Ligar": tudo certo.', id_app: null }]);
 });
 
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco
