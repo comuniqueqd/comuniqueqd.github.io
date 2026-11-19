@@ -1,0 +1,1273 @@
+{
+ "gerado_em": "2026-11-20",
+ "versao_publicada": "009w (009x em andamento no repositório)",
+ "areas": [
+  {
+   "id": "entrada",
+   "nome": "Entrada e acesso",
+   "descricao": "Como a pessoa entra no Comunique e pede para fazer parte da equipe. Só entra quem um moderador cadastrou.",
+   "onde": "Primeira tela, antes do login",
+   "quem": "qualquer pessoa com conta Google (entra só quem foi aceito)",
+   "ferramentas": [
+    {
+     "nome": "Entrar com Google",
+     "onde": "tela de entrada",
+     "faz": "Entra com a conta Google, sem senha nova. A janela do Google mostra o endereço do site.",
+     "quem": "qualquer pessoa",
+     "detalhes": [
+      "Login oficial do Google com conferência de segurança (nonce)",
+      "Se o botão do Google não carregar, usa o login do Supabase"
+     ],
+     "banco": [
+      "entrar"
+     ],
+     "desde": "início"
+    },
+    {
+     "nome": "Pedir acesso",
+     "onde": "tela de entrada",
+     "faz": "Quem ainda não é da equipe pede acesso; o pedido aparece para os moderadores na tela Equipe.",
+     "quem": "qualquer pessoa",
+     "detalhes": [
+      "O moderador aceita escolhendo o papel ou recusa"
+     ],
+     "banco": [
+      "pedir_acesso"
+     ],
+     "desde": "início"
+    }
+   ]
+  },
+  {
+   "id": "inicio",
+   "nome": "Tela inicial",
+   "descricao": "A primeira tela depois de entrar: o que está acontecendo agora na equipe e atalhos para o que mais se faz no dia.",
+   "onde": "Menu > Início (#inicio)",
+   "quem": "todos os papéis",
+   "ferramentas": [
+    {
+     "nome": "Atalhos do dia a dia",
+     "onde": "#inicio (botões grandes)",
+     "faz": "Botões grandes para Nova ativação, Novo bloqueio, Cadastrar entregador, Ativar parceiro, Calculadora de bairro, Registrar adicional, Nova tarefa e Registros.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Mostra só os atalhos que o papel da pessoa permite",
+      "Nova tarefa abre o formulário já com o cursor no título",
+      "Seus números do dia aparecem discretos embaixo"
+     ],
+     "banco": [
+      "resumo_e_avisos"
+     ],
+     "desde": "008c"
+    },
+    {
+     "nome": "Acontecendo agora",
+     "onde": "#inicio (topo)",
+     "faz": "Junta no topo os pedidos de ajuda, avisos gerais, passagens de turno e pendências como 'Aguardando prestação de contas'.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Pendência de bloqueio some quando alguém marca como resolvida, com uma nota",
+      "Aparece junto das pendências da pessoa"
+     ],
+     "banco": [
+      "resumo_e_avisos",
+      "resolver_aviso_rapido"
+     ],
+     "desde": "009d"
+    },
+    {
+     "nome": "Pedir ajuda",
+     "onde": "#inicio > Pedir ajuda",
+     "faz": "Pede ajuda urgente à equipe escolhendo Monitoramento, Suporte (Crisp) ou Suporte (Blip). Todos veem e ouvem um som até alguém tocar em 'Eu ajudo'.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Fica aberto por 10 minutos",
+      "Ninguém pegou: pedir de novo ou mandar só para os moderadores",
+      "Um pedido ativo por pessoa",
+      "Som mais forte do app, repetido por até 1 minuto"
+     ],
+     "banco": [
+      "pedir_ajuda",
+      "aceitar_ajuda",
+      "renovar_ajuda",
+      "resolver_aviso_rapido",
+      "encerrar_aviso_rapido"
+     ],
+     "desde": "009d"
+    },
+    {
+     "nome": "Aviso geral",
+     "onde": "#inicio > Aviso geral",
+     "faz": "Coloca um recado na tela inicial de todos pelo tempo que a pessoa escolher, de 15 minutos a 12 horas.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Quem criou ou um moderador pode encerrar antes",
+      "Toca som e entra no sino de todos"
+     ],
+     "banco": [
+      "criar_aviso_geral",
+      "encerrar_aviso_rapido"
+     ],
+     "desde": "009d"
+    },
+    {
+     "nome": "Passagem de turno",
+     "onde": "#inicio > Passar o turno",
+     "faz": "Monta um panorama do que está com a pessoa e deixa ela decidir, tarefa por tarefa, o que passa para alguém, o que volta para a fila e o que mantém.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Lembrete entre 17h30 e 18h59 para quem ainda não passou o turno",
+      "'Depois' adia o lembrete por 30 minutos",
+      "Quem recebe vê a passagem no topo e marca como lida",
+      "Tarefa de bloqueio só vai para quem tem o módulo"
+     ],
+     "banco": [
+      "panorama_turno",
+      "passar_turno",
+      "ler_passagem"
+     ],
+     "desde": "009d"
+    },
+    {
+     "nome": "Acordos vencidos",
+     "onde": "#inicio (faixa vermelha)",
+     "faz": "Mostra em vermelho os acordos com estabelecimentos que venceram e ainda não foram ajustados.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Some quando alguém toca em 'Ajuste feito'"
+     ],
+     "banco": [
+      "resumo_e_avisos",
+      "ajustar_acordo"
+     ],
+     "desde": "009d"
+    },
+    {
+     "nome": "Notícias rápidas",
+     "onde": "#inicio (faixa de notícias)",
+     "faz": "Frases comemorativas com as ativações de parceiros dos últimos 7 dias.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "As frases são escolhidas no próprio app"
+     ],
+     "banco": [
+      "noticias_rapidas"
+     ],
+     "desde": "009f"
+    },
+    {
+     "nome": "Histórico de atualizações",
+     "onde": "#inicio > Histórico de atualizações",
+     "faz": "Abre a janela 'O que há de novo' com o que mudou em cada versão. A janela também abre sozinha uma vez a cada versão nova.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Lista acumulada: as versões novas entram no topo sem apagar as antigas",
+      "Tour guiado: balões que mostram onde ficaram as coisas que mudaram de lugar"
+     ],
+     "banco": [],
+     "desde": "009w"
+    }
+   ]
+  },
+  {
+   "id": "ativacao",
+   "nome": "Ativação de entregadores",
+   "descricao": "Envio e aprovação dos cadastros de entregadores novos: quem conversou com o entregador envia, e a equipe analisa, aprova, reprova ou encerra.",
+   "onde": "Menu > Entregadores > Ativação (#ativacao/...)",
+   "quem": "moderador, monitorador e suporte (papel da ativação)",
+   "ferramentas": [
+    {
+     "nome": "Novo cadastro",
+     "onde": "#ativacao/novo",
+     "faz": "Envia o cadastro de um entregador com ID do app, nome, cidade e observação.",
+     "quem": "moderador, monitorador e suporte",
+     "detalhes": [
+      "ID obrigatório e sem CPF (o Comunique não guarda CPF)",
+      "Avisa quando o ID já tem histórico (cadastros, bloqueios) num quadrinho ao lado",
+      "Cria a ficha do entregador sozinho quando tem ID e nome",
+      "O responsável da cidade recebe aviso"
+     ],
+     "banco": [
+      "enviar_cadastro",
+      "historico_id",
+      "listar_cidades"
+     ],
+     "desde": "início"
+    },
+    {
+     "nome": "Pendentes",
+     "onde": "#ativacao/pendentes",
+     "faz": "Fila dos cadastros esperando análise ou contato, com os botões aprovar, reprovar e encerrar.",
+     "quem": "moderador e monitorador decidem; suporte acompanha os seus",
+     "detalhes": [
+      "Número vermelho no menu com quantos esperam",
+      "Desfazer a última decisão",
+      "Marca 'revisar' quando falta nome/ID ou o nome não bate com a ficha",
+      "Depois de aprovar, diz em quais tarefas a aprovação contou",
+      "Previsão de término informativa em cada item"
+     ],
+     "banco": [
+      "listar_cadastros",
+      "decidir",
+      "desfazer",
+      "marcar_cadastro_revisado",
+      "tarefas_que_contam",
+      "definir_previsao"
+     ],
+     "desde": "início"
+    },
+    {
+     "nome": "Revisão do cadastro (janela)",
+     "onde": "abre de Pendentes, Histórico, avisos e busca (#cadastro/<id>)",
+     "faz": "Abre um cadastro para ver tudo, completar ID/nome/cidade e ver o que aconteceu com ele.",
+     "quem": "todos completam; monitorador e moderador marcam como revisado",
+     "detalhes": [
+      "Toda edição grava o antes e o depois",
+      "Pode virar uma tarefa opcional para a equipe revisar"
+     ],
+     "banco": [
+      "ver_cadastro",
+      "completar_cadastro",
+      "eventos_do_cadastro",
+      "sugerir_tarefa_cadastro",
+      "excluir_cadastro"
+     ],
+     "desde": "007"
+    },
+    {
+     "nome": "Histórico da ativação",
+     "onde": "#ativacao/historico",
+     "faz": "Lista de todos os cadastros com busca e filtros, e download em CSV.",
+     "quem": "todos (o suporte vê só os que enviou)",
+     "detalhes": [
+      "Filtro 'Só os que eu enviei'",
+      "Baixar CSV",
+      "Na versão em andamento (009x) passa a vir em páginas"
+     ],
+     "banco": [
+      "listar_cadastros",
+      "listar_cadastros_pagina"
+     ],
+     "desde": "início (páginas na 009x)"
+    }
+   ]
+  },
+  {
+   "id": "bloqueios",
+   "nome": "Bloqueios",
+   "descricao": "Registro das restrições aplicadas a entregadores por infração, com a punição calculada pelas regras, as tratativas (conversa com o entregador) e o histórico.",
+   "onde": "Menu > Entregadores > Bloqueios (#bloqueios/...)",
+   "quem": "quem tem papel no módulo de bloqueios (moderador, monitorador, suporte)",
+   "ferramentas": [
+    {
+     "nome": "Novo bloqueio",
+     "onde": "#bloqueios/novo",
+     "faz": "Registra uma infração para um ID e mostra antes a punição calculada (horas, qual ocorrência é, quando termina).",
+     "quem": "moderador, monitorador e suporte dos bloqueios",
+     "detalhes": [
+      "Prévia com a contagem de reincidência dentro da janela de dias",
+      "Caixinha de agravante (conta como a próxima ocorrência ou encerra a parceria)",
+      "Infração leve (aviso de 30 min) só com ID e motivo; ao acumular, vira bloqueio sozinho",
+      "Pergunta 'já solucionado?' quando a infração tem pendência (ex.: prestação de contas)",
+      "Até 3 anexos (imagens comprimidas)",
+      "Botão 'Gerar mensagem' para o entregador"
+     ],
+     "banco": [
+      "regras_bloqueio",
+      "previa_bloqueio",
+      "registrar_bloqueio_agravante",
+      "registrar_infracao_leve",
+      "anexar"
+     ],
+     "desde": "002 (agravante 009c)"
+    },
+    {
+     "nome": "Tratativas",
+     "onde": "#bloqueios/tratativas",
+     "faz": "Tarefas de conversar com o entregador depois de um bloqueio de 10 h ou mais, encerramento de parceria ou leves acumuladas.",
+     "quem": "monitorador e moderador",
+     "detalhes": [
+      "Vai para o responsável da cidade (ou moderadores)",
+      "Atrasada depois de 32 h (prazo editável); moderadores recebem aviso",
+      "Moderador pode passar para outra pessoa",
+      "Tarefa 'completar dados' quando o bloqueio veio sem nome",
+      "Concluídas mais recentes com 'Ver mais' (009x)"
+     ],
+     "banco": [
+      "listar_tarefas",
+      "concluir_tratativa",
+      "realocar_tarefa",
+      "completar_dados_bloqueio",
+      "salvar_prazo_tratativa",
+      "listar_tarefas_concluidas"
+     ],
+     "desde": "002/004"
+    },
+    {
+     "nome": "Bloqueados agora",
+     "onde": "#bloqueios/ativos",
+     "faz": "Quem está com restrição neste momento e quando termina; é onde se libera antes do prazo ou se reverte um encerramento.",
+     "quem": "monitorador e moderador",
+     "detalhes": [
+      "O fim do prazo libera sozinho, sem ninguém precisar fazer nada"
+     ],
+     "banco": [
+      "listar_bloqueios",
+      "liberar_bloqueio"
+     ],
+     "desde": "002"
+    },
+    {
+     "nome": "Atenção",
+     "onde": "#bloqueios/atencao",
+     "faz": "Lista de entregadores que merecem cuidado: a uma leve do limite, 2 ou mais bloqueios, tipos diferentes de infração, ou aprovados há pouco e já bloqueados.",
+     "quem": "papéis dos bloqueios",
+     "detalhes": [
+      "Olha os últimos 50 dias",
+      "Deixa de fora os encerrados"
+     ],
+     "banco": [
+      "entregadores_atencao"
+     ],
+     "desde": "006"
+    },
+    {
+     "nome": "Consultar entregador",
+     "onde": "#bloqueios/consultar",
+     "faz": "Procura um ID e mostra a ficha com tudo o que aconteceu com ele.",
+     "quem": "papéis dos bloqueios",
+     "detalhes": [
+      "Se o ID não existe, oferece cadastrar o entregador"
+     ],
+     "banco": [
+      "consultar_entregador"
+     ],
+     "desde": "003"
+    },
+    {
+     "nome": "Histórico de bloqueios",
+     "onde": "#bloqueios/historico",
+     "faz": "Lista de todos os bloqueios com quadrinhos clicáveis por situação, filtros, linha que abre os detalhes e CSV.",
+     "quem": "papéis dos bloqueios",
+     "detalhes": [
+      "'Só os que eu registrei'",
+      "Linha aberta em blocos: dados, tratativa e o que aconteceu",
+      "Corrigir ID/nome/cidade com motivo (marca 'revisar' some)",
+      "Anexos e 'Gerar mensagem' na linha",
+      "Colunas ordenáveis"
+     ],
+     "banco": [
+      "listar_bloqueios_pagina",
+      "eventos_do_bloqueio",
+      "corrigir_bloqueio",
+      "excluir_bloqueio",
+      "listar_anexos",
+      "baixar_anexo",
+      "excluir_anexo"
+     ],
+     "desde": "002 (visual 008d6)"
+    },
+    {
+     "nome": "Regras",
+     "onde": "#bloqueios/regras",
+     "faz": "Tabela das infrações com as horas da 1a e 2a vez, o aumento de 30% a partir da 3a, a explicação em linguagem simples e as regras das leves.",
+     "quem": "moderador dos bloqueios edita",
+     "detalhes": [
+      "Mudar a regra não muda bloqueios já feitos",
+      "Explicação da regra usada nas mensagens"
+     ],
+     "banco": [
+      "regras_bloqueio",
+      "salvar_infracao",
+      "salvar_infracao_leve",
+      "salvar_parametros_leves",
+      "salvar_explicacao_infracao"
+     ],
+     "desde": "002 (política 009a)"
+    },
+    {
+     "nome": "Revisar registros (suporte)",
+     "onde": "cartão em Minha fila",
+     "faz": "Lista dos bloqueios marcados 'revisar' para o suporte conferir e corrigir.",
+     "quem": "suporte, monitorador e moderador",
+     "detalhes": [
+      "Corrigir exige motivo e fica no histórico"
+     ],
+     "banco": [
+      "bloqueios_para_revisar",
+      "corrigir_bloqueio"
+     ],
+     "desde": "008d"
+    }
+   ]
+  },
+  {
+   "id": "ficha",
+   "nome": "Entregadores e ficha",
+   "descricao": "Cada entregador tem uma ficha única por ID, com nome e cidade oficiais e a linha do tempo de tudo o que aconteceu com ele.",
+   "onde": "Clicando no nome em qualquer lista, pela busca do topo, ou #ficha/<id>",
+   "quem": "papéis dos bloqueios (ficha completa)",
+   "ferramentas": [
+    {
+     "nome": "Ficha do entregador",
+     "onde": "janela (#ficha/<id>)",
+     "faz": "Mostra dados, bloqueios, cadastros, comentários e alterações do entregador numa linha do tempo.",
+     "quem": "papéis dos bloqueios",
+     "detalhes": [
+      "Comentários da equipe (apaga quem escreveu ou moderador)",
+      "Monitorador/moderador alteram nome e cidade, podendo aplicar aos bloqueios antigos",
+      "Botão 'De olho nele' para receber tudo sobre ele",
+      "ID com botão de copiar"
+     ],
+     "banco": [
+      "consultar_entregador",
+      "comentar_entregador",
+      "excluir_comentario",
+      "salvar_entregador",
+      "seguir"
+     ],
+     "desde": "003"
+    },
+    {
+     "nome": "Cadastrar entregador",
+     "onde": "janela (atalho da tela inicial ou #entregadores/cadastrar)",
+     "faz": "Cria a ficha de um entregador sem precisar de ativação nem bloqueio.",
+     "quem": "papéis dos bloqueios",
+     "detalhes": [
+      "Recusa ID que já tem ficha",
+      "Completa sozinho bloqueios que estavam sem nome",
+      "Mostra os cadastrados recentemente"
+     ],
+     "banco": [
+      "cadastrar_entregador",
+      "entregadores_recentes"
+     ],
+     "desde": "008b (janela 009m)"
+    },
+    {
+     "nome": "Ficha automática",
+     "onde": "acontece sozinha",
+     "faz": "A ficha nasce sozinha a partir do primeiro bloqueio, cadastro ou lançamento financeiro que traga ID e nome.",
+     "quem": "sistema",
+     "detalhes": [
+      "Nunca sobrescreve uma ficha existente"
+     ],
+     "banco": [
+      "(gatilhos no banco)"
+     ],
+     "desde": "003/009h"
+    }
+   ]
+  },
+  {
+   "id": "atividades",
+   "nome": "Atividades e tarefas",
+   "descricao": "O que cada pessoa tem para fazer e o quadro de tarefas da equipe, com tipos definidos, prazos e progresso.",
+   "onde": "Menu > Atividades (#atividades/...)",
+   "quem": "todos os papéis",
+   "ferramentas": [
+    {
+     "nome": "Minha fila",
+     "onde": "#atividades/pendencias",
+     "faz": "Tudo o que está esperando pela pessoa: tarefas comigo ou sugeridas para mim, tratativas, pendências, pedidos de cidade.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Número vermelho no menu",
+      "Cartão 'Revisar registros da planilha: faltam N'",
+      "Tarefas opcionais no fim, menores"
+     ],
+     "banco": [
+      "resumo_e_avisos",
+      "listar_atividades",
+      "listar_tarefas"
+     ],
+     "desde": "004 (nome 009m)"
+    },
+    {
+     "nome": "Tarefas (quadro da equipe)",
+     "onde": "#atividades/sugeridas",
+     "faz": "Quadro com as tarefas em cartões por tipo: Para você, Abertas, Em andamento e Concluídas.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "10 tipos com campos próprios e prazo padrão (ex.: Procurar entregador 1 h, Pagamento ao entregador 24 h)",
+      "'Eu faço', 'Pedir para alguém' e 'Pegar a próxima'",
+      "Pausa 'aguardando terceiro' (o relógio para)",
+      "Checklist, comentários com menções e agradecimentos",
+      "'Registrar o que já fiz' entra já concluída"
+     ],
+     "banco": [
+      "listar_atividades",
+      "criar_tarefa",
+      "aceitar_atividade",
+      "concluir_atividade",
+      "aguardar_terceiro",
+      "pegar_proxima",
+      "comentar_tarefa",
+      "comentarios_da_tarefa",
+      "agradecer_tarefa",
+      "tipos_tarefa"
+     ],
+     "desde": "004 (cartões 009d2)"
+    },
+    {
+     "nome": "Tarefas de aprovação que contam sozinhas",
+     "onde": "dentro do quadro",
+     "faz": "'Aprovar N entregadores' e 'Aprovar N parceiros' contam sozinhas as aprovações que a pessoa faz na cidade.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Várias pessoas podem 'Entrar junto' e somar",
+      "Ativar um parceiro aumenta em 5 a meta de entregadores da cidade (ou cria a tarefa)"
+     ],
+     "banco": [
+      "tarefas_que_contam",
+      "aceitar_atividade"
+     ],
+     "desde": "009e/009g"
+    },
+    {
+     "nome": "Prazos por tipo",
+     "onde": "fim da aba Tarefas",
+     "faz": "O moderador ajusta o prazo padrão de cada tipo de tarefa.",
+     "quem": "moderador da ativação",
+     "detalhes": [],
+     "banco": [
+      "salvar_prazo_tipo_tarefa"
+     ],
+     "desde": "009d2"
+    },
+    {
+     "nome": "Tarefas recorrentes",
+     "onde": "fim da aba Tarefas",
+     "faz": "Tarefas que se criam sozinhas todo dia, toda semana ou todo mês, num horário escolhido.",
+     "quem": "quem criou ou moderador muda",
+     "detalhes": [
+      "Pode ter checklist",
+      "Mês curto cai no último dia"
+     ],
+     "banco": [
+      "listar_recorrentes",
+      "salvar_recorrente",
+      "excluir_recorrente",
+      "gerar_recorrentes"
+     ],
+     "desde": "009d3"
+    },
+    {
+     "nome": "Previsão de término",
+     "onde": "em cadastros, tarefas e atividades",
+     "faz": "A pessoa diz quando pretende terminar; o app avisa quem definiu quando a previsão vence.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Só informativa, não muda prazo"
+     ],
+     "banco": [
+      "definir_previsao",
+      "verificar_previsoes"
+     ],
+     "desde": "006/008d"
+    }
+   ]
+  },
+  {
+   "id": "parceiros",
+   "nome": "Parceiros",
+   "descricao": "Registro dos estabelecimentos parceiros ativados (segundo processo de ativação) e acompanhamento por cidade e semana.",
+   "onde": "Menu > Parceiros (#parceiros/...)",
+   "quem": "papéis da ativação",
+   "ferramentas": [
+    {
+     "nome": "Ativar parceiro",
+     "onde": "#parceiros/novo",
+     "faz": "Registra direto um estabelecimento ativado, com cidade e observação.",
+     "quem": "papéis da ativação",
+     "detalhes": [
+      "Sem etapa de aprovação",
+      "Diz em quais tarefas contou",
+      "Não repete o mesmo nome na mesma cidade"
+     ],
+     "banco": [
+      "registrar_parceiro",
+      "tarefas_que_contam"
+     ],
+     "desde": "009e"
+    },
+    {
+     "nome": "Parceiros ativos",
+     "onde": "#parceiros/lista",
+     "faz": "Lista com busca e filtros de todos os parceiros ativados.",
+     "quem": "papéis da ativação",
+     "detalhes": [
+      "Excluir: quem registrou ou moderador",
+      "Parceiro ativado continua ativo para sempre"
+     ],
+     "banco": [
+      "listar_parceiros",
+      "excluir_parceiro"
+     ],
+     "desde": "009f"
+    },
+    {
+     "nome": "Ativações",
+     "onde": "#parceiros/cidades",
+     "faz": "Análise da semana (esta × a passada), cartões por cidade e histórico por dia ('Fulano ativou X em CIDADE').",
+     "quem": "papéis da ativação",
+     "detalhes": [
+      "Semana de terça a segunda, horário de Brasília"
+     ],
+     "banco": [
+      "parceiros_por_cidade",
+      "listar_parceiros"
+     ],
+     "desde": "009f/009g4"
+    }
+   ]
+  },
+  {
+   "id": "ferramentas",
+   "nome": "Ferramentas",
+   "descricao": "Ferramentas do dia a dia: calcular quanto pagar quando o bairro foi cobrado errado e montar mensagens prontas.",
+   "onde": "Menu > Ferramentas (#ferramentas/...)",
+   "quem": "papéis da ativação",
+   "ferramentas": [
+    {
+     "nome": "Calculadora de bairro",
+     "onde": "#ferramentas/calculadora",
+     "faz": "Escolhe a cidade, o bairro informado e o real, e mostra a diferença que o entregador deve receber; dá para registrar o ajuste ali mesmo.",
+     "quem": "papéis da ativação",
+     "detalhes": [
+      "Entende nomes parecidos ('Centri' vira CENTRO) e avisa",
+      "Diferença negativa vira zero",
+      "Botão para registrar o ajuste como lançamento financeiro"
+     ],
+     "banco": [
+      "tarifas_bairros",
+      "registrar_ajuste_bairro"
+     ],
+     "desde": "009b"
+    },
+    {
+     "nome": "Tarifas dos bairros",
+     "onde": "dentro da Calculadora (#ferramentas/tarifas)",
+     "faz": "Tabela dos bairros de cada cidade com valor e taxa; o moderador edita.",
+     "quem": "todos veem; moderador da ativação edita",
+     "detalhes": [
+      "Bairro novo com nome quase igual vira apelido do existente",
+      "Lista de bairros parecidos para juntar ou marcar como diferentes"
+     ],
+     "banco": [
+      "tarifas_bairros",
+      "salvar_bairro",
+      "bairros_parecidos",
+      "juntar_bairros"
+     ],
+     "desde": "009b (parecidos 009p)"
+    },
+    {
+     "nome": "Mensagens prontas",
+     "onde": "#ferramentas/mensagens",
+     "faz": "Modelos de mensagem para entregadores, parceiros e cidades, preenchidos com nome, infração, horas e término.",
+     "quem": "todos usam; moderador edita os modelos",
+     "detalhes": [
+      "Até 3 opções de texto para engajamento",
+      "Escolher 'Entregador com restrição' preenche tudo sozinho",
+      "Nunca diz 'bloqueio', e sim 'restrição temporária'"
+     ],
+     "banco": [
+      "mensagens",
+      "salvar_modelo_mensagem",
+      "listar_bloqueios"
+     ],
+     "desde": "009c/009c2"
+    }
+   ]
+  },
+  {
+   "id": "financeiro",
+   "nome": "Financeiro",
+   "descricao": "Registro do que é pago ao entregador fora da corrida (adicionais e ajustes de bairro) e dos acordos com estabelecimentos.",
+   "onde": "Menu > Financeiro (#financeiro/...)",
+   "quem": "papéis da ativação (todos registram e todos veem)",
+   "ferramentas": [
+    {
+     "nome": "Registrar adicional",
+     "onde": "#financeiro/adicional",
+     "faz": "Registra um adicional pago: valor da entrega, do pedido e combinado; o app calcula o adicional.",
+     "quem": "papéis da ativação",
+     "detalhes": [
+      "Ao digitar o ID mostra nome e cidade da ficha, ou pede o nome",
+      "Origem QD ou outros, mercado sim/não, motivo em lista",
+      "Pergunta se já foi lançado no sistema"
+     ],
+     "banco": [
+      "registrar_adicional",
+      "quem_e"
+     ],
+     "desde": "009b"
+    },
+    {
+     "nome": "Lançamentos e pendentes",
+     "onde": "#financeiro/lancamentos",
+     "faz": "Lista de adicionais e ajustes com filtros e resumo; no topo, os que a pessoa registrou e ainda não lançou.",
+     "quem": "papéis da ativação",
+     "detalhes": [
+      "Qualquer um marca como lançado",
+      "Excluir: quem registrou ou moderador",
+      "Número no menu com os pendentes"
+     ],
+     "banco": [
+      "listar_lancamentos",
+      "marcar_lancado",
+      "excluir_lancamento",
+      "resumo_financeiro"
+     ],
+     "desde": "009b (juntos 009k)"
+    },
+    {
+     "nome": "Acordos",
+     "onde": "#financeiro/acordos",
+     "faz": "Registra o que foi combinado com um estabelecimento e até quando; vencido aparece em vermelho na tela inicial.",
+     "quem": "papéis da ativação",
+     "detalhes": [
+      "'Ajuste feito' avisa quem registrou",
+      "Filtros abertos/ajustados e cidade"
+     ],
+     "banco": [
+      "registrar_acordo",
+      "listar_acordos",
+      "ajustar_acordo",
+      "excluir_acordo"
+     ],
+     "desde": "009d"
+    }
+   ]
+  },
+  {
+   "id": "analises",
+   "nome": "Análises",
+   "descricao": "Números para entender a operação: o dia a dia, padrões mais profundos, o resumo da semana e o andamento das tarefas.",
+   "onde": "Menu > Análises (#analises/...)",
+   "quem": "todos os papéis (só números somados)",
+   "ferramentas": [
+    {
+     "nome": "Análises simples",
+     "onde": "#analises/simples",
+     "faz": "Números do dia a dia: ativação agora e no período, motivos de não aprovação, quem sai do bloqueio hoje, bloqueados por cidade, mapa de dia e hora.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Filtro de período e cidade",
+      "Parte de bloqueios só para quem tem o módulo",
+      "Seus números ('você')"
+     ],
+     "banco": [
+      "analises_simples",
+      "metricas",
+      "metricas_bloqueios",
+      "listar_cidades"
+     ],
+     "desde": "008c"
+    },
+    {
+     "nome": "Análises complexas",
+     "onde": "#analises/complexas",
+     "faz": "Eficácia das punições, reincidência por infração, escada de ocorrências, tempo de resposta da ativação, tempo da ativação ao primeiro bloqueio, liberações.",
+     "quem": "todos os papéis",
+     "detalhes": [],
+     "banco": [
+      "analises_complexas"
+     ],
+     "desde": "008c"
+    },
+    {
+     "nome": "Resumo semanal",
+     "onde": "#analises/resumo",
+     "faz": "Resumo da semana de terça a segunda, pronto para imprimir em PDF.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Imprime só o resumo"
+     ],
+     "banco": [
+      "resumo_semanal"
+     ],
+     "desde": "005"
+    },
+    {
+     "nome": "Painel das tarefas",
+     "onde": "#analises/tarefas",
+     "faz": "Tarefas agora (sem dono, em andamento, aguardando, atrasadas) e no período (% no prazo, tempos médios, por tipo, cidade e pessoa).",
+     "quem": "todos; moderador vê todas as pessoas, os outros só a própria linha",
+     "detalhes": [
+      "Metas pessoais (em teste)",
+      "Revisão de qualidade por amostragem (moderadores)",
+      "Placar da equipe (só o administrador final)"
+     ],
+     "banco": [
+      "painel_tarefas",
+      "minhas_metas",
+      "salvar_meta",
+      "excluir_meta",
+      "placar_equipe",
+      "amostra_revisao",
+      "revisar_qualidade"
+     ],
+     "desde": "009d3 (nas Análises desde a 009m)"
+    }
+   ]
+  },
+  {
+   "id": "avisos",
+   "nome": "Avisos",
+   "descricao": "Tudo o que avisa a pessoa: o sino, a lista dos avisos dela, o feed do que a equipe fez, o que ela acompanha e os sons.",
+   "onde": "Menu > Avisos (#avisos/...) e o sino no topo",
+   "quem": "todos os papéis",
+   "ferramentas": [
+    {
+     "nome": "Sino (tira de avisos)",
+     "onde": "botão do sino no topo",
+     "faz": "Abre uma tira com os 20 avisos mais recentes e o resumo do dia, sem sair da tela.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Número no sino com os não lidos",
+      "Leves da mesma cidade agrupadas num aviso que vai subindo",
+      "Marcar como lidos"
+     ],
+     "banco": [
+      "resumo_e_avisos",
+      "resumo_do_dia",
+      "marcar_notificacoes_lidas"
+     ],
+     "desde": "008b"
+    },
+    {
+     "nome": "Para mim",
+     "onde": "#avisos/para-mim",
+     "faz": "Lista completa dos avisos da pessoa com busca, filtros e cidade.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Avisos não mostram o código do entregador, e sim o nome"
+     ],
+     "banco": [
+      "listar_avisos"
+     ],
+     "desde": "008b"
+    },
+    {
+     "nome": "Toda a equipe (Registros)",
+     "onde": "#avisos/equipe",
+     "faz": "Feed de tudo o que a equipe registrou: cadastros, decisões, bloqueios, comentários.",
+     "quem": "todos (quem não tem bloqueios vê só a ativação)",
+     "detalhes": [
+      "Carrega mais conforme rola",
+      "Grifa o termo buscado"
+     ],
+     "banco": [
+      "listar_registros"
+     ],
+     "desde": "004 (em Avisos desde a 009m)"
+    },
+    {
+     "nome": "Seguir cidade e 'de olho nele'",
+     "onde": "Avisos > preferências; ficha do entregador",
+     "faz": "A pessoa escolhe acompanhar uma cidade ou um entregador e passa a receber os avisos deles.",
+     "quem": "todos os papéis",
+     "detalhes": [],
+     "banco": [
+      "seguir",
+      "minhas_preferencias"
+     ],
+     "desde": "008d"
+    },
+    {
+     "nome": "Silenciar tipos de aviso",
+     "onde": "Avisos > preferências",
+     "faz": "Desliga avisos de ativação, bloqueios, leves, comentários, cidades ou financeiro.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "O que é tarefa da pessoa e 'de olho' não se silencia"
+     ],
+     "banco": [
+      "salvar_preferencias",
+      "minhas_preferencias"
+     ],
+     "desde": "008d"
+    },
+    {
+     "nome": "Sons e notificação do sistema",
+     "onde": "Avisos > sons; botão 'Testar avisos e sons'",
+     "faz": "Toca um som conforme a urgência (4 níveis) e pode mostrar notificação do computador quando a aba está escondida.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Pedido de ajuda é o nível mais forte",
+      "Preferência guardada no navegador",
+      "Botão para testar cada som"
+     ],
+     "banco": [],
+     "desde": "009d (teste 009e2)"
+    },
+    {
+     "nome": "Pedir para ser responsável de cidade",
+     "onde": "Avisos",
+     "faz": "Quem quiser pede para ser responsável por uma cidade sem responsável; moderador aprova ou recusa.",
+     "quem": "todos pedem; moderadores decidem",
+     "detalhes": [
+      "Aprovado, a pessoa passa a receber tudo da cidade"
+     ],
+     "banco": [
+      "cidades_sem_responsavel",
+      "pedir_cidade",
+      "cancelar_pedido_cidade",
+      "decidir_pedido_cidade"
+     ],
+     "desde": "008b"
+    }
+   ]
+  },
+  {
+   "id": "equipe",
+   "nome": "Equipe",
+   "descricao": "Quem é da equipe e com qual papel, e as regras de quem cuida de cada cidade.",
+   "onde": "Menu > Equipe (#equipe/...)",
+   "quem": "todos veem as regras; moderador da ativação gerencia membros",
+   "ferramentas": [
+    {
+     "nome": "Membros e papéis",
+     "onde": "#equipe/equipe",
+     "faz": "Lista da equipe, pedidos de acesso, e a escolha do papel de cada pessoa na ativação e nos bloqueios.",
+     "quem": "moderador da ativação",
+     "detalhes": [
+      "O administrador final não pode ser removido",
+      "Aceitar ou recusar pedidos de acesso"
+     ],
+     "banco": [
+      "listar_equipe",
+      "salvar_membro",
+      "remover_membro",
+      "recusar_pedido"
+     ],
+     "desde": "início"
+    },
+    {
+     "nome": "Regras de equipe",
+     "onde": "#equipe/regras",
+     "faz": "Cidades com o responsável de cada uma; as de operador mostram o operador e o contato.",
+     "quem": "todos veem; moderador edita",
+     "detalhes": [
+      "Trocar responsável passa as tarefas abertas para a pessoa nova"
+     ],
+     "banco": [
+      "regras_equipe"
+     ],
+     "desde": "006 (008d3)"
+    },
+    {
+     "nome": "Operadores logísticos",
+     "onde": "#equipe/operadores",
+     "faz": "Responsável pelos operadores e lista dos operadores com as cidades de cada um.",
+     "quem": "todos veem; moderador edita",
+     "detalhes": [],
+     "banco": [
+      "regras_equipe"
+     ],
+     "desde": "006 (008d3)"
+    }
+   ]
+  },
+  {
+   "id": "busca",
+   "nome": "Busca do topo e recursos gerais",
+   "descricao": "Coisas que valem em todo o app: a busca, o tema, a atualização de versão e o app instalável.",
+   "onde": "Topo de todas as telas",
+   "quem": "todos os papéis",
+   "ferramentas": [
+    {
+     "nome": "Busca do topo",
+     "onde": "campo de busca no cabeçalho",
+     "faz": "Procura por ID, nome ou texto em cadastros, fichas, comentários e avisos, e abre o resultado.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Fichas só para quem tem bloqueios",
+      "Não achou: oferece cadastrar o entregador",
+      "Grifa o termo nos resultados"
+     ],
+     "banco": [
+      "busca_rapida"
+     ],
+     "desde": "007"
+    },
+    {
+     "nome": "Tema claro e escuro",
+     "onde": "botão da lua no topo",
+     "faz": "Troca o visual entre claro e escuro só para a pessoa.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Sincroniza entre abas"
+     ],
+     "banco": [],
+     "desde": "009j"
+    },
+    {
+     "nome": "Aviso de versão nova",
+     "onde": "aparece sozinho",
+     "faz": "Quando sai versão nova, mostra 'Atualizar agora' para quem está com a antiga aberta.",
+     "quem": "todos os papéis",
+     "detalhes": [],
+     "banco": [],
+     "desde": "009"
+    },
+    {
+     "nome": "App instalável",
+     "onde": "botão Instalar no topo",
+     "faz": "Instala o Comunique como um app no computador ou celular, com ícone próprio.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "O botão só aparece quando o navegador permite"
+     ],
+     "banco": [],
+     "desde": "009n"
+    },
+    {
+     "nome": "Formulário pré-preenchido por link",
+     "onde": "#preencher/<tipo>?id=&nome=&cidade=",
+     "faz": "Abre cadastro, bloqueio, adicional, entregador ou pedido de ajuda já preenchido para a pessoa conferir e enviar.",
+     "quem": "todos os papéis",
+     "detalhes": [
+      "Nada é salvo sozinho"
+     ],
+     "banco": [],
+     "desde": "009t"
+    }
+   ]
+  },
+  {
+   "id": "extensao",
+   "nome": "Extensão do Chrome",
+   "descricao": "Complemento do navegador que leva o Comunique para dentro das telas do Quero Log e do Crisp, num painel lateral.",
+   "onde": "Ícone da extensão no Chrome (versão 1.2.2; ainda não publicada na loja)",
+   "quem": "quem da equipe instalar",
+   "ferramentas": [
+    {
+     "nome": "Ícone com avisos e notificações",
+     "onde": "ícone no Chrome",
+     "faz": "Mostra o número de avisos no ícone e notifica avisos novos e pedidos de ajuda.",
+     "quem": "equipe",
+     "detalhes": [
+      "Confere a cada 1 minuto",
+      "Menu do botão direito: 'Ver no Comunique' com o texto selecionado"
+     ],
+     "banco": [
+      "resumo_e_avisos"
+     ],
+     "desde": "009t (1.0)"
+    },
+    {
+     "nome": "Painel lateral",
+     "onde": "painel do Chrome",
+     "faz": "Entrar, buscar, ver avisos e pedidos de ajuda (com 'Eu ajudo') sem abrir o site.",
+     "quem": "equipe",
+     "detalhes": [
+      "Mostra 'Nesta tela' com o entregador encontrado",
+      "Botão 'Ler a tela de novo'"
+     ],
+     "banco": [
+      "entrar",
+      "busca_rapida",
+      "aceitar_ajuda",
+      "marcar_notificacoes_lidas"
+     ],
+     "desde": "009t"
+    },
+    {
+     "nome": "Leitor do Quero Log e do Crisp",
+     "onde": "nas páginas admin.querolog.io e app.crisp.chat",
+     "faz": "Lê só o ID, o nome e a cidade do entregador que está na tela.",
+     "quem": "equipe",
+     "detalhes": [
+      "Não mexe na página",
+      "Sem nome na tela, usa o nome da ficha"
+     ],
+     "banco": [],
+     "desde": "009t (1.2.2)"
+    },
+    {
+     "nome": "Formulários no painel",
+     "onde": "painel lateral",
+     "faz": "Novo bloqueio, Nova ativação, Registrar adicional, Cadastrar entregador, Calculadora de bairro e Pedir ajuda, preenchidos com os dados da tela.",
+     "quem": "equipe (conforme o papel)",
+     "detalhes": [
+      "Prévia da punição e agravante no bloqueio",
+      "Avisa ID com ficha de outro nome",
+      "Só pode chamar uma lista fechada de funções"
+     ],
+     "banco": [
+      "regras_bloqueio",
+      "previa_bloqueio",
+      "registrar_bloqueio_agravante",
+      "registrar_adicional",
+      "cadastrar_entregador",
+      "enviar_cadastro",
+      "registrar_ajuste_bairro",
+      "tarifas_bairros",
+      "pedir_ajuda"
+     ],
+     "desde": "009t (1.1/1.2)"
+    }
+   ]
+  },
+  {
+   "id": "guardado",
+   "nome": "Guardado (existe, mas está desligado)",
+   "descricao": "Coisas prontas ou começadas que foram retiradas ou postas de lado e podem voltar.",
+   "onde": "Pasta guardado/ do repositório",
+   "quem": "ninguém usa hoje",
+   "ferramentas": [
+    {
+     "nome": "Casos suspeitos ('Espionagem profissional')",
+     "onde": "guardado/casos/",
+     "faz": "Abria um caso quando um cadastro parecia suspeito, com checklist, veredito e placar do detetive.",
+     "quem": "ninguém (desligado)",
+     "detalhes": [
+      "Estado: retirado do app em 11/2026; tabelas e funções continuam no banco, com o interruptor desligado",
+      "Precisa ser revisto antes de voltar"
+     ],
+     "banco": [
+      "abrir_caso (devolve nulo)"
+     ],
+     "desde": "008"
+    },
+    {
+     "nome": "Cartão da extensão na página",
+     "onde": "guardado/extensao-cartao/",
+     "faz": "Cartão flutuante dentro da página do Quero Log/Crisp com os botões de ação.",
+     "quem": "ninguém",
+     "detalhes": [
+      "Estado: trocado pelo painel lateral na 1.2; o dono quer religar no futuro"
+     ],
+     "banco": [],
+     "desde": "009t (1.1)"
+    },
+    {
+     "nome": "Caderno de Campo (direção visual)",
+     "onde": "guardado/caderno-de-campo/",
+     "faz": "Visual de 'diário do dia', papel areia, pendências escritas como tarefa.",
+     "quem": "ninguém",
+     "detalhes": [
+      "Estado: guardado para testar em breve; tem prévia em HTML"
+     ],
+     "banco": [],
+     "desde": "11/2026"
+    },
+    {
+     "nome": "Histórico de bloqueios, visual antigo",
+     "onde": "guardado/historico-bloqueios-008d5/",
+     "faz": "O visual anterior da lista do Histórico de bloqueios.",
+     "quem": "ninguém",
+     "detalhes": [
+      "Estado: guardado porque talvez volte"
+     ],
+     "banco": [],
+     "desde": "008d5"
+    },
+    {
+     "nome": "Spec original da extensão",
+     "onde": "guardado/extensao-comunique/",
+     "faz": "O pedido original da extensão.",
+     "quem": "ninguém",
+     "detalhes": [
+      "Estado: referência"
+     ],
+     "banco": [],
+     "desde": "009t"
+    }
+   ]
+  }
+ ],
+ "rotinas": [
+  {
+   "nome": "Conferir tratativas atrasadas",
+   "faz": "Avisa os moderadores (uma vez por tarefa) quando uma tratativa passa do prazo de 32 h.",
+   "quando": "a cada 5 min, enquanto alguém com papel nos bloqueios usa o app (verificar_atrasos)"
+  },
+  {
+   "nome": "Conferir previsões vencidas",
+   "faz": "Avisa quem definiu uma previsão de término que já venceu.",
+   "quando": "a cada 5 min, enquanto alguém usa (verificar_previsoes)"
+  },
+  {
+   "nome": "Conferir tarefas sem dono ou atrasadas",
+   "faz": "Tarefa sem dono na metade do prazo avisa os moderadores; com dono e atrasada avisa quem está com ela.",
+   "quando": "a cada 5 min, enquanto alguém usa (verificar_tarefas)"
+  },
+  {
+   "nome": "Gerar tarefas recorrentes",
+   "faz": "Cria a tarefa recorrente cujo horário já passou.",
+   "quando": "a cada 5 min, enquanto alguém usa (gerar_recorrentes)"
+  },
+  {
+   "nome": "Perguntar se algo mudou",
+   "faz": "Pergunta ao banco só um número de 'última mudança' e redesenha a tela quando muda; recarrega tudo a cada 5 min.",
+   "quando": "a cada 30 s com a aba visível (2 min se a pessoa está parada há 5 min)"
+  },
+  {
+   "nome": "Avisos ao vivo",
+   "faz": "Recebe na hora os avisos novos da pessoa e toca o som.",
+   "quando": "o tempo todo, pelo Realtime do Supabase"
+  },
+  {
+   "nome": "Conferir versão nova",
+   "faz": "Lê o arquivo versao.txt e oferece 'Atualizar agora'.",
+   "quando": "ao voltar para a aba (no máximo a cada 5 min) e a cada 30 min com a aba aberta"
+  },
+  {
+   "nome": "Fim do bloqueio",
+   "faz": "O bloqueio aparece como liberado quando o prazo acaba, sem ninguém fazer nada.",
+   "quando": "calculado na hora em que alguém olha"
+  },
+  {
+   "nome": "Lembrete da passagem de turno",
+   "faz": "Lembra de passar o turno quem ainda não passou.",
+   "quando": "entre 17h30 e 18h59 (Brasília)"
+  },
+  {
+   "nome": "Pedido de ajuda vence",
+   "faz": "Pedido sem ninguém vence e fica só para quem pediu.",
+   "quando": "10 min depois de criado"
+  },
+  {
+   "nome": "Extensão: conferir avisos",
+   "faz": "Atualiza o número no ícone e notifica avisos novos e pedidos de ajuda.",
+   "quando": "a cada 1 min, com o Chrome aberto e a extensão logada"
+  },
+  {
+   "nome": "Gatilhos do banco",
+   "faz": "Criam fichas, avisos, apagam CPF, tiram o código do entregador dos avisos, marcam mudança.",
+   "quando": "na hora em que o dado é gravado"
+  }
+ ],
+ "numeros": {
+  "telas": 31,
+  "ferramentas": 63,
+  "funcoes_banco": 254,
+  "funcoes_usadas_pelo_site": 141,
+  "funcoes_usadas_pela_extensao": 14,
+  "migracoes": 27,
+  "testes": 25,
+  "conferencias_nos_testes": 1205,
+  "linhas_js": 5645,
+  "linhas_js_extensao": 899,
+  "linhas_sql": 9933,
+  "linhas_html_css": 1669
+ },
+ "numeros_como": {
+  "telas": "seções <section id=\"v-...\"> do index.html (33 seções, menos inicio-rapidos e inicio-noticias, que são partes da tela inicial). Inclui v-en-cadastrar, que hoje abre como janela.",
+  "ferramentas": "soma das ferramentas listadas neste inventário (sem a área Guardado). É uma contagem de leitura, não sai do código.",
+  "funcoes_banco": "nomes distintos em 'create [or replace] function' em supabase/*.sql (inclui as internas e as de casos guardados; uma função redefinida em várias migrações conta uma vez)",
+  "funcoes_usadas_pelo_site": "dessas 254, quantas aparecem entre aspas em js/*.js",
+  "funcoes_usadas_pela_extensao": "quantas aparecem entre aspas nos .js de extensao/",
+  "migracoes": "arquivos supabase/0*.sql (schema.sql conta como instalação; analises.sql, uso-do-comunique.sql e verificacao-dados.sql são consultas avulsas e ficam de fora)",
+  "testes": "arquivos testes/*.test.mjs",
+  "conferencias_nos_testes": "chamadas igual( (718) + ok( (473) + check( (14) em testes/*.test.mjs",
+  "linhas_js": "wc -l js/*.js (site)",
+  "linhas_js_extensao": "wc -l extensao/*.js, painel/* e telas/*",
+  "linhas_sql": "wc -l de todos os supabase/*.sql",
+  "linhas_html_css": "wc -l index.html + estilo.css"
+ }
+}
