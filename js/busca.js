@@ -51,10 +51,18 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009w";
+  const VERSAO = "009x";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009x", tema: "Casa em ordem", itens: [
+      ["Listas mais leves", "O Histórico da ativação vem em páginas de 100, com Anterior e Próxima. As tratativas concluídas e as tarefas concluídas mostram as mais recentes, com o botão \"Ver mais\". A busca roda no banco e acha também os antigos."],
+      ["Busca sem travar", "No Histórico, a busca espera você parar de digitar e redesenha só a lista."],
+      ["Análises com horário", "As Análises dizem de quando são os números (\"Números de 14:32\") e têm o botão \"Atualizar\"."],
+      ["Contadores certos", "O número de tarefas em aberto conta só as que você pode ver e pegar. Quem entra junto numa tarefa também passa a contá-la."],
+      ["Ninguém fica com trabalho parado", "Quando alguém perde o acesso aos bloqueios ou sai da equipe, as cidades e as tratativas dessa pessoa passam para os moderadores, e as tarefas que ela tinha pegado voltam a ficar abertas."],
+      ["Avisos como foram escritos", "Pedidos de ajuda e avisos gerais chegam com o texto exatamente como a pessoa escreveu."],
+    ] },
     { versao: "009w", tema: "Tela inicial mais limpa", itens: [
       ["Histórico de atualizações", "A faixa de novidades saiu da tela inicial. No lugar dela fica o botão \"Histórico de atualizações\", que mostra tudo o que mudou em cada versão."],
     ] },

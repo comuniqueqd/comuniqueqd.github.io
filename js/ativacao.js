@@ -255,7 +255,12 @@
     if (chave === chaveDoHist()) S.lista.hist = d;
   }
   // A3-04: espera a pessoa parar de digitar e busca de novo (o redesenho é só da lista, quando os dados chegam)
-  const filtrarHist = () => { clearTimeout(pagT); pagT = setTimeout(() => App.carregar(), 300); };
+  // PB-11: busca e troca de página pedem só a página nova e redesenham só a tabela (sem recarregar o app inteiro)
+  async function atualizarHist() {
+    try { await carregarHist(); } catch (e) { return toast(msgErro(e)); }
+    renderHist();
+  }
+  const filtrarHist = () => { clearTimeout(pagT); pagT = setTimeout(atualizarHist, 300); };
   function renderHist() {
     const t = $("#t-hist"), h = S.lista.hist;
     const cols = ["Situação", "Entregador", "Cidade", "Enviado por", "Enviado em", "Última decisão", ""];
@@ -290,7 +295,7 @@
       if (S.abertos.has(c.id)) body.append(el("tr", {}, el("td", { colspan: cols.length }, timeline(c.id))));
     }
     t.replaceChildren(head, body);
-    const ir = (n) => { histPag = n; App.carregar(); App.u.rolar?.($("#t-hist")); };
+    const ir = (n) => { histPag = n; atualizarHist(); App.u.rolar?.($("#t-hist")); };
     $("#hist-paginas").replaceChildren(...(paginas > 1 ? [
       el("button", { class: "btn small", type: "button", disabled: h.pagina === 1, onclick: () => ir(h.pagina - 1) }, "‹ Anterior"),
       el("span", { text: `Página ${h.pagina} de ${paginas}` }),

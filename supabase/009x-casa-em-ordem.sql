@@ -3,6 +3,8 @@
 --              as mais recentes com "Ver mais" (listar_tarefas_concluidas) e as Atividades trazem só as N
 --              concluídas mais recentes (listar_atividades(p_concluidas)).
 --   AT2: índice parcial em bloqueios.gerou_bloqueio (o Resumo semanal varria a tabela inteira para cada bloqueio).
+-- Correções do estudo de nov/2026: PB-1, PB-2 (contadores das tarefas), PB-3 (quem perde o papel nos bloqueios),
+--   PB-4 (busca das concluídas), PB-5 e PB-6 (limpeza do código do entregador nos avisos).
 -- Só funções novas (e listar_atividades ganha um parâmetro com padrão: sem ele, devolve o mesmo de antes).
 -- Pode rodar de novo.
 
@@ -80,7 +82,8 @@ begin
   filtradas as (
     select v.* from visiveis v
      where (p_cidade is null or (v.b).cidade = p_cidade)
-       and (q is null or public.norm_nome(concat_ws(' ', (v.b).id_app, (v.b).nome_entregador, (v.b).infracao, (v.b).cidade)) like '%' || q || '%')
+       and (q is null or public.norm_nome(concat_ws(' ', (v.b).id_app, (v.b).nome_entregador, (v.b).infracao, (v.b).cidade,
+              (v.b).registrado_por_nome, public.nome_por_email((v.t).responsavel_email))) like '%' || q || '%')
      order by (v.t).concluida_em desc nulls last limit lim + 1)
   select jsonb_build_object(
     'itens', coalesce((select jsonb_agg(public.json_tarefa(f.t) || jsonb_build_object(
@@ -120,9 +123,105 @@ end $$;
 -- ---------------------------------------------------------------------
 create index if not exists bloqueios_gerou_bloqueio_idx on public.bloqueios (gerou_bloqueio) where gerou_bloqueio is not null;
 
+-- ---------------------------------------------------------------------
+-- Correções do estudo de nov/2026 (revisor do contra)
+-- ---------------------------------------------------------------------
+-- PB-1: o número de tarefas em aberto (009v) contava tarefas que a pessoa ainda não vê (sugeridas a outra pessoa
+--       nos primeiros 10 min). Agora conta só as que aparecem para ela, como a lista (moderador vê todas).
+-- PB-2: quem "entra junto" numa tarefa compartilhada passa a contá-la em minhas_em_andamento.
+do $$
+declare def text; novo text;
+begin
+  def := pg_get_functiondef('public.resumo_inicio()'::regprocedure);
+  novo := replace(def, $a$'abertas_para_pegar', count(*) filter (where a.status = 'aberta' and a.criada_por is distinct from auth.uid()))$a$,
+    $a$'abertas_para_pegar', count(*) filter (where a.status = 'aberta' and a.criada_por is distinct from auth.uid() and (p = 'moderador' or public.atividade_aberta_para_mim(a))))$a$);
+  if to_regprocedure('public.participa(public.atividades)') is not null then
+    novo := replace(novo, $a$'minhas_em_andamento', count(*) filter (where a.status = 'aceita' and a.aceita_por = auth.uid())$a$,
+      $a$'minhas_em_andamento', count(*) filter (where a.status = 'aceita' and public.participa(a))$a$);
+  end if;
+  if novo <> def then execute novo; end if;
+end $$;
+
+-- PB-3: quem perde o papel de monitorador/moderador nos bloqueios (ou sai da equipe) deixava cidades e tratativas
+--       no nome dele. Agora: a cidade fica sem responsável (alguém pode pedir), as tratativas pendentes vão para o novo
+--       responsável da cidade (ou para os moderadores) e, se a pessoa saiu da equipe, as tarefas que ela tinha
+--       aceitado voltam a ficar abertas.
+create or replace function public.membro_saiu_dos_bloqueios()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare cids text[]; sai boolean;
+begin
+  sai := tg_op = 'DELETE' or (coalesce(old.papel_bloqueios::text, '') in ('moderador', 'monitorador')
+                             and coalesce(new.papel_bloqueios::text, '') not in ('moderador', 'monitorador'));
+  if sai then
+    select coalesce(array_agg(distinct c), '{}') into cids from (
+      select nome c from public.cidades where responsavel_email = old.email
+      union select cidade from public.tarefas where responsavel_email = old.email and status = 'pendente' and cidade is not null) x;
+    if tg_op = 'UPDATE' then
+      update public.cidades set responsavel_email = null where responsavel_email = old.email;
+      -- realocadas para a pessoa (não seguem a cidade): voltam para os moderadores
+      update public.tarefas set responsavel_email = null where responsavel_email = old.email and status = 'pendente';
+    end if;
+    if cardinality(cids) > 0 then perform public.reatribuir_tarefas(cids); end if;
+  end if;
+  if tg_op = 'DELETE' and old.user_id is not null then
+    update public.atividades set status = 'aberta', aceita_por = null, aceita_em = null,
+           participantes = coalesce((select jsonb_agg(x) from jsonb_array_elements(participantes) x where x->>'id' <> old.user_id::text), '[]')
+     where status = 'aceita' and aceita_por = old.user_id;
+  end if;
+  return null;
+end $$;
+drop trigger if exists zz_membro_saiu_dos_bloqueios on public.membros;
+create trigger zz_membro_saiu_dos_bloqueios after update of papel_bloqueios or delete on public.membros
+  for each row execute function public.membro_saiu_dos_bloqueios();
+
+-- PB-5 e PB-6: a limpeza do código do entregador nos avisos (009u/009v) mexia em texto escrito pela equipe
+--       (a placa "(QWE1A23)" sumia de um pedido de ajuda, "NATAL25" virava "sem nome") e não pegava IDs só de
+--       números. Agora: só avisos sobre um entregador (link #ficha/#cadastro ou categoria de ativação, bloqueios,
+--       comentários e financeiro); o ID vem do link ou do cadastro, e só é tirado o ID desse entregador. A
+--       adivinhação pelo formato só vale quando o código existe numa ficha ou num cadastro.
+create or replace function public.aviso_tira_id(t text, p_id text, p_nome text)
+returns text language plpgsql immutable set search_path = public as $$
+declare quem constant text := replace(coalesce(nullif(btrim(p_nome), ''), 'sem nome'), '\', '\\'); r text := t;
+begin
+  if r is null or p_id is null or length(p_id) < 4 then return r; end if;
+  r := regexp_replace(r, '\s*\((ID\s+)?' || p_id || '\)', '', 'gi');
+  r := regexp_replace(r, '\mID\s+' || p_id || '\M', quem, 'gi');
+  r := regexp_replace(r, '\m' || p_id || '\M', quem, 'gi');
+  return regexp_replace(r, '^👏\s*', '');
+end $$;
+
+create or replace function public.notificacao_sem_id()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare achado text;
+begin
+  new.texto := regexp_replace(new.texto, '^👏\s*', '');
+  if not (new.id_app is not null or coalesce(new.link, '') ~ '^#(ficha|cadastro)/'
+          or coalesce(new.categoria, '') in ('ativacao', 'bloqueios', 'comentarios', 'financeiro')) then
+    return new;   -- ajuda, aviso geral, passagem de turno, tarefas: o texto fica como a pessoa escreveu
+  end if;
+  if new.id_app is null and coalesce(new.link, '') ~ '^#cadastro/[0-9a-fA-F-]{36}$' then
+    select lower(c.id_app) into new.id_app from public.cadastros c where c.id::text = lower(substring(new.link from 11));
+  end if;
+  if new.id_app is null and coalesce(new.link, '') ~ '^#ficha/[A-Za-z0-9]{4,40}$' then new.id_app := lower(substring(new.link from 8)); end if;
+  if new.id_app is null then
+    achado := coalesce(substring(new.texto from '\((?:ID\s+)?([A-Za-z0-9]{4,40})\)'), substring(new.texto from '\mID\s+([A-Za-z0-9]{4,40})'));
+    if achado is not null and (exists (select 1 from public.entregadores e where e.id_app = lower(achado))
+                               or exists (select 1 from public.cadastros c where lower(c.id_app) = lower(achado))) then
+      new.id_app := lower(achado);
+    end if;
+  end if;
+  if new.id_app is not null and new.texto ~* ('\m' || new.id_app || '\M') then
+    new.texto := public.aviso_tira_id(new.texto, new.id_app, public.nome_do_id(new.id_app));
+  end if;
+  return new;
+end $$;
+
 revoke all on function public.listar_cadastros_pagina(integer, integer, text, text, text, boolean) from public, anon;
 revoke all on function public.listar_tarefas_concluidas(integer, text, text) from public, anon;
 revoke all on function public.listar_atividades(integer) from public, anon;
+revoke all on function public.membro_saiu_dos_bloqueios() from public, anon, authenticated;
+revoke all on function public.aviso_tira_id(text, text, text) from public, anon, authenticated;
+revoke all on function public.notificacao_sem_id() from public, anon, authenticated;
 grant execute on function public.listar_cadastros_pagina(integer, integer, text, text, text, boolean) to authenticated;
 grant execute on function public.listar_tarefas_concluidas(integer, text, text) to authenticated;
 grant execute on function public.listar_atividades(integer) to authenticated;

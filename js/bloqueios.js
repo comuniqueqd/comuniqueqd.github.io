@@ -400,11 +400,13 @@
     const q = $("#bq-q-trat").value, cid = $("#bq-trat-cidade").value;
     const lista = l.filter((t) => buscaB(t.bloqueio, q) && (!cid || t.bloqueio.cidade === cid));
     if (B.tratVer === "concluida") lista.sort((a, b) => String(b.concluida_em).localeCompare(String(a.concluida_em)));
+    // PB-4: nas concluídas a busca roda no banco: lista vazia com filtro é "nada com esse filtro", não "nenhuma ainda"
+    if (!l.length && B.tratVer === "concluida" && (q || cid)) return box.replaceChildren(vazio("Nada com esse filtro", "Limpe a busca ou troque a cidade."));
     if (!l.length) return box.replaceChildren(vazio(B.tratVer === "pendente" ? "Nenhuma tratativa pendente" : "Nenhuma tratativa concluída ainda", B.tratVer === "pendente" ? "Quando um bloqueio de 10 h ou mais for registrado nas suas cidades, ele aparece aqui." : ""));
     if (!lista.length) return box.replaceChildren(vazio("Nada com esse filtro", "Limpe a busca ou troque a cidade."));
     const grupo = (tipo) => lista.filter((t) => t.tipo === tipo);
     const verMais = B.tratVer === "concluida" && B.concMais ? el("div", { class: "paginas" }, el("button", { class: "btn small", type: "button",
-      onclick: (e) => { e.currentTarget.disabled = true; B.concLimite = (B.concLimite || 100) + 100; App.carregar(); } }, "Ver mais concluídas")) : null;
+      onclick: async (e) => { e.currentTarget.disabled = true; B.concLimite = (B.concLimite || 100) + 100; try { await carregarConcluidas(); } catch (err) { return toast(msgErro(err)); } renderTratativas(); } }, "Ver mais concluídas")) : null;
     box.replaceChildren(...[["Completar dados do entregador", grupo("completar_dados")], ["Encerramentos de parceria", grupo("encerramento_parceria")],
       ["Contato por infrações leves acumuladas", grupo("leves_acumuladas")], ["Tratativas de bloqueio", grupo("tratativa")]].filter(([, x]) => x.length).map(([tit, x]) =>
       el("div", { class: "grupo" }, el("h3", {}, tit, el("span", { class: "count", text: x.length })), el("div", { class: "queue" }, x.map((t) => cardBloqueio(t.bloqueio))))), ...(verMais ? [verMais] : []));
@@ -429,7 +431,7 @@
   let concT = null;
   ["#bq-q-trat", "#bq-trat-cidade"].forEach((x) => $(x).addEventListener("input", () => {
     if (B.tratVer !== "concluida") return;
-    clearTimeout(concT); concT = setTimeout(() => { B.concLimite = 100; App.carregar(); }, 300);
+    clearTimeout(concT); concT = setTimeout(async () => { B.concLimite = 100; try { await carregarConcluidas(); } catch (e) { return toast(msgErro(e)); } renderTratativas(); }, 300);
   }));
 
   // ---------- bloqueados agora ----------

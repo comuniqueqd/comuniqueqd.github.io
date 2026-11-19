@@ -3,7 +3,7 @@
 // Carrega TODAS as migrações (carregar-banco.mjs), como o banco de verdade.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node casa.test.mjs
 import pg from "pg";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { carregarBanco } from "./carregar-banco.mjs";
 
@@ -129,6 +129,75 @@ await t("Atividades: 0 = sem concluídas (Minha fila); sem parâmetro = todas, c
 
 await t("AT2: o índice da leve que gerou o bloqueio existe", async () => {
   verdade(await um("select 1 from pg_indexes where indexname = 'bloqueios_gerou_bloqueio_idx'"), "sem índice");
+});
+
+// ---------- correções do estudo de nov/2026 ----------
+const mona = pessoa("mona.casa@x.com", "Mona Monitora");
+await db.query("insert into membros (email, nome, papel, papel_bloqueios) values ($1, $2, 'monitorador', 'monitorador') on conflict do nothing", [mona.email, mona.nome]);
+await rpc(mona, "entrar");
+
+await t("PB-1: tarefa sugerida só para outra pessoa (nos primeiros 10 min) e a que eu criei não contam nas minhas abertas", async () => {
+  const antes = (await rpc(sup, "resumo_inicio")).atividades.abertas_para_pegar;
+  const uMona = (await um("select user_id from membros where email = $1", [mona.email])).user_id;
+  await rpc(admin, "sugerir_atividade", { p_titulo: "Só para a Mona", p_para: [uMona] });
+  await rpc(sup, "sugerir_atividade", { p_titulo: "Criada pela suporte" });
+  igual((await rpc(sup, "resumo_inicio")).atividades.abertas_para_pegar, antes, "suporte");
+  const lista = await rpc(sup, "listar_atividades", { p_concluidas: 0 });
+  verdade(!lista.some((a) => a.titulo === "Só para a Mona"), "a suporte não vê a da Mona (por isso não conta)");
+  verdade((await rpc(mona, "resumo_inicio")).atividades.para_aceitar >= 1, "a Mona vê e conta a dela");
+});
+await t("PB-2: quem entra junto numa tarefa compartilhada conta ela em 'minhas em andamento'", async () => {
+  const tf = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "LAGARTO - SE", quantidade: 3 } });
+  await rpc(sup, "aceitar_atividade", { p_id: tf.id });
+  await rpc(mona, "aceitar_atividade", { p_id: tf.id });
+  const s1 = (await rpc(sup, "resumo_inicio")).atividades.minhas_em_andamento, m1 = (await rpc(mona, "resumo_inicio")).atividades.minhas_em_andamento;
+  verdade(s1 >= 1 && m1 >= 1, `suporte ${s1}, Mona ${m1}`);
+});
+await t("PB-3: quem perde o papel nos bloqueios deixa a cidade sem responsável e a tratativa vai para os moderadores", async () => {
+  await db.query("update cidades set responsavel_email = $1 where nome = 'ITABAIANA - SE'", [mona.email]);
+  await db.query(`with b as (insert into bloqueios (id_app, nome_entregador, cidade, infracao_id, infracao, ocorrencia, ocorrencia_total, horas, inicio, fim, registrado_por, registrado_por_nome, leve)
+      select 'pb3x0001', 'Entregador PB3', 'ITABAIANA - SE', id, nome, 1, 1, 24, now(), now() + interval '24 hours', $2, 'Mateus Lopes', false from infracoes where not leve order by id limit 1 returning id)
+    insert into tarefas (modulo, tipo, bloqueio_id, cidade, responsavel_email, status) select 'bloqueios', 'tratativa', id, 'ITABAIANA - SE', $1, 'pendente' from b`, [mona.email, uAdmin]);
+  await rpc(admin, "salvar_membro", { p_email: mona.email, p_nome: mona.nome, p_papel: "monitorador", p_papel_bloqueios: null });
+  igual((await um("select responsavel_email r from cidades where nome = 'ITABAIANA - SE'")).r, null, "cidade");
+  igual((await um("select t.responsavel_email r from tarefas t join bloqueios b on b.id = t.bloqueio_id where b.id_app = 'pb3x0001'")).r, null, "tratativa");
+});
+await t("PB-3: quem sai da equipe devolve as tarefas que tinha aceitado", async () => {
+  const tf = await rpc(admin, "sugerir_atividade", { p_titulo: "Aceita pela Mona" });
+  const id = tf?.id || (await um("select id from atividades where titulo = 'Aceita pela Mona'")).id;
+  await rpc(mona, "aceitar_atividade", { p_id: id });
+  await rpc(admin, "remover_membro", { p_email: mona.email });
+  igual((await um("select status, aceita_por from atividades where id = $1", [id])), { status: "aberta", aceita_por: null });
+});
+await t("PB-4: a busca das tratativas concluídas acha por quem registrou", async () => {
+  verdade((await rpc(admin, "listar_tarefas_concluidas", { p_busca: "mateus lopes" })).itens.length > 0, "por quem registrou");
+});
+await t("PB-6: pedido de ajuda e aviso geral ficam como a pessoa escreveu (placa e códigos não somem)", async () => {
+  await db.query(`insert into notificacoes (para, texto, categoria) values ($1, 'Mateus Lopes pediu ajuda: moto do entregador (QWE1A23) parada no posto', 'ajuda'),
+    ($1, 'Aviso geral de Mateus Lopes: cupom NATAL25 no ar', 'aviso_geral')`, [uSup]);
+  const l = (await db.query("select texto, id_app from notificacoes where para = $1 and categoria in ('ajuda', 'aviso_geral') order by id", [uSup])).rows;
+  igual(l, [{ texto: "Mateus Lopes pediu ajuda: moto do entregador (QWE1A23) parada no posto", id_app: null }, { texto: "Aviso geral de Mateus Lopes: cupom NATAL25 no ar", id_app: null }]);
+});
+await t("PB-5: aviso de cadastro com ID só de números também perde o código e ganha o id_app", async () => {
+  const c = (await um("insert into cadastros (id_app, nome, cidade, status, enviado_por) values ('48291377', 'Jose Numeros', 'LAGARTO - SE', 'aprovado', $1) returning id", [uSup])).id;
+  await db.query("insert into notificacoes (para, texto, link) values ($1, 'Seu cadastro Jose Numeros (ID 48291377) foi aprovado por Monitor.', $2)", [uSup, "#cadastro/" + c]);
+  igual(await um("select texto, id_app from notificacoes where link = $1", ["#cadastro/" + c]), { texto: "Seu cadastro Jose Numeros foi aprovado por Monitor.", id_app: "48291377" });
+});
+
+// A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco
+await t("A7-01: cada arquivo de supabase/funcoes/ é igual à função que está no banco", async () => {
+  const pasta = new URL("../supabase/funcoes/", import.meta.url);
+  const arqs = readdirSync(pasta).filter((f) => f.endsWith(".sql"));
+  verdade(arqs.length >= 12, "arquivos: " + arqs.length);
+  const tira = (x) => x.replace(/^--.*$/gm, "").replace(/;\s*$/, "").replace(/\s+/g, "");
+  const dif = [];
+  for (const f of arqs) {
+    const txt = readFileSync(new URL(f, pasta), "utf8");
+    const sig = txt.match(/^-- (\S+\(.*?\)):/m)[1];
+    const banco = (await um("select pg_get_functiondef($1::regprocedure) d", ["public." + sig])).d;
+    if (tira(txt) !== tira(banco)) dif.push(f);
+  }
+  igual(dif, [], "diferentes");
 });
 
 console.log(`\n${n - falhas}/${n} ok`);

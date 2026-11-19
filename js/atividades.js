@@ -385,7 +385,8 @@
     const temMais = l.filter((a) => a.status === "concluida").length > (A.concLimite || 50);
     box.replaceChildren(...grupos.map(([tit, x]) => el("div", { class: "grupo" }, el("h3", {}, tit, el("span", { class: "count", text: x.length })), el("div", { class: "queue" }, x.map(cartaoAtividade)))),
       ...(temMais ? [el("div", { class: "paginas" }, el("button", { class: "btn small", type: "button",
-        onclick: (e) => { e.currentTarget.disabled = true; A.concLimite = (A.concLimite || 50) + 50; App.carregar(); } }, "Ver mais concluídas"))] : []));
+        onclick: async (e) => { e.currentTarget.disabled = true; A.concLimite = (A.concLimite || 50) + 50;
+          try { A.atividades = await listarAtividades(A.concLimite + 1); } catch (err) { return toast(msgErro(err)); } renderSugeridas(); } }, "Ver mais concluídas"))] : []));
   }
 
 

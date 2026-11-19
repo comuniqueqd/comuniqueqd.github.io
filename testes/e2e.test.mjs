@@ -114,7 +114,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009w"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009x"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -855,7 +855,7 @@ try {
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
   { const hs = await n7.$$eval("dialog.janela .bloco-versao h4", (l) => l.map((x) => x.textContent));
-    ok(hs.length === 26 && hs[0] === "Agora: Tela inicial mais limpa" && hs.includes("Tarefas à vista") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
+    ok(hs.length === 27 && hs[0] === "Agora: Casa em ordem" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou

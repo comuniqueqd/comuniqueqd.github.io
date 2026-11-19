@@ -22,7 +22,20 @@
 --   Row Level Security: o suporte só enxerga os próprios cadastros.
 -- =====================================================================
 
-drop table if exists public.parceiros, public.revisoes_qualidade, public.metas, public.tarefas_recorrentes, public.agradecimentos, public.comentarios_tarefa, public.tipos_tarefa, public.acordos, public.passagens_lidas, public.passagens_turno, public.avisos_rapidos, public.modelos_mensagem, public.lancamentos_financeiros, public.bairros, public.seguindo, public.preferencias_aviso, public.pedidos_cidade, public.parametros_casos, public.casos_comentarios, public.casos, public.checklist_casos, public.versao_dados, public.anexos, public.operadores_logisticos, public.parametros_equipe, public.atividades, public.comentarios_entregador, public.entregadores, public.notificacoes, public.tarefas, public.eventos_bloqueio, public.bloqueios,
+-- 009x (A7-03): instalação do zero de verdade: apaga TODAS as funções do esquema public (as de extensões ficam),
+-- para não sobrar versão antiga com outra lista de argumentos (ex.: duas salvar_bairro e "is not unique")
+do $$
+declare r record;
+begin
+  for r in select p.oid::regprocedure as f from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'public' and p.prokind in ('f', 'p')
+              and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+  loop
+    execute format('drop routine if exists %s cascade', r.f);
+  end loop;
+end $$;
+
+drop table if exists public.bairros_diferentes, public.parceiros, public.revisoes_qualidade, public.metas, public.tarefas_recorrentes, public.agradecimentos, public.comentarios_tarefa, public.tipos_tarefa, public.acordos, public.passagens_lidas, public.passagens_turno, public.avisos_rapidos, public.modelos_mensagem, public.lancamentos_financeiros, public.bairros, public.seguindo, public.preferencias_aviso, public.pedidos_cidade, public.parametros_casos, public.casos_comentarios, public.casos, public.checklist_casos, public.versao_dados, public.anexos, public.operadores_logisticos, public.parametros_equipe, public.atividades, public.comentarios_entregador, public.entregadores, public.notificacoes, public.tarefas, public.eventos_bloqueio, public.bloqueios,
   public.infracoes, public.cidades, public.parametros_bloqueio,  -- módulos (002 a 008)
   public.eventos, public.cadastros, public.pedidos_acesso, public.membros, public.motivos cascade;
 drop type if exists public.papel, public.status_cadastro cascade;
