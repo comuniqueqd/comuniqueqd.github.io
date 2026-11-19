@@ -34,6 +34,13 @@
       if (chave === chaveAnalises()) { D[tipo] = d; D.mAtiv = ma; D.mBloq = mb; D.chave[tipo] = chave; D.erro[tipo] = null; (D.em ||= {})[tipo] = Date.now(); }
     } catch (e) { D.erro[tipo] = msgErro(e); }
   }
+  // 009x: os números ficam guardados por até 5 min (AT6); a tela diz de quando são e deixa atualizar na hora
+  function marcarAtualizado(tipo) {
+    const em = D.em?.[tipo];
+    document.querySelectorAll("[data-an-atualizado]").forEach((x) => x.replaceChildren(...(em ? [
+      `Números de ${new Date(em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: App.u.FUSO })} `,
+      el("button", { class: "btn link small", type: "button", onclick: (e) => { e.currentTarget.disabled = true; D.em[tipo] = 0; App.carregar(); } }, "Atualizar")] : [])));
+  }
   const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
   const DIAS_LONGOS = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
   function mapaCalor(lista, cor = "var(--accent)") {
@@ -85,6 +92,7 @@
     const box = $("#as-cards"), d = D.simples;
     if (D.erro.simples && !d) return box.replaceChildren(el("p", { class: "err", text: D.erro.simples }));
     if (!d || D.chave.simples !== chaveAnalises()) return box.replaceChildren(carregandoEl());
+    marcarAtualizado("simples");
     $("#as-sub").textContent = `Os números do dia a dia ${textoPeriodo()}. “Agora” é o momento atual; o resto vale para o período escolhido.`;
     const at = d.ativacao, mot = d.motivos_nao_aprovacao, ag = d.agora, ri = d.reincidencia, lv = d.leves, tr = d.tratativas, av = d.atividades, vc = d.voce;
     const pMeu = picos(d.dia_hora_meu), pEq = picos(d.dia_hora);
@@ -173,6 +181,7 @@
     const box = $("#an-cards"), d = D.complexas;
     if (D.erro.complexas && !d) return box.replaceChildren(el("p", { class: "err", text: D.erro.complexas }));
     if (!d || D.chave.complexas !== chaveAnalises()) return box.replaceChildren(carregandoEl());
+    marcarAtualizado("complexas");
     $("#an-sub").textContent = `Para entender o que funciona, ${textoPeriodo()}. Só totais: nenhum dado pessoal.`;
     const ef = d.eficacia, ab = d.ativacao_bloqueio, es = d.escada, ra = d.resposta_ativacao;
     const tab = (cols, linhas, vazioTxt) => linhas.length ? el("div", { class: "tablewrap" }, el("table", {}, ...tabela(cols, linhas, ""))) : el("p", { class: "meta", text: vazioTxt });
