@@ -24,13 +24,13 @@ Tudo o que o painel do desenvolvedor da Chrome Web Store pede, pronto para copia
 
 > Extensão de uso interno da equipe de operação que usa o Comunique.
 >
-> • Registrar sem trocar de tela: com a tela de um entregador aberta no painel Quero Log ou no Crisp, o painel lateral da extensão lê o ID, o nome e a cidade e preenche o formulário ali mesmo. Novo bloqueio (escolha o motivo e veja a punição antes de confirmar), Nova ativação, Registrar adicional, Cadastrar entregador e Calculadora de bairro (mostra o ajuste e registra; falta só o código do pedido). Você confere, muda o que precisar e registra.
+> • Registrar sem trocar de tela: com a tela de um entregador aberta no painel Quero Log ou no Crisp, o painel lateral da extensão lê o ID, o nome e a cidade e preenche o formulário ali mesmo. Novo bloqueio (escolha o motivo e veja a punição antes de confirmar), Nova ativação, Registrar adicional, Cadastrar entregador e Calculadora de bairro (mostra o ajuste e registra; falta só o código do pedido). Na tela de um estabelecimento no Quero Log, Ativar parceiro com o nome e a cidade. Você confere, muda o que precisar e registra.
 > • Pedir ajuda e ajudar: peça ajuda à equipe pelo painel e aceite os pedidos dos colegas com "Eu ajudo".
 > • Avisos no ícone: mostra quantos avisos novos você tem e manda notificação quando chega algo para você ou quando alguém pede ajuda.
 > • Busca de entregadores por ID ou nome e "Ver no Comunique" ao selecionar um ID em qualquer página (botão direito).
 > • Conferência: se o ID da tela já está no Comunique com outro nome, o formulário avisa antes de gravar; se a tela não tem ID de entregador, o formulário abre vazio para digitar.
 >
-> A extensão lê somente o ID, o nome e a cidade do entregador nessas telas, e só quando você abre um formulário ou o painel. Celular, e-mail, CPF, endereço e o resto da página não são lidos, e a página não é alterada. Nada é gravado sem você confirmar. Entre com a mesma conta Google do Comunique.
+> A extensão lê somente o ID, o nome e a cidade do entregador nessas telas (e, na tela de um estabelecimento, só o nome e a cidade dele), e só quando você abre um formulário ou o painel. Celular, e-mail, CPF, endereço e o resto da página não são lidos, e a página não é alterada. Nada é gravado sem você confirmar. Entre com a mesma conta Google do Comunique.
 
 ## Imagens
 
@@ -61,7 +61,7 @@ As imagens são geradas por `testes/prints-extensao.mjs`, só com dados fictíci
 | Host `nhgmkbfaqonojhaggwui.supabase.co` | O banco de dados do Comunique: login, avisos, busca de entregadores. |
 | Host `comuniqueqd.github.io` | O próprio Comunique: reaproveitar a aba já aberta em vez de abrir outra a cada clique. |
 | Host `admin.querolog.io` e `app.crisp.chat` | Os mesmos sites do leitor; exigidos pela permissão `scripting` para colocar o leitor numa aba já aberta. |
-| Conteúdo em `admin.querolog.io` | Ler o ID, o nome e a cidade na tela de um entregador quando a pessoa abre um formulário no painel lateral. A página não é alterada. |
+| Conteúdo em `admin.querolog.io` | Ler o ID, o nome e a cidade na tela de um entregador, ou o nome e a cidade na tela de um estabelecimento, quando a pessoa abre o painel lateral ou um formulário. A página não é alterada. |
 | Conteúdo em `app.crisp.chat` | Ler o ID (dado personalizado `entregador_id`), o nome e a cidade do contato quando a pessoa abre um formulário no painel lateral. A página não é alterada. |
 
 **Código remoto:** não. Todo o código está no pacote; a extensão só troca dados (JSON) com o banco do Comunique.

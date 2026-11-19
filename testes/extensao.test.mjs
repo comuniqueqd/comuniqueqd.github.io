@@ -78,6 +78,18 @@ try {
     const u = r.request().url();
     if (u.includes("/entregadores/novo1234")) return r.fulfill({ contentType: "text/html", body: telaQL("novo1234", "Fulano de Teste", "Lagarto - SE") });
     if (u.includes("/entregadores/outro5678")) return r.fulfill({ contentType: "text/html", body: telaQL("outro5678", "Nome Diferente", "Lagarto - SE", true) });
+    // 1.3: a tela do estabelecimento (Cadastro e gerenciamento), como no print do usuário, com dados fictícios
+    if (u.includes("/estabelecimentos/biju")) return r.fulfill({ contentType: "text/html", body: `<!doctype html><html><head><meta charset="utf-8"></head><body>
+      <div class="lateral"><span>Mateus Lopes</span><a>Página inicial</a><a>Monitor de entregas</a><a>Lista</a><a>Esteira de aprovação</a><a>Cadastro e gerenciamento</a><a>Equipe</a></div>
+      <main><h1>Cadastro e gerenciamento</h1>
+      <div><a><span>‹</span> Voltar</a><label><input type="radio" checked> Tarifa cidade</label><label><input type="radio"> Tarifa estabelecimento</label>
+        <button>Criar tarifa</button><button>editar <b>estabelecimento</b></button></div>
+      <h2>Biju Teste Presentes</h2><p>Saldo atual: R$ 0,00</p>
+      <section><h3>Bank</h3><button>Lançar crédito</button><button>Lançar débito</button></section>
+      <h3>Informações</h3><table>
+        <tr><td>Criado em</td><td>01/01/2021</td></tr><tr><td>Celular</td><td>(00) 0 0000-0000</td></tr><tr><td>Email</td><td>loja@exemplo.com</td></tr>
+        <tr><td>CNPJ</td><td>00.000.000/0001-00</td></tr><tr><td>Cidade</td><td>Tobias barreto - SE</td></tr><tr><td>Logradouro</td><td>RUA TESTE</td></tr><tr><td>Bairro</td><td>CENTRO</td></tr>
+      </table></main></body></html>` });
     return r.fulfill({ contentType: "text/html", body: "<!doctype html><html><body><h1>Estabelecimentos</h1><aside><a>Lista</a><a>Aprovação</a></aside></body></html>" });
   });
   // 1.2.2: o Crisp real nem sempre tem o botão "Ver Perfil de …": variações em inglês, sem botão (nome vem da ficha)
@@ -128,6 +140,14 @@ try {
   const outra = await ctx.newPage(); await outra.goto("https://admin.querolog.io/estabelecimentos"); await outra.waitForTimeout(400);
   const abaOutra = await abaDe("admin.querolog.io");
   ok((await lerAba(abaOutra))?.entregador === null, "tela sem ID: o leitor responde que não há entregador");
+  // 1.3: tela do estabelecimento: só o nome e a cidade; celular, e-mail, CNPJ e endereço ficam na página
+  const est = await ctx.newPage(); await est.goto("https://admin.querolog.io/estabelecimentos/biju"); await est.waitForTimeout(400);
+  const abaEst = await sw.evaluate(async () => { for (const t of await chrome.tabs.query({})) { try { const r = await chrome.tabs.sendMessage(t.id, { tipo: "tela" }); if (r?.parceiro) return t.id; } catch (_) {} } return null; });
+  const lidoEst = abaEst ? await lerAba(abaEst) : null;
+  ok(JSON.stringify(lidoEst?.parceiro) === JSON.stringify({ nome: "Biju Teste Presentes", cidade: "Tobias barreto - SE" }) && lidoEst?.entregador === null,
+    "1.3 Quero Log, estabelecimento: lê o nome (não o título, o menu nem o botão) e a cidade: " + JSON.stringify(lidoEst));
+  ok(!/0000-0000|exemplo\.com|0001-00|RUA TESTE|Saldo/.test(JSON.stringify(lidoEst)), "1.3 estabelecimento: celular, e-mail, CNPJ, endereço e saldo não saem da tela");
+  ok((await lerAba(abaQL))?.parceiro === null, "1.3 tela de entregador não vira estabelecimento");
 
   // painel apontando para a aba do Quero Log (?aba= só nos testes)
   const p = await ctx.newPage();
@@ -222,8 +242,23 @@ try {
   ok(viuFicha && await p.locator("#tela", { hasText: "Nome Da Ficha" }).isVisible(), "1.2.2 Crisp sem nome: o painel mostra o nome da ficha e avisa a origem");
   await abrirForm("Novo bloqueio");
   ok((await campos())[1] === "Nome Da Ficha" && await p.locator("#caixa-form .alerta", { hasText: "ficha do Comunique" }).isVisible(), "1.2.2 Crisp sem nome: o formulário vem com o nome da ficha e o aviso");
+  // 1.3: Ativar parceiro pela tela do estabelecimento
+  await painelDe(abaEst);
+  ok(await p.locator("#tela", { hasText: "Biju Teste Presentes" }).waitFor({ timeout: 5000 }).then(() => true).catch(() => false) && await p.locator("#tela", { hasText: "estabelecimento" }).isVisible(),
+    "1.3 o painel mostra o estabelecimento da tela");
+  await p.locator("#tela button", { hasText: "Ativar parceiro" }).click(); await p.waitForSelector("#v-form:not([hidden]) form");
+  ok(JSON.stringify(await campos()) === JSON.stringify(["Biju Teste Presentes", "TOBIAS BARRETO - SE"]), "1.3 Ativar parceiro: abre com o nome e a cidade da tela: " + JSON.stringify(await campos()));
+  await p.locator("#caixa-form textarea").fill("Ativado pela extensão");
+  await p.locator("#caixa-form button.primario").click();
+  ok(await feito("Parceiro ativado"), "1.3 Ativar parceiro: grava pelo painel");
+  ok((await um("select cidade, observacao from parceiros where estabelecimento = 'Biju Teste Presentes'"))?.cidade === "TOBIAS BARRETO - SE", "1.3 o parceiro está no banco, com a cidade no formato do Comunique");
+  await abrirForm("Ativar parceiro");
+  ok(await p.locator("#caixa-form .alerta", { hasText: "já é parceiro" }).isVisible(), "1.3 parceiro já ativado: o formulário avisa antes de gravar");
+  await p.locator("#caixa-form button.primario").click();
+  ok(await p.locator("#caixa-form .erro", { hasText: "já está registrado" }).waitFor({ timeout: 5000 }).then(() => true).catch(() => false), "1.3 e o banco recusa repetir");
+  ok(Number((await um("select count(*) n from parceiros where estabelecimento = 'Biju Teste Presentes'")).n) === 1, "1.3 continua um parceiro só");
   await painelDe(abaOutra);
-  ok(await p.locator("#tela", { hasText: "Não encontrei ID" }).isVisible(), "tela sem ID: o painel avisa");
+  ok(await p.locator("#tela", { hasText: "Não encontrei entregador nem estabelecimento" }).isVisible(), "tela sem ID: o painel avisa");
   await abrirForm("Novo bloqueio");
   ok(await p.locator("#caixa-form .alerta", { hasText: "Não encontrei ID" }).isVisible() && (await campos())[0] === "", "tela sem ID: o formulário abre vazio para digitar");
   ok(await semNull(), "formulários sem texto quebrado (null)");

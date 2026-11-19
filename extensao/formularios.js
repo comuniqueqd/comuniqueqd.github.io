@@ -1,5 +1,5 @@
 // Formulários curtos da extensão (painel lateral): bloqueio, ativação, adicional, cadastrar entregador,
-// calculadora de bairro e pedido de ajuda. Vêm preenchidos com o que a página aberta tem (ID, nome, cidade);
+// calculadora de bairro, ativar parceiro (1.3) e pedido de ajuda. Vêm preenchidos com o que a página aberta tem (ID, nome, cidade);
 // a pessoa confere, completa e confirma. Nada é gravado sem o clique no botão do formulário.
 // Uso: ComuniqueForms.montar(acao, dados, { rpc, abrir, pronto }) devolve um <form>.
 //   rpc(fn, args) → Promise com a resposta do banco; abrir(hash) abre o Comunique (opcional);
@@ -194,6 +194,24 @@
           p_origem: marcado(form, "origem") || "qd", p_lancado: lancado.checked, p_pedido: limpo(pedido.value) || null, p_motivo: null });
         return r?.lancado ? `Ajuste de ${brl(r.valor)} registrado.` : `Ajuste de ${brl(r.valor)} registrado. Ficou nos pendentes até ser lançado.`;
       };
+    } else if (acao === "parceiro") {
+      // 1.3: ativar parceiro com o nome e a cidade lidos da tela do estabelecimento no Quero Log
+      const estab = el("input", { value: dados.nome || "", maxlength: 120, autocomplete: "off", "aria-label": "Estabelecimento" });
+      const obs = el("textarea", { rows: 2, maxlength: 600, placeholder: "Opcional" });
+      camposBase.length = 0;
+      camposBase.push(el("label", {}, "Estabelecimento", estab), el("label", {}, "Cidade", cid), listaCid);
+      extra.push(el("label", {}, "Observação", obs));
+      textoBotao = "Ativar parceiro"; foco = dados.nome ? obs : estab;
+      gravar = async (v) => {
+        const nomeP = limpo(estab.value);
+        if (!nomeP) throw new Error("Preencha o nome do estabelecimento.");
+        if (!/^.+ - [A-Z]{2}$/.test(v.cidade)) throw new Error("Use a cidade no formato CIDADE - UF.");
+        const r = await rpc("registrar_parceiro", { p_estabelecimento: nomeP, p_cidade: v.cidade, p_observacao: limpo(obs.value) || null });
+        const contou = (r?.tarefas || []).map((t) => `${t.titulo} (${t.progresso} de ${t.meta})`).join("; ");
+        const te = r?.tarefa_entregadores;
+        return `Parceiro ativado: ${r?.parceiro?.estabelecimento || nomeP}.` + (contou ? ` Contou para: ${contou}.` : "") +
+          (te ? (te.nova ? ` Nasceu a tarefa "${te.titulo}" para a equipe.` : ` A tarefa de entregadores da cidade subiu para ${te.meta}.`) : "");
+      };
     } else if (acao === "ajuda") {
       const texto = el("textarea", { rows: 3, maxlength: 500, placeholder: "Ex.: fila no Crisp com 12 conversas esperando" });
       camposBase.length = 0;
@@ -206,13 +224,14 @@
     }
 
     const botao = el("button", { class: "btn primario", type: "submit", text: textoBotao });
-    const precisaId = !["ajuda"].includes(acao);
+    const precisaId = !["ajuda", "parceiro"].includes(acao);
     const form = el("form", { class: "form-cx", novalidate: true, "data-acao": acao },
       precisaId && !dados.id ? el("p", { class: "alerta", text: "Não encontrei ID de entregador nesta tela: preencha os dados." }) : null,
+      acao === "parceiro" && !dados.nome ? el("p", { class: "alerta", text: "Não encontrei estabelecimento nesta tela: preencha os dados." }) : null,
       dados.aviso ? el("p", { class: "alerta", text: dados.aviso }) : null,
       camposBase, extra, erro,
       el("div", { class: "acoes" }, botao,
-        abrir && acao !== "ajuda" && acao !== "calculadora" ? el("button", { class: "link", type: "button", onclick: () => {
+        abrir && !["ajuda", "calculadora", "parceiro"].includes(acao) ? el("button", { class: "link", type: "button", onclick: () => {
           const q = new URLSearchParams(Object.entries(base()).filter(([, x]) => x)).toString();
           abrir(`#preencher/${acao}?${q}`);
         } }, "Ver no Comunique") : null));

@@ -34,7 +34,7 @@ $("#b-entrar").addEventListener("click", async (e) => {
 $("#b-sair").addEventListener("click", async () => { await Api.sair(); await chrome.runtime.sendMessage({ tipo: "conferir" }); await mostrar(); });
 // os botões de registrar: leem a página aberta e mostram o formulário aqui mesmo
 const TITULOS = { bloqueio: "Novo bloqueio", cadastro: "Nova ativação", adicional: "Registrar adicional", entregador: "Cadastrar entregador",
-  calculadora: "Calculadora de bairro", ajuda: "Pedir ajuda" };
+  calculadora: "Calculadora de bairro", parceiro: "Ativar parceiro", ajuda: "Pedir ajuda" };
 // a aba lida é a aba ativa da janela do painel (?aba=<id> só nos testes, onde o painel abre numa aba)
 const ABA_TESTE = Number(new URLSearchParams(location.search).get("aba")) || null;
 async function lerPagina() {
@@ -58,7 +58,16 @@ async function abrirForm(acao) {
   $("#feito").hidden = true;
   $("#b-reler").hidden = acao === "ajuda";
   const r = acao === "ajuda" ? null : await lerPagina();
-  const dados = { ...(r?.entregador || {}) };
+  const dados = acao === "parceiro" ? { ...(r?.parceiro || {}) } : { ...(r?.entregador || {}) };
+  // 1.3: o estabelecimento já é parceiro? (avisa antes de gravar; o banco também recusa a repetição)
+  if (acao === "parceiro" && dados.nome) {
+    try {
+      const cid = globalThis.ComuniqueForms.cidadeComunique(dados.cidade);
+      const l = await Api.rpc("listar_parceiros", { p_busca: dados.nome, p_cidade: cid || null, p_meus: false, p_limite: 20 });
+      const ja = (l?.itens || []).find((x) => norm(x.estabelecimento) === norm(dados.nome) && (!cid || x.cidade === cid));
+      if (ja) dados.aviso = `${ja.estabelecimento} já é parceiro do Comunique em ${ja.cidade}` + (ja.criado_por_nome ? ` (ativado por ${ja.criado_por_nome}).` : ".");
+    } catch (_) {}
+  }
   // o ID já tem ficha com outro nome? (avisa antes de gravar)
   if (dados.id && acao !== "calculadora") {
     try {
@@ -115,7 +124,10 @@ async function telaAtual() {
   const box = $("#tela");
   const r = await lerPagina();   // aba sem o leitor (outro site): não mostra nada
   if (!r) return box.replaceChildren();
-  if (!r.entregador) return box.replaceChildren(el("div", { class: "tela vazia", text: "Não encontrei ID de entregador nesta tela." }));
+  if (r.parceiro) return box.replaceChildren(el("div", { class: "tela" }, el("span", { class: "grupo", text: "Nesta tela: estabelecimento" }), el("b", { text: r.parceiro.nome }),
+    el("span", { class: "sub meta", text: r.parceiro.cidade || "Cidade não encontrada" }),
+    el("button", { class: "btn", type: "button", onclick: () => abrirForm("parceiro") }, "Ativar parceiro")));
+  if (!r.entregador) return box.replaceChildren(el("div", { class: "tela vazia", text: "Não encontrei entregador nem estabelecimento nesta tela." }));
   const e = r.entregador;
   // sem nome na tela: procura na ficha do Comunique pelo ID
   let daFicha = false;

@@ -1,7 +1,8 @@
 // Lê SÓ o ID, o nome e a cidade do entregador nas telas do Quero Log (admin.querolog.io) e do Crisp
 // (app.crisp.chat) e mostra um cartão com os botões do Comunique. Celular, e-mail, CPF, endereço e o
 // resto da tela nunca são lidos (LGPD). Quem usa os dados é o painel lateral da extensão: ele pergunta
-// ("tela") e recebe { site, entregador: {id, nome, cidade} | null }. A página não é alterada.
+// ("tela") e recebe { site, entregador: {id, nome, cidade} | null, parceiro: {nome, cidade} | null }.
+// Na tela de um estabelecimento (1.3) só o nome e a cidade. A página não é alterada.
 // (O cartão com botões que aparecia no canto da página está guardado em guardado/extensao-cartao/.)
 (() => {
   if (window.__comuniqueLeitor) return;
@@ -93,15 +94,44 @@
       return { id, nome: nome.replace(/(\.\.\.|…)$/, "").trim(), cidade: depoisDoRotulo("cidade") };
     },
   };
+  // 1.3: tela de um estabelecimento no Quero Log ("Cadastro e gerenciamento" > Voltar > nome > Informações).
+  // Lê SÓ o nome do estabelecimento e a cidade; celular, e-mail, CNPJ, endereço e saldo ficam na página.
+  function lerParceiro() {
+    if (location.hostname !== "admin.querolog.io" || /\/entregadores\//.test(location.pathname)) return null;
+    const folhas = [...document.querySelectorAll("body *")].filter((n) => !n.childElementCount && !n.closest("script, style"));
+    const t = folhas.map((n) => limpo(n.textContent));
+    const tem = (re) => t.some((x) => re.test(x));
+    if (!tem(/^cadastro e gerenciamento$/i) || !tem(/^cidade$/i) || !tem(/^(editar|editar estabelecimento|bank|saldo atual.*)$/i)) return null;
+    const PULA = /^(voltar|‹|<|tarifa cidade|tarifa estabelecimento|criar tarifa|editar|estabelecimento|editar estabelecimento|cadastro e gerenciamento)$/i;
+    const FIM = /^(saldo atual.*|bank|informa[cç][oõ]es|lan[cç]ar cr[eé]dito|lan[cç]ar d[eé]bito)$/i;
+    const pareceNome = (x) => x && x.length <= 120 && /[A-Za-zÀ-ú]{2}/.test(x) && !x.includes("@") && !/R\$/.test(x);
+    let nome = "";
+    const iVoltar = t.findIndex((x) => /^voltar$/i.test(x));
+    if (iVoltar >= 0) for (let i = iVoltar + 1; i < t.length; i++) {   // o primeiro texto depois do "Voltar" que não é botão
+      if (!t[i] || PULA.test(t[i])) continue;
+      if (FIM.test(t[i])) break;
+      if (pareceNome(t[i])) { nome = t[i]; break; }
+    }
+    if (!nome) {   // sem "Voltar": o texto logo antes do saldo / "Bank"
+      const iFim = t.findIndex((x) => FIM.test(x));
+      for (let i = iFim - 1; i >= 0; i--) { if (!t[i] || PULA.test(t[i]) || /^saldo/i.test(t[i])) continue; if (pareceNome(t[i])) nome = t[i]; break; }
+    }
+    const cidade = depoisDoRotulo("Cidade");
+    return nome ? { nome, cidade } : null;
+  }
+
   const ler = LEITORES[location.hostname];
   if (!ler) return;
 
   // o painel lateral pergunta o que esta tela tem; a leitura é feita na hora, a página não muda
   chrome.runtime.onMessage.addListener((msg, _s, responder) => {
     if (msg?.tipo !== "tela") return;
-    let d = null;
+    let d = null, pa = null;
     try { d = ler(); } catch (_) {}
     if (d) d = { id: limpo(d.id).replace(/[^A-Za-z0-9]/g, "").slice(0, 40), nome: limpo(d.nome).slice(0, 120), cidade: limpo(d.cidade).slice(0, 80) };
-    responder({ site: location.hostname, entregador: d?.id?.length >= 4 ? d : null });
+    const entregador = d?.id?.length >= 4 ? d : null;
+    if (!entregador) { try { pa = lerParceiro(); } catch (_) {} }
+    if (pa) pa = { nome: limpo(pa.nome).slice(0, 120), cidade: limpo(pa.cidade).slice(0, 80) };
+    responder({ site: location.hostname, entregador, parceiro: pa || null });
   });
 })();
