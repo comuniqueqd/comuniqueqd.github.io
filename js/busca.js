@@ -61,6 +61,9 @@
       ["Atividades com número", "O menu Atividades mostra quantas pendências estão com você, como os outros menus."],
       ["Novidades numa linha", "Esta faixa agora ocupa uma linha só, com a última atualização. Clique nela para ver o histórico."],
       ["CPF fora dos textos", "Se alguém escrever um CPF num comentário, observação ou aviso, ele é trocado por \"[CPF removido]\" ao salvar."],
+      ["Avisos mais limpos", "Os avisos mostram o nome do entregador, sem o código. A busca da tela de Avisos continua achando pelo ID."],
+      ["Sino no celular", "A lista de avisos do sino agora cabe inteira na tela do celular."],
+      ["Mais rápido", "A tela inicial carrega mais rápido: a conta dos entregadores de atenção ficou bem mais leve."],
       ["Cores ajustadas", "No tema escuro, a Tratativa, os acordos vencidos e o foco do teclado no topo ficaram fáceis de ler, e os links ganharam cor própria."],
     ] },
     { versao: "009t", tema: "Extensão do Comunique", itens: [

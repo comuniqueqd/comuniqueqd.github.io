@@ -114,7 +114,9 @@
     const n = S.notif, itens = n?.itens || [];
     const b = sino.getBoundingClientRect();
     tira.style.top = `${b.bottom + scrollY + 6}px`;
-    tira.style.right = `${Math.max(8, document.documentElement.clientWidth - b.right)}px`;
+    // 009u: no celular o sino não fica no canto; a tira (largura até 500 px) nunca passa da borda esquerda
+    const cw = document.documentElement.clientWidth, larg = Math.min(500, cw - 16);
+    tira.style.right = `${Math.max(8, Math.min(cw - b.right, cw - larg - 8))}px`;
     tira.replaceChildren(
       el("div", { class: "tira-topo" }, el("b", { text: n?.nao_lidas ? `${n.nao_lidas} aviso(s) novo(s)` : "Avisos recentes" }),
         el("button", { class: "btn link", type: "button", onclick: fecharTira, "aria-label": "Fechar" }, App.ic("fechar"))),

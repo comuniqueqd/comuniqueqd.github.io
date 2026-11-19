@@ -43,11 +43,39 @@ async function falha(p, trecho) {
 const um = async (sql, p = []) => (await db.query(sql, p)).rows[0];
 
 
-// a 009u, duas vezes (pode rodar de novo)
-for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009u-sem-cpf-nos-textos.sql"));
 await rpc(admin, "entrar");
 await db.query("insert into cidades (nome) values ('LAGARTO - SE') on conflict do nothing");
 await db.query("update membros set papel_bloqueios = 'moderador' where email = $1", [admin.email]);
+
+// AT1: massa fictícia (1.500 IDs bloqueados em 50 dias, 300 aprovados há pouco) para comparar a função antiga com a nova
+await db.query(`insert into cadastros (id_app, cidade, status, enviado_por, enviado_em, status_desde, nome, decidido_por, decidido_em)
+  select 'at'||lpad(i::text,5,'0'), 'LAGARTO - SE', 'aprovado', m.user_id, now() - (i % 40) * interval '1 day', now() - (i % 40) * interval '1 day',
+         'Teste Atencao '||i, m.user_id, now() - (i % 40) * interval '1 day'
+    from generate_series(1, 300) i, (select user_id from membros where email = '${admin.email}') m`);
+await db.query(`insert into eventos (cadastro_id, tipo, status_anterior, status_novo, por, em)
+  select id, 'aprovado', 'aguardando_analise', 'aprovado', decidido_por, decidido_em from cadastros where id_app like 'at%'`);
+await db.query(`insert into bloqueios (id_app, nome_entregador, cidade, infracao_id, infracao, ocorrencia, ocorrencia_total, horas, inicio, fim,
+    registrado_por, registrado_por_nome, leve)
+  select 'at'||lpad((1 + i % 1500)::text,5,'0'), 'Teste Atencao '||(1 + i % 1500), 'LAGARTO - SE', inf.id, inf.nome, 1, 1, inf.h,
+         now() - (i % 49) * interval '1 day' - (i % 7) * interval '1 hour', now() - (i % 49) * interval '1 day' + inf.h * interval '1 hour',
+         m.user_id, 'Mateus Lopes', inf.leve
+    from generate_series(1, 4000) i, (select user_id from membros where email = '${admin.email}') m,
+    lateral (select id, nome, leve, coalesce(horas_1a, 24) h from infracoes where leve = (i % 5 = 0) order by id offset (i % 3) limit 1) inf`);
+const antes = await rpc(admin, "entregadores_atencao");
+
+// a 009u, duas vezes (pode rodar de novo)
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009u-sem-cpf-nos-textos.sql"));
+
+await t("AT1: entregadores_atencao() nova devolve exatamente o mesmo que a antiga", async () => {
+  const depois = await rpc(admin, "entregadores_atencao");
+  if (!antes.length || !antes.some((x) => x.motivos.includes("aprovado há pouco e já bloqueado"))) throw new Error("massa sem casos de atenção: " + antes.length);
+  igual(JSON.stringify(depois), JSON.stringify(antes));
+});
+await t("AT1: e o resumo da tela inicial responde rápido com a massa", async () => {
+  const t0 = Date.now(); await rpc(admin, "resumo_e_avisos"); const ms = Date.now() - t0;
+  if (ms > 1500) throw new Error(ms + " ms");
+  console.log("       resumo_e_avisos com 4.000 bloqueios:", ms, "ms");
+});
 await rpc(admin, "cadastrar_entregador", { p_id_app: "mesa0001", p_nome: "Fulano de Tal", p_cidade: "LAGARTO - SE", p_comentario: null });
 
 await t("quando alguém escreve um CPF formatado num comentário, então ele é gravado como [CPF removido]", async () => {
@@ -75,6 +103,18 @@ await t("quando o ID não tem ficha, então quem_e não inventa nome", async () 
 });
 await t("quem não é da equipe não usa quem_e", async () => {
   await falha(rpc(pessoa("estranho@x.com", "Estranho"), "quem_e", { p_id_app: "mesa0001" }));
+});
+
+await t("avisos sem o código do entregador: o nome fica, o código sai, sem nome vira 'sem nome' e a busca continua pelo id_app", async () => {
+  const para = (await um("select user_id from membros where email = $1", [admin.email])).user_id;
+  await db.query(`insert into notificacoes (para, texto) values ($1, 'Suporte registrou um bloqueio: Fulano de Tal (mesa0001) · Atraso · LAGARTO - SE'),
+    ($1, 'Seu cadastro ID abc99999 foi aprovado por Monitor.'), ($1, 'Suporte enviou um cadastro: xyz12345 · LAGARTO - SE'),
+    ($1, '👏 Suporte agradeceu por: Ligar (2 vezes)')`, [para]);
+  const l = (await db.query("select texto, id_app from notificacoes where para = $1 order by id desc limit 4", [para])).rows.reverse();
+  igual(l, [{ texto: "Suporte registrou um bloqueio: Fulano de Tal · Atraso · LAGARTO - SE", id_app: "mesa0001" },
+    { texto: "Seu cadastro sem nome foi aprovado por Monitor.", id_app: "abc99999" },
+    { texto: "Suporte enviou um cadastro: sem nome · LAGARTO - SE", id_app: null },
+    { texto: "Suporte agradeceu por: Ligar (2 vezes)", id_app: null }]);
 });
 
 console.log(`\n${n - falhas}/${n} ok`);

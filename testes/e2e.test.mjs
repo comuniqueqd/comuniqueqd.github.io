@@ -481,6 +481,17 @@ try {
   await s.mouse.click(5, 600);
   ok(await sumir(s, "#tira-avisos"), "clicar fora fecha a tira");
   await s.click("#b-avisos"); await esperar(s, "#tira-avisos:popover-open");
+  // 009u: no celular a tira cabe na tela e os avisos não mostram o código do entregador
+  await s.keyboard.press("Escape"); await sumir(s, "#tira-avisos");
+  await s.setViewportSize({ width: 390, height: 844 });
+  await s.click("#b-avisos"); await esperar(s, "#tira-avisos:popover-open");
+  { const r = await s.$eval("#tira-avisos", (t) => { const rc = t.getBoundingClientRect(); return { l: Math.round(rc.left), r: Math.round(rc.right), w: document.documentElement.clientWidth, txt: t.textContent }; });
+    ok(r.l >= 0 && r.r <= r.w, "009u: no celular a tira do sino cabe na tela: " + JSON.stringify({ l: r.l, r: r.r, w: r.w }));
+    ok(!/\((ID )?[a-z]+[0-9]{4,}\)|\bID [a-z0-9]{4,}/i.test(r.txt) && !/\p{Extended_Pictographic}/u.test(r.txt), "009u: os avisos não mostram o código do entregador nem emoji"); }
+  await s.screenshot({ path: path.join(PRINTS, "h1b-tira-sino-celular.png") });
+  await s.keyboard.press("Escape"); await sumir(s, "#tira-avisos");
+  await s.setViewportSize({ width: 1200, height: 900 });
+  await s.click("#b-avisos"); await esperar(s, "#tira-avisos:popover-open");
   await s.click("#tira-avisos >> text=Ver todos os avisos");
   ok(await esperar(s, "#at-avisos >> text=Tratativa realizada por Monitor Um") && await sumir(s, "#tira-avisos"), "Ver todos os avisos abre a tela de Avisos e fecha a tira");
   ok(await s.evaluate(() => location.hash) === "#avisos/para-mim" && (await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).join() === "para-mim,equipe"
@@ -891,7 +902,7 @@ try {
   await n7.reload();
   ok(await esperar(n7, "#b-avisos[data-novas=true]"), "quem enviou recebe aviso no sino");
   await ir(n7, "#atividades/avisos");
-  ok(await esperar(n7, "#at-avisos >> text=Seu cadastro Maria Sem Nome (ID semnome77) foi aprovado por Monitor Um."), "aviso: cadastro aprovado por quem");
+  ok(await esperar(n7, "#at-avisos >> text=Seu cadastro Maria Sem Nome foi aprovado por Monitor Um."), "aviso: cadastro aprovado por quem");
   await n7.screenshot({ path: path.join(PRINTS, "f6-aviso.png") });
   // histórico do ID ao digitar no Novo cadastro (monitorador tem os bloqueios)
   await ir(m7, "#ativacao/novo"); await esperar(m7, "#form");
@@ -942,7 +953,7 @@ try {
   const a8 = await abrir(admin, "#atividades/avisos");
   ok(await esperar(a8, "#at-avisos .aviso >> text=Você recebeu porque você é moderador"), "moderador recebe os avisos de Registros, com o porquê");
   await a8.fill("#av-q", "avulso01");
-  ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#at-avisos .aviso")]; return l.length && l.every((x) => x.textContent.includes("avulso01")); }, null, { timeout: 8000 }).then(() => true, () => false), "busca nos avisos pelo ID");
+  ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#at-avisos .aviso")]; return l.length && l.every((x) => x.textContent.includes("Avulso da Silva") && !x.textContent.includes("avulso01")); }, null, { timeout: 8000 }).then(() => true, () => false), "busca nos avisos pelo ID (o texto mostra o nome, sem o código)");
   await a8.fill("#av-q", "");
   await a8.selectOption("#av-filtro", "bloqueios");
   ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#at-avisos .aviso .tag")]; return l.length && l.every((x) => x.textContent === "BLOQUEIOS"); }, null, { timeout: 8000 }).then(() => true, () => false), "filtro por tipo: só bloqueios");
@@ -1508,6 +1519,63 @@ try {
     }
     problemas.forEach((x) => console.log("VARREDURA", x));
     ok(!problemas.length, `009o: varredura visual de ${rotas.length} telas no computador e no celular` + (problemas.length ? `: ${problemas.length} problema(s)` : " sem problemas")); }
+  // 009u: contraste do texto (WCAG AA: 4,5:1; texto grande 3:1) em todas as telas, no tema claro e no escuro.
+  // A cor de fundo é a primeira opaca subindo pelos pais (as transparentes são misturadas); fundo com imagem/gradiente fica de fora.
+  { const v = await abrir(admin, "#inicio"); await esperar(v, "#v-inicio:not([hidden])");
+    await v.setViewportSize({ width: 1200, height: 900 });
+    const rotas = ["#inicio", ...await v.evaluate(() => App.ordem.filter((id) => { const m = App.modulos[id]; return !m.acesso || m.acesso(); })
+      .flatMap((id) => App.modulos[id].abas.filter((a) => !a.pode || a.pode()).map((a) => `#${id}/${a.id}`)))];
+    const baixos = new Map();
+    for (const tema of ["light", "dark"]) {
+      await v.emulateMedia({ colorScheme: tema, reducedMotion: "reduce" });
+      await v.evaluate((t) => { document.documentElement.dataset.theme = t; }, tema);
+      for (const r of rotas) {
+        await v.evaluate((x) => { location.hash = x; }, r);
+        await v.waitForTimeout(700);
+        const achou = await v.evaluate((sonda) => {
+          if (sonda) { const x = document.createElement("span"); x.id = "sonda-contraste"; x.textContent = "sonda de contraste"; x.style.cssText = "color:#b8b8b8;position:fixed;top:0;left:0;background:#fff"; document.body.append(x); setTimeout(() => x.remove(), 0); }
+          const cv = document.createElement("canvas"); cv.width = cv.height = 1; const cx = cv.getContext("2d", { willReadFrequently: true });
+          const rgba = (c) => { cx.clearRect(0, 0, 1, 1); cx.fillStyle = "#000"; cx.fillStyle = c; cx.fillRect(0, 0, 1, 1); const d = cx.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255]; };
+          const lum = ([r, g, b]) => { const f = (x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+          const mistura = (a, b) => [0, 1, 2].map((i) => a[i] * a[3] + b[i] * (1 - a[3])).concat(1);
+          function fundo(n) {
+            const camadas = [];
+            for (let p = n; p; p = p.parentElement) {
+              const o = getComputedStyle(p);
+              if (o.backgroundImage !== "none" && !/^url/.test(o.backgroundImage)) return null;
+              const c = rgba(o.backgroundColor);
+              if (c[3] > 0) { camadas.push(c); if (c[3] >= 1) break; }
+            }
+            let f = [255, 255, 255, 1];
+            for (const c of camadas.reverse()) f = mistura(c, f);
+            return f;
+          }
+          const lista = [], vistos = new Set();
+          const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+          for (let t; (t = tw.nextNode());) {
+            const p = t.parentElement;
+            if (!t.data.trim() || !p || vistos.has(p) || !p.getClientRects().length) continue;
+            vistos.add(p);
+            if (p.closest("script, style, template, [hidden], [inert], [aria-hidden=true], :disabled, .so-leitor, option, select, svg, .esqueleto, #toast, dialog:not([open])")) continue;
+            const o = getComputedStyle(p);
+            if (o.visibility !== "visible") continue;
+            let op = 1; for (let q = p; q; q = q.parentElement) op *= Number(getComputedStyle(q).opacity);
+            if (op < 1) continue;
+            const f = fundo(p); if (!f) continue;
+            const c = mistura(rgba(o.color), f);
+            const L1 = lum(c), L2 = lum(f), razao = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+            const px = parseFloat(o.fontSize), grande = px >= 24 || (px >= 18.66 && Number(o.fontWeight) >= 700);
+            if (razao < (grande ? 3 : 4.5)) lista.push(`${razao.toFixed(2)}:1 "${t.data.trim().slice(0, 30)}" em <${p.tagName.toLowerCase()}${p.id ? "#" + p.id : ""}${typeof p.className === "string" && p.className ? "." + p.className.trim().split(/\s+/).join(".") : ""}>`);
+          }
+          return lista;
+        }, r === "#inicio" && tema === "light");
+        if (r === "#inicio" && tema === "light") { ok(achou.some((x) => x.includes("sonda-contraste")), "009u: o teste de contraste acha um texto claro demais (sonda)"); achou.splice(0, achou.length, ...achou.filter((x) => !x.includes("sonda-contraste"))); }
+        for (const x of achou) { const k = `${tema}: ${x.replace(/^[0-9.]+:1 "[^"]*" /, "")}`; if (!baixos.has(k)) baixos.set(k, `${tema} ${r}: ${x}`); }
+      }
+    }
+    [...baixos.values()].forEach((x) => console.log("CONTRASTE", x));
+    ok(!baixos.size, `009u: contraste do texto em ${rotas.length} telas, tema claro e escuro` + (baixos.size ? `: ${baixos.size} trecho(s) abaixo do mínimo` : " sem problemas"));
+    await v.close(); }
 } finally {
   await b.close(); site.close(); await api.fechar();
 }

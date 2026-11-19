@@ -65,7 +65,9 @@
   "onda": 1,
   "veredito": "CONFIRMADO",
   "nota": "Agravante que o a1 não citou: registrar_adicional preenche nome e cidade pela ficha quando ficam em branco (dados_conhecidos). Então um ID trocado grava **o nome de outro entregador sem avisar**. É dinheiro: fica alta.",
-  "junto": ""
+  "junto": "",
+  "feito": "009u",
+  "situacao": "Feito na 009u: ao digitar o ID, o adicional mostra nome e cidade da ficha (quem_e); sem ficha, pede o nome."
  },
  {
   "ag": "a1",
@@ -99,7 +101,9 @@
   "onda": 1,
   "veredito": "CONFIRMADO",
   "nota": "Os cartões de ajuda são desenhados só em #inicio-rapidos (inicio.js:57, agora.js:174). Fora dali só toca o som. A notificação do sistema (sons.js:70) só aparece com a aba escondida.",
-  "junto": ""
+  "junto": "",
+  "feito": "decidido",
+  "situacao": "Decisão do usuário (19/11/2026): o pedido de ajuda continua só na tela inicial."
  },
  {
   "ag": "a1",
@@ -218,7 +222,9 @@
   "onda": 1,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Reproduzido: 16,3 s → 0,36 s, md5 igual. A correção restringe bapos aos aprovados há 30 dias ou menos, que é exatamente onde bloq_apos é usado (só em motivos), então é equivalente. Com o volume de hoje custa milissegundos: o risco é de crescimento. Pesa mais com o AT7: a extensão chama resumo",
-  "junto": ""
+  "junto": "",
+  "feito": "009u",
+  "situacao": "Feito na 009u: CTE agregado (bapos); mesmo resultado, resumo da tela inicial em 91 ms com 4.000 bloqueios."
  },
  {
   "ag": "a2",
@@ -762,7 +768,9 @@
   "onda": 1,
   "veredito": "CONFIRMADO",
   "nota": "Reproduzido em ap04.sql: enviar_cadastro('novoid9999', … 'Fulano Novo De Teste') → o gatilho cadastro_cria_ficha_ins cria a ficha → listar_cadastros('pendentes') traz historico com nome → o cartão diz \"Este ID já existe no Comunique\". Subo para alta porque o aviso existe para pegar ID re",
-  "junto": ""
+  "junto": "",
+  "feito": "009u",
+  "situacao": "Feito na 009u: o quadrinho some quando o único registro do ID é o próprio cadastro."
  },
  {
   "ag": "a4",
@@ -1238,7 +1246,8 @@
   "onda": 1,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Ver o detalhe abaixo da tabela.",
-  "junto": ""
+  "junto": "",
+  "situacao": "Aguarda o usuário: desligar Email, Phone e Anonymous em Authentication → Providers no Supabase. A trava no banco vem depois disso."
  },
  {
   "ag": "a6",
@@ -1272,7 +1281,9 @@
   "onda": 1,
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Confere: só existe o gatilho aaa_cadastro_sem_cpf (coluna cadastros.cpf), e nenhuma função ou gatilho limpa texto. O **telefone** de \"Fazer contato\" foi decisão do dono (\"pode guardar, ajustar depois\", no CLAUDE.md), então não é defeito novo. O CPF contradiz a política publicada: fica alta.",
-  "junto": ""
+  "junto": "",
+  "feito": "009u",
+  "situacao": "Feito na 009u: gatilho aab_sem_cpf troca CPF por \"[CPF removido]\" em todo texto livre (telefone fica, decisão do usuário)."
  },
  {
   "ag": "a6",
@@ -2616,5 +2627,100 @@
   "onde": "O art. 41 pede a identidade e o contato do encarregado divulgados publicamente. A Lei 15.352/2026 transformou a ANPD em Agência Nacional de Proteção de Dados.",
   "sugestao": "Na revisão da privacidade (S5): indicar o encarregado da empresa (o controlador é a empresa, não o Comunique), o canal para pedidos de titulares e escrever 'Agência Nacional de Proteção de Dados (ANPD)'.",
   "nota": "Fontes: Lei 13.709/2018, art. 41; Lei 15.352/2026."
+ },
+ {
+  "ag": "pedido",
+  "id": "U1",
+  "titulo": "Faixa de Novidades ocupava tela demais",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "achado",
+  "onde": "",
+  "sugestao": "Uma linha só com a última atualização; clicar abre o histórico, sem os códigos internos.",
+  "objetivo": "menos",
+  "tela": "inicio",
+  "onda": 1,
+  "veredito": "",
+  "nota": "",
+  "junto": "",
+  "feito": "009u",
+  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026)."
+ },
+ {
+  "ag": "pedido",
+  "id": "U2",
+  "titulo": "Atividades sem o número de pendências no menu",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "achado",
+  "onde": "",
+  "sugestao": "Contador c-at-menu, o mesmo da Minha fila.",
+  "objetivo": "menos",
+  "tela": "tarefas",
+  "onda": 1,
+  "veredito": "",
+  "nota": "",
+  "junto": "",
+  "feito": "009u",
+  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026)."
+ },
+ {
+  "ag": "pedido",
+  "id": "U3",
+  "titulo": "Tira do sino passava da borda no celular",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "achado",
+  "onde": "",
+  "sugestao": "A tira nunca passa da borda esquerda (largura limitada pela tela).",
+  "objetivo": "menos",
+  "tela": "avisos",
+  "onda": 1,
+  "veredito": "",
+  "nota": "",
+  "junto": "",
+  "feito": "009u",
+  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026)."
+ },
+ {
+  "ag": "pedido",
+  "id": "U4",
+  "titulo": "Avisos mostravam o código do entregador",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "achado",
+  "onde": "",
+  "sugestao": "Gatilho aac_aviso_sem_id: o nome fica, o código sai (sem nome = \"sem nome\"); a busca por ID continua. Também saiu o emoji do agradecimento.",
+  "objetivo": "menos",
+  "tela": "avisos",
+  "onda": 1,
+  "veredito": "",
+  "nota": "",
+  "junto": "",
+  "feito": "009u",
+  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026)."
+ },
+ {
+  "ag": "pedido",
+  "id": "U5",
+  "titulo": "Faltava um teste automático de contraste",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "achado",
+  "onde": "",
+  "sugestao": "O e2e mede o contraste do texto em 31 telas, tema claro e escuro (WCAG AA), com uma sonda que prova que o teste acha erro.",
+  "objetivo": "menos",
+  "tela": "geral",
+  "onda": 1,
+  "veredito": "",
+  "nota": "",
+  "junto": "",
+  "feito": "009u",
+  "situacao": "Feito na 009u (pedido do usuário em 19/11/2026)."
  }
 ]
