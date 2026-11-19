@@ -1,0 +1,374 @@
+[
+ {
+  "id": "NF-1",
+  "veredito": "CONFIRMADO",
+  "prio": "alta",
+  "nota": "Conferido: decidir() (js/ativacao.js:103) termina num toast e não há nenhum modelo de ativação em modelos_mensagem (só grupos bloqueio, entregador, cidade, parceiro). Os motivos de reprovação são uma lista curta (schema.sql:138), então cada um tem resposta padrão. Fluxo diário; o esforço real inclui o usuário aprovar 7 textos novos."
+ },
+ {
+  "id": "NF-2",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "nota": "Fato certo: o resultado só diz 'Aplique X de bloqueio' e nada registra que foi aplicado. Mas é um clique a mais por bloqueio, contra o pilar 'menos trabalho'; o próprio resultado diz 'O sistema retira sozinho nesse horário' (bloqueios.js:559), então só a aplicação precisa de rastro. Testar antes com a equipe se esquecer de aplicar acontece de verdade."
+ },
+ {
+  "id": "NF-3",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "nota": "O texto do resultado (bloqueios.js:544 e 559) já diz que o sistema retira sozinho no fim do prazo, o que responde a dúvida do próprio item: o 'Liberei no Quero Log' não é necessário. Sobra o que vale: um modelo 'fim da restrição' e o bloco 'saem hoje' em Bloqueados agora."
+ },
+ {
+  "id": "NF-4",
+  "veredito": "CONFIRMADO",
+  "prio": "alta",
+  "nota": "Conferido: a caixa da tratativa só tem a nota e 'Confirmar' (bloqueios.js:231-244); tentativa sem resposta não deixa rastro e a tarefa só aparece como atrasada. Mostra o esforço (pilar 1) e casa com AN-10 (resultado da tratativa em lista): fazer os dois juntos."
+ },
+ {
+  "id": "NF-5",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "nota": "Parte do fato está errada: o cartão já mostra 'aguardando contato há X' com destaque de velho (ativacao.js:64). O que falta é a ação de um clique ('Encerrar: sem retorno', em lote), que depende de NF-1 para a mensagem de cobrança. AN-12 mostra o mesmo por cidade."
+ },
+ {
+  "id": "NF-6",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Conferido: registrar_parceiro termina num toast (parceiros.js:27-32) e o modelo parceiro_ativacao existe no banco. É uma linha de código. Fica este id; LG-2 é a mesma proposta."
+ },
+ {
+  "id": "NF-7",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Conferido: acordos só aparecem depois de vencidos, para todos, e não há verificar_acordos nem aviso na véspera em nenhuma migração. Fica este id (mais completo: véspera, dono e 'Renovar'); LG-4 é a mesma coisa."
+ },
+ {
+  "id": "NF-8",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Conferido: renderAtencao (bloqueios.js:981-995) só lista, sem ação. O 'De olho' na linha é barato; o 'Orientar' com mensagem nova depende de texto aprovado pelo usuário. Junto de OP-1 e LG-8."
+ },
+ {
+  "id": "NF-9",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "nota": "comentar_entregador não tem data, e o caso 'te dou retorno amanhã' é real. Mas é quase o MK-6 (adiar/lembrar) aplicado à ficha; propor como a primeira entrega do MK-6, e baixar para média (coluna nova + rotina + item novo na Minha fila não é pequeno)."
+ },
+ {
+  "id": "NF-10",
+  "veredito": "DUPLICADO DE LG-13",
+  "prio": "média",
+  "nota": "Mesma ideia de LG-13 (nova tarefa a partir do painel da extensão). O primeiro passo está errado: a lista PERMITIDAS do sw.js não é mais usada desde a 1.2 (o painel chama Api.rpc direto; ver S9). Guardar daqui só o 'link da conversa no campo de detalhes'."
+ },
+ {
+  "id": "NF-11",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "nota": "A ficha (tabela entregadores) não guarda telefone nem se a pessoa está rodando: a lista de 'quem chamar' não dá para chamar ninguém sem ir a outro sistema. O esforço está subestimado. O que vale e é pequeno: o cartão de Procurar entregador abrir o modelo engajamento_cidade, que já existe."
+ },
+ {
+  "id": "NF-12",
+  "veredito": "DERRUBADO",
+  "prio": "baixa",
+  "nota": "Já existe: o resultado da leve tem 'Gerar mensagem' com a contagem de leves (bloqueios.js:552) e 'Registrar outra' devolve o foco ao ID (bloqueios.js:553). O próprio autor pediu para conferir; conferido, não há o que fazer."
+ },
+ {
+  "id": "PB-1",
+  "veredito": "CONFIRMADO",
+  "prio": "alta",
+  "nota": "Reproduzido no teste_rev: com uma tarefa sugerida só para a monitora e outra criada pela própria suporte, a suporte recebe abertas_para_pegar = 1 e a lista dela mostra só a tarefa que ela criou (que não conta). O número que o usuário pediu na 009v aponta para algo que a pessoa não vê. Correção de uma linha no 009v."
+ },
+ {
+  "id": "PB-2",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Reproduzido: suporte aceita 'Aprovar entregadores', monitora entra junto; minhas_em_andamento = 1 para a suporte e 0 para a monitora. verificar_tarefas também só avisa aceita_por. Trocar por participa(a) é pequeno."
+ },
+ {
+  "id": "PB-3",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "alta",
+  "nota": "Reproduzido: depois de salvar_membro tirar o módulo de bloqueios da Mona, a tratativa e a cidade continuam no e-mail dela, ela recebe 'Você não tem acesso ao módulo de bloqueios' e o moderador vê 'Mona Monitora' como dona. Ajuste: o conserto mínimo é chamar reatribuir_tarefas() e limpar cidades.responsavel_email dentro de salvar_membro/remover_membro (pequeno); a janela 'passar para…' fica para depois."
+ },
+ {
+  "id": "PB-4",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Reproduzido: listar_tarefas_concluidas com busca 'Suzana' (quem registrou) devolve 0; com 'Carlos' (entregador) devolve 1. É da 009x, ainda não publicada: corrigir antes de publicar."
+ },
+ {
+  "id": "PB-5",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "nota": "Reproduzido: IDs '48291377' e 'abcdefgh' deixam o código no aviso e id_app nulo; 'ab12cd34' funciona. Prioridade baixa porque os IDs reais vistos (ex.: 6aeff32c5ac2) misturam letras e números quase sempre; mas o conserto (avisar_decisao passar c.id_app) é pequeno e acaba com o adivinhar."
+ },
+ {
+  "id": "PB-6",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Reproduzido: aviso_sem_id('… moto do entregador (QWE1A23) parada') tira a placa, e 'Aviso geral de X: NATAL25' vira 'Aviso geral de X: sem nome'. O gatilho muda texto escrito pela equipe em ajuda e aviso geral, justo onde o código é a informação. Limitar às categorias sobre entregador."
+ },
+ {
+  "id": "PB-7",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Conferido pela leitura (inicio.js e atividades.js:421-425): três contas diferentes. Resolver junto com PB-1, que muda a mesma conta."
+ },
+ {
+  "id": "PB-8",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Conferido: resumoSemana (parceiros.js:74-78) conta 'este' de terça até hoje e 'anterior' a semana passada inteira; a frase do topo diz '-80%' numa quarta com ritmo igual. Duas linhas. Junto de PX4 (mover o cálculo para o banco)."
+ },
+ {
+  "id": "PB-9",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Conferido: o grupo mostra a quantidade carregada (50) como se fosse o total. Da 009x; cosmético."
+ },
+ {
+  "id": "PB-10",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Conferido: o botão Próxima usa h.pagina === paginas e histPag só volta a 1 quando muda o filtro; o CSV pede uma página de 5.000. Caso raro (moderador excluindo na última página); o aviso do CSV é que vale."
+ },
+ {
+  "id": "PB-11",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Conferido: filtrarHist chama App.carregar (ativacao.js:259), que busca resumo_e_avisos, listar_cadastros('pendentes') e redesenha tudo (base.js:485-520). O A3-04 está marcado como feito no rascunho da 009x, mas só ganhou a espera de 300 ms; corrigir antes de publicar."
+ },
+ {
+  "id": "PB-12",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Conferido: S.eventos só é apagado nas ações da própria pessoa (ativacao.js:109, 184, 301). Raro (duas pessoas no mesmo cadastro com a linha aberta)."
+ },
+ {
+  "id": "PB-13",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Conferido: o bloco 009u do js/busca.js ainda diz 'Esta faixa agora ocupa uma linha só… Clique nela', e a faixa saiu na 009w. Texto, cinco minutos."
+ },
+ {
+  "id": "AN-1",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "nota": "Os dados existem, mas só bloqueios de 10 h ou mais têm tratativa, e as infrações mais graves é que recebem tratativa: comparar 'no prazo × fora' mistura gravidade com contato. Com o volume de hoje os grupos não chegam a 30 tão cedo. Fazer depois de AN-10, que dá o resultado do contato."
+ },
+ {
+  "id": "AN-2",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "ativacao_ao_bloqueio só tem meses e total; o CTE do primeiro bloqueio já existe. O limite que o autor aponta (quem para de rodar sem infração não aparece) precisa ir escrito na tela."
+ },
+ {
+  "id": "AN-3",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "nota": "Conferido: resumo_financeiro agrupa por cidade, motivo, origem e quem registrou, nunca por entregador. A parte 'quem mais recebe' é o MK-4 (011); o novo aqui é a linha na ficha, que é onde vale. Entrar junto com o MK-4, não antes."
+ },
+ {
+  "id": "AN-4",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Conferido: resumo_semanal só está na 005 e nunca foi refeito; financeiro, parceiros, acordos e ajuda ficaram de fora. Barato e serve a reunião semanal."
+ },
+ {
+  "id": "AN-5",
+  "veredito": "DUPLICADO DE M9",
+  "prio": "baixa",
+  "nota": "É o M9 (alerta por limite nas Análises) com o método melhor (mediana de 8 semanas e mínimo de 5 casos). Levar o método para dentro do M9."
+ },
+ {
+  "id": "AN-6",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Reproduzido: um pedido de 20 min renovado volta a ter 0 min (renovar_ajuda grava criado_em = now(), 009d:129). É dado perdido que não se recupera depois; o conserto é pequeno."
+ },
+ {
+  "id": "AN-7",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Faz sentido, mas com uma equipe de cerca de 11 pessoas os pedidos de ajuda são poucos e o mapa dia × hora fica quase vazio por meses. Depende de AN-6."
+ },
+ {
+  "id": "AN-8",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "nota": "Volume de acordos é muito pequeno para análise por cidade. O achado útil é outro: acordos.cidade é texto livre; padronizar a cidade entra no LG-5."
+ },
+ {
+  "id": "AN-9",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Conferido: a conversão das leves só conta quem chegou ao limite. A pergunta 'a leve avisa antes?' é boa e barata com o índice por ID."
+ },
+ {
+  "id": "AN-10",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "nota": "Conferido: concluir_tratativa e liberar_bloqueio só têm texto livre. A parte da liberação ('foi engano, não conta') é o A5-S2; a parte da tratativa fecha com NF-4 (o 'não respondeu' é a mesma coisa). Fazer NF-4 + AN-10 como uma entrega."
+ },
+ {
+  "id": "AN-11",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "nota": "Fato certo (lida em lote não diferencia). Mas mede ruído com uma coluna nova e conta por categoria; antes, o C-5 (agrupar avisos do mesmo entregador) ataca o ruído direto. Baixa."
+ },
+ {
+  "id": "AN-12",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "status_desde existe e tem índice. Complementa NF-5 por cidade; fazer só se NF-5 entrar."
+ },
+ {
+  "id": "AN-13",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "A 009g já cria +5 entregadores a cada parceiro; esta análise só confere se a meta acompanha. Baixo valor até haver volume de parceiros."
+ },
+ {
+  "id": "AN-14",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "nota": "Cruzar os itens da passagem com tarefas concluídas é possível, mas o M4 ('Recebi') é o primeiro passo e mais útil. Depois do M4."
+ },
+ {
+  "id": "AN-15",
+  "veredito": "DERRUBADO",
+  "prio": "baixa",
+  "nota": "A tela já diz o certo: o mapa se chama 'Quando a equipe registra' e o texto explica que são bloqueios, leves e cadastros da equipe (js/analises.js:147). Não induz a leitura errada que o item descreve."
+ },
+ {
+  "id": "LG-1",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "nota": "Conferido: o painel termina em 'Bloqueio registrado: aplique X' (formularios.js:129), sem mensagem. Prioridade média porque a extensão ainda não foi publicada nem é usada pela equipe; tirar varsMensagem para arquivo comum é o esforço real (junto de A7-08)."
+ },
+ {
+  "id": "LG-2",
+  "veredito": "DUPLICADO DE NF-6",
+  "prio": "média",
+  "nota": "Mesma proposta de NF-6 (botão da mensagem parceiro_ativacao depois de ativar o parceiro). Fica NF-6."
+ },
+ {
+  "id": "LG-3",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "nota": "Conferido: botaoMensagem só aparece no resultado e no Histórico (bloqueios.js:552, 564, 871), não na tratativa. Ajuste: a mensagem de restrição normalmente já foi mandada por quem registrou; na tratativa o útil é uma mensagem de orientação/contato, não a mesma. Pequeno; fazer junto de NF-4."
+ },
+ {
+  "id": "LG-4",
+  "veredito": "DUPLICADO DE NF-7",
+  "prio": "média",
+  "nota": "Mesma coisa que NF-7 (aviso a quem registrou o acordo). O 'acordos_amanha' no panorama do turno é um detalhe a levar para NF-7."
+ },
+ {
+  "id": "LG-5",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Conferido: acordos e parceiros guardam estabelecimento e cidade em texto livre sem ligação. Um datalist é pequeno; o parceiro_id é médio. Leva junto a padronização da cidade dos acordos (AN-8). Junto de C-4."
+ },
+ {
+  "id": "LG-6",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "pares_bairros já é calculado e mostrado sem ação. Com a 009p (bairros parecidos) parte dos pares já se resolve sozinha; o botão na lista é barato."
+ },
+ {
+  "id": "LG-7",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "nota": "Pagamento ao entregador nem sempre é um adicional (pode ser repasse atrasado); jogar tudo no Financeiro como adicional pode sujar o resumo. Perguntar ao usuário antes."
+ },
+ {
+  "id": "LG-8",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Conferido: o cartão de contato_entregador só leva à ficha. Útil, mas junto de OP-1 (ações na ficha) e NF-8, que mexem no mesmo lugar."
+ },
+ {
+  "id": "LG-9",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Conferido: formularios.js:98 filtra !i.leve, então leve não sai do painel (a linha citada, 113, está um pouco errada). Média porque a extensão ainda não está em uso."
+ },
+ {
+  "id": "LG-10",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Conferido: painel.js:141 só mostra tipo 'ajuda'; aviso geral, pendência e acordo já chegam no mesmo resumo. Tirar o filtro é pequeno."
+ },
+ {
+  "id": "LG-11",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "nota": "Conferido: 'Cadastrar este ID' (painel.js:109) e o menu do botão direito abrem o site. Só o 'Cadastrar este ID' fere a decisão da 1.2 (é um formulário); 'Ver ficha' abrir o site é esperado, porque a ficha só existe no site."
+ },
+ {
+  "id": "LG-12",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "nota": "Fato certo, mas o primeiro passo não pega o caso principal: o Crisp troca de conversa sem recarregar a página, então onUpdated com status 'complete' não dispara e nem o 'Nesta tela' muda. O leitor precisa avisar quando a URL muda (history/MutationObserver). Esforço médio, não pequeno."
+ },
+ {
+  "id": "LG-13",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Fica este id (NF-10 é a mesma ideia). Pilar 1 no lugar onde mais conversa acontece; só contato_entregador em modo 'registro' é um bom começo. Duplicar CAMPOS entra no A7-08."
+ },
+ {
+  "id": "LG-14",
+  "veredito": "DUPLICADO DE A7-08",
+  "prio": "baixa",
+  "nota": "O A7-08 já propõe um extensao/comum.js copiado pelo empacotar.py e um teste que falha se as cópias divergirem. Acrescentar ao A7-08 os motivos do adicional e o acharBairro."
+ },
+ {
+  "id": "LG-15",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "nota": "Conferido: manifest 1.2.2 sem 'key' e zips só até 1.2.1; o ramo rpc/PERMITIDAS do sw.js está mesmo sem uso (S9). É mais lista de tarefas do envio que achado; a decisão de enviar é do usuário. O passo que mais importa é o (6), testar nas telas reais, e ele depende de alguém da equipe."
+ },
+ {
+  "id": "C-1",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "nota": "Conferido: o leitor da extensão já usa admin.querolog.io/entregadores/<id> (leitor.js:46). Um link na ficha e no resultado do bloqueio é pequeno e corta redigitação; confirmar antes que o ID é o mesmo."
+ },
+ {
+  "id": "C-2",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Já feito no rascunho da 009x (AT6). Nada a revisar."
+ },
+ {
+  "id": "C-3",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Útil para quem volta ao Histórico, mas o caminho por sessionStorage é simples. Baixa."
+ },
+ {
+  "id": "C-4",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Conferido: busca_rapida (008) procura em fichas, cadastros, comentários e avisos, não em parceiros, acordos ou tarefas. Começar por parceiros e acordos, como sugerido; junto de LG-5."
+ },
+ {
+  "id": "C-5",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Medir primeiro, como o próprio item diz. Ataca o mesmo ruído que AN-11, e de forma mais direta."
+ },
+ {
+  "id": "C-6",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "nota": "Já existe resumo_do_dia no topo da tira do sino (008d) e a passagem de turno; antes de um terceiro resumo, ver se basta mostrar o resumo_do_dia na tela inicial ao voltar."
+ },
+ {
+  "id": "C-7",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "nota": "Filtros nas concluídas, no banco. Vai junto de PB-9 (total certo no título)."
+ }
+]
