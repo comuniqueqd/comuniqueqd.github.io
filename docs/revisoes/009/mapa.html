@@ -94,7 +94,7 @@ h1{font-size:clamp(24px,3.6vw,32px);font-weight:800}
 /* como seguir */
 .seguir{display:grid;gap:22px}
 .frase{font:700 18px var(--t);max-width:70ch;margin:0}
-.trilhas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px}
+.trilhas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:16px;align-items:start}
 .trilha{background:var(--surface);border:1px solid var(--line);border-radius:12px;min-width:0}
 .trilha>h2{font-size:16px;padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
 .trilha>h2 small{font:600 12px var(--b);color:var(--muted)}
@@ -250,10 +250,9 @@ const TRILHAS=[
  ["011 · Painel financeiro (antes da 010)","Já há dados desde 08/11; custo de adicional por pedido, motivos, casos fora do normal."," "],
  ["010 · Comemorativa","Desafios de equipe (sem ranking individual público), \"Quem somos\", documentação de lançamento."," "]]],
 ["Extensão: trilha paralela","não espera o visual",[
- ["1.2.2 · Consertos","Notificação sem emoji, consulta leve a cada minuto, ramo sem uso removido, chave no manifesto (mesmo ID no teste e na loja), imagens da loja refeitas.","AP-14 AT7 S9"],
- ["Piloto de 1 semana","2 ou 3 pessoas, nas telas reais do Quero Log e do Crisp; conferir a leitura de ID, nome e cidade."," "],
- ["Volta à loja (não listada)","Reenvio com a lista de conferência pronta."," "],
- ["1.3 · Contextual","Ficha resumida do entregador no topo, mensagens com \"Copiar\", opção \"não ler esta aba\"."," "]]],
+ ["1.2.2 e 1.3 · Feitas","Nome no Crisp corrigido (1.2.2) e Ativar parceiro pela tela do estabelecimento no Quero Log (1.3)."," "],
+ ["Piloto e volta à loja","2 ou 3 pessoas nas telas reais por uma semana; antes do reenvio: chave no manifesto (mesmo ID), imagens da loja sem emoji."," "],
+ ["1.4 · Contextual","Copiar mensagem e ID depois da restrição; perceber troca de entregador no Crisp; ficha resumida no topo."," "]]],
 ["Operação: sem código","o maior ganho de tempo",[
  ["Uma fonte só","Data de corte: a planilha vira só leitura; o WhatsApp vira eco do app (\"Copiar para o grupo\"), sem proibir."," "],
  ["Multiplicador por turno","Uma pessoa por turno que ajuda os outros nas novidades; materiais enxutos (cartões de um fluxo; decks completos só na 010)."," "],
