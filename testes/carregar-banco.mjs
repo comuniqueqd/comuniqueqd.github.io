@@ -14,7 +14,8 @@ export const MIGRACOES = ["testes/supabase-local.sql", "supabase/schema.sql", "s
   "supabase/009c-mensagens-agravante.sql", "supabase/009c2-mensagens-opcoes.sql", "supabase/009d-ajuda-aviso-turno.sql",
   "supabase/009d2-tarefas-cards.sql", "supabase/009d3-painel-metas-recorrentes.sql", "supabase/009e-parceiros.sql",
   "supabase/009f-parceiros-completo.sql", "supabase/009g-tarefas-compartilhadas.sql", "supabase/009h-entregador-pelo-lancamento.sql",
-  "supabase/009p-bairros-parecidos.sql", "supabase/009s-sem-cpf.sql"];
+  "supabase/009p-bairros-parecidos.sql", "supabase/009s-sem-cpf.sql", "supabase/009u-sem-cpf-nos-textos.sql",
+  "supabase/009v-tarefas-abertas.sql", "supabase/009x-casa-em-ordem.sql"];
 
 export async function carregarBanco(url) {
   const db = new pg.Client({ connectionString: url });

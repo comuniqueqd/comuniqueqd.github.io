@@ -55,6 +55,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009p-bairros-parecidos.
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009s-sem-cpf.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009u-sem-cpf-nos-textos.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009v-tarefas-abertas.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009x-casa-em-ordem.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -927,6 +928,8 @@ try {
   await esperar(m7, "#t-hist tr:has-text('rev00002') button.revisar-cad");
   ok((await texto(m7, "#t-hist tr:has-text('rev00002') button.revisar-cad")).includes("o ID já tem ficha com outro nome: Nome Velho"), "Histórico: ID com ficha de outro nome fica para revisar");
   await m7.selectOption("#f-hist-status", "revisar");
+  // 009x: o filtro roda no banco depois de uma pausa curta: espera a lista nova chegar
+  await m7.waitForFunction(() => { const l = [...document.querySelectorAll("#t-hist tbody tr.clicavel")]; return l.length && l.every((tr) => tr.querySelector("button.revisar-cad")); }, null, { timeout: 8000 }).catch(() => {});
   { const linhas = await m7.$$("#t-hist tbody tr.clicavel"), comMarca = await m7.$$("#t-hist tbody tr.clicavel button.revisar-cad");
     ok(linhas.length > 0 && linhas.length === comMarca.length && !(await m7.isVisible("#t-hist tr:has-text('semnome77')")), "filtro 'Para revisar' no Histórico (" + linhas.length + ")"); }
   await m7.click("#t-hist tr:has-text('rev00002') button.revisar-cad");

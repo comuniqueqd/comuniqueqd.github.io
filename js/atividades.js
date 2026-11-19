@@ -379,12 +379,26 @@
       ["Para você", l.filter(paraMim)],
       ["Abertas: quem puder, pega", l.filter((a) => (a.status === "aberta" && !a.para_mim) || a.pode_entrar).sort((x, y) => String(x.prazo || "9").localeCompare(String(y.prazo || "9")) || String(x.criada_em).localeCompare(String(y.criada_em)))],
       ["Em andamento com a equipe", l.filter((a) => a.status === "aceita" && !a.sou_participante && !a.pode_entrar)],
-      ["Concluídas nos últimos 30 dias", l.filter((a) => a.status === "concluida").sort((x, y) => String(y.concluida_em).localeCompare(String(x.concluida_em)))],
+      ["Concluídas nos últimos 30 dias", l.filter((a) => a.status === "concluida").sort((x, y) => String(y.concluida_em).localeCompare(String(x.concluida_em))).slice(0, A.concLimite || 50)],
     ].filter(([, x]) => x.length);
     if (!grupos.length) return box.replaceChildren(vazio("Nenhuma tarefa", "Use “Nova tarefa” para pedir algo à equipe ou registrar o que você fez."));
-    box.replaceChildren(...grupos.map(([tit, x]) => el("div", { class: "grupo" }, el("h3", {}, tit, el("span", { class: "count", text: x.length })), el("div", { class: "queue" }, x.map(cartaoAtividade)))));
+    const temMais = l.filter((a) => a.status === "concluida").length > (A.concLimite || 50);
+    box.replaceChildren(...grupos.map(([tit, x]) => el("div", { class: "grupo" }, el("h3", {}, tit, el("span", { class: "count", text: x.length })), el("div", { class: "queue" }, x.map(cartaoAtividade)))),
+      ...(temMais ? [el("div", { class: "paginas" }, el("button", { class: "btn small", type: "button",
+        onclick: (e) => { e.currentTarget.disabled = true; A.concLimite = (A.concLimite || 50) + 50; App.carregar(); } }, "Ver mais concluídas"))] : []));
   }
 
+
+  // 009x (AT4): só as N concluídas mais recentes (pede uma a mais para saber se há "Ver mais"); 0 = nenhuma.
+  // Banco sem a 009x: a lista de antes (todas as concluídas de 30 dias).
+  async function listarAtividades(n) {
+    try { return await rpc("listar_atividades", { p_concluidas: n }); }
+    catch (e) {
+      if (!/listar_atividades|function|schema cache/i.test(msgErro(e) + (e?.message || ""))) throw e;
+      return rpc("listar_atividades");
+    }
+  }
+  App.listarAtividades = listarAtividades;
 
   App.modulo({
     id: "atividades", nome: "Atividades",
@@ -398,7 +412,7 @@
       await Promise.all([
         aba === "sugeridas" ? App.painel.carregarRecorrentes() : null,
         aba === "pendencias" && S.me.papel_bloqueios ? rpc("listar_tarefas", { p_status: "pendente" }).then((d) => (A.tarefas = d)) : null,
-        rpc("listar_atividades").then((d) => (A.atividades = d)),
+        listarAtividades(aba === "sugeridas" ? (A.concLimite || 50) + 1 : 0).then((d) => (A.atividades = d)),
         aba === "sugeridas" && !A.tipos ? rpc("tipos_tarefa").then((d) => (A.tipos = d)) : null,
       ]);
     },

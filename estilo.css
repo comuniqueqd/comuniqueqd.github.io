@@ -941,3 +941,6 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
 #inicio-novidades { display: flex; justify-content: flex-end; margin: 0 0 10px; }
 #inicio-novidades:empty { display: none; }
 .historico-versoes { display: inline-flex; align-items: center; gap: 6px; }
+
+/* 009x (A3-05): o bloco da semana dos parceiros guarda o lugar enquanto os dados chegam (a tela não pula) */
+.pa-semana-reserva { min-height: 132px; }

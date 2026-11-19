@@ -222,25 +222,59 @@
   };
 
   // ---------- histórico ----------
+  // 009x (AT4): a busca e os filtros rodam no banco, que devolve só a página da tela (100 por vez) e as contagens.
+  // Banco sem a 009x: cai no jeito antigo (lista inteira) e pagina aqui mesmo.
+  const POR_HIST = 100;
+  let histPag = 1, pagChave = null, pagT = null;
+  function argsHist(por = POR_HIST, pagina = histPag) {
+    return { p_pagina: pagina, p_por: por, p_busca: $("#q-hist").value.trim() || null, p_status: $("#f-hist-status").value || null,
+      p_cidade: $("#f-hist-cidade").value || null, p_meus: staff() && $("#f-hist-meus").checked };
+  }
+  const chaveDoHist = () => { const a = argsHist(); delete a.p_pagina; return JSON.stringify(a); };
+  function paginarAqui(l, a) {   // reserva para o banco sem a 009x
+    const base = l.filter((c) => !a.p_meus || c.enviado_por === S.me.id);
+    const cont = (f) => base.filter(f).length;
+    const f = base.filter((c) => busca(c, a.p_busca) && (!a.p_status || (a.p_status === "revisar" ? !!c.revisar : c.status === a.p_status)) && (!a.p_cidade || c.cidade === a.p_cidade))
+      .sort((x, y) => String(y.enviado_em).localeCompare(String(x.enviado_em)));
+    return { itens: f.slice((a.p_pagina - 1) * a.p_por, a.p_pagina * a.p_por), total: f.length, pagina: a.p_pagina, por: a.p_por,
+      contagens: { cadastros: base.length, aguardando_analise: cont((c) => c.status === "aguardando_analise"), aguardando_contato: cont((c) => c.status === "aguardando_contato"),
+        aprovado: cont((c) => c.status === "aprovado"), encerrado: cont((c) => c.status === "encerrado") },
+      cidades: [...new Set(base.map((c) => c.cidade).filter(Boolean))].sort() };
+  }
+  async function pedirHist(a) {
+    try { return await rpc("listar_cadastros_pagina", a); }
+    catch (e) {
+      if (!/listar_cadastros_pagina|function|schema cache/i.test(msgErro(e) + (e?.message || ""))) throw e;
+      return paginarAqui(await rpc("listar_cadastros", { p_escopo: "todos" }), a);
+    }
+  }
+  async function carregarHist() {
+    const chave = chaveDoHist();
+    if (pagChave !== chave) { pagChave = chave; histPag = 1; }
+    const d = await pedirHist(argsHist());
+    if (chave === chaveDoHist()) S.lista.hist = d;
+  }
+  // A3-04: espera a pessoa parar de digitar e busca de novo (o redesenho é só da lista, quando os dados chegam)
+  const filtrarHist = () => { clearTimeout(pagT); pagT = setTimeout(() => App.carregar(), 300); };
   function renderHist() {
-    const t = $("#t-hist"), l = S.lista.todos;
+    const t = $("#t-hist"), h = S.lista.hist;
     const cols = ["Situação", "Entregador", "Cidade", "Enviado por", "Enviado em", "Última decisão", ""];
-    const head = el("thead", {}, el("tr", {}, cols.map((h) => el("th", { text: h }))));
-    if (!l) return t.replaceChildren(head, el("tbody", {}, App.u.linhasEsqueleto(cols.length)));
-    opcoesCidade($("#f-hist-cidade"), l);
+    const head = el("thead", {}, el("tr", {}, cols.map((x) => el("th", { text: x }))));
+    if (!h) { $("#hist-total").textContent = ""; return t.replaceChildren(head, el("tbody", {}, App.u.linhasEsqueleto(cols.length))); }
+    opcoesCidade($("#f-hist-cidade"), h.cidades.map((cidade) => ({ cidade })));
     // 008c: o Histórico junta o antigo "Meus cadastros" (o suporte já recebe só os dele)
     $("#hist-sub").textContent = staff() ? "Todos os cadastros recebidos. Clique numa linha para ver o histórico de cada um." : "Tudo o que você enviou, com a situação atual. Clique numa linha para ver o histórico.";
     $("#f-hist-meus-box").hidden = !staff();
-    const q = $("#q-hist").value, st = $("#f-hist-status").value, cid = $("#f-hist-cidade").value, meus = staff() && $("#f-hist-meus").checked;
-    const base = l.filter((c) => !meus || c.enviado_por === S.me.id);
-    const cont = (f) => base.filter(f).length;
-    const tile = (k, v, cls = "") => el("div", { class: "tile " + cls }, el("div", { class: "k", text: k }), el("div", { class: "v", text: v }));
-    $("#hist-tiles").replaceChildren(tile(staff() && !meus ? "Cadastros" : "Enviados por você", base.length), tile("Aguardando análise", cont((c) => c.status === "aguardando_analise"), "hl"),
-      tile("Aguardando novo contato", cont((c) => c.status === "aguardando_contato"), "hl2"), tile("Aprovados", cont((c) => c.status === "aprovado"), "good"), tile("Encerrados", cont((c) => c.status === "encerrado")));
-    const lista = base.filter((c) => busca(c, q) && (!st || (st === "revisar" ? !!c.revisar : c.status === st)) && (!cid || c.cidade === cid)).sort((a, b) => String(b.enviado_em).localeCompare(String(a.enviado_em)));
+    const meus = staff() && $("#f-hist-meus").checked, k = h.contagens;
+    const tile = (rot, v, cls = "") => el("div", { class: "tile " + cls }, el("div", { class: "k", text: rot }), el("div", { class: "v", text: v }));
+    $("#hist-tiles").replaceChildren(tile(staff() && !meus ? "Cadastros" : "Enviados por você", k.cadastros), tile("Aguardando análise", k.aguardando_analise, "hl"),
+      tile("Aguardando novo contato", k.aguardando_contato, "hl2"), tile("Aprovados", k.aprovado, "good"), tile("Encerrados", k.encerrado));
+    const paginas = Math.max(1, Math.ceil(h.total / h.por)), ini = (h.pagina - 1) * h.por;
+    $("#hist-total").textContent = h.total === k.cadastros ? `${h.total} cadastro(s)` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + h.por, h.total)}` : "")
+      : `${h.total} de ${k.cadastros} cadastro(s)` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + h.por, h.total)}` : "");
     const body = el("tbody");
-    if (!lista.length) body.append(el("tr", {}, el("td", { colspan: cols.length, class: "meta", text: l.length ? "Nenhum cadastro encontrado." : "Você ainda não enviou cadastros." })));
-    for (const c of lista) {
+    if (!h.itens.length) body.append(el("tr", {}, el("td", { colspan: cols.length, class: "meta", text: k.cadastros ? "Nenhum cadastro encontrado." : "Você ainda não enviou cadastros." })));
+    for (const c of h.itens) {
       const acoes = el("td", { style: "white-space:nowrap", onclick: (e) => e.stopPropagation() }, botaoHistorico(c.id));
       if (mod()) {
         if (c.pode_desfazer) acoes.append(el("button", { class: "btn link", type: "button", onclick: (e) => desfazer(c, e.currentTarget) }, "Desfazer"));
@@ -256,6 +290,11 @@
       if (S.abertos.has(c.id)) body.append(el("tr", {}, el("td", { colspan: cols.length }, timeline(c.id))));
     }
     t.replaceChildren(head, body);
+    const ir = (n) => { histPag = n; App.carregar(); App.u.rolar?.($("#t-hist")); };
+    $("#hist-paginas").replaceChildren(...(paginas > 1 ? [
+      el("button", { class: "btn small", type: "button", disabled: h.pagina === 1, onclick: () => ir(h.pagina - 1) }, "‹ Anterior"),
+      el("span", { text: `Página ${h.pagina} de ${paginas}` }),
+      el("button", { class: "btn small", type: "button", disabled: h.pagina === paginas, onclick: () => ir(h.pagina + 1) }, "Próxima ›")] : []));
   }
   async function desfazer(c, btn) {
     btn.disabled = true;
@@ -267,9 +306,13 @@
     try { await rpc("excluir_cadastro", { p_cadastro: c.id }); delete S.confirmar["x" + c.id]; toast("Cadastro excluído."); await carregar(); }
     catch (e) { btn.disabled = false; toast(msgErro(e)); }
   }
-  $("#b-export").addEventListener("click", () => {
+  $("#b-export").addEventListener("click", async (e) => {
+    const btn = e.currentTarget; btn.disabled = true;
+    let itens;   // 009x: o CSV pede tudo de uma vez (com os filtros da tela), até 5.000
+    try { itens = (await pedirHist(argsHist(5000, 1))).itens; } catch (err) { btn.disabled = false; return toast(msgErro(err)); }
+    btn.disabled = false;
     const cols = ["id_entregador", "nome", "cidade", "observacao", "situacao", "enviado_por", "enviado_em", "situacao_desde", "decidido_por", "decidido_em", "motivo", "detalhe", "reprovacoes"];
-    baixarCSV("cadastros-entregadores", cols, (S.lista.todos || []).slice().sort((a, b) => String(a.enviado_em).localeCompare(String(b.enviado_em))).map((c) =>
+    baixarCSV("cadastros-entregadores", cols, itens.slice().sort((a, b) => String(a.enviado_em).localeCompare(String(b.enviado_em))).map((c) =>
       [c.id_app, c.nome, c.cidade, c.observacao, ST[c.status], c.enviado_por_nome, c.enviado_em, c.status_desde, c.decidido_por_nome, c.decidido_em, c.motivo, c.detalhe, c.reprovacoes]));
   });
 
@@ -338,7 +381,8 @@
   });
 
   // ---------- filtros ----------
-  ["#q-pend", "#f-pend-status", "#f-pend-cidade", "#q-hist", "#f-hist-status", "#f-hist-cidade", "#f-hist-meus"].forEach((s) => $(s).addEventListener("input", render));
+  ["#q-pend", "#f-pend-status", "#f-pend-cidade"].forEach((s) => $(s).addEventListener("input", render));
+  ["#q-hist", "#f-hist-status", "#f-hist-cidade", "#f-hist-meus"].forEach((s) => $(s).addEventListener("input", filtrarHist));
 
   App.modulo({
     id: "ativacao", nome: "Ativação de entregadores",
@@ -352,7 +396,7 @@
     async carregar(aba) {
       if (aba === "novo") atualizarCidades();
       const t = [rpc("listar_cadastros", { p_escopo: "pendentes" }).then((d) => (S.lista.pendentes = d))];
-      if (aba === "historico") t.push(rpc("listar_cadastros", { p_escopo: "todos" }).then((d) => (S.lista.todos = d)));
+      if (aba === "historico") t.push(carregarHist());
       await Promise.all(t);
     },
     render(aba) {

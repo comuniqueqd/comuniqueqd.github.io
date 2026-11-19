@@ -396,19 +396,41 @@
       ? "Bloqueios de 10 h ou mais, encerramentos de parceria e contatos por infrações leves de todas as cidades, mais os IDs que precisam de dados. Resolver a tratativa não libera o bloqueio."
       : "Bloqueios de 10 h ou mais, encerramentos de parceria e contatos por infrações leves das suas cidades, mais os IDs que precisam de dados (de qualquer cidade). Resolver a tratativa não libera o bloqueio.";
     if (!l) return box.replaceChildren(carregandoEl());
-    preencher($("#bq-trat-cidade"), opcCidades(l.map((t) => t.bloqueio)), "Todas as cidades");
+    preencher($("#bq-trat-cidade"), B.tratVer === "concluida" && B.concCidades ? B.concCidades.map((c) => [c, c]) : opcCidades(l.map((t) => t.bloqueio)), "Todas as cidades");
     const q = $("#bq-q-trat").value, cid = $("#bq-trat-cidade").value;
     const lista = l.filter((t) => buscaB(t.bloqueio, q) && (!cid || t.bloqueio.cidade === cid));
     if (B.tratVer === "concluida") lista.sort((a, b) => String(b.concluida_em).localeCompare(String(a.concluida_em)));
     if (!l.length) return box.replaceChildren(vazio(B.tratVer === "pendente" ? "Nenhuma tratativa pendente" : "Nenhuma tratativa concluída ainda", B.tratVer === "pendente" ? "Quando um bloqueio de 10 h ou mais for registrado nas suas cidades, ele aparece aqui." : ""));
     if (!lista.length) return box.replaceChildren(vazio("Nada com esse filtro", "Limpe a busca ou troque a cidade."));
     const grupo = (tipo) => lista.filter((t) => t.tipo === tipo);
+    const verMais = B.tratVer === "concluida" && B.concMais ? el("div", { class: "paginas" }, el("button", { class: "btn small", type: "button",
+      onclick: (e) => { e.currentTarget.disabled = true; B.concLimite = (B.concLimite || 100) + 100; App.carregar(); } }, "Ver mais concluídas")) : null;
     box.replaceChildren(...[["Completar dados do entregador", grupo("completar_dados")], ["Encerramentos de parceria", grupo("encerramento_parceria")],
       ["Contato por infrações leves acumuladas", grupo("leves_acumuladas")], ["Tratativas de bloqueio", grupo("tratativa")]].filter(([, x]) => x.length).map(([tit, x]) =>
-      el("div", { class: "grupo" }, el("h3", {}, tit, el("span", { class: "count", text: x.length })), el("div", { class: "queue" }, x.map((t) => cardBloqueio(t.bloqueio))))));
+      el("div", { class: "grupo" }, el("h3", {}, tit, el("span", { class: "count", text: x.length })), el("div", { class: "queue" }, x.map((t) => cardBloqueio(t.bloqueio))))), ...(verMais ? [verMais] : []));
   }
 
-  document.querySelectorAll("[data-trat]").forEach((b) => b.addEventListener("click", () => { B.tratVer = b.dataset.trat; render(); carregar(); }));
+  document.querySelectorAll("[data-trat]").forEach((b) => b.addEventListener("click", () => { B.tratVer = b.dataset.trat; B.concLimite = 100; render(); carregar(); }));
+  // 009x (AT4): as concluídas vêm as mais recentes (100 por vez, "Ver mais"); busca e cidade vão para o banco.
+  // Banco sem a 009x: a lista inteira, como antes.
+  async function carregarConcluidas() {
+    const a = { p_limite: B.concLimite || 100, p_busca: $("#bq-q-trat").value.trim() || null, p_cidade: $("#bq-trat-cidade").value || null };
+    const chave = JSON.stringify(a);
+    let d;
+    try { d = await rpc("listar_tarefas_concluidas", a); }
+    catch (e) {
+      if (!/listar_tarefas_concluidas|function|schema cache/i.test(msgErro(e) + (e?.message || ""))) throw e;
+      const l = await rpc("listar_tarefas", { p_status: "concluida" });
+      d = { itens: l, mais: false, cidades: null };
+    }
+    if (chave !== JSON.stringify({ p_limite: B.concLimite || 100, p_busca: $("#bq-q-trat").value.trim() || null, p_cidade: $("#bq-trat-cidade").value || null })) return;
+    B.tarefas.concluida = d.itens; B.concMais = d.mais; B.concCidades = d.cidades;
+  }
+  let concT = null;
+  ["#bq-q-trat", "#bq-trat-cidade"].forEach((x) => $(x).addEventListener("input", () => {
+    if (B.tratVer !== "concluida") return;
+    clearTimeout(concT); concT = setTimeout(() => { B.concLimite = 100; App.carregar(); }, 300);
+  }));
 
   // ---------- bloqueados agora ----------
   function renderAtivos() {
@@ -997,7 +1019,7 @@
       // regras e cidades: recarrega na aba Regras e a cada 5 min (alguém pode ter mudado)
       if (!B.regras || aba === "regras" || Date.now() - (B.regrasEm || 0) > 300000)
         t.push(rpc("regras_bloqueio").then((d) => { B.regras = d; B.regrasEm = Date.now(); }));
-      if (aba === "tratativas") t.push(rpc("listar_tarefas", { p_status: B.tratVer }).then((d) => (B.tarefas[B.tratVer] = d)));
+      if (aba === "tratativas") t.push(B.tratVer === "concluida" ? carregarConcluidas() : rpc("listar_tarefas", { p_status: "pendente" }).then((d) => (B.tarefas.pendente = d)));
       if (aba === "ativos") t.push(rpc("listar_bloqueios", { p_escopo: "ativos" }).then((d) => (B.lista.ativos = d)));
       if (aba === "atencao") t.push(rpc("entregadores_atencao").then((d) => (B.atencao = d)));
       if (aba === "historico") t.push(carregarHist());

@@ -23,13 +23,15 @@
   async function carregarAnalises(tipo) {
     if (!A.cidades) A.cidades = await rpc("listar_cidades").catch(() => []);
     const chave = chaveAnalises();
+    // 009x (AT6): as análises pesam no banco; com o mesmo período e cidade, só recalcula depois de 5 min
+    if (D.chave[tipo] === chave && D[tipo] && Date.now() - (D.em?.[tipo] || 0) < 300000) return;
     try {
       const dias = A.periodo === "tudo" ? null : A.periodo;
       const [d, ma, mb] = await Promise.all([
         rpc(tipo === "simples" ? "analises_simples" : "analises_complexas", { p_dias: dias, p_cidade: A.cidade || null }),
         rpc("metricas", {}),
         S.me.papel_bloqueios ? rpc("metricas_bloqueios", { p_dias: dias, p_cidade: A.cidade || null }) : null]);
-      if (chave === chaveAnalises()) { D[tipo] = d; D.mAtiv = ma; D.mBloq = mb; D.chave[tipo] = chave; D.erro[tipo] = null; }
+      if (chave === chaveAnalises()) { D[tipo] = d; D.mAtiv = ma; D.mBloq = mb; D.chave[tipo] = chave; D.erro[tipo] = null; (D.em ||= {})[tipo] = Date.now(); }
     } catch (e) { D.erro[tipo] = msgErro(e); }
   }
   const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];

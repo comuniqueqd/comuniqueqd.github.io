@@ -106,7 +106,7 @@
     const sel = $("#pa-hist-cidade"), atual = sel.value;
     sel.replaceChildren(el("option", { value: "", text: "Todas as cidades" }), ...(P.cidades || []).map((c) => el("option", { value: c.cidade, text: c.cidade })));
     sel.value = atual;
-    if (!P.historico) return box.replaceChildren(carregandoEl());
+    if (!P.historico) { $("#pa-semana").replaceChildren(el("div", { class: "pa-semana-reserva", "aria-hidden": "true" })); return box.replaceChildren(carregandoEl()); }
     const lista = P.historico.filter((p) => !sel.value || p.cidade === sel.value);
     $("#pa-semana").replaceChildren(blocoSemana(resumoSemana(lista, sel.value || null)));
     if (!lista.length) return box.replaceChildren(el("p", { class: "meta", text: "Nenhuma ativação ainda." }));
@@ -160,7 +160,7 @@
           P.cidades = c; P.historico = todos.itens;
         }
         else {
-          const [l, t] = await Promise.all([rpc("listar_parceiros", { p_meus: true, p_limite: 8 }), rpc("listar_atividades")]);
+          const [l, t] = await Promise.all([rpc("listar_parceiros", { p_meus: true, p_limite: 8 }), (App.listarAtividades ? App.listarAtividades(0) : rpc("listar_atividades"))]);
           P.meus = l.itens;
           P.tarefas = t.filter((a) => a.tipo === "ativar_parceiro" && a.status === "aceita" && a.sou_participante && a.modo === "solicitacao");
         }

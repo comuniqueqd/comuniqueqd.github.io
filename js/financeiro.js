@@ -122,7 +122,8 @@
   }
   function renderPendentes() {
     const box = $("#fi-pend-lista");
-    if (!G.pend) return box.replaceChildren(G.erro ? vazio(G.erro) : carregandoEl());
+    // 009x (A3-05): enquanto carrega, a caixa já fica numa linha só (antes ela abria grande e encolhia, e a tela pulava)
+    if (!G.pend) { $("#fi-pend-box")?.classList.add("vazia"); return box.replaceChildren(G.erro ? vazio(G.erro) : el("p", { class: "meta nada-pend", text: "Conferindo os seus pendentes…" })); }
     const total = G.pend.reduce((s, l) => s + Number(l.valor), 0);
     box.replaceChildren(...(G.pend.length
       ? [el("p", { class: "meta", text: `${G.pend.length} pendente(s), ${brl(total)} no total.` }), ...G.pend.map((l) => cartao(l))]
