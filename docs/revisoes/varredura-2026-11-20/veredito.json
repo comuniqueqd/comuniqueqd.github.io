@@ -1,0 +1,569 @@
+[
+ {
+  "id": "A13-01",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Junto A7-12 (versão em 4 lugares): o lançador resolve os dois."
+ },
+ {
+  "id": "A13-02",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "Junto PX6 (medir egress de verdade) e A10-01."
+ },
+ {
+  "id": "A13-03",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Risco real e recorrente (o dono roda o SQL à mão; \"Could not find the function\" aparece a cada versão, ver A12-04). Pode ser um bloco a mais na consulta do A10-01."
+ },
+ {
+  "id": "A13-04",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "010",
+  "nota": "Processo/organização."
+ },
+ {
+  "id": "A13-05",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "O a10 já mede \"pessoas que usaram\" por módulo: junto A10-01, não precisa de agente novo antes dos números reais."
+ },
+ {
+  "id": "A13-06",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "Processo. Parente do F4/A7-11 (CI): primeiro os testes rodando sozinhos, depois a varredura agendada."
+ },
+ {
+  "id": "A13-07",
+  "veredito": "DUPLICADO DE F5",
+  "prio": "média",
+  "versao": "depois",
+  "nota": "O F5 do mapa já pede guardar erros do navegador numa tabela própria (sem serviço de fora)."
+ },
+ {
+  "id": "A13-08",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A13-09",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A13-10",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "depois",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A13-11",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "012",
+  "nota": "Ferramenta de trabalho do Claude, não do app."
+ },
+ {
+  "id": "A13-12",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A13-13",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A13-14",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "011",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A13-15",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "depois",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A10-01",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A7-13",
+  "veredito": "DUPLICADO DE S10",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Mesmo problema do S10 (remendo via pg_get_functiondef que segue em silêncio); o próprio a7 juntou evidência no S10. Sugiro subir o S10 para média e para a 009z, com o teste \"prosrc de toda função aparece em algum arquivo\" (a7/fonte.py) na suíte."
+ },
+ {
+  "id": "A7-14",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Raiz comum do A5-08, A2-04, PB-5 e PB-6: 4 versões do mesmo gatilho em 2 dias. Conserto estrutural: cada função que cria aviso já grava id_app e o texto sem código; o gatilho só tira emoji."
+ },
+ {
+  "id": "A7-15",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A7-16",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A5-08",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "Mecanismo confirmado (aviso_tira_id troca o ID solto em qualquer lugar: \"20/11/2026\" com ID 2026 vira \"20/11/Ana Ano\", reproduzido no teste_a9), mas só dispara quando o aviso já é daquele entregador e o ID coincide com outra palavra/número do mesmo texto; os casos do a5 foram montados com IDs \"2026\", \"1500\", \"centro\" e uma placa como ID de ficha. Com IDs reais (códigos do app) a colisão é rara: risco distante, sem dado real afetado. Corrigir junto do A7-14 (gravar id/nome no aviso na origem em vez de adivinhar)."
+ },
+ {
+  "id": "A5-09",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Conferido: liberar_bloqueio() só faz update em bloqueios, nada em tarefas."
+ },
+ {
+  "id": "A5-10",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A5-11",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A5-12",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Antecipar da 011 para a 009z: a extensão (formularios.js:154 manda p_nome null) pula a trava da tela. Junto A8-04 (as duas travas do adicional no banco)."
+ },
+ {
+  "id": "A5-13",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "011",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A5-14",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "011",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A5-15",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "depois",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A2-01",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A2-02",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Medido com 205 pendentes de massa; sem número real. Junto A3-15 (Pendentes em páginas na 009y)."
+ },
+ {
+  "id": "A2-03",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Junto A3-13 (mesma lista)."
+ },
+ {
+  "id": "A2-04",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "Confirmado no código (009x2:42 update em todo aviso com \"(…)\" ou \"ID …\"). Só custa na hora de rodar a migração. Junto A7-14."
+ },
+ {
+  "id": "OP9-01",
+  "veredito": "DUPLICADO DE OP-4",
+  "prio": "média",
+  "versao": "009y",
+  "nota": "Mesmo problema do OP-4 (Atividades abre em Minha fila) e PB-7, agravado pela 009v. Sugiro subir o OP-4 da 010 para a 009y: o número leva para onde estão as tarefas."
+ },
+ {
+  "id": "OP9-02",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "OP9-03",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "OP9-04",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A11-01",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "versao": "ext",
+  "nota": "Código confirmado (leitor.js:49: depoisDoRotulo(\"Id\") vence o ID do endereço; vazio sobe para o vizinho). Mas: o ID aparece num campo editável do formulário antes de gravar (formularios.js:67) e os valores errados medidos são palavras óbvias (\"Cliente\", \"FranquiaLagartoSE\"); a extensão não está na loja nem com a equipe. Fica média e trava o envio da 1.4 junto com A11-02. Acrescentar a trava barata no banco: ID com dígito e 4+ caracteres em registrar_bloqueio_agravante/cadastrar_entregador."
+ },
+ {
+  "id": "A11-02",
+  "veredito": "CONFIRMADO",
+  "prio": "alta",
+  "versao": "ext",
+  "nota": "Mantida alta: diferente do A11-01, o ID errado é válido e plausível (o da conversa anterior), então a conferência humana não pega; no Crisp a troca de conversa é constante. Absorve o LG-12 (mapa, média): fazer os dois juntos (ler só o visível + avisar troca de tela). Bloqueia o envio da extensão à loja."
+ },
+ {
+  "id": "A11-03",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "ext",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A11-04",
+  "veredito": "DUPLICADO DE A11-01",
+  "prio": "média",
+  "versao": "ext",
+  "nota": "Mesma causa (depoisDoRotulo sobe para o vizinho quando o campo está vazio) e mesmo conserto. O ângulo LGPD (telefone lido como cidade) vale como teste extra do A11-01."
+ },
+ {
+  "id": "A11-05",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "ext",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A11-06",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "ext",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A11-07",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "versao": "ext",
+  "nota": "Ferramenta, não defeito: pela régua não é alta. Mas é o primeiro passo da ext 1.4 (sem ela não há como validar A11-01/02/03/05 nas telas reais sem expor dados)."
+ },
+ {
+  "id": "A11-08",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "ext",
+  "nota": "A privacidade.html já fala do estabelecimento (linha 48); o que está parado é só o CHROMEWEBSTORE.md (data, tabela de versões, finalidade única, imagens). Parte do LG-15."
+ },
+ {
+  "id": "A4-01",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009y",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A4-02",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "320 px é raro na equipe (Chrome/Edge no computador); vale como regra do test:visual (PR-08) mais do que como conserto isolado."
+ },
+ {
+  "id": "A4-03",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A4-04",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Organização (régua: baixa). Resolver tela a tela dentro do A4-06."
+ },
+ {
+  "id": "A4-05",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A4-06",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "versao": "009y",
+  "nota": "Plano de execução, não defeito: média pela régua. Junta PR-07 (DESIGN.md) e PR-08 (test:visual) do mapa; o passo 1 (correções de 1 linha) já resolve AP-06, AP-13, AP-16, AP-12. Recomendo adotar como roteiro da 009y junto do A3-18."
+ },
+ {
+  "id": "A6-01",
+  "veredito": "CONFIRMADO",
+  "prio": "crítica",
+  "versao": "009y",
+  "nota": "Reproduzido no teste_a9: membro removido com o próprio token leu \"Bloqueio de Fulano em LAGARTO\" direto da tabela; minhas_notificacoes() recusa, mas a política notificacoes_leitura é só para = auth.uid() e authenticated tem SELECT; Realtime usa a mesma política. Alcance real: os avisos antigos (moderador removido leva o histórico de tudo) + avisos pessoais novos via notificar() (decisão de cadastro que enviou, comentários de tarefa, tratativa concluída); avisar_registro() já filtra por membros. Migração pequena: sai antes da 009y, sozinha, se o dono quiser."
+ },
+ {
+  "id": "A6-02",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Confirmado pelo a6 e coerente com o código (quem_e usa dados_conhecidos sem checar papel_bloqueios). É o mesmo padrão do S7 (definer contorna a regra \"fichas só com bloqueios\"): precisa de decisão do dono junto do S7."
+ },
+ {
+  "id": "A6-03",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "012",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A6-04",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "012",
+  "nota": "chrome.storage.local só é alcançável pelo content script, não pela página; risco só se o leitor for comprometido. setAccessLevel(TRUSTED_CONTEXTS) é 1 linha: pode ir na ext 1.4."
+ },
+ {
+  "id": "A8-01",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "010",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A8-02",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "010",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A8-03",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "010",
+  "nota": "Junto M1 (mesmo canal de presença do Realtime)."
+ },
+ {
+  "id": "A8-04",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Adicional repetido = dinheiro pago duas vezes; trava pequena no banco (mesmo ID + pedido em 7 dias → pergunta). Junto A5-12."
+ },
+ {
+  "id": "A8-05",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "010",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A8-06",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "010",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A8-07",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "010",
+  "nota": "Junto MK-3 (desafios da 010)."
+ },
+ {
+  "id": "A8-08",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "ext",
+  "nota": "Novidade, não atrito. Parente do M3/A2 (Ctrl+K no site)."
+ },
+ {
+  "id": "A3-13",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "versao": "009y",
+  "nota": "Código confirmado (abertas/em andamento sem limite), mas os números vêm da massa do a3 (577 abertas, 399 opcionais); não há número real (a10 ainda na fase 1). Hoje é atrito; vira alta se a fase 2 mostrar mais de ~150 abertas. Como a 009y reescreve a tela de Tarefas em linhas, entra nela. Junto A2-03 e do resto do AT4/A3-03 (feitos só para concluídas)."
+ },
+ {
+  "id": "A3-14",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A3-15",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009y",
+  "nota": "\"Aguardando contato\" não vence (NF-5): a fila só cresce. Junto A2-02."
+ },
+ {
+  "id": "A3-16",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A3-17",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A3-18",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "média",
+  "versao": "009y",
+  "nota": "Plano, não defeito: pela régua não é alta. Junta A3-S8 (orçamento no e2e), A3-01 e A3-S4 do mapa; fazer como a outra metade do A4-06 (um só \"contrato da 009y\": visual + desempenho)."
+ },
+ {
+  "id": "A12-01",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Acabamento (régua: baixa). Resolver pelo glossário do A12-10."
+ },
+ {
+  "id": "A12-02",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Idem: glossário do A12-10."
+ },
+ {
+  "id": "A12-03",
+  "veredito": "CONFIRMADO COM AJUSTE",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Idem: glossário do A12-10."
+ },
+ {
+  "id": "A12-04",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A12-05",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A12-06",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A12-07",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009z",
+  "nota": "Junto A13-12 (o axe no e2e pega as 3 regras)."
+ },
+ {
+  "id": "A12-08",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A12-09",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A12-10",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009y",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A12-11",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "ext",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A12-12",
+  "veredito": "CONFIRMADO",
+  "prio": "baixa",
+  "versao": "009y",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ },
+ {
+  "id": "A12-13",
+  "veredito": "CONFIRMADO",
+  "prio": "média",
+  "versao": "009z",
+  "nota": "Conferido pela evidência e pelo código citado; prioridade e versão mantidas."
+ }
+]
