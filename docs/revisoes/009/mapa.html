@@ -82,11 +82,21 @@ h1{font-size:clamp(24px,3.6vw,32px);font-weight:800}
 .no.centro{background:#14352B;color:#F4EFE6;font:800 40px var(--t);padding:24px 46px;border-color:#0B1F19;max-width:none;cursor:default}
 .no.obj{background:#1F6F4C;color:#fff;border-color:#155238;font:700 22px var(--t);max-width:280px}
 .no.tel{background:#DCEFE4;color:#14352B;border-color:#7FBF9C}
+.no.tel{background:linear-gradient(90deg,#8FD0AC var(--p,0%),#E6F2EA var(--p,0%))}
+.no.tel.completo{background:#1F8A5B;border-color:#155238;color:#fff}
 .no.tel.aberto{background:#E8A33D;border-color:#B7791F;color:#14352B}
+.no.it.feito{background:#E3F3EA;border-color:#7FBF9C;color:#14352B}
+.no.it.feito .ponto{background:#1F8A5B!important}
+.legenda-m{position:absolute;left:12px;top:10px;z-index:2;display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--fg);background:var(--surface);padding:6px 10px;border-radius:8px;border:1px solid var(--line)}
+.legenda-m i{display:inline-block;width:14px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px;border:1px solid var(--line)}
 .no.it{background:var(--surface);color:var(--fg);border-color:var(--line);font:500 16px var(--b);text-align:left;max-width:260px;padding:8px 12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .no.it .ponto{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
 :root[data-theme="dark"] .no.tel:not(.aberto){background:#1D3A2F;color:#E8EFE9;border-color:#2F6E57}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .no.tel:not(.aberto){background:#1D3A2F;color:#E8EFE9;border-color:#2F6E57}}
+:root[data-theme="dark"] .no.tel:not(.aberto):not(.completo){background:linear-gradient(90deg,#2F6E57 var(--p,0%),#1D3A2F var(--p,0%))}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .no.tel:not(.aberto):not(.completo){background:linear-gradient(90deg,#2F6E57 var(--p,0%),#1D3A2F var(--p,0%))}}
+:root[data-theme="dark"] .no.tel.completo{background:#1F8A5B;color:#fff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .no.tel.completo{background:#1F8A5B;color:#fff}}
 .controles{position:absolute;right:10px;top:10px;display:flex;gap:6px;z-index:2}
 .controles button{font:600 14px var(--b);min-width:40px;min-height:40px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
 .dica{position:absolute;left:12px;bottom:10px;z-index:2;font-size:12px;color:var(--muted);background:var(--surface);padding:4px 8px;border-radius:6px;border:1px solid var(--line)}
@@ -209,25 +219,29 @@ function mente(){
  objs.forEach(([k,nome],oi)=>{
   const set=Math.PI*2*pesos[oi]/tot,meio=ang+set/2;const its=porObj.get(k);
   const[ox,oy]=pol(430,meio);linha(C,C,ox,oy,true);
-  no(ox,oy,"obj",[nome,el("small",{text:`${its.length} itens`})]);
+  const fo=its.filter((i)=>i.feito).length;
+  no(ox,oy,"obj",[nome,el("small",{text:`${fo} de ${its.length} feitos`})]);
   const tl=[...agrupar(its,"tela").entries()].sort((a,b)=>b[1].length-a[1].length);
   tl.forEach(([t,ii],ti)=>{
    const a=ang+set*(ti+.5)/tl.length;const[tx,ty]=pol(tl.length>6?[740,900,1060][ti%3]:tl.length>4?(ti%2?900:740):780,a);linha(ox,oy,tx,ty);
    const chave=k+"|"+t,aberta=abertas.has(chave);
-   const n=no(tx,ty,"tel"+(aberta?" aberto":""),[TEL[t],el("small",{text:`${ii.length} ${ii.length===1?"item":"itens"}${aberta?" · fechar":""}`})],{tabindex:"0",role:"button","aria-expanded":String(aberta)});
+   // progresso: a tela vai ficando verde conforme os itens são feitos (toda verde = tudo feito)
+   const ft=ii.filter((i)=>i.feito).length,pct=Math.round(100*ft/ii.length);
+   const n=no(tx,ty,"tel"+(aberta?" aberto":"")+(pct===100?" completo":""),[TEL[t],el("small",{text:`${ft} de ${ii.length} feitos${aberta?" · fechar":""}`})],{tabindex:"0",role:"button","aria-expanded":String(aberta),style:`left:${tx}px;top:${ty}px;--p:${pct}%`});
    const tog=()=>{if(aberta)abertas.delete(chave);else{abertas.add(chave);foco={x:tx,y:ty,a}}desenhar()};
    n.addEventListener("click",tog);n.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tog()}});
    if(aberta){const passo=Math.min(0.105,Math.max(0.05,set/Math.max(ii.length,1)));const ini=a-passo*(ii.length-1)/2;
     ii.forEach((i,ix)=>{const aa=ini+passo*ix;const r=(tl.length>6?1220:1100)+(ix%2?160:0);const[ix_,iy]=pol(r,aa);linha(tx,ty,ix_,iy);
      const cor=i.prio==="alta"?"var(--alta)":i.prio==="média"?"var(--media)":"var(--baixa)";
-     const ni=no(ix_,iy,"it",[el("span",{class:"ponto",style:`background:${cor}`,"aria-hidden":"true"}),`${i.id} · ${i.titulo}`],{tabindex:"0",role:"button",title:`${i.prio} · ${ONDA[i.onda]} · ${i.titulo}`});
+     const ni=no(ix_,iy,"it"+(i.feito?" feito":""),[el("span",{class:"ponto",style:`background:${cor}`,"aria-hidden":"true"}),`${i.feito?"Feito · ":""}${i.id} · ${i.titulo}`],{tabindex:"0",role:"button",title:`${i.feito?"feito na "+i.feito+" · ":""}${i.prio} · ${ONDA[i.onda]} · ${i.titulo}`});
      const ver=()=>{det.replaceChildren(el("div",{class:"lista"},linha2(i)))};
      ni.addEventListener("click",ver);ni.addEventListener("keydown",(e)=>{if(e.key==="Enter"){e.preventDefault();ver()}})})}
   });
   ang+=set});
  // zoom e arrastar (estado guardado entre redesenhos)
  const ctr=el("div",{class:"controles"},el("button",{type:"button","aria-label":"Aproximar",text:"+",onclick:()=>z(1.2)}),el("button",{type:"button","aria-label":"Afastar",text:"−",onclick:()=>z(1/1.2)}),el("button",{type:"button",text:"Centralizar",onclick:()=>{zoom=null;aplicar(true)}}));
- caixa.append(ctr,el("div",{class:"dica",text:"Clique numa tela para abrir os itens. Arraste para mover; roda do mouse para zoom."}));
+ caixa.append(ctr,el("div",{class:"dica",text:"Clique numa tela para abrir os itens. Arraste para mover; roda do mouse para zoom."}),
+  el("div",{class:"legenda-m"},el("span",{},el("i",{style:"background:#DCEFE4"}),"nada feito"),el("span",{},el("i",{style:"background:linear-gradient(90deg,#8FD0AC 50%,#E6F2EA 50%)"}),"em andamento (verde = feito)"),el("span",{},el("i",{style:"background:#1F8A5B"}),"tudo feito")));
  const aplicar=(ajustar)=>{if(ajustar||!zoom){const w=caixa.clientWidth||1000,h=caixa.clientHeight||700;const sc=Math.min(w,h)/2150;zoom={s:sc,x:w/2-C*sc,y:h/2-C*sc}}tela.style.transform=`translate(${zoom.x}px,${zoom.y}px) scale(${zoom.s})`};
  const z=(f,cx,cy)=>{const w=caixa.clientWidth,h=caixa.clientHeight;cx??=w/2;cy??=h/2;zoom.x=cx-(cx-zoom.x)*f;zoom.y=cy-(cy-zoom.y)*f;zoom.s*=f;aplicar()};
  caixa.addEventListener("wheel",(e)=>{e.preventDefault();const r=caixa.getBoundingClientRect();z(e.deltaY<0?1.12:1/1.12,e.clientX-r.left,e.clientY-r.top)},{passive:false});
