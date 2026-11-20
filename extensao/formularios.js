@@ -145,14 +145,19 @@
         el("label", {}, "Motivo", motivo), el("label", {}, "Código do pedido (sem os números)", pedido),
         el("label", { class: "linha" }, lancado, "Já lancei no sistema (o entregador vai receber)"));
       textoBotao = "Registrar adicional"; foco = ent;
+      let repetidoOk = null;
       gravar = async (v, form) => {
         const e = valor(ent.value), p = valor(ped.value), c = valor(comb.value), origem = marcado(form, "origem"), mercado = marcado(form, "mercado");
         if ([e, p, c].some((x) => x == null || Number.isNaN(x))) throw new Error("Preencha os valores da entrega, do pedido e o combinado.");
         if (!origem) throw new Error("Escolha de onde veio o pedido (QD ou outros).");
         if (!mercado) throw new Error("Diga se o pedido é de mercado.");
         if (!motivo.value) throw new Error("Escolha o motivo do adicional.");
+        // adicional repetido: o banco pergunta; o 2º clique em "Registrar adicional" confirma
+        const chave = [v.id, e, c, limpo(pedido.value)].join("|"), confirmar = repetidoOk === chave;
         const r = await rpc("registrar_adicional", { p_cidade: v.cidade || null, p_id_app: v.id, p_nome: v.nome || null, p_origem: origem, p_mercado: mercado === "sim",
-          p_motivo: motivo.value, p_valor_entrega: e, p_valor_pedido: p, p_valor_combinado: c, p_lancado: lancado.checked, p_pedido: limpo(pedido.value) || null, p_observacao: null });
+          p_motivo: motivo.value, p_valor_entrega: e, p_valor_pedido: p, p_valor_combinado: c, p_lancado: lancado.checked, p_pedido: limpo(pedido.value) || null, p_observacao: null,
+          ...(confirmar ? { p_confirmar: true } : {}) });
+        if (r?.precisa_confirmar) { repetidoOk = chave; throw new Error(r.texto + " Para registrar, clique em Registrar adicional de novo."); }
         return r?.lancado ? `Adicional de ${brl(r.valor)} registrado.` : `Adicional de ${brl(r.valor)} registrado. Ficou nos pendentes até ser lançado.`;
       };
     } else if (acao === "calculadora") {

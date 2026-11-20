@@ -1,11 +1,17 @@
--- 009x3 (20/11/2026, pedido do usuário): tarefas automáticas contam as aprovações de toda a equipe.
--- A tarefa "Aprovar N entregadores · CIDADE" que nasce sozinha ao ativar um parceiro (tarefa_entregadores_do_parceiro,
--- 009g) passa a contar TODOS os cadastros aprovados naquela cidade desde que a tarefa foi criada, não importa quem
--- aprovou nem se alguém já pegou a tarefa. As tarefas criadas por uma pessoa continuam contando só as aprovações de
--- quem pegou (e de quem entrou junto).
--- Marca nova: atividades.automatica (as que já existem são reconhecidas pela descrição "Criada sozinha ao ativar o
--- parceiro"). aprovacoes_de() com p_quem nulo = qualquer pessoa. json_atividade ganha 'automatica' (corpo inteiro,
--- regra da 009x: supabase/funcoes/json_atividade.sql atualizado junto).
+-- 009x3 (20/11/2026): lançamento urgente, pedidos e decisões do usuário de 20/11.
+-- 1. Tarefas automáticas contam as aprovações de toda a equipe (pedido do usuário). A tarefa "Aprovar N entregadores
+--    · CIDADE" que nasce sozinha ao ativar um parceiro (tarefa_entregadores_do_parceiro, 009g) conta TODOS os cadastros
+--    aprovados naquela cidade desde que a tarefa foi criada, não importa quem aprovou nem se alguém já pegou a tarefa.
+--    Ao bater a meta ela FECHA SOZINHA e avisa todo mundo que participou (quem aprovou e quem estava nela).
+--    As tarefas criadas por uma pessoa continuam contando só as aprovações de quem pegou (e de quem entrou junto).
+--    Marca nova: atividades.automatica (as que já existem são reconhecidas pela descrição "Criada sozinha ao ativar o
+--    parceiro"). aprovacoes_de() com p_quem nulo = qualquer pessoa. json_atividade ganha 'automatica' (corpo inteiro,
+--    regra da 009x: supabase/funcoes/json_atividade.sql atualizado junto).
+-- 2. A6-01: quem sai da equipe não lê mais avisos (nem os antigos, nem pelo Realtime) e não recebe avisos novos; os
+--    avisos, o "seguindo" e as preferências da pessoa são apagados quando ela é removida.
+-- 3. A5-09: reverter um encerramento de parceria fecha a tarefa "Encerramento de parceria" que estava pendente.
+-- 4. A8-04: adicional repetido (mesmo ID e mesmo código do pedido, ou mesmo ID e mesmo valor no mesmo dia) pergunta
+--    antes de gravar: registrar_adicional ganhou p_confirmar (a versão de 12 argumentos sai).
 -- Pode rodar de novo.
 
 alter table public.atividades add column if not exists automatica boolean not null default false;
@@ -126,11 +132,177 @@ AS $function$
   from (select 1) _ left join public.tipos_tarefa t on t.tipo = a.tipo
 $function$;
 
+-- ---------------------------------------------------------------------
+-- 1b. A tarefa automática fecha sozinha ao bater a meta
+-- ---------------------------------------------------------------------
+create or replace function public.fechar_tarefas_automaticas(p_cidade text)
+returns void language plpgsql security definer set search_path = public as $$
+declare a public.atividades; nomes text; quem uuid;
+begin
+  for a in select * from public.atividades
+            where automatica and status in ('aberta', 'aceita') and cidade = p_cidade and meta is not null
+            for update loop
+    if public.progresso_tarefa(a) < a.meta then continue; end if;
+    -- quem aprovou os cadastros que contaram, mais quem estava na tarefa
+    with gente as (
+      select distinct e.por as id from public.eventos e join public.cadastros c on c.id = e.cadastro_id
+       where e.tipo = 'aprovado' and c.status = 'aprovado' and c.cidade = a.cidade and e.em >= a.criada_em
+      union select (p->>'id')::uuid from jsonb_array_elements(public.participantes_de(a)) p)
+    select string_agg(m.nome, ', ' order by m.nome) into nomes from gente g join public.membros m on m.user_id = g.id;
+    update public.atividades set status = 'concluida', concluida_em = now(), concluida_por_nome = 'Equipe',
+           nota = left('Meta atingida pela equipe. Participaram: ' || coalesce(nomes, '-'), 600)
+     where id = a.id;
+    for quem in
+      select distinct e.por from public.eventos e join public.cadastros c on c.id = e.cadastro_id
+       where e.tipo = 'aprovado' and c.status = 'aprovado' and c.cidade = a.cidade and e.em >= a.criada_em
+      union select (p->>'id')::uuid from jsonb_array_elements(public.participantes_de(a)) p
+    loop
+      perform public.notificar(quem, format('Meta da equipe atingida: %s. Participaram: %s.', a.titulo, coalesce(nomes, '-')), '#atividades/sugeridas');
+    end loop;
+  end loop;
+end $$;
+
+create or replace function public.aprovacao_fecha_tarefas()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare cid text;
+begin
+  if new.tipo = 'aprovado' then
+    select cidade into cid from public.cadastros where id = new.cadastro_id;
+    if cid is not null then perform public.fechar_tarefas_automaticas(cid); end if;
+  end if;
+  return null;
+end $$;
+drop trigger if exists zz_aprovacao_fecha_tarefas on public.eventos;
+create trigger zz_aprovacao_fecha_tarefas after insert on public.eventos
+  for each row execute function public.aprovacao_fecha_tarefas();
+
+-- ---------------------------------------------------------------------
+-- 2. A6-01: ex-membro não lê nem recebe avisos
+-- ---------------------------------------------------------------------
+drop policy if exists notificacoes_leitura on public.notificacoes;
+create policy notificacoes_leitura on public.notificacoes for select to authenticated
+  using (para = (select auth.uid()) and exists (select 1 from public.membros m where m.user_id = (select auth.uid())));
+
+-- aviso para quem não é (mais) da equipe não é gravado (vale para notificar, avisar_registro, avisar_equipe...)
+create or replace function public.aviso_so_para_membros()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if not exists (select 1 from public.membros m where m.user_id = new.para) then return null; end if;
+  return new;
+end $$;
+drop trigger if exists aa0_so_para_membros on public.notificacoes;
+create trigger aa0_so_para_membros before insert on public.notificacoes
+  for each row execute function public.aviso_so_para_membros();
+
+create or replace function public.membro_removido_limpa_avisos()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if old.user_id is not null then
+    delete from public.notificacoes where para = old.user_id;
+    delete from public.seguindo where para = old.user_id;
+    delete from public.preferencias_aviso where para = old.user_id;
+  end if;
+  return null;
+end $$;
+drop trigger if exists zz_membro_removido_limpa_avisos on public.membros;
+create trigger zz_membro_removido_limpa_avisos after delete on public.membros
+  for each row execute function public.membro_removido_limpa_avisos();
+
+-- quem já tinha saído antes desta migração
+delete from public.notificacoes n where n.id is not null and not exists (select 1 from public.membros m where m.user_id = n.para);
+delete from public.seguindo s where s.para is not null and not exists (select 1 from public.membros m where m.user_id = s.para);
+delete from public.preferencias_aviso s where s.para is not null and not exists (select 1 from public.membros m where m.user_id = s.para);
+
+-- ---------------------------------------------------------------------
+-- 3. A5-09: reverter um encerramento fecha a tarefa de encerramento pendente
+-- ---------------------------------------------------------------------
+create or replace function public.reverter_fecha_encerramento()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.tipo = 'liberado_antes' then
+    update public.tarefas set status = 'concluida', concluida_em = now(), concluida_por = new.por,
+           nota = left(coalesce(nullif(new.detalhe, ''), 'Encerramento revertido.'), 600)
+     where bloqueio_id = new.bloqueio_id and tipo = 'encerramento_parceria' and status = 'pendente';
+  end if;
+  return null;
+end $$;
+drop trigger if exists zz_reverter_fecha_encerramento on public.eventos_bloqueio;
+create trigger zz_reverter_fecha_encerramento after insert on public.eventos_bloqueio
+  for each row execute function public.reverter_fecha_encerramento();
+
+-- os que já foram revertidos antes desta migração
+update public.tarefas t set status = 'concluida', concluida_em = now(), nota = 'Encerramento revertido.'
+ where t.tipo = 'encerramento_parceria' and t.status = 'pendente'
+   and exists (select 1 from public.bloqueios b where b.id = t.bloqueio_id and b.liberado_em is not null);
+
+-- ---------------------------------------------------------------------
+-- 4. A8-04: adicional repetido pergunta antes de gravar
+-- ---------------------------------------------------------------------
+drop function if exists public.registrar_adicional(text, text, text, text, boolean, text, numeric, numeric, numeric, boolean, text, text);
+create or replace function public.registrar_adicional(
+  p_cidade text, p_id_app text, p_nome text, p_origem text, p_mercado boolean, p_motivo text,
+  p_valor_entrega numeric, p_valor_pedido numeric, p_valor_combinado numeric,
+  p_lancado boolean default false, p_pedido text default null, p_observacao text default null,
+  p_confirmar boolean default false)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare v record; l public.lancamentos_financeiros; x public.lancamentos_financeiros;
+        ped text := nullif(btrim(coalesce(p_pedido, '')), '');
+begin
+  perform public.exigir_papel('moderador', 'monitorador', 'suporte');
+  if p_origem is null or p_origem not in ('qd', 'outros') then raise exception 'Escolha de onde veio o pedido (QD ou outros).'; end if;
+  if p_mercado is null then raise exception 'Diga se o pedido é de mercado.'; end if;
+  if nullif(btrim(coalesce(p_motivo, '')), '') is null then raise exception 'Escolha o motivo do adicional.'; end if;
+  if p_valor_entrega is null or p_valor_pedido is null or p_valor_combinado is null then
+    raise exception 'Preencha o valor da entrega, o valor do pedido e o valor combinado.';
+  end if;
+  if p_valor_entrega < 0 or p_valor_pedido < 0 or p_valor_combinado < 0 then raise exception 'Os valores não podem ser negativos.'; end if;
+  if p_valor_combinado <= p_valor_entrega then
+    raise exception 'O valor combinado precisa ser maior que o valor da entrega (o adicional é a diferença).';
+  end if;
+  select * into v from public.validar_entregador_lancamento(p_id_app, p_nome, p_cidade);
+  if v.cidade is null then raise exception 'Escolha a cidade.'; end if;
+  if not coalesce(p_confirmar, false) then
+    select * into x from public.lancamentos_financeiros f
+     where f.tipo = 'adicional' and lower(f.id_app) = lower(v.id_app)
+       and ((ped is not null and lower(f.pedido) = lower(ped))
+         or (f.valor = p_valor_combinado - p_valor_entrega and (f.criado_em at time zone 'America/Sao_Paulo')::date = public.hoje_brasilia()))
+     order by f.criado_em desc limit 1;
+    if x.id is not null then
+      return jsonb_build_object('precisa_confirmar', true, 'parecido', public.json_lancamento(x),
+        'texto', format('Já existe um adicional de %s para %s%s, registrado por %s em %s. Registrar mesmo assim?',
+          'R$ ' || replace(to_char(x.valor, 'FM999990.00'), '.', ','), coalesce(x.nome_entregador, 'este entregador'),
+          case when x.pedido is not null then ' (pedido ' || x.pedido || ')' else '' end,
+          coalesce(x.registrado_por_nome, 'alguém'), to_char(x.criado_em at time zone 'America/Sao_Paulo', 'DD/MM "às" HH24:MI')));
+    end if;
+  end if;
+  insert into public.lancamentos_financeiros (tipo, cidade, id_app, nome_entregador, pedido, origem, mercado, motivo,
+      valor_entrega, valor_pedido, valor_combinado, valor,
+      lancado, lancado_em, lancado_por, lancado_por_nome, observacao, registrado_por, registrado_por_nome)
+  values ('adicional', v.cidade, v.id_app, v.nome, ped, p_origem, p_mercado, btrim(p_motivo),
+      p_valor_entrega, p_valor_pedido, p_valor_combinado, p_valor_combinado - p_valor_entrega,
+      coalesce(p_lancado, false), case when p_lancado then now() end, case when p_lancado then auth.uid() end,
+      case when p_lancado then public.nome_de(auth.uid()) end,
+      nullif(btrim(coalesce(p_observacao, '')), ''), auth.uid(), public.nome_de(auth.uid()))
+  returning * into l;
+  return public.json_lancamento(l);
+end $$;
+
 revoke all on function public.aprovacoes_de(text, uuid, text, timestamptz, timestamptz) from public, anon, authenticated;
 revoke all on function public.progresso_tarefa(public.atividades) from public, anon, authenticated;
 revoke all on function public.tarefa_entregadores_do_parceiro(public.parceiros) from public, anon, authenticated;
 revoke all on function public.json_atividade(public.atividades) from public, anon, authenticated;
 revoke all on function public.tarefas_que_contam(text, text) from public, anon;
 grant execute on function public.tarefas_que_contam(text, text) to authenticated;
+
+do $$
+declare f text;
+begin
+  foreach f in array array['public.fechar_tarefas_automaticas(text)', 'public.aprovacao_fecha_tarefas()', 'public.aviso_so_para_membros()',
+                           'public.membro_removido_limpa_avisos()', 'public.reverter_fecha_encerramento()'] loop
+    execute format('revoke all on function %s from public, anon, authenticated', f);
+  end loop;
+end $$;
+revoke all on function public.registrar_adicional(text, text, text, text, boolean, text, numeric, numeric, numeric, boolean, text, text, boolean) from public, anon;
+grant execute on function public.registrar_adicional(text, text, text, text, boolean, text, numeric, numeric, numeric, boolean, text, text, boolean) to authenticated;
 
 notify pgrst, 'reload schema';

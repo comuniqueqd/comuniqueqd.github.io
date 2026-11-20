@@ -220,6 +220,73 @@ await t("009x3: tarefa automática do parceiro conta as aprovações de qualquer
   verdade(j.find((x) => x.id === auto.id)?.automatica === true, "o cartão sabe que é automática");
 });
 
+await t("009x3: a tarefa automática fecha sozinha ao bater a meta e avisa quem participou", async () => {
+  const aprovar = async (id, quem) => {
+    const c = await um("insert into cadastros (id_app, nome, cidade, status, enviado_por) values ($1, 'Aprovado Auto', 'CARPINA - PE', 'aprovado', $2) returning id", [id, quem]);
+    await db.query("insert into eventos (cadastro_id, tipo, status_novo, por) values ($1, 'aprovado', 'aprovado', $2)", [c.id, quem]);
+  };
+  const auto = await um("select id from atividades where cidade = 'CARPINA - PE' and automatica");
+  await aprovar("auto0003", uSup); await aprovar("auto0004", uSup);
+  igual((await um("select status from atividades where id = $1", [auto.id])).status, "aberta", "4 de 5: continua aberta");
+  await db.query("delete from notificacoes where para in ($1, $2)", [uAdmin, uSup]);
+  await aprovar("auto0005", uAdmin);
+  const a = await um("select status, concluida_por_nome, nota from atividades where id = $1", [auto.id]);
+  igual([a.status, a.concluida_por_nome], ["concluida", "Equipe"], "fechou");
+  verdade(a.nota.includes("Mateus Lopes") && a.nota.includes("Suporte Casa"), "nota com quem participou: " + a.nota);
+  const av = (await db.query("select texto from notificacoes where para = $1", [uSup])).rows.map((x) => x.texto);
+  verdade(av.some((x) => x.startsWith("Meta da equipe atingida")), "o suporte foi avisado: " + JSON.stringify(av));
+  igual((await um("select status from atividades a where cidade = 'CARPINA - PE' and not automatica")).status, "aceita", "a manual não fecha");
+});
+
+await t("009x3 (A6-01): quem sai da equipe perde os avisos e não recebe novos", async () => {
+  const ex = pessoa("ex.membro@x.com", "Ex Membro");
+  await db.query("insert into membros (email, nome, papel) values ($1, $2, 'suporte')", [ex.email, ex.nome]);
+  await rpc(ex, "entrar");
+  const uEx = (await um("select user_id from membros where email = $1", [ex.email])).user_id;
+  await db.query("insert into notificacoes (para, texto) values ($1, 'Aviso antigo')", [uEx]);
+  await db.query("insert into seguindo (para, tipo, alvo) values ($1, 'cidade', 'LAGARTO - SE')", [uEx]);
+  await rpc(admin, "remover_membro", { p_email: ex.email });
+  igual((await um("select count(*)::int n from notificacoes where para = $1", [uEx])).n, 0, "avisos apagados");
+  igual((await um("select count(*)::int n from seguindo where para = $1", [uEx])).n, 0, "seguindo apagado");
+  await db.query("insert into notificacoes (para, texto) values ($1, 'Aviso novo')", [uEx]);
+  igual((await um("select count(*)::int n from notificacoes where para = $1", [uEx])).n, 0, "aviso novo não é gravado");
+  // e a leitura direta da tabela (API REST/Realtime) não devolve nada para quem não é membro
+  await db.query("begin"); await db.query("set local role postgres");
+  await db.query("alter table notificacoes disable trigger aa0_so_para_membros");
+  await db.query("insert into notificacoes (para, texto) values ($1, 'Escapou')", [uEx]);
+  await db.query("alter table notificacoes enable trigger aa0_so_para_membros");
+  await db.query("set local role authenticated");
+  await db.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: ex.sub, email: ex.email, role: "authenticated" })]);
+  const n = (await db.query("select count(*)::int n from notificacoes")).rows[0].n;
+  await db.query("rollback");
+  igual(n, 0, "a política não deixa ler");
+});
+
+await t("009x3 (A5-09): reverter um encerramento fecha a tarefa de encerramento", async () => {
+  const b = await um(`insert into bloqueios (id_app, nome_entregador, cidade, infracao_id, infracao, ocorrencia, ocorrencia_total, horas, inicio, registrado_por, registrado_por_nome, leve)
+      select 'enc00001', 'Entregador Enc', 'LAGARTO - SE', id, nome, 1, 1, null, now(), $1, 'Mateus Lopes', false from infracoes where not leve order by id limit 1 returning id`, [uAdmin]);
+  await db.query("insert into tarefas (modulo, tipo, bloqueio_id, cidade, status) values ('bloqueios', 'encerramento_parceria', $1, 'LAGARTO - SE', 'pendente')", [b.id]);
+  await rpc(admin, "liberar_bloqueio", { p_bloqueio: b.id, p_motivo: "Provou que não foi ele" });
+  const tf = await um("select status, nota from tarefas where bloqueio_id = $1", [b.id]);
+  igual(tf.status, "concluida", "fechou");
+  verdade(tf.nota.includes("Provou que não foi ele"), "nota com o motivo: " + tf.nota);
+});
+
+await t("009x3 (A8-04): adicional repetido pergunta antes; com p_confirmar grava", async () => {
+  const args = { p_cidade: "LAGARTO - SE", p_id_app: "rep00001", p_nome: "Repetido Teste", p_origem: "qd", p_mercado: false, p_motivo: "Distância",
+    p_valor_entrega: 5, p_valor_pedido: 40, p_valor_combinado: 12, p_pedido: "AB-CD" };
+  const r1 = await rpc(sup, "registrar_adicional", args);
+  verdade(r1.id && !r1.precisa_confirmar, "o 1º grava");
+  const r2 = await rpc(admin, "registrar_adicional", args);
+  igual(r2.precisa_confirmar, true, "o 2º pergunta");
+  verdade(r2.texto.includes("R$ 7,00") && r2.texto.includes("Suporte Casa") && r2.texto.includes("AB-CD"), "texto: " + r2.texto);
+  const r3 = await rpc(admin, "registrar_adicional", { ...args, p_pedido: "XY-ZZ", p_valor_combinado: 15 });
+  verdade(r3.id, "outro pedido e outro valor: grava direto");
+  const r4 = await rpc(admin, "registrar_adicional", { ...args, p_confirmar: true });
+  verdade(r4.id, "confirmado: grava");
+  igual((await um("select count(*)::int n from lancamentos_financeiros where id_app = 'rep00001'")).n, 3);
+});
+
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco
 await t("A7-01: cada arquivo de supabase/funcoes/ é igual à função que está no banco", async () => {
   const pasta = new URL("../supabase/funcoes/", import.meta.url);

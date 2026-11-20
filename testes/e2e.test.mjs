@@ -1069,6 +1069,15 @@ try {
   await a8.click("#fi-enviar");
   ok(await esperar(a8, "#toast:has-text('Adicional de R$ 5,00 registrado.')"), "adicional registrado já lançado");
   ok(await esperar(a8, "#fi-meus .fin-card >> text=Fulano de Tal Souza"), "o nome veio da ficha do entregador");
+  // 009x3 (A8-04): o mesmo adicional de novo pergunta antes de gravar
+  await a8.fill("#fi-id", "mal00001");
+  await a8.check("input[name=fi-origem][value=qd]"); await a8.check("input[name=fi-mercado][value=nao]");
+  await a8.selectOption("#fi-motivo", "Chuva"); await a8.fill("#fi-entrega", "6"); await a8.fill("#fi-valor-pedido", "80"); await a8.fill("#fi-combinado", "11");
+  await a8.click("#fi-enviar");
+  ok(await esperar(a8, "#fi-repetido:not([hidden]) >> text=Já existe um adicional de R$ 5,00"), "009x3: adicional repetido pergunta antes de gravar");
+  await a8.click("#fi-repetido button:has-text('Não registrar')");
+  ok(await a8.isHidden("#fi-repetido"), "009x3: 'Não registrar' fecha a pergunta sem gravar");
+  await a8.click("#fi-form button[type=reset]");
   await ir(a8, "#financeiro/pendentes");
   ok(await esperar(a8, "#fi-pend-lista .fin-card >> text=CENTRO → BREJO"), "Adicionais pendentes mostra o ajuste não lançado");
   ok(await a8.evaluate(() => location.hash) === "#financeiro/lancamentos" && (await a8.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view))).join() === "adicional,acordos,lancamentos"

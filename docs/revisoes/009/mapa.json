@@ -4672,8 +4672,9 @@
   "veredito": "CONFIRMADO",
   "nota": "Terceiros com agravante (encerra) → tarefa encerramento_parceria pendente; liberar_bloqueio(motivo 'engano') → situação 'revertido', tarefa continua {tipo: encerramento_parceria, status: pendente}. Ela entra em tratativas_pendentes e vira atrasada depois de 32 h (verificar_atrasos avisa os moderadores). | Revisor: Conferido: liberar_bloqueio() só faz update em bloqueios, nada em tarefas.",
   "junto": "",
-  "versao": "009z",
-  "situacao": "Varredura de 20/11/2026."
+  "versao": "009x3",
+  "situacao": "Feito na 009x3: reverter o encerramento fecha a tarefa de encerramento com o motivo.",
+  "feito": "009x3"
  },
  {
   "ag": "a5",
@@ -5225,8 +5226,9 @@
   "veredito": "CONFIRMADO",
   "nota": "Banco teste_a6: removi sup@x.com e, com o token dele, 'select texto from notificacoes' devolveu 'Bloqueio de Maria Teste em LAGARTO'. Removi sup2@x.com, o moderador aprovou o cadastro que ele tinha enviado e o ex-membro leu o aviso novo: 'Seu cadastro Ana Teste foi aprovado por Mateus Lopes.' minhas_notificacoes() recusa (exige papel), mas a tabela é exposta pela API REST (/rest/v1/notificacoes) e está na publicação do Realtime. A sessão do Google/Supabase continua valendo depois da remoção. Um moderador removido leva junto o histórico de tudo (moderadores recebem todos os avisos). O mesmo vale para quem perde o módulo de bloqueios. | Revisor: Reproduzido no teste_a9: membro removido com o próprio token leu \"Bloqueio de Fulano em LAGARTO\" direto da tabela; minhas_notificacoes() recusa, mas a política notificacoes_leitura é só para = auth.uid() e authenticated tem SELECT; Realtime usa a mesma política. Alcance real: os avisos antigos (moderador removido leva o histórico de tudo) + avisos pessoais novos via notificar() (decisão de cadastro que enviou, comentários de tarefa, tratativa concluída); avisar_registro() já filtra por membros. Migração pequena: sai antes da 009y, sozinha, se o dono quiser.",
   "junto": "S1",
-  "versao": "009z",
-  "situacao": "Varredura de 20/11/2026: CRÍTICO (corrigir antes da 009y)."
+  "versao": "009x3",
+  "situacao": "Feito na 009x3: só membros leem avisos; ex-membro não recebe aviso novo; remover apaga avisos, seguindo e preferências.",
+  "feito": "009x3"
  },
  {
   "ag": "a6",
@@ -5244,8 +5246,9 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Como sup2@x.com (ativação=suporte, bloqueios=nulo): quem_e('ent002') = {nome: 'Maria Teste', cidade: 'LAGARTO - SE', tem_ficha: true} (ficha nascida de um bloqueio), enquanto busca_rapida('ent002') devolve entregadores: [] e select count(*) from entregadores = 0 (RLS). A regra do projeto é 'fichas só com o módulo de bloqueios'. Dá para varrer IDs e montar a lista de entregadores com restrição. | Revisor: Confirmado pelo a6 e coerente com o código (quem_e usa dados_conhecidos sem checar papel_bloqueios). É o mesmo padrão do S7 (definer contorna a regra \"fichas só com bloqueios\"): precisa de decisão do dono junto do S7.",
   "junto": "S7",
-  "versao": "009z",
-  "situacao": "Varredura de 20/11/2026."
+  "versao": "decidido",
+  "situacao": "Decisão do dono (20/11/2026): o suporte continua com o módulo de bloqueios; nada muda.",
+  "feito": "decidido"
  },
  {
   "ag": "a6",
@@ -5358,8 +5361,9 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "registrar_adicional valida origem, mercado, motivo e valores, mas não procura lançamento igual (grep 'duplic|mesmo pedido' sem resultado). Com site + extensão registrando, duas pessoas podem lançar o mesmo pedido. Mercado: Ramp e Expensify comparam cada despesa com as anteriores e marcam a suspeita de duplicado antes da aprovação; quem revisa confirma ou ignora (ramp.com/answers/.../duplicate-reimbursement-claims-detected; help.expensify.com Duplicate-Detection; verificados hoje). | Revisor: Adicional repetido = dinheiro pago duas vezes; trava pequena no banco (mesmo ID + pedido em 7 dias → pergunta). Junto A5-12.",
   "junto": "",
-  "versao": "009z",
-  "situacao": "Varredura de 20/11/2026."
+  "versao": "009x3",
+  "situacao": "Feito na 009x3: o adicional igual (ID + pedido, ou ID + valor no dia) pergunta antes de gravar, no site e na extensão.",
+  "feito": "009x3"
  },
  {
   "ag": "a8",
@@ -5814,8 +5818,8 @@
   "veredito": "",
   "nota": "As 4 rotinas automáticas só rodam no navegador de quem está online; cada aviso novo exige uma coluna *_avisada_em própria; notificar() ignora p_para = auth.uid() (aviso para si mesmo pelo próprio navegador some). | Teste: 2 chamadas seguidas: a 2ª pula; mesmo sinal/dia = 1 aviso; 7 sinais = 5 + 1 agrupado; regra desligada = 0.",
   "junto": "PX5",
-  "versao": "009z",
-  "situacao": "Proposta da rodada de 20/11 (a15/a16), ainda não aprovada."
+  "versao": "depois",
+  "situacao": "Adiado pelo dono em 20/11/2026 (pensar depois)."
  },
  {
   "ag": "a16",
@@ -5833,8 +5837,8 @@
   "veredito": "",
   "nota": "Dados já existem (cadastros.status_desde, tarefas prazo 32 h, metas, pedidos_cidade, revisar), mas nada avisa antes do problema; só a tratativa atrasada avisa, e aos moderadores, depois de vencer. | Teste: Um teste por sinal: no limiar aparece 1 vez; abaixo, nada.",
   "junto": "A16-01",
-  "versao": "009z",
-  "situacao": "Proposta da rodada de 20/11 (a15/a16), ainda não aprovada."
+  "versao": "depois",
+  "situacao": "Adiado pelo dono em 20/11/2026 (pensar depois)."
  },
  {
   "ag": "a16",
@@ -5852,8 +5856,8 @@
   "veredito": "",
   "nota": "Hoje o adicional esquecido só vira um número no menu de quem registrou; o dinheiro do entregador atrasa sem ninguém ser cobrado. | Teste: Lançamento de 49 h gera 1 aviso; rodar de novo não repete; marcar lançado tira o cartão.",
   "junto": "A16-01",
-  "versao": "009z",
-  "situacao": "Proposta da rodada de 20/11 (a15/a16), ainda não aprovada."
+  "versao": "depois",
+  "situacao": "Adiado pelo dono em 20/11/2026 (pensar depois)."
  },
  {
   "ag": "a16",
@@ -6004,8 +6008,9 @@
   "veredito": "",
   "nota": "Hoje, se ninguém pega a tarefa, ela fica em 0 com a cidade recebendo aprovações; o pedido do dono de 20/11. | Teste: 0/5 ao criar; outra pessoa aprova 2 na cidade = 2/5 sem ninguém pegar; outra cidade não conta; desfazer+refazer = 1; 5ª fecha e avisa; aprovação anterior à criação não conta.",
   "junto": "A5-1",
-  "versao": "009y",
-  "situacao": "Parte feita na 009x3 (20/11): automáticas contam as aprovações de toda a equipe na cidade desde a criação. Falta: fechar sozinha ao bater a meta e avisar quem contribuiu."
+  "versao": "009x3",
+  "situacao": "Feito na 009x3: contam as aprovações de toda a equipe na cidade desde a criação; fecha sozinha ao bater a meta e avisa quem participou.",
+  "feito": "009x3"
  },
  {
   "ag": "a16",

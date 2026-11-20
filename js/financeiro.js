@@ -55,9 +55,14 @@
       ad > 0 && p > 0 ? el("span", { class: "meta", text: `${((ad / p) * 100).toFixed(1).replace(".", ",")}% do valor do pedido` }) : null,
       ad <= 0 ? el("p", { class: "warn-msg", text: "O valor combinado precisa ser maior que o valor da entrega." }) : null));
   }
+  // 009x3 (A8-04): adicional igual a um já registrado (mesmo ID e pedido, ou mesmo ID e valor no dia) pergunta antes
+  let confirmarRepetido = false;
+  form.addEventListener("reset", () => { confirmarRepetido = false; $("#fi-repetido").hidden = true; });
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     erro.hidden = true;
+    const repetido = $("#fi-repetido"), confirmar = confirmarRepetido;
+    confirmarRepetido = false; repetido.hidden = true;
     const falha = (t) => { erro.textContent = t; erro.hidden = false; };
     const e = valor($("#fi-entrega").value), p = valor($("#fi-valor-pedido").value), c = valor($("#fi-combinado").value);
     if ($("#fi-id").value.trim().length < 4) return falha("Digite o ID do entregador.");
@@ -72,7 +77,14 @@
       const r = await rpc("registrar_adicional", { p_cidade: $("#fi-cidade").value || null, p_id_app: $("#fi-id").value.trim(), p_nome: $("#fi-nome").value.trim() || null,
         p_origem: radio("fi-origem"), p_mercado: radio("fi-mercado") === "sim", p_motivo: $("#fi-motivo").value,
         p_valor_entrega: e, p_valor_pedido: p, p_valor_combinado: c, p_lancado: $("#fi-lancado").checked,
-        p_pedido: $("#fi-pedido").value.trim() || null, p_observacao: $("#fi-obs").value.trim() || null });
+        p_pedido: $("#fi-pedido").value.trim() || null, p_observacao: $("#fi-obs").value.trim() || null, ...(confirmar ? { p_confirmar: true } : {}) });
+      if (r?.precisa_confirmar) {
+        repetido.hidden = false;
+        return repetido.replaceChildren(el("p", { style: "margin:0", text: r.texto }),
+          el("div", { class: "actions" },
+            el("button", { class: "btn primary small", type: "button", onclick: () => { confirmarRepetido = true; form.requestSubmit(); } }, "Registrar mesmo assim"),
+            el("button", { class: "btn small", type: "button", onclick: () => { repetido.hidden = true; } }, "Não registrar")));
+      }
       toast(r.lancado ? `Adicional de ${brl(r.valor)} registrado.` : `Adicional de ${brl(r.valor)} registrado. Ficou nos pendentes (em Lançamentos) até ser lançado.`);
       form.reset();
       App.carregar();

@@ -57,6 +57,10 @@
   const VERSOES = [
     { versao: "009x3", tema: "Missões da equipe", itens: [
       ["Tarefas automáticas contam para todos", "A tarefa \"Aprovar entregadores\" que nasce sozinha ao ativar um parceiro agora conta todos os entregadores aprovados na cidade desde que ela foi criada, não importa quem aprovou. As tarefas criadas por alguém continuam contando só as aprovações de quem pegou."],
+      ["A meta fecha sozinha", "Quando a equipe bate a meta de uma tarefa automática, ela fecha sozinha e avisa todo mundo que participou."],
+      ["Adicional repetido", "Se você registrar um adicional igual a um que já existe (mesmo entregador e mesmo pedido, ou mesmo valor no mesmo dia), o Comunique pergunta antes de gravar."],
+      ["Encerramento revertido", "Reverter um encerramento de parceria fecha a tarefa de encerramento que estava pendente."],
+      ["Mais segurança", "Quem sai da equipe deixa de ver os avisos do Comunique."],
     ] },
     { versao: "009x", tema: "Casa em ordem", itens: [
       ["Listas mais leves", "O Histórico da ativação vem em páginas de 100, com Anterior e Próxima. As tratativas concluídas e as tarefas concluídas mostram as mais recentes, com o botão \"Ver mais\". A busca roda no banco e acha também os antigos."],
