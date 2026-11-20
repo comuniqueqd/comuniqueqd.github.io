@@ -124,7 +124,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009y1b"); localStorage.setItem("comunique-tour", "009y1b"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009y2a"); localStorage.setItem("comunique-tour", "009y2a"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -238,6 +238,7 @@ try {
   ok((await texto(m, cardLagarto)).includes("Fotos sem camisa — Foto do rosto também"), "card mostra motivo e detalhe");
   ok(!(await m.isVisible(`${cardLagarto} >> text=Reprovar`)) && await m.isVisible(`${cardLagarto} >> text=Aprovar`) && await m.isVisible(`${cardLagarto} >> text=Encerrar…`), "aguardando contato: só Aprovar ou Encerrar");
   const cardZ = "#queue .card:has-text('zzz99881')";
+  await m.click(`${cardZ} >> button:text-is('Detalhes')`);  // 009y2: na linha de quem aguarda análise, Encerrar fica nos Detalhes
   await m.click(`${cardZ} >> text=Encerrar…`);
   ok((await texto(m, `${cardZ} .box`)).includes("definitivo"), "encerrar avisa que é definitivo");
   await m.selectOption(`${cardZ} select`, "CPF com restrição");
@@ -867,6 +868,9 @@ try {
   await ir(m, "#ativacao/pendentes"); await m.reload();
   const cardP = "#queue .card:has-text('prev0001')";
   await esperar(m, cardP);
+  // 009y2 (AP-03): o cadastro é uma linha; "Detalhes" abre o cartão completo
+  ok(!(await m.isVisible(`${cardP} >> text=Informar previsão de término`)) && await m.isVisible(`${cardP} >> text=Aprovar`), "009y2: a linha do cadastro mostra a decisão e esconde o resto");
+  await m.click(`${cardP} >> button:text-is('Detalhes')`);
   await m.click(`${cardP} >> text=Informar previsão de término`);
   await m.click("dialog.janela >> text=+2 h");
   await m.click("dialog.janela .actions button.primary");
@@ -885,22 +889,22 @@ try {
     await d7.query("select importar_bloqueio('rev00002', 'Nome Velho', 'ITABAIANA - SE', 'Avaria de Produto', now() - interval '120 days', 'Planilha', 'Nome diferente na planilha', '24')");
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
-  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Comece pelo que precisa de você"), "janela O que há de novo aparece na primeira vez");
+  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Veja e resolva na tela inicial"), "janela O que há de novo aparece na primeira vez");
   // 009y1 (A15-06): só a versão nova aberta; as anteriores recolhidas
   ok(!(await n7.isVisible("dialog.janela >> text=Sino com tira")) && await n7.isVisible("dialog.janela details.versoes-antigas > summary")
       && await n7.isVisible("dialog.janela .mostrar-onde"), "009y1: a janela mostra só a versão nova, com Mostrar onde; as anteriores ficam recolhidas");
   { const hs = await n7.$$eval("dialog.janela .bloco-versao h4", (l) => l.map((x) => x.textContent));
-    ok(hs.length === 30 && hs[0] === "Agora: A mesa do dia" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
+    ok(hs.length === 31 && hs[0] === "Agora: Resolva sem trocar de tela" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
-  ok(await esperar(n7, "#tour-passo:popover-open >> text=Comece pelo que precisa de você") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
+  ok(await esperar(n7, "#tour-passo:popover-open >> text=Veja e resolva na tela inicial") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
       && (await n7.getAttribute("#tour-passo", "role")) === "dialog", "009n: tour das novidades abre no 1º passo, com o foco dentro do balão");
   await n7.screenshot({ path: path.join(PRINTS, "f1b-tour.png") });
   await n7.click("#tour-passo >> text=Próximo");
-  ok(await esperar(n7, "#tour-passo >> text=Acompanhe as atividades da equipe"), "009n: o tour passa pelos passos (009y1: saem dos itens da versão)");
+  ok(await esperar(n7, "#tour-passo >> text=Use a Minha fila do mesmo jeito"), "009n: o tour passa pelos passos (009y1: saem dos itens da versão)");
   await n7.click("#tour-passo >> text=Entendi");
-  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009y1b"), "009n: “Entendi” fecha o tour e ele não volta");
+  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009y2a"), "009n: “Entendi” fecha o tour e ele não volta");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
   ok(!(await n7.isVisible("dialog.janela")), "e não aparece de novo" + ((await n7.isVisible("dialog.janela")) ? ": " + (await n7.textContent("dialog.janela[open]").catch(() => "?")) : ""));
   // suporte envia sem nome: marca revisar e tarefa para o admin (opcional para os outros)
@@ -1660,12 +1664,39 @@ try {
     await v.setViewportSize({ width: 1280, height: 900 });
     ok(await v.isVisible("nav.modulos a[data-mod='atividades']") && await v.isHidden("#barra-baixo") && await esperar(v, "#precisa-lista li"),
       "009y1: no computador, o menu fica na lateral e a tela inicial começa pelo que precisa de você");
+    // 009y2: no celular de 320 px a linha do cadastro é curta e nada passa da tela
+    { await v.setViewportSize({ width: 320, height: 800 });
+      for (const r of ["#ativacao/pendentes", "#analises/tarefas", "#financeiro/acordos", "#ativacao/historico"]) {
+        await v.evaluate((h) => { location.hash = h; }, r); await v.waitForTimeout(900);
+        const larg = await v.evaluate(() => document.documentElement.scrollWidth);
+        ok(larg <= 321, `009y2: em 320 px, ${r} não rola para o lado (${larg} px)`);
+      }
+      await v.evaluate(() => { location.hash = "#ativacao/pendentes"; }); 
+      await v.reload(); await v.setViewportSize({ width: 320, height: 800 });
+      if (await esperar(v, "#v-pendentes:not([hidden]) #queue .card.linha-cad")) {
+        const alt = (await v.locator("#v-pendentes #queue .card.linha-cad").first().boundingBox())?.height || 0;
+        ok(alt <= 150, "009y2: em 320 px, a linha do cadastro tem até 150 px: " + Math.round(alt));
+      }
+      await v.setViewportSize({ width: 1280, height: 900 }); await v.evaluate(() => { location.hash = "#inicio"; }); await esperar(v, "#precisa-lista li"); }
     // 009y1f: "Ver" abre a tira com a prévia, sem sair da tela inicial
     { const linha = (await v.$("#precisa-lista li[data-chave=cadastros]")) ? "cadastros" : (await v.$eval("#precisa-lista li[data-chave]", (x) => x.dataset.chave));
       await v.click(`#precisa-lista li[data-chave=${linha}] button`);
       ok(await esperar(v, `#precisa-lista li[data-chave=${linha}] .precisa-tira .tira-card, #precisa-lista li[data-chave=${linha}] .precisa-tira p`) && await v.evaluate(() => location.hash) === "#inicio",
         "009y1f: 'Ver' abre a prévia logo abaixo da linha (" + linha + "), sem sair da tela inicial");
       ok(await v.$eval(`#precisa-lista li[data-chave=${linha}] .precisa-tira`, (t) => t.querySelectorAll(".tira-card").length <= 5), "009y1f: a prévia mostra no máximo 5");
+      ok(await v.$eval(`#precisa-lista li[data-chave=${linha}] .precisa-tira`, (t) => [...t.querySelectorAll(".tira-txt")].every((x) => x.getBoundingClientRect().width > 160)),
+        "009y2: os cartões da prévia não ficam espremidos");
+      if (linha === "cadastros") ok(await v.isVisible(`#precisa-lista li[data-chave=cadastros] .tira-card >> text=Aprovar`) && await v.isVisible(`#precisa-lista li[data-chave=cadastros] .tira-card >> text=Reprovar`),
+        "009y2: na prévia dos cadastros dá para aprovar e reprovar ali mesmo");
+      // 009y2: a Minha fila usa a mesma prévia ("porta-cartões") para os cadastros aguardando análise
+      if (linha === "cadastros") {
+        await v.evaluate(() => { location.hash = "#atividades/pendencias"; });
+        await v.click("#v-at-pendencias >> button:text-is('Ver os cadastros')");
+        ok(await esperar(v, "#v-at-pendencias .precisa-tira .tira-card >> text=Aprovar") && await v.evaluate(() => location.hash) === "#atividades/pendencias",
+          "009y2: na Minha fila, 'Ver os cadastros' abre os cartões ali mesmo, com Aprovar");
+        await v.click("#v-at-pendencias >> button:text-is('Fechar')");
+        await v.evaluate(() => { location.hash = "#inicio"; }); await esperar(v, `#precisa-lista li[data-chave=${linha}] .precisa-tira`);
+      }
       await v.click(`#precisa-lista li[data-chave=${linha}] > button`);
       ok(await v.waitForFunction((l) => !document.querySelector(`#precisa-lista li[data-chave=${l}] .precisa-tira`), linha, { timeout: 4000 }).then(() => true, () => false), "009y1f: 'Fechar' recolhe a prévia"); }
     await v.setViewportSize({ width: 390, height: 800 });

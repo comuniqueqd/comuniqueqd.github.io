@@ -1018,20 +1018,21 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
 #inicio-dia { margin: -6px 0 14px; color: var(--muted); }
 .precisa { margin: 0 0 18px; }
 .linhas-precisa { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
-.linhas-precisa li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 12px; }
-.linhas-precisa li + li { border-top: 1px solid var(--line); }
+.linhas-precisa > li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 12px; }
+.linhas-precisa > li + li { border-top: 1px solid var(--line); }
 .linhas-precisa .precisa-n { font-family: var(--font-titulo); font-size: 22px; font-variant-numeric: tabular-nums; text-align: right; color: var(--ink); }
-.linhas-precisa li.urgente .precisa-n, .linhas-precisa li.urgente span { color: var(--bad); font-weight: 600; }
-.linhas-precisa li.leve .precisa-n { color: var(--muted); }
-.linhas-precisa li.nada { grid-template-columns: 1fr; color: var(--muted); }
+.linhas-precisa > li.urgente > .precisa-n, .linhas-precisa > li.urgente > span { color: var(--bad); font-weight: 600; }
+.linhas-precisa > li.leve > .precisa-n { color: var(--muted); }
+.linhas-precisa > li.nada { grid-template-columns: 1fr; color: var(--muted); }
 /* 009y1f: tira de prévia abaixo da linha */
-.linhas-precisa li.aberta { background: var(--gray-soft); }
+.linhas-precisa > li.aberta { background: var(--gray-soft); }
 .precisa-tira { grid-column: 1 / -1; display: grid; gap: 8px; padding: 4px 0 2px; }
 .tira-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); }
 .tira-card { display: grid; gap: 8px; align-content: space-between; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
 .tira-card.alerta { border-color: var(--bad); }
 .tira-txt { display: grid; gap: 2px; min-width: 0; }
-.tira-txt b { overflow-wrap: anywhere; }
+.tira-txt b { overflow-wrap: anywhere; font-size: 15px; }
+.tira-txt .meta { font-size: 13px; }
 .tira-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
 .precisa-tira > .btn.link { justify-self: start; }
 .funcoes.compacto { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
@@ -1050,3 +1051,35 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
 .passos-lista li.feito a, .passos-lista li.feito button { text-decoration: line-through; color: var(--muted); }
 .passos-lista button.btn.link { white-space: normal; text-align: left; padding: 0; }
 .linhas-precisa a.btn:not(.primary) { color: var(--ink); text-decoration: none; }
+
+/* 009y2 (AP-03): Pendentes em linhas */
+.linhas-cad { gap: 6px; }
+.card.linha-cad { padding: 10px 14px; gap: 4px; }
+.card.linha-cad .head { margin: 0; }
+.card.linha-cad .actions { margin-top: 2px; flex-wrap: nowrap; }
+.card.linha-cad .actions .btn.link { padding-inline: 6px; }
+.card.linha-cad .motivo { font-size: 14px; }
+.linha-cad-info { margin: 0; }
+.mais-pend { margin-top: 6px; }
+/* 009y2 (AP-11): barra de filtros com a contagem (no lugar dos quadrinhos grandes) */
+.tiles.filtro-contagem { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.filtro-contagem .tile { display: inline-flex; align-items: baseline; gap: 8px; padding: 6px 12px; min-height: 38px; border-radius: 999px; border-top-width: 1px; }
+.filtro-contagem .tile .k { font-size: 14px; color: var(--ink); }
+.filtro-contagem .tile .v { font-size: 16px; line-height: 1.2; }
+.filtro-contagem .tile.hl { border-color: var(--warn); }
+.filtro-contagem .tile.hl2 { border-color: var(--bad); }
+.filtro-contagem .tile.ativo { background: var(--accent-soft); outline: 2px solid var(--accent); outline-offset: -2px; }
+/* 009y2 (A4-02/03/05): celular estreito */
+@media (max-width: 600px) {
+  .acordo-vencido .acordo-corpo { flex: 1 1 calc(100% - 52px); }
+  .acordo-vencido .btn { flex: 1 1 100%; justify-content: center; }
+  #pn-meta-form select { flex: 1 1 100%; max-width: 100%; }
+}
+@media (max-width: 420px) {
+  .toolbar select { flex-basis: 100%; }
+}
+@media (max-width: 480px) {
+  /* 009y2: na linha do cadastro, com nome, o ID fica para os Detalhes (a linha cabe em menos altura) */
+  .card.linha-cad .name > span:first-child + .copiavel { display: none; }
+  .card.linha-cad .actions { gap: 6px; }
+}

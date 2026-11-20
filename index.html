@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009y1f">
+<link rel="stylesheet" href="estilo.css?v=009y2a">
 </head>
 <body>
 <header class="top">
@@ -138,7 +138,7 @@
   <section class="view" id="v-historico" hidden>
     <h2>Histórico de cadastros</h2>
     <p class="sub" id="hist-sub">Todos os cadastros recebidos. Clique numa linha para ver o histórico de cada um.</p>
-    <div class="tiles" id="hist-tiles"></div>
+    <div class="tiles filtro-contagem" role="group" aria-label="Filtrar pela situação" id="hist-tiles"></div>
     <div class="toolbar">
       <input id="q-hist" type="search" placeholder="Buscar por nome, ID, cidade ou pessoa" aria-label="Buscar no histórico">
       <select id="f-hist-status" aria-label="Filtrar por situação"></select>
@@ -481,7 +481,7 @@
   <section class="view" id="v-bq-historico" hidden>
     <h2>Histórico de restrições</h2>
     <p class="sub" id="bq-hist-sub"></p>
-    <div class="tiles" id="bq-hist-tiles"></div>
+    <div class="tiles filtro-contagem" role="group" aria-label="Filtrar pela situação" id="bq-hist-tiles"></div>
     <p class="meta" id="bq-hist-total"></p>
     <div class="toolbar">
       <input id="bq-q-hist" type="search" placeholder="Buscar por nome, ID, infração, cidade ou pessoa" aria-label="Buscar no histórico">
@@ -722,23 +722,23 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="js/base.js?v=009y1f"></script>
-<script src="js/icones.js?v=009y1f"></script>
-<script src="js/inicio.js?v=009y1f"></script>
-<script src="js/ativacao.js?v=009y1f"></script>
-<script src="js/bloqueios.js?v=009y1f"></script>
-<script src="js/entregadores.js?v=009y1f"></script>
-<script src="js/atividades.js?v=009y1f"></script>
-<script src="js/painel.js?v=009y1f"></script>
-<script src="js/avisos.js?v=009y1f"></script>
-<script src="js/analises.js?v=009y1f"></script>
-<script src="js/registros.js?v=009y1f"></script>
-<script src="js/equipe.js?v=009y1f"></script>
-<script src="js/ferramentas.js?v=009y1f"></script>
-<script src="js/financeiro.js?v=009y1f"></script>
-<script src="js/parceiros.js?v=009y1f"></script>
-<script src="js/busca.js?v=009y1f"></script>
-<script src="js/sons.js?v=009y1f"></script>
-<script src="js/agora.js?v=009y1f"></script>
+<script src="js/base.js?v=009y2a"></script>
+<script src="js/icones.js?v=009y2a"></script>
+<script src="js/inicio.js?v=009y2a"></script>
+<script src="js/ativacao.js?v=009y2a"></script>
+<script src="js/bloqueios.js?v=009y2a"></script>
+<script src="js/entregadores.js?v=009y2a"></script>
+<script src="js/atividades.js?v=009y2a"></script>
+<script src="js/painel.js?v=009y2a"></script>
+<script src="js/avisos.js?v=009y2a"></script>
+<script src="js/analises.js?v=009y2a"></script>
+<script src="js/registros.js?v=009y2a"></script>
+<script src="js/equipe.js?v=009y2a"></script>
+<script src="js/ferramentas.js?v=009y2a"></script>
+<script src="js/financeiro.js?v=009y2a"></script>
+<script src="js/parceiros.js?v=009y2a"></script>
+<script src="js/busca.js?v=009y2a"></script>
+<script src="js/sons.js?v=009y2a"></script>
+<script src="js/agora.js?v=009y2a"></script>
 </body>
 </html>

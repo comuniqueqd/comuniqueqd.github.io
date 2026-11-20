@@ -51,10 +51,16 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009y1b";
+  const VERSAO = "009y2a";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009y2a", tema: "Resolva sem trocar de tela", itens: [
+      ["Veja e resolva na tela inicial", "Em Precisa de você, “Ver” abre os cartões logo abaixo: aprove ou reprove um cadastro, pegue uma tarefa ou marque um lançamento sem sair da tela.", "#inicio-precisa"],
+      ["Decida os cadastros em linhas", "Em Pendentes cada cadastro é uma linha com Aprovar e Reprovar; “Detalhes” abre o resto. A lista vem de 50 em 50."],
+      ["Filtre o Histórico pela situação", "Os números do Histórico viraram filtros: clique em Aprovados, Aguardando análise e os outros para ver só eles."],
+      ["Use a Minha fila do mesmo jeito", "Em Atividades, na Minha fila, os cadastros aguardando análise abrem como cartões ali mesmo.", 'nav.modulos a[data-mod="atividades"]'],
+    ] },
     { versao: "009y1b", tema: "A mesa do dia", itens: [
       ["Comece pelo que precisa de você", "A tela inicial abre com o que está esperando por você, do mais urgente ao resto. Os atalhos ficam embaixo, numa linha.", "#inicio-precisa"],
       ["Acompanhe as atividades da equipe", "As tarefas que o sistema cria sozinho ficam em Atividades da equipe: todos participam, sem precisar aceitar, e elas fecham sozinhas ao bater a meta.", 'nav.modulos a[data-mod="atividades"]'],

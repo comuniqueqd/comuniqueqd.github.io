@@ -808,7 +808,9 @@
   "veredito": "CONFIRMADO",
   "nota": "O print confirma: nome 2×, ID 2×. Em 320 px dá cerca de 650 px por cartão. | Varredura 20/11 (a4): 20/11: igual (o quadrinho falso saiu, AP-04). Pendentes em 320 = 4.249 px para 6 cadastros (~650 px cada); nome e ID repetidos no título e nos campos; 3 estilos de botão no cartão. Print a4/c-pend.png.",
   "junto": "",
-  "versao": "009y2"
+  "versao": "009y2",
+  "feito": "009y2a",
+  "situacao": "Feito na 009y2 parte 1 (publicada em 20/11/2026): cada cadastro é uma linha com Aprovar/Reprovar; Detalhes abre o resto (128 px em 320 px)."
  },
  {
   "ag": "a4",
@@ -960,7 +962,9 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: igual. nested-cards 8 em 6 telas (Análises Tarefas, Novo bloqueio, Calculadora, Adicional, Lançamentos, Parceiros Ativações); border-accent-on-rounded 4 (Histórico da ativação, Lançamentos, Análises Tarefas).",
   "junto": "",
-  "versao": "009y2"
+  "versao": "009y2",
+  "feito": "009y2a",
+  "situacao": "Feito na 009y2 parte 1 (publicada em 20/11/2026): Histórico da ativação e de restrições com filtros em pílula e a contagem."
  },
  {
   "ag": "a4",
@@ -5149,7 +5153,8 @@
   "nota": "scrollWidth 340 com viewport 320 (claro e escuro; a4/medidas.json). O elemento que estica: select#pn-meta-tipo, right=340, width=307 (a4/largura.mjs). A varredura do e2e só roda em 1200 e 390, por isso não acusa. | Revisor: 320 px é raro na equipe (Chrome/Edge no computador); vale como regra do test:visual (PR-08) mais do que como conserto isolado.",
   "junto": "",
   "versao": "009y2",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Feito na 009y2 parte 1 (publicada em 20/11/2026): conferido em 320 px no e2e.",
+  "feito": "009y2a"
  },
  {
   "ag": "a4",
@@ -5168,7 +5173,8 @@
   "nota": "Em 320 px o aviso vermelho ocupa ~330 px de altura, com 'Acordo vencido há 2 dia(s): fazer o ajuste · Mercado Modelo (LAGARTO - SE)' em 9 linhas ao lado de 'Ajuste feito' (a4/c320-inicio-top.png, a4/c-e320-inicio.png). | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
   "versao": "009y2",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Feito na 009y2 parte 1 (publicada em 20/11/2026): acordo vencido quebra a linha no celular.",
+  "feito": "009y2a"
  },
  {
   "ag": "a4",
@@ -5206,7 +5212,8 @@
   "nota": "Print a4/c-pend.png: os dois filtros lado a lado em 320 px mostram 'Todas as situ' e 'Todas as cida'. A varredura do e2e só confere rótulos, não o texto do select. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
   "versao": "009y2",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Feito na 009y2 parte 1 (publicada em 20/11/2026): filtros um por linha abaixo de 420 px.",
+  "feito": "009y2a"
  },
  {
   "ag": "a4",
@@ -5475,7 +5482,8 @@
   "nota": "Massa a3: 577 abertas (399 opcionais 'revisar cadastro') + 85 em andamento + 51 concluídas. listar_atividades(51) = 996 KB e 0,42 s no banco; tela com 12.867 elementos e 131 mil px; pronta em 675 ms (1x) / 1.645 ms (4x); redesenho 94-161 / 501-716 ms (era 212-632 em 4x na 009t). Cada item ~1,4 KB. | Revisor: Código confirmado (abertas/em andamento sem limite), mas os números vêm da massa do a3 (577 abertas, 399 opcionais); não há número real (a10 ainda na fase 1). Hoje é atrito; vira alta se a fase 2 mostrar mais de ~150 abertas. Como a 009y reescreve a tela de Tarefas em linhas, entra nela. Junto A2-03 e do resto do AT4/A3-03 (feitos só para concluídas).",
   "junto": "A2-03",
   "versao": "009y2",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Feito na 009y2 parte 1 (publicada em 20/11/2026): grupos com mais de 30 mostram 30 e Mostrar mais.",
+  "feito": "009y2a"
  },
  {
   "ag": "a3",
@@ -5513,7 +5521,8 @@
   "nota": "205 pendentes = 8.091 elementos, 61 mil px, pronta em 183/583 ms (1x/4x), redesenho 43-56 / 181-234 ms a cada tique, long task de 185 ms em 4x. 'Aguardando contato' não vence: a fila só cresce. | Revisor: \"Aguardando contato\" não vence (NF-5): a fila só cresce. Junto A2-02.",
   "junto": "A2-02",
   "versao": "009y2",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Feito na 009y2 parte 1 (publicada em 20/11/2026): 50 por grupo com Mostrar mais.",
+  "feito": "009y2a"
  },
  {
   "ag": "a3",
@@ -6535,5 +6544,65 @@
   "tela": "inicio",
   "feito": "009y1e",
   "situacao": "Feito na 009y1e (pedido do usuário em 20/11/2026; publicada em 20/11/2026)."
+ },
+ {
+  "ag": "usuario",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "objetivo": "menos",
+  "onda": 1,
+  "veredito": "",
+  "junto": "",
+  "onde": "",
+  "nota": "Pedido do usuário.",
+  "versao": "009y2",
+  "id": "U16",
+  "titulo": "Cartões da prévia espremidos e com o ID no lugar do nome",
+  "sugestao": "Cartões com largura própria e o nome do entregador como título.",
+  "tela": "inicio",
+  "feito": "009y2a",
+  "situacao": "Feito na 009y2 parte 1 (publicada em 20/11/2026)."
+ },
+ {
+  "ag": "usuario",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "objetivo": "menos",
+  "onda": 1,
+  "veredito": "",
+  "junto": "",
+  "onde": "",
+  "nota": "Pedido do usuário.",
+  "versao": "009y2",
+  "id": "U17",
+  "titulo": "Prévia dos cadastros sem como decidir",
+  "sugestao": "Aprovar e Reprovar direto no cartão da prévia.",
+  "tela": "inicio",
+  "feito": "009y2a",
+  "situacao": "Feito na 009y2 parte 1 (publicada em 20/11/2026)."
+ },
+ {
+  "ag": "usuario",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "objetivo": "menos",
+  "onda": 1,
+  "veredito": "",
+  "junto": "",
+  "onde": "",
+  "nota": "Pedido do usuário.",
+  "versao": "009y2",
+  "id": "U18",
+  "titulo": "Minha fila mandava para outra tela",
+  "sugestao": "'Ver os cadastros' abre os cartões ali mesmo (porta-cartões).",
+  "tela": "tarefas",
+  "feito": "009y2a",
+  "situacao": "Feito na 009y2 parte 1 (publicada em 20/11/2026)."
  }
 ]

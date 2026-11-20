@@ -53,10 +53,18 @@
       .sort((x, y) => String(x.prazo || "9").localeCompare(String(y.prazo || "9")));
     // Pedidos para ser responsável de cidade (moderadores, 008b)
     itens.push(...App.avisos.cartoesPedidos(item));
+    // 009y2 (pedido do usuário): "porta-cartões": o botão abre logo abaixo os cartões curtos (os mesmos da tela inicial),
+    // com Aprovar/Reprovar ali mesmo; "Abrir a tela completa" continua no fim
+    const porta = (chave, txt, href, rotulo) => {
+      const aberta = App.previa?.aberta("fila") === chave;
+      if (!App.previa) return { acoes: [el("a", { class: "btn primary small", href }, "Abrir")] };
+      return { acoes: [el("button", { class: "btn small" + (aberta ? "" : " primary"), type: "button", "aria-expanded": String(aberta), onclick: () => App.previa.alternar("fila", chave) }, aberta ? "Fechar" : rotulo)],
+        extra: aberta ? App.previa.tira({ chave, txt, href }) : null };
+    };
     // Ativação
     if (staffAtiv() && r.ativacao.aguardando_analise)
       itens.push(item({ modulo: "ATIVAÇÃO", titulo: `${r.ativacao.aguardando_analise} cadastro(s) aguardando análise`,
-        detalhe: "Aprovar, reprovar ou encerrar.", acoes: [el("a", { class: "btn primary small", href: "#ativacao/pendentes" }, "Abrir pendentes")] }));
+        detalhe: "Aprovar, reprovar ou encerrar.", ...porta("cadastros", `${r.ativacao.aguardando_analise} cadastro(s) aguardando análise`, "#ativacao/pendentes", "Ver os cadastros") }));
     if (!staffAtiv() && (r.ativacao.aguardando_analise || r.ativacao.aguardando_contato))
       itens.push(item({ modulo: "ATIVAÇÃO", titulo: "Seus cadastros em andamento", estado: "sem",
         detalhe: `${r.ativacao.aguardando_analise} aguardando análise · ${r.ativacao.aguardando_contato} aguardando novo contato. Você acompanha, quem decide é o responsável.`,
@@ -405,7 +413,13 @@
     ].filter(([, x]) => x.length);
     if (!grupos.length) return box.replaceChildren(vazio("Nenhuma tarefa", "Use “Nova tarefa” para pedir algo à equipe ou registrar o que você fez."));
     const temMais = l.filter((a) => a.status === "concluida").length > (A.concLimite || 50);
-    box.replaceChildren(...grupos.map(([tit, x]) => el("div", { class: "grupo" }, el("h3", {}, tit, el("span", { class: "count", text: x.length })), el("div", { class: "queue" }, x.map(cartaoAtividade)))),
+    // 009y2 (A3-13): grupos grandes (as abertas chegam a centenas) mostram 30 por vez, com "Mostrar mais"
+    A.limGrupo = A.limGrupo || {};
+    box.replaceChildren(...grupos.map(([tit, x]) => {
+      const lim = tit.startsWith("Concluídas") ? x.length : (A.limGrupo[tit] || 30);
+      return el("div", { class: "grupo" }, el("h3", {}, tit, el("span", { class: "count", text: x.length })), el("div", { class: "queue" }, x.slice(0, lim).map(cartaoAtividade)),
+        x.length > lim ? el("button", { class: "btn link mais-pend", type: "button", onclick: () => { A.limGrupo[tit] = lim + 30; renderSugeridas(); } }, `Mostrar mais ${Math.min(30, x.length - lim)} (de ${x.length})`) : null);
+    }),
       ...(temMais ? [el("div", { class: "paginas" }, el("button", { class: "btn small", type: "button",
         onclick: async (e) => { e.currentTarget.disabled = true; A.concLimite = (A.concLimite || 50) + 50;
           try { A.atividades = await listarAtividades(A.concLimite + 1); } catch (err) { return toast(msgErro(err)); } renderSugeridas(); } }, "Ver mais concluídas"))] : []));

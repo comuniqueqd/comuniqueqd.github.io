@@ -27,7 +27,7 @@
         const l = await App.u.rpc("listar_tarefas", { p_status: "pendente" });
         itens = l.filter((t) => t.minha && t.tipo !== "completar_dados" && (chave === "tratativas" || t.atrasada))
           .sort((a, b) => (b.atrasada - a.atrasada) || String(a.criada_em).localeCompare(String(b.criada_em)))
-          .map((t) => ({ titulo: t.bloqueio?.nome_entregador || (t.bloqueio?.id_app ? "ID " + t.bloqueio.id_app : "Sem nome"),
+          .map((t) => ({ titulo: t.bloqueio?.nome || t.bloqueio?.nome_entregador || (t.bloqueio?.id_app ? "ID " + t.bloqueio.id_app : "Sem nome"),
             detalhe: [t.bloqueio?.infracao, t.cidade, t.atrasada ? `atrasada há ${tempo(t.criada_em)}` : `há ${tempo(t.criada_em)}`].filter(Boolean).join(" · "),
             alerta: t.atrasada,
             acoes: [t.bloqueio?.id_app ? el("button", { class: "btn small", type: "button", onclick: () => App.abrirFicha?.(t.bloqueio.id_app) }, "Ver a ficha") : null,
@@ -48,7 +48,10 @@
         itens = (r.itens || []).sort((a, b) => String(a.enviado_em).localeCompare(String(b.enviado_em)))
           .map((c) => ({ titulo: c.nome || (c.id_app ? "ID " + c.id_app : "Sem ID"),
             detalhe: [c.cidade, `esperando há ${tempo(c.enviado_em)}`, c.enviado_por_nome ? `enviado por ${c.enviado_por_nome}` : null].filter(Boolean).join(" · "),
-            acoes: [el("button", { class: "btn small primary", type: "button", onclick: () => App.abrirCadastro?.(c.id) }, "Revisar")] }));
+            acoes: [
+              App.decidirCadastro ? el("button", { class: "btn approve small", type: "button", onclick: (e) => App.decidirCadastro.aprovar(c, e.currentTarget, () => buscarTira(chave)) }, "Aprovar") : null,
+              App.decidirCadastro ? el("button", { class: "btn reject small", type: "button", onclick: () => App.decidirCadastro.reprovar(c, () => buscarTira(chave)) }, "Reprovar") : null,
+              el("button", { class: "btn small", type: "button", onclick: () => App.abrirCadastro?.(c.id) }, "Revisar")].filter(Boolean) }));
       } else if (chave === "lancamentos") {
         const r = await App.u.rpc("listar_lancamentos", { p_pendentes: true, p_meus: true, p_limite: 50 });
         itens = (r.itens || []).map((l) => ({ titulo: `${l.tipo === "adicional" ? "Adicional" : "Ajuste de bairro"} de ${real(l.valor)}`,
@@ -57,7 +60,7 @@
       }
       tiras[chave] = { itens };
     } catch (e) { tiras[chave] = { itens: [], erro: App.u.msgErro(e) }; }
-    if (tiraAberta === chave) App.render();
+    if (tiraAberta === chave || Object.values(abertaEm).includes(chave)) App.render();
   }
   function tira(x) {
     const t = tiras[x.chave] || { carregando: true };
@@ -70,7 +73,13 @@
             el("div", { class: "tira-txt" }, el("b", { text: i.titulo }), el("span", { class: "meta", text: i.detalhe })),
             i.acoes?.length ? el("div", { class: "tira-acoes" }, ...i.acoes) : null))),
       el("a", { class: "btn link", href: x.href }, itens.length > MAX ? `Ver todos os ${itens.length} na tela completa` : "Abrir a tela completa"));
-  }
+  }  // 009y2 (pedido do usuário): a mesma prévia em outras telas (Minha fila); host = onde está aberta
+  const abertaEm = {};
+  App.previa = {
+    tira, aberta: (host) => abertaEm[host] || null,
+    alternar(host, chave) { abertaEm[host] = abertaEm[host] === chave ? null : chave; if (abertaEm[host]) buscarTira(chave); App.render(); },
+  };
+
 
   // número principal + linha "N na equipe" (ou "N seus") embaixo
   const numero = (v, rotulo, extra = null, alerta = false) =>

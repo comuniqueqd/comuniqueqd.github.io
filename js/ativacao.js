@@ -42,9 +42,16 @@
     if (!S.lista.pendentes.length) return box.replaceChildren(vazio("Nada em andamento", staff() ? "Nenhum cadastro esperando. Os novos aparecem aqui assim que forem enviados." : "Quando você enviar um cadastro, ele aparece aqui com a situação da análise."));
     if (!lista.length) return box.replaceChildren(vazio("Nenhum cadastro com esse filtro", "Limpe a busca ou troque os filtros."));
     const grupos = ["aguardando_analise", "aguardando_contato"].map((s) => [s, lista.filter((c) => c.status === s)]).filter(([, l]) => l.length);
-    box.replaceChildren(...grupos.map(([s, l]) => el("div", { class: "grupo" },
-      el("h3", {}, ST[s], el("span", { class: "count", text: l.length })),
-      el("div", { class: "queue" }, l.map(card)))));
+    // 009y2 (A3-15): no máximo 50 por grupo; "Mostrar mais" traz mais 50
+    S.limPend = S.limPend || {};
+    box.replaceChildren(...grupos.map(([s, l]) => {
+      const lim = S.limPend[s] || 50;
+      return el("div", { class: "grupo" },
+        el("h3", {}, ST[s], el("span", { class: "count", text: l.length })),
+        el("div", { class: "queue linhas-cad" }, l.slice(0, lim).map(card)),
+        l.length > lim ? el("button", { class: "btn link mais-pend", type: "button", onclick: () => { S.limPend[s] = lim + 50; render(); } },
+          `Mostrar mais ${Math.min(50, l.length - lim)} (de ${l.length})`) : null);
+    }));
     if (S.destaque) {
       const n = box.querySelector(`[data-id="${S.destaque}"]`);
       if (n) { App.u.rolar(n, { block: "center" }); setTimeout(() => { S.destaque = null; render(); }, 8000); S.destaque = "_mostrado_" + S.destaque; }
@@ -57,6 +64,25 @@
     const destacado = S.destaque === c.id || S.destaque === "_mostrado_" + c.id;
     const cx = S.caixa[c.id];
     const prevPassou = c.previsao && new Date(c.previsao) < Date.now();
+    // 009y2 (AP-03): cada cadastro é uma linha (quem, cidade, há quanto tempo e as decisões); "Detalhes" abre o resto
+    S.abertoCad = S.abertoCad || new Set();
+    const aberto = destacado || S.abertoCad.has(c.id) || S.abertos.has(c.id);
+    if (!aberto) return el("article", { class: "card linha-cad" + (contato ? " contato" : "") + (prevPassou ? " previsao-passou" : ""), "data-id": c.id },
+      el("div", { class: "head" },
+        el("span", { class: "name" }, c.nome ? el("span", { text: c.nome }) : null, c.id_app ? App.u.copiavel(c.id_app, "ID " + c.id_app, "mono" + (c.nome ? " meta" : ""), titulo(c)) : el("span", { class: "meta", text: "Sem ID" }),
+          c.revisar ? botaoRevisar(c, true) : null),
+        el("span", { class: "espera" + (esp.velho ? " velho" : ""), title: "Desde " + dt(c.status_desde), text: (contato ? "contato há " : "há ") + esp.txt })),
+      el("div", { class: "meta linha-cad-info", text: [c.cidade, staff() ? (c.enviado_por === S.me.id ? "enviado por você" : c.enviado_por_nome ? "enviado por " + c.enviado_por_nome : null) : null,
+        c.previsao ? `Previsão: até ${dt(c.previsao)}` : null].filter(Boolean).join(" · ") }),
+      contato ? el("div", { class: "motivo" }, el("b", { text: `Reprovado por ${c.decidido_por_nome} em ${dt(c.decidido_em)}: ` }), c.motivo, c.detalhe ? " — " + c.detalhe : "") : null,
+      el("div", { class: "actions" },
+        staff() ? el("button", { class: "btn approve small", type: "button", onclick: (e) => decidir(c, "aprovar", e.currentTarget) }, "Aprovar") : null,
+        staff() && !contato ? el("button", { class: "btn reject small", type: "button", onclick: () => abrir(c.id, "reprovar") }, "Reprovar") : null,
+        // Encerrar fica na linha só para quem já foi reprovado (é a decisão daquele grupo); nos outros, em Detalhes
+        staff() && contato ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrir(c.id, "encerrar") }, "Encerrar…") : null,
+        el("span", { class: "spacer" }),
+        el("button", { class: "btn link", type: "button", "aria-expanded": "false", onclick: () => { S.abertoCad.add(c.id); render(); } }, "Detalhes")),
+      cx ? caixa(c, cx) : null);
     return el("article", { class: "card" + (contato ? " contato" : "") + (prevPassou ? " previsao-passou" : "") + (destacado ? " destaque" : ""), "data-id": c.id },
       el("div", { class: "head" },
         el("span", { class: "name" }, c.nome ? el("span", { text: c.nome }) : null, c.id_app ? App.u.copiavel(c.id_app, "ID " + c.id_app, "mono" + (c.nome ? " meta" : ""), titulo(c)) : el("span", { class: "meta", text: "Sem ID" }), pill(c.status, true),
@@ -78,7 +104,8 @@
         botaoHistorico(c.id),
         !staff() ? el("span", { class: "meta", text: contato ? "O responsável vai retomar o contato com o entregador." : "Aguardando análise do responsável." }) : null,
         el("span", { class: "spacer" }),
-        staff() ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrir(c.id, "encerrar") }, "Encerrar…") : null),
+        staff() ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrir(c.id, "encerrar") }, "Encerrar…") : null,
+        !destacado ? el("button", { class: "btn link", type: "button", "aria-expanded": "true", onclick: () => { S.abertoCad.delete(c.id); S.abertos.delete(c.id); render(); } }, "Fechar detalhes") : null),
       cx ? caixa(c, cx) : null,
       S.abertos.has(c.id) ? timeline(c.id) : null);
   }
@@ -116,6 +143,22 @@
       await carregar();
     } catch (e) { btn.disabled = false; toast(msgErro(e)); }
   }
+
+  // 009y2: aprovar e reprovar de fora da tela de Pendentes (tira da tela inicial)
+  App.decidirCadastro = {
+    async aprovar(c, btn, depois) { await decidir(c, "aprovar", btn); depois?.(); },
+    reprovar(c, depois) {
+      const sel = el("select", { "aria-label": "Motivo da reprovação" }, el("option", { value: "", text: "Escolha o motivo" }),
+        ...(S.motivos?.reprovacao || []).map((m) => el("option", { value: m, text: m })));
+      const txt = el("input", { placeholder: "Detalhe (obrigatório se escolher Outro)", "aria-label": "Detalhe", maxlength: "300" });
+      const d = App.u.janela("Reprovar: " + (c.nome || "ID " + c.id_app),
+        el("div", { class: "grid2" }, sel, txt),
+        el("div", { class: "actions" },
+          el("button", { class: "btn reject", type: "button", onclick: async (e) => { await decidir(c, "reprovar", e.currentTarget, sel.value, txt.value); if (!sel.value) return; d.close(); depois?.(); } }, "Confirmar reprovação"),
+          el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
+      sel.focus();
+    },
+  };
 
   // 009y1 (NF-1): o que o entregador precisa mandar de novo, por motivo de reprovação (os motivos da tabela "motivos")
   const REENVIAR = {
@@ -300,9 +343,13 @@
     $("#hist-sub").textContent = "Todos os cadastros recebidos. Clique numa linha para ver o histórico de cada um.";  // 009x6: o suporte também vê todos
     $("#f-hist-meus-box").hidden = false;  // 009x6: o suporte também vê todos e pode filtrar os seus
     const meus = $("#f-hist-meus").checked, k = h.contagens;
-    const tile = (rot, v, cls = "") => el("div", { class: "tile " + cls }, el("div", { class: "k", text: rot }), el("div", { class: "v", text: v }));
-    $("#hist-tiles").replaceChildren(tile(staff() && !meus ? "Cadastros" : "Enviados por você", k.cadastros), tile("Aguardando análise", k.aguardando_analise, "hl"),
-      tile("Aguardando novo contato", k.aguardando_contato, "hl2"), tile("Aprovados", k.aprovado, "good"), tile("Encerrados", k.encerrado));
+    // 009y2 (AP-11): os quadrinhos viram uma barra de filtros com a contagem; clicar filtra pela situação
+    const stAtual = $("#f-hist-status").value;
+    const tile = (rot, v, st, cls = "") => el("button", { type: "button", class: "tile clicavel " + cls + (stAtual === st ? " ativo" : ""), "aria-pressed": String(stAtual === st),
+      title: st ? "Filtrar: " + rot : "Tirar o filtro de situação", onclick: () => { $("#f-hist-status").value = stAtual === st ? "" : st; filtrarHist(); } },
+      el("span", { class: "k", text: rot }), el("span", { class: "v", text: v }));
+    $("#hist-tiles").replaceChildren(tile(staff() && !meus ? "Cadastros" : "Enviados por você", k.cadastros, ""), tile("Aguardando análise", k.aguardando_analise, "aguardando_analise", "hl"),
+      tile("Aguardando novo contato", k.aguardando_contato, "aguardando_contato", "hl2"), tile("Aprovados", k.aprovado, "aprovado", "good"), tile("Encerrados", k.encerrado, "encerrado"));
     const paginas = Math.max(1, Math.ceil(h.total / h.por)), ini = (h.pagina - 1) * h.por;
     $("#hist-total").textContent = h.total === k.cadastros ? `${h.total} cadastro(s)` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + h.por, h.total)}` : "")
       : `${h.total} de ${k.cadastros} cadastro(s)` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + h.por, h.total)}` : "");
