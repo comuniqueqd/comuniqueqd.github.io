@@ -1,4 +1,4 @@
--- resumo_inicio(): versão atual (todas as migrações até a 009x rodadas), tirada do banco com pg_get_functiondef.
+-- resumo_inicio(): versão atual (todas as migrações até a 009y1c rodadas), tirada do banco com pg_get_functiondef.
 -- Esta função foi mudada por "remendo" (troca de texto via pg_get_functiondef) em alguma migração, então o corpo
 -- inteiro não existia escrito em nenhum arquivo. A partir daqui, mudar esta função = criar uma migração nova com
 -- o corpo inteiro (create or replace) e atualizar este arquivo. O teste test:casa confere que o arquivo e o banco
@@ -43,7 +43,7 @@ begin
       'opcionais', count(*) filter (where a.status = 'aberta' and a.opcional and not coalesce(auth.uid() = any (a.sugeridas_para), false)),
       'minhas_em_andamento', count(*) filter (where a.status = 'aceita' and public.participa(a)),
       'equipe_abertas', count(*) filter (where a.status in ('aberta', 'aceita')),
-      'abertas_para_pegar', count(*) filter (where a.status = 'aberta' and a.criada_por is distinct from auth.uid() and (p = 'moderador' or public.atividade_aberta_para_mim(a))))
+      'abertas_para_pegar', count(*) filter (where a.status = 'aberta' and not a.automatica and a.criada_por is distinct from auth.uid() and (p = 'moderador' or public.atividade_aberta_para_mim(a))))
       from public.atividades a),
     'notificacoes', (select count(*) from public.notificacoes where para = auth.uid() and lida_em is null));
 end $function$;

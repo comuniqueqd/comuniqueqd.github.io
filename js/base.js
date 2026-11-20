@@ -540,7 +540,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009y1";
+  const VERSAO_APP = "009y1b";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;
@@ -593,7 +593,39 @@
     $("#b-avisos").setAttribute("aria-label", nAv ? `${nAv} aviso(s) novo(s)` : "Avisos");
     mod.render?.(App.atual.aba);
     sec?.querySelectorAll("table[data-ordenavel]").forEach(ordenavel);  // 009l: tabelas que ordenam pelo cabeçalho
+    montarBarraBaixo();
   };
+  // 009y1 parte 2 (AP-01): no celular, Início · Entregadores · Atividades · Avisos numa barra embaixo e o resto em
+  // "Mais" (copiados do menu de cima: mesmo endereço, mesmo número, mesma tela atual). No computador a barra some.
+  const NA_BARRA = { inicio: 'a[data-mod="inicio"]', entregadores: 'a[data-grupo="entregadores"]', atividades: 'a[data-mod="atividades"]', avisos: 'a[data-mod="avisos"]' };
+  function montarBarraBaixo() {
+    const barra = $("#barra-baixo"), mais = $("#bb-mais");
+    if (!barra || !mais) return;
+    for (const [k, sel] of Object.entries(NA_BARRA)) {
+      const orig = document.querySelector("nav.modulos " + sel), b = barra.querySelector(`[data-bb="${k}"]`);
+      if (!orig || !b) continue;
+      b.href = orig.getAttribute("href"); b.hidden = orig.hidden;
+      if (orig.hasAttribute("aria-current")) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+    }
+    barra.querySelectorAll("[data-bb-count]").forEach((x) => { const o = document.getElementById(x.dataset.bbCount); if (o) { x.textContent = o.textContent; x.hidden = o.hidden; } });
+    const resto = [...document.querySelectorAll("nav.modulos a")].filter((a) => !Object.values(NA_BARRA).some((s) => a.matches(s)) && !a.hidden);
+    const atual = resto.some((a) => a.hasAttribute("aria-current"));
+    const bm = barra.querySelector('[data-bb="mais"]');
+    if (atual) bm.setAttribute("aria-current", "page"); else bm.removeAttribute("aria-current");
+    const nMais = resto.reduce((t, a) => { const c = a.querySelector(".count"); return t + (c && !c.hidden ? Number(c.textContent) || 0 : 0); }, 0);
+    const cm = barra.querySelector('[data-bb-count="mais"]'); cm.textContent = nMais; cm.hidden = !nMais;
+    const sig = resto.map((a) => a.getAttribute("href") + (a.querySelector(".count:not([hidden])")?.textContent || "") + (a.hasAttribute("aria-current") ? "*" : "")).join("|");
+    if (mais.dataset.sig === sig) return;
+    mais.dataset.sig = sig;
+    const fechar = () => { try { mais.hidePopover(); } catch (_) {} };
+    mais.replaceChildren(...resto.map((a) => {
+      const c = a.querySelector(".count");
+      return el("a", { href: a.getAttribute("href"), "aria-current": a.hasAttribute("aria-current") ? "page" : null, onclick: fechar },
+        a.firstChild.textContent.trim(), c && !c.hidden ? el("span", { class: "count alert", text: c.textContent }) : null);
+    }), el("hr"),
+      el("button", { type: "button", class: "bb-item", onclick: () => { fechar(); $("#b-tema")?.click(); } }, "Trocar tema claro/escuro"),
+      el("button", { type: "button", class: "bb-item", onclick: () => { fechar(); $("#b-sair")?.click(); } }, "Sair"));
+  }
   document.addEventListener("focusout", () => setTimeout(() => { if (adiado) App.render(); }, 0));
   const carregar = () => App.carregar();
   App.valores = {};

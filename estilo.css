@@ -950,7 +950,6 @@ svg.ic { width: 1.15em; height: 1.15em; flex: none; vertical-align: -0.2em; fill
 /* 009u: correções da revisão da identidade */
 header.top :focus-visible { outline-color: var(--ambar); }          /* o verde do foco sumia no cabeçalho floresta (2,41:1) */
 :where(main, dialog) a:not([class]) { color: var(--accent); }       /* links do texto saíam no azul do navegador */
-@media (max-width: 600px) { 
 /* 009w: a faixa de Novidades virou um botão discreto */
 #inicio-novidades { display: flex; justify-content: flex-end; margin: 0 0 10px; }
 #inicio-novidades:empty { display: none; }
@@ -966,3 +965,71 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
 .mostrar-onde { margin-left: 6px; }
 /* 009y1 (NF-1): faixa depois de aprovar ou reprovar, com a mensagem para o entregador */
 .decisao-feita { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--accent-soft); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; }
+
+/* ===== 009y1 parte 2 (AP-01): navegação nova =====
+   Celular e tablet (< 1024 px): cabeçalho de uma linha (símbolo, busca, sino, tema) e os destinos principais
+   numa barra embaixo; o resto em "Mais". Computador (>= 1024 px): o menu vira uma barra lateral fina. */
+.barra-baixo { display: none; }
+.bb-mais { display: none; }
+.bb-mais:popover-open { display: grid; position: fixed; inset: auto 8px calc(72px + env(safe-area-inset-bottom)) auto; margin: 0; min-width: 220px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line-forte); border-radius: 14px; padding: 6px; gap: 2px; box-shadow: 0 12px 32px var(--sombra-4); }
+.bb-mais a, .bb-mais .bb-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 0 12px; border-radius: 10px;
+  color: var(--ink); text-decoration: none; font-weight: 600; background: none; border: 0; text-align: left; cursor: pointer; }
+.bb-mais a[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+.bb-mais a:hover, .bb-mais .bb-item:hover { background: var(--gray-soft); }
+.bb-mais hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
+@media (max-width: 1023px) {
+  nav.modulos { display: none; }
+  .barra-baixo { display: grid; grid-template-columns: repeat(5, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    background: var(--marca); padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid var(--vidro-16); }
+  .barra-baixo > a, .barra-baixo > button { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-height: 56px; padding: 4px 2px; color: var(--marca-ink); text-decoration: none; font: inherit; font-size: 12px; font-weight: 600; background: none; border: 0; cursor: pointer; }
+  .barra-baixo .ic { width: 22px; height: 22px; }
+  .barra-baixo [aria-current="page"] { background: var(--areia); color: var(--floresta); }
+  .barra-baixo .count { position: absolute; top: 4px; left: calc(50% + 6px); font-size: 12px; min-width: 18px; padding: 0 5px; }
+  body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+  /* cabeçalho de uma linha */
+  header.top .wrap { padding-top: 8px; }
+  .titlebar { flex-wrap: nowrap; gap: 8px; }
+  .titlebar h1 { flex: none; }
+  .who { flex: 1 1 auto; flex-wrap: nowrap; justify-content: flex-end; min-width: 0; }
+  #who, #papel, #b-sair, #b-instalar { display: none !important; }
+  .busca-topo { order: 0; flex: 1 1 auto; width: auto; min-width: 0; max-width: 360px; }
+  .busca-topo input { width: 100%; }
+  nav.tabs { margin-top: 6px; }
+}
+@media (max-width: 480px) { .h1-nome { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; } }
+@media (min-width: 1024px) {
+  body { padding-left: 216px; }
+  nav.modulos { position: fixed; top: 0; left: 0; bottom: 0; width: 216px; margin: 0; padding: 16px 12px; z-index: 20;
+    flex-direction: column; flex-wrap: nowrap; gap: 2px; background: var(--marca); overflow-y: auto; }
+  nav.modulos a { border-radius: 10px; padding: 9px 12px; justify-content: space-between; }
+}
+@media print { body { padding: 0 !important; } .barra-baixo, .bb-mais, nav.modulos { display: none !important; } }
+
+/* 009y1 parte 2 (AP-10): tela inicial "mesa do dia" */
+#inicio-dia { margin: -6px 0 14px; color: var(--muted); }
+.precisa { margin: 0 0 18px; }
+.linhas-precisa { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.linhas-precisa li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 12px; }
+.linhas-precisa li + li { border-top: 1px solid var(--line); }
+.linhas-precisa .precisa-n { font-family: var(--font-titulo); font-size: 22px; font-variant-numeric: tabular-nums; text-align: right; color: var(--ink); }
+.linhas-precisa li.urgente .precisa-n, .linhas-precisa li.urgente span { color: var(--bad); font-weight: 600; }
+.linhas-precisa li.leve .precisa-n { color: var(--muted); }
+.linhas-precisa li.nada { grid-template-columns: 1fr; color: var(--muted); }
+.funcoes.compacto { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+.funcoes.compacto a.funcao { display: inline-flex; grid-template-columns: none; align-items: center; gap: 8px; min-height: 44px; padding: 6px 14px; border-radius: 10px;
+  border: 1px solid var(--line-forte); box-shadow: none; transform: none; background: var(--surface); color: var(--ink); }
+.funcoes.compacto a.funcao::before { display: none; }
+.funcoes.compacto a.funcao:hover { transform: none; box-shadow: none; border-color: var(--accent); }
+.funcoes.compacto .funcao-icone { width: auto; height: auto; background: none; padding: 0; color: var(--accent); }
+.funcoes.compacto .funcao-icone .ic { width: 20px; height: 20px; }
+.funcoes.compacto .funcao-corpo b { font-size: 14px; }
+.funcoes.compacto .funcao-texto, .funcoes.compacto .funcao-vivo, .funcoes.compacto .funcao-seta { display: none; }
+.atalhos-titulo { margin-top: 6px; }
+.passos { margin-bottom: 16px; }
+.passos summary { cursor: pointer; }
+.passos-lista { margin: 10px 0 6px; padding-left: 22px; display: grid; gap: 6px; }
+.passos-lista li.feito a, .passos-lista li.feito button { text-decoration: line-through; color: var(--muted); }
+.passos-lista button.btn.link { white-space: normal; text-align: left; padding: 0; }
+.linhas-precisa a.btn:not(.primary) { color: var(--ink); text-decoration: none; }

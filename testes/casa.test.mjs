@@ -40,6 +40,7 @@ for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x3-tarefas-au
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x4-restricao.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x5-avisos-que-importam.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x6-suporte-ve-tudo.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1c-atividades-equipe.sql"));
 
 await rpc(admin, "entrar");
 await db.query("update membros set papel_bloqueios = 'moderador' where email = $1", [admin.email]);
@@ -357,6 +358,19 @@ await t("009x6: notícias rápidas = tarefas concluídas; parceiros têm a seman
   verdade(n.some((x) => x.equipe), "a meta batida pela equipe aparece");
   const p = await rpc(sup, "parceiros_semana");
   verdade(p.esta_semana >= 1 && p.ultimos.length >= 1 && p.ultimos.length <= 10 && "semana_passada" in p, JSON.stringify(p).slice(0, 200));
+});
+
+await t("009y1c: atividade da equipe (automática) não se pega nem conta como aberta, e não avisa 'sem ninguém'", async () => {
+  await rpc(admin, "registrar_parceiro", { p_estabelecimento: "Lanche da Equipe", p_cidade: "PROPRIA - SE" });
+  const a = await um("select id, escalada_em is not null esc from atividades where cidade = 'PROPRIA - SE' and automatica");
+  igual(a.esc, true, "nasce sem aviso de 'sem ninguém'");
+  const j = (await rpc(sup, "listar_atividades")).find((x) => x.id === a.id);
+  igual([j.automatica, j.pode_aceitar], [true, false]);
+  let erro = ""; try { await rpc(sup, "aceitar_atividade", { p_id: a.id }); } catch (e) { erro = e.message; }
+  verdade(erro, "ninguém aceita");
+  const antes = (await rpc(admin, "resumo_inicio")).atividades.abertas_para_pegar;
+  await db.query("update atividades set criada_em = now() - interval '1 day' where id = $1", [a.id]);
+  igual((await rpc(admin, "resumo_inicio")).atividades.abertas_para_pegar, antes, "não entra nas abertas para pegar (nem para o moderador)");
 });
 
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco

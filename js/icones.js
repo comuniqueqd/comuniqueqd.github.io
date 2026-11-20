@@ -43,6 +43,8 @@
     som: [p("M4 9.5v5h3.5L12 18V6L7.5 9.5z"), p("M15.5 9a4 4 0 0 1 0 6"), p("M18 6.5a7.5 7.5 0 0 1 0 11")],
     tocar: [p("M8 5.5v13l10.5-6.5z")],
     meta: [c(12, 12, 8.5), c(12, 12, 4.5), p("M12 12h.01")],
+    inicio: [p("M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5h-3.5v-6h-6v6H5.5A1.5 1.5 0 0 1 4 19z")],   // 009y1: barra de baixo
+    mais: [c(6, 12, 1.2), c(12, 12, 1.2), c(18, 12, 1.2)],
   };
   // ícone avulso; rotulo = texto para leitor de tela (sem rótulo, fica escondido: o texto ao lado já diz)
   function ic(nome, { rotulo, classe } = {}) {

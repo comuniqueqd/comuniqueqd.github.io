@@ -97,7 +97,7 @@
     // 009y1 (OP-4): as 3 tarefas abertas para a equipe mais urgentes (prazo mais perto, depois a mais antiga), com
     // "Eu faço", sem ir até a aba Tarefas
     const ja = new Set(minhas.map((x) => x.id));
-    const abertas = A.atividades.filter((x) => x.status === "aberta" && x.pode_aceitar && !x.opcional_para_mim && x.criada_por !== S.me.id && !ja.has(x.id))
+    const abertas = A.atividades.filter((x) => x.status === "aberta" && !x.automatica && x.pode_aceitar && !x.opcional_para_mim && x.criada_por !== S.me.id && !ja.has(x.id))
       .sort((x, y) => String(x.prazo || "9").localeCompare(String(y.prazo || "9")) || String(x.criada_em).localeCompare(String(y.criada_em)));
     const blocoAbertas = abertas.length ? el("div", { class: "grupo", id: "at-abertas-fila" },
       el("h3", {}, "Abertas para a equipe", el("span", { class: "count", text: abertas.length })),
@@ -105,8 +105,15 @@
         detalhe: [a.cidade, a.prazo ? `prazo ${App.u.dt(a.prazo)}` : "sem prazo", a.criada_por_nome ? `pedida por ${a.criada_por_nome}` : null].filter(Boolean).join(" · "),
         acoes: [el("button", { class: "btn primary small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Tarefa aceita. Ela está com você.") }, "Eu faço")] }))),
       abertas.length > 3 ? el("a", { class: "btn link", href: "#atividades/sugeridas" }, `Ver todas as ${abertas.length} abertas`) : null) : null;
-    if (!itens.length && !opcionais.length && !minhas.length && !blocoAbertas) return box.replaceChildren(vazio("Tudo em dia", "Nenhuma pendência para você agora. Novas tarefas aparecem aqui assim que forem criadas."));
+    if (!itens.length && !opcionais.length && !minhas.length && !blocoAbertas && !A.atividades.some((x) => x.automatica && x.status !== "concluida")) return box.replaceChildren(vazio("Tudo em dia", "Nenhuma pendência para você agora. Novas tarefas aparecem aqui assim que forem criadas."));
+    // 009y1c: atividades da equipe (automáticas): de todos, sem aceitar; no topo da Minha fila
+    const daEquipe = A.atividades.filter((x) => x.automatica && x.status !== "concluida");
+    const blocoEquipe = daEquipe.length ? el("div", { class: "grupo", id: "at-equipe-fila" },
+      el("h3", {}, "Atividades da equipe", el("span", { class: "count", text: daEquipe.length })),
+      el("p", { class: "meta", style: "margin:0 0 6px", text: "Criadas pelo sistema. Todos participam: cada aprovação na cidade conta, e ela fecha sozinha quando bate a meta." }),
+      el("div", { class: "queue" }, daEquipe.map(cartaoAtividade))) : null;
     box.replaceChildren(...[
+      blocoEquipe,
       minhas.length ? el("div", { class: "grupo" }, el("h3", {}, "Tarefas com você", el("span", { class: "count", text: minhas.length })),
         el("div", { class: "queue" }, minhas.map(cartaoAtividade))) : null,
       itens.length ? el("ul", { class: "queue", style: "padding:0;margin:0" }, itens) : minhas.length || blocoAbertas ? null : vazio("Tudo em dia", "Nenhuma pendência só sua agora."),
@@ -344,7 +351,7 @@
       el("div", { class: "actions" },
         a.pode_aceitar ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, a.compartilhavel ? "Tarefa aceita. Outras pessoas ainda podem entrar junto." : "Tarefa aceita. Ela está com você.") }, "Eu faço") : null,
         a.pode_entrar ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Você entrou na tarefa. Suas aprovações contam junto.") }, [App.ic("juntos"), "Entrar junto"]) : null,
-        a.status === "aberta" ? el("button", { class: "btn small", type: "button", onclick: () => janelaPedir(a) }, "Pedir para alguém") : null,
+        a.status === "aberta" && !a.automatica ? el("button", { class: "btn small", type: "button", onclick: () => janelaPedir(a) }, "Pedir para alguém") : null,
         a.cadastro_id && a.status !== "concluida" ? el("button", { class: "btn small", type: "button", onclick: () => App.abrirCadastro(a.cadastro_id) }, "Completar o cadastro") : null,
         a.pode_concluir && !cx ? el("button", { class: "btn approve small", type: "button", onclick: () => { A.caixa["a" + a.id] = { texto: "" }; render(); } }, "Concluir") : null,
         cx ? el("button", { class: "btn approve small", type: "button", onclick: (e) => acaoAtividade("concluir_atividade", { p_id: a.id, p_nota: cx.texto || null }, e.currentTarget, "Tarefa concluída.") }, "Confirmar conclusão") : null,
@@ -386,11 +393,13 @@
     App.painel?.renderRecorrentes();
     const box = $("#at-sug-lista"), l = A.atividades;
     if (!l) return box.replaceChildren(carregandoEl());
-    const paraMim = (a) => (a.status === "aberta" && a.para_mim) || (a.status === "aceita" && a.sou_participante);
+    const paraMim = (a) => !a.automatica && ((a.status === "aberta" && a.para_mim) || (a.status === "aceita" && a.sou_participante));
     const grupos = [
+      // 009y1c (pedido do usuário): as que o sistema cria sozinho são de todos; ninguém precisa aceitar
+      ["Atividades da equipe: todos participam", l.filter((a) => a.automatica && a.status !== "concluida")],
       ["Para você", l.filter(paraMim)],
-      ["Abertas: quem puder, pega", l.filter((a) => (a.status === "aberta" && !a.para_mim) || a.pode_entrar).sort((x, y) => String(x.prazo || "9").localeCompare(String(y.prazo || "9")) || String(x.criada_em).localeCompare(String(y.criada_em)))],
-      ["Em andamento com a equipe", l.filter((a) => a.status === "aceita" && !a.sou_participante && !a.pode_entrar)],
+      ["Abertas: quem puder, pega", l.filter((a) => !a.automatica && ((a.status === "aberta" && !a.para_mim) || a.pode_entrar)).sort((x, y) => String(x.prazo || "9").localeCompare(String(y.prazo || "9")) || String(x.criada_em).localeCompare(String(y.criada_em)))],
+      ["Em andamento com a equipe", l.filter((a) => !a.automatica && a.status === "aceita" && !a.sou_participante && !a.pode_entrar)],
       ["Concluídas nos últimos 30 dias", l.filter((a) => a.status === "concluida").sort((x, y) => String(y.concluida_em).localeCompare(String(x.concluida_em))).slice(0, A.concLimite || 50)],
     ].filter(([, x]) => x.length);
     if (!grupos.length) return box.replaceChildren(vazio("Nenhuma tarefa", "Use “Nova tarefa” para pedir algo à equipe ou registrar o que você fez."));

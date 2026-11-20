@@ -51,10 +51,16 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009y1";
+  const VERSAO = "009y1b";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009y1b", tema: "A mesa do dia", itens: [
+      ["Comece pelo que precisa de você", "A tela inicial abre com o que está esperando por você, do mais urgente ao resto. Os atalhos ficam embaixo, numa linha.", "#inicio-precisa"],
+      ["Acompanhe as atividades da equipe", "As tarefas que o sistema cria sozinho ficam em Atividades da equipe: todos participam, sem precisar aceitar, e elas fecham sozinhas ao bater a meta.", 'nav.modulos a[data-mod="atividades"]'],
+      ["Navegue pela barra de baixo no celular", "No celular, Início, Entregadores, Atividades e Avisos ficam numa barra embaixo e o resto em Mais. No computador, o menu fica na lateral."],
+      ["Siga seus primeiros passos", "Quem entrou há pouco na equipe vê uma lista curta para começar, na tela inicial."],
+    ] },
     // 009y1: até 5 itens começando por verbo; o 3º campo (seletor) dá o "Mostrar onde" e vira o tour da versão
     { versao: "009y1", tema: "Mais rápido no dia a dia", itens: [
       ["Pegue tarefas pela Minha fila", "As 3 tarefas abertas mais urgentes da equipe aparecem na Minha fila, com o botão Eu faço, sem trocar de tela.", 'nav.modulos a[data-mod="atividades"]'],

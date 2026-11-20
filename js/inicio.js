@@ -86,6 +86,24 @@
     renderRapidos();
     const r = S.resumo, a = r?.ativacao, b = r?.bloqueios, at = r?.atividades;
     $("#ola").textContent = `Olá, ${S.me.nome.split(" ")[0]}!`;
+    $("#inicio-dia").textContent = new Intl.DateTimeFormat("pt-BR", { timeZone: App.u.FUSO, weekday: "long", day: "numeric", month: "long" }).format(new Date()).replace(/^./, (x) => x.toUpperCase());
+
+    // ---------- 009y1 parte 2 (AP-10): o que precisa de você agora, em linhas, do mais urgente ao resto ----------
+    const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
+    const precisa = [
+      b?.tratativas_atrasadas && staffBloq() ? { n: b.tratativas_atrasadas, txt: plural(b.tratativas_atrasadas, "tratativa atrasada", "tratativas atrasadas"), href: "#bloqueios/tratativas", urgente: true } : null,
+      at?.para_aceitar ? { n: at.para_aceitar, txt: plural(at.para_aceitar, "tarefa pedida para você", "tarefas pedidas para você"), href: "#atividades/pendencias" } : null,
+      at?.minhas_em_andamento ? { n: at.minhas_em_andamento, txt: plural(at.minhas_em_andamento, "tarefa com você em andamento", "tarefas com você em andamento"), href: "#atividades/pendencias" } : null,
+      staffBloq() && b?.tratativas_pendentes ? { n: b.tratativas_pendentes, txt: plural(b.tratativas_pendentes, S.me.papel_bloqueios === "moderador" ? "tratativa pendente" : "tratativa com você", S.me.papel_bloqueios === "moderador" ? "tratativas pendentes" : "tratativas com você"), href: "#bloqueios/tratativas" } : null,
+      staffAtiv() && a?.equipe_aguardando_analise ? { n: a.equipe_aguardando_analise, txt: plural(a.equipe_aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"), href: "#ativacao/pendentes" } : null,
+      r?.financeiro_pendentes ? { n: r.financeiro_pendentes, txt: plural(r.financeiro_pendentes, "lançamento seu ainda não lançado no sistema", "lançamentos seus ainda não lançados no sistema"), href: "#financeiro/lancamentos/pendentes" } : null,
+      at?.abertas_para_pegar ? { n: at.abertas_para_pegar, txt: plural(at.abertas_para_pegar, "tarefa aberta para a equipe", "tarefas abertas para a equipe"), href: "#atividades/pendencias", leve: true } : null,
+    ].filter(Boolean);
+    $("#precisa-lista").replaceChildren(...(precisa.length ? precisa.map((x) => el("li", { class: x.urgente ? "urgente" : x.leve ? "leve" : null },
+      el("b", { class: "precisa-n", text: String(x.n) }), el("span", { text: x.txt.replace(/^\d+ /, "") }),
+      el("a", { class: "btn small" + (x.leve ? "" : " primary"), href: x.href }, "Abrir")))
+      : [el("li", { class: "nada" }, el("span", { text: "Nada esperando por você agora." }))]));
+    renderPassos();
     $("#inicio-acoes").replaceChildren(...(App.agora?.botoes() || []));
 
     // ---------- funções ----------
@@ -152,6 +170,33 @@
     $("#inicio-cidades").replaceChildren(sr ? el("p", { class: "meta lembrete-cidades" }, `${sr} ${sr === 1 ? "cidade está" : "cidades estão"} sem responsável: os avisos delas vão para todos os moderadores. `,
       el("a", { href: "#avisos/para-mim", onclick: () => { const b = document.querySelector("#av-cidades"); if (b) b.dataset.aberto = "1"; } }, "Ver e pedir uma")) : "");
   }
+  // ---------- 009y1 parte 2 (A15-03): primeiros passos de quem entrou na equipe há menos de 14 dias ----------
+  // Marcados à mão (clicar no passo marca como feito); somem quando todos estão feitos, em 14 dias ou em "Não preciso".
+  const PASSOS = [
+    ["cadastro", "Enviar um cadastro de entregador", "#ativacao/novo", () => true],
+    ["busca", "Abrir a ficha de um entregador pela busca do topo", null, () => !!S.me.papel_bloqueios],
+    ["adicional", "Registrar um adicional", "#financeiro/adicional", () => true],
+    ["tarefa", "Pegar uma tarefa na Minha fila", "#atividades/pendencias", () => true],
+    ["avisos", "Escolher o que você recebe em Avisos", "#avisos/para-mim", () => true],
+    ["analisar", "Analisar um cadastro pendente", "#ativacao/pendentes", () => staffAtiv()],
+    ["tratativa", "Concluir uma tratativa", "#bloqueios/tratativas", () => staffBloq()],
+  ];
+  const lerPassos = () => { try { return JSON.parse(localStorage.getItem("comunique-passos") || "{}"); } catch (_) { return {}; } };
+  const gravarPassos = (v) => { try { localStorage.setItem("comunique-passos", JSON.stringify(v)); } catch (_) {} };
+  function renderPassos() {
+    const box = $("#inicio-passos"), desde = S.me?.liberado_em ? new Date(S.me.liberado_em) : null;
+    const st = lerPassos(), meus = PASSOS.filter((p) => p[3]());
+    const feitos = meus.filter(([k]) => st[k]).length;
+    if (!desde || Date.now() - desde > 14 * 86400000 || st.dispensado || feitos === meus.length) return box.replaceChildren();
+    const marcar = (k) => { const v = lerPassos(); v[k] = true; gravarPassos(v); renderPassos(); };
+    box.replaceChildren(el("details", { class: "passos panel" },
+      el("summary", {}, el("b", { text: `Seus primeiros passos: ${feitos} de ${meus.length}` }), el("span", { class: "meta", text: " · Continuar" })),
+      el("ol", { class: "passos-lista" }, meus.map(([k, txt, href]) => el("li", { class: st[k] ? "feito" : null },
+        href ? el("a", { href, onclick: () => marcar(k) }, txt) : el("button", { type: "button", class: "btn link", onclick: () => { marcar(k); $("#q-topo")?.focus(); } }, txt),
+        st[k] ? el("span", { class: "meta", text: " · feito" }) : null))),
+      el("button", { type: "button", class: "btn link", onclick: () => { const v = lerPassos(); v.dispensado = true; gravarPassos(v); renderPassos(); } }, "Não preciso")));
+  }
+
   // 009x5: cidades sem responsável, no máximo a cada 5 min
   const I = { semResp: null, em: 0 };
   async function carregarCidades() {
