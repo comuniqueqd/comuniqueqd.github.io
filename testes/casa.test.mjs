@@ -42,6 +42,7 @@ for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x5-avisos-que
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x6-suporte-ve-tudo.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1c-atividades-equipe.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1d-concluir-atividade-equipe.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1e-equipe-sem-dono.sql"));
 
 await rpc(admin, "entrar");
 await db.query("update membros set papel_bloqueios = 'moderador' where email = $1", [admin.email]);
@@ -385,6 +386,20 @@ await t("009y1d: qualquer pessoa conclui a atividade da equipe; antes da meta, s
   igual([d.status, d.nota, d.quem], ["concluida", "A cidade já tem entregadores suficientes.", true]);
   erro = ""; try { await rpc(admin, "concluir_atividade", { p_id: a.id, p_nota: "de novo" }); } catch (e) { erro = e.message; }
   verdade(/já foi concluída/.test(erro), "não conclui duas vezes");
+});
+
+await t("009y1e: atividade da equipe que alguém tinha pegado volta a ser da equipe; acordo novo entra nas notícias", async () => {
+  await rpc(admin, "registrar_parceiro", { p_estabelecimento: "Doces da Vila", p_cidade: "VILA NOVA Y - SE" });
+  const a = await um("select id from atividades where cidade = 'VILA NOVA Y - SE' and automatica");
+  await db.query("update atividades set status = 'aceita', aceita_por = (select user_id from membros where email = $2), aceita_por_nome = 'Alguém', aceita_em = now() where id = $1", [a.id, sup.email]);
+  const antes = (await rpc(sup, "resumo_inicio")).atividades.minhas_em_andamento;
+  await db.query(arquivo("../supabase/009y1e-equipe-sem-dono.sql"));
+  const d = await um("select status, aceita_por from atividades where id = $1", [a.id]);
+  igual([d.status, d.aceita_por], ["aberta", null]);
+  igual((await rpc(sup, "resumo_inicio")).atividades.minhas_em_andamento, antes - 1, "não conta mais como tarefa com você");
+  await rpc(sup, "registrar_acordo", { p_estabelecimento: "Pizzaria Boa", p_cidade: "LAGARTO - SE", p_acordo: "Taxa fixa por uma semana", p_vence_em: "2026-12-31" });
+  const n = (await rpc(admin, "noticias_rapidas", { p_limite: 20 })).find((x) => x.tipo === "acordo");
+  igual([n?.titulo, n?.cidade], ["Pizzaria Boa", "LAGARTO - SE"]);
 });
 
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco

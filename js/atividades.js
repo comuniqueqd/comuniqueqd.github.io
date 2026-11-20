@@ -49,7 +49,7 @@
         acoes: [el("button", { class: "btn small", type: "button", onclick: () => App.bloqueios?.abrirRevisar?.() }, "Abrir os registros para revisar")] }));
     // 009m (Minha fila): as tarefas para você ou com você aparecem com o cartão completo (dá para aceitar, concluir,
     // comentar sem trocar de tela); as abertas para a equipe continuam na aba Tarefas
-    const minhas = A.atividades.filter((x) => (x.status === "aberta" && x.pode_aceitar && !x.opcional_para_mim && x.criada_por !== S.me.id && x.para_mim) || (x.status === "aceita" && x.sou_participante))
+    const minhas = A.atividades.filter((x) => (x.status === "aberta" && x.pode_aceitar && !x.opcional_para_mim && x.criada_por !== S.me.id && x.para_mim) || (x.status === "aceita" && x.sou_participante && !x.automatica))
       .sort((x, y) => String(x.prazo || "9").localeCompare(String(y.prazo || "9")));
     // Pedidos para ser responsável de cidade (moderadores, 008b)
     itens.push(...App.avisos.cartoesPedidos(item));

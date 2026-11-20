@@ -9,6 +9,69 @@
   const staffAtiv = () => ["moderador", "monitorador"].includes(S.me?.papel);
   const staffBloq = () => ["moderador", "monitorador"].includes(S.me?.papel_bloqueios);
 
+  // ---------- 009y1f: tira de prévia das linhas de "Precisa de você" (pedido do usuário) ----------
+  let tiraAberta = null;
+  const tiras = {};   // chave -> { itens, erro, carregando }
+  const tempo = (iso) => { const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000)); return m < 60 ? `${m} min` : m < 1440 ? `${Math.floor(m / 60)} h` : `${Math.floor(m / 1440)} d`; };
+  const real = (v) => Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  async function acaoTira(fn, args, botao, msg, chave) {
+    botao.disabled = true;
+    try { await App.u.rpc(fn, args); App.u.toast(msg); await buscarTira(chave); App.carregar(); }
+    catch (e) { botao.disabled = false; App.u.toast(App.u.msgErro(e)); }
+  }
+  async function buscarTira(chave) {
+    tiras[chave] = { ...(tiras[chave] || {}), carregando: true, erro: null };
+    try {
+      let itens = [];
+      if (chave === "atrasadas" || chave === "tratativas") {
+        const l = await App.u.rpc("listar_tarefas", { p_status: "pendente" });
+        itens = l.filter((t) => t.minha && t.tipo !== "completar_dados" && (chave === "tratativas" || t.atrasada))
+          .sort((a, b) => (b.atrasada - a.atrasada) || String(a.criada_em).localeCompare(String(b.criada_em)))
+          .map((t) => ({ titulo: t.bloqueio?.nome_entregador || (t.bloqueio?.id_app ? "ID " + t.bloqueio.id_app : "Sem nome"),
+            detalhe: [t.bloqueio?.infracao, t.cidade, t.atrasada ? `atrasada há ${tempo(t.criada_em)}` : `há ${tempo(t.criada_em)}`].filter(Boolean).join(" · "),
+            alerta: t.atrasada,
+            acoes: [t.bloqueio?.id_app ? el("button", { class: "btn small", type: "button", onclick: () => App.abrirFicha?.(t.bloqueio.id_app) }, "Ver a ficha") : null,
+              el("a", { class: "btn small primary", href: "#bloqueios/tratativas" }, "Tratar")].filter(Boolean) }));
+      } else if (chave === "pedidas" || chave === "comigo" || chave === "abertas") {
+        const l = await (App.listarAtividades ? App.listarAtividades(0) : App.u.rpc("listar_atividades"));
+        const filtro = { pedidas: (a) => a.status === "aberta" && a.para_mim && a.pode_aceitar && !a.opcional_para_mim && !a.automatica,
+          comigo: (a) => a.status === "aceita" && a.sou_participante && !a.automatica,
+          abertas: (a) => a.status === "aberta" && !a.automatica && a.pode_aceitar && !a.para_mim && !a.opcional_para_mim && a.criada_por !== S.me.id }[chave];
+        itens = l.filter(filtro).sort((a, b) => String(a.prazo || "9").localeCompare(String(b.prazo || "9")) || String(a.criada_em).localeCompare(String(b.criada_em)))
+          .map((a) => ({ titulo: a.titulo,
+            detalhe: [a.cidade, a.prazo ? `prazo ${App.u.dt(a.prazo)}` : "sem prazo", chave !== "comigo" && a.criada_por_nome ? `pedida por ${a.criada_por_nome}` : null].filter(Boolean).join(" · "),
+            alerta: !!a.atrasada,
+            acoes: chave === "comigo" ? [el("a", { class: "btn small", href: "#atividades/pendencias" }, "Abrir")]
+              : [el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoTira("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Tarefa aceita. Ela está com você.", chave) }, "Eu faço")] }));
+      } else if (chave === "cadastros") {
+        const r = await App.u.rpc("listar_cadastros_pagina", { p_pagina: 1, p_por: 200, p_status: "aguardando_analise" });
+        itens = (r.itens || []).sort((a, b) => String(a.enviado_em).localeCompare(String(b.enviado_em)))
+          .map((c) => ({ titulo: c.nome || (c.id_app ? "ID " + c.id_app : "Sem ID"),
+            detalhe: [c.cidade, `esperando há ${tempo(c.enviado_em)}`, c.enviado_por_nome ? `enviado por ${c.enviado_por_nome}` : null].filter(Boolean).join(" · "),
+            acoes: [el("button", { class: "btn small primary", type: "button", onclick: () => App.abrirCadastro?.(c.id) }, "Revisar")] }));
+      } else if (chave === "lancamentos") {
+        const r = await App.u.rpc("listar_lancamentos", { p_pendentes: true, p_meus: true, p_limite: 50 });
+        itens = (r.itens || []).map((l) => ({ titulo: `${l.tipo === "adicional" ? "Adicional" : "Ajuste de bairro"} de ${real(l.valor)}`,
+          detalhe: [l.nome_entregador, l.cidade, l.pedido ? "pedido " + l.pedido : null, `há ${tempo(l.criado_em)}`].filter(Boolean).join(" · "),
+          acoes: [el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoTira("marcar_lancado", { p_id: l.id, p_lancado: true }, e.currentTarget, "Marcado como lançado.", chave) }, "Já lancei")] }));
+      }
+      tiras[chave] = { itens };
+    } catch (e) { tiras[chave] = { itens: [], erro: App.u.msgErro(e) }; }
+    if (tiraAberta === chave) App.render();
+  }
+  function tira(x) {
+    const t = tiras[x.chave] || { carregando: true };
+    const MAX = 5, itens = t.itens || [];
+    return el("div", { class: "precisa-tira", role: "region", "aria-label": "Prévia: " + x.txt },
+      t.carregando && !t.itens ? App.u.vazio("Carregando…")
+        : t.erro ? el("p", { class: "err", text: t.erro })
+        : !itens.length ? el("p", { class: "meta", text: "Nada aqui agora. O número se atualiza em instantes." })
+        : el("ul", { class: "tira-cards" }, itens.slice(0, MAX).map((i) => el("li", { class: "tira-card" + (i.alerta ? " alerta" : "") },
+            el("div", { class: "tira-txt" }, el("b", { text: i.titulo }), el("span", { class: "meta", text: i.detalhe })),
+            i.acoes?.length ? el("div", { class: "tira-acoes" }, ...i.acoes) : null))),
+      el("a", { class: "btn link", href: x.href }, itens.length > MAX ? `Ver todos os ${itens.length} na tela completa` : "Abrir a tela completa"));
+  }
+
   // número principal + linha "N na equipe" (ou "N seus") embaixo
   const numero = (v, rotulo, extra = null, alerta = false) =>
     el("div", { class: alerta && v ? "alerta" : null }, el("b", { text: v ?? "…" }), el("span", { text: rotulo }),
@@ -91,18 +154,23 @@
     // ---------- 009y1 parte 2 (AP-10): o que precisa de você agora, em linhas, do mais urgente ao resto ----------
     const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
     const precisa = [
-      b?.tratativas_atrasadas && staffBloq() ? { n: b.tratativas_atrasadas, txt: plural(b.tratativas_atrasadas, "tratativa atrasada", "tratativas atrasadas"), href: "#bloqueios/tratativas", urgente: true } : null,
-      at?.para_aceitar ? { n: at.para_aceitar, txt: plural(at.para_aceitar, "tarefa pedida para você", "tarefas pedidas para você"), href: "#atividades/pendencias" } : null,
-      at?.minhas_em_andamento ? { n: at.minhas_em_andamento, txt: plural(at.minhas_em_andamento, "tarefa com você em andamento", "tarefas com você em andamento"), href: "#atividades/pendencias" } : null,
-      staffBloq() && b?.tratativas_pendentes ? { n: b.tratativas_pendentes, txt: plural(b.tratativas_pendentes, S.me.papel_bloqueios === "moderador" ? "tratativa pendente" : "tratativa com você", S.me.papel_bloqueios === "moderador" ? "tratativas pendentes" : "tratativas com você"), href: "#bloqueios/tratativas" } : null,
-      staffAtiv() && a?.equipe_aguardando_analise ? { n: a.equipe_aguardando_analise, txt: plural(a.equipe_aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"), href: "#ativacao/pendentes" } : null,
-      r?.financeiro_pendentes ? { n: r.financeiro_pendentes, txt: plural(r.financeiro_pendentes, "lançamento seu ainda não lançado no sistema", "lançamentos seus ainda não lançados no sistema"), href: "#financeiro/lancamentos/pendentes" } : null,
-      at?.abertas_para_pegar ? { n: at.abertas_para_pegar, txt: plural(at.abertas_para_pegar, "tarefa aberta para a equipe", "tarefas abertas para a equipe"), href: "#atividades/pendencias", leve: true } : null,
+      b?.tratativas_atrasadas && staffBloq() ? { n: b.tratativas_atrasadas, txt: plural(b.tratativas_atrasadas, "tratativa atrasada", "tratativas atrasadas"), href: "#bloqueios/tratativas", urgente: true, chave: "atrasadas" } : null,
+      at?.para_aceitar ? { n: at.para_aceitar, txt: plural(at.para_aceitar, "tarefa pedida para você", "tarefas pedidas para você"), href: "#atividades/pendencias", chave: "pedidas" } : null,
+      at?.minhas_em_andamento ? { n: at.minhas_em_andamento, txt: plural(at.minhas_em_andamento, "tarefa com você em andamento", "tarefas com você em andamento"), href: "#atividades/pendencias", chave: "comigo" } : null,
+      staffBloq() && b?.tratativas_pendentes ? { n: b.tratativas_pendentes, txt: plural(b.tratativas_pendentes, S.me.papel_bloqueios === "moderador" ? "tratativa pendente" : "tratativa com você", S.me.papel_bloqueios === "moderador" ? "tratativas pendentes" : "tratativas com você"), href: "#bloqueios/tratativas", chave: "tratativas" } : null,
+      staffAtiv() && a?.equipe_aguardando_analise ? { n: a.equipe_aguardando_analise, txt: plural(a.equipe_aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"), href: "#ativacao/pendentes", chave: "cadastros" } : null,
+      r?.financeiro_pendentes ? { n: r.financeiro_pendentes, txt: plural(r.financeiro_pendentes, "lançamento seu ainda não lançado no sistema", "lançamentos seus ainda não lançados no sistema"), href: "#financeiro/lancamentos/pendentes", chave: "lancamentos" } : null,
+      at?.abertas_para_pegar ? { n: at.abertas_para_pegar, txt: plural(at.abertas_para_pegar, "tarefa aberta para a equipe", "tarefas abertas para a equipe"), href: "#atividades/sugeridas", leve: true, chave: "abertas" } : null,
     ].filter(Boolean);
-    $("#precisa-lista").replaceChildren(...(precisa.length ? precisa.map((x) => el("li", { class: x.urgente ? "urgente" : x.leve ? "leve" : null },
-      el("b", { class: "precisa-n", text: String(x.n) }), el("span", { text: x.txt.replace(/^\d+ /, "") }),
-      el("a", { class: "btn small" + (x.leve ? "" : " primary"), href: x.href }, "Abrir")))
-      : [el("li", { class: "nada" }, el("span", { text: "Nada esperando por você agora." }))]));
+    // 009y1f (pedido do usuário): "Ver" abre uma tira logo abaixo com a prévia do que é preciso fazer (até 5), sem sair da tela
+    $("#precisa-lista").replaceChildren(...(precisa.length ? precisa.map((x) => {
+      const aberta = tiraAberta === x.chave;
+      return el("li", { class: [x.urgente ? "urgente" : x.leve ? "leve" : null, aberta ? "aberta" : null].filter(Boolean).join(" ") || null, "data-chave": x.chave },
+        el("b", { class: "precisa-n", text: String(x.n) }), el("span", { text: x.txt.replace(/^\d+ /, "") }),
+        el("button", { class: "btn small" + (x.leve || aberta ? "" : " primary"), type: "button", "aria-expanded": aberta ? "true" : "false",
+          onclick: () => { tiraAberta = aberta ? null : x.chave; if (!aberta) buscarTira(x.chave); App.render(); } }, aberta ? "Fechar" : "Ver"),
+        aberta ? tira(x) : null);
+    }) : [el("li", { class: "nada" }, el("span", { text: "Nada esperando por você agora." }))]));
     renderPassos();
     $("#inicio-acoes").replaceChildren(...(App.agora?.botoes() || []));
 

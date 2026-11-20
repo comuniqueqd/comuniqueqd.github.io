@@ -65,6 +65,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1-mensagens-ativaca
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1b-entrar-liberado.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1c-atividades-equipe.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1d-concluir-atividade-equipe.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1e-equipe-sem-dono.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -1437,7 +1438,9 @@ try {
   await s8.screenshot({ path: path.join(PRINTS, "o3-parceiros-cidade.png"), fullPage: true });
   await ir(a8, "#inicio"); await a8.evaluate(() => App.carregar());
   ok(await esperar(a8, "#inicio-parceiros .noticia >> text=Padaria Sol") && await a8.isVisible("#inicio-parceiros >> text=Parceiros ativados na semana"), "009x6: tela inicial: a ativação aparece no bloco dos parceiros, com a semana");
-  ok(!(await texto(a8, "#inicio-noticias")).includes("Padaria Sol"), "009x6: as Notícias rápidas não trazem mais as ativações de parceiros");
+  { const nt = await texto(a8, "#inicio-noticias");
+    ok(!/Parceiro novo: Padaria Sol|ativou Padaria Sol/.test(nt), "009x6: as Notícias rápidas não trazem mais as ativações de parceiros");
+    ok(nt.includes("Acordo novo com Padaria Sol (ITABAIANA - SE)"), "009y1e: o acordo novo aparece nas Notícias rápidas"); }
   // 009y1c: a tarefa que nasce do parceiro é uma atividade da equipe: aparece para todos, sem "Eu faço"
   await ir(s8, "#atividades/sugeridas"); await s8.reload();
   const cardAuto = "#at-sug-lista .grupo:has-text('Atividades da equipe') .tarefa-card[data-tipo=ativar_entregadores]:has-text('LAGARTO - SE')";
@@ -1657,6 +1660,14 @@ try {
     await v.setViewportSize({ width: 1280, height: 900 });
     ok(await v.isVisible("nav.modulos a[data-mod='atividades']") && await v.isHidden("#barra-baixo") && await esperar(v, "#precisa-lista li"),
       "009y1: no computador, o menu fica na lateral e a tela inicial começa pelo que precisa de você");
+    // 009y1f: "Ver" abre a tira com a prévia, sem sair da tela inicial
+    { const linha = (await v.$("#precisa-lista li[data-chave=cadastros]")) ? "cadastros" : (await v.$eval("#precisa-lista li[data-chave]", (x) => x.dataset.chave));
+      await v.click(`#precisa-lista li[data-chave=${linha}] button`);
+      ok(await esperar(v, `#precisa-lista li[data-chave=${linha}] .precisa-tira .tira-card, #precisa-lista li[data-chave=${linha}] .precisa-tira p`) && await v.evaluate(() => location.hash) === "#inicio",
+        "009y1f: 'Ver' abre a prévia logo abaixo da linha (" + linha + "), sem sair da tela inicial");
+      ok(await v.$eval(`#precisa-lista li[data-chave=${linha}] .precisa-tira`, (t) => t.querySelectorAll(".tira-card").length <= 5), "009y1f: a prévia mostra no máximo 5");
+      await v.click(`#precisa-lista li[data-chave=${linha}] > button`);
+      ok(await v.waitForFunction((l) => !document.querySelector(`#precisa-lista li[data-chave=${l}] .precisa-tira`), linha, { timeout: 4000 }).then(() => true, () => false), "009y1f: 'Fechar' recolhe a prévia"); }
     await v.setViewportSize({ width: 390, height: 800 });
     ok(await v.isVisible("#barra-baixo [data-bb='atividades']") && await v.isHidden("nav.modulos"), "009y1: no celular, a barra de baixo aparece e o menu de cima some");
     const alt = await v.evaluate(() => document.querySelector("header.top").getBoundingClientRect().height);

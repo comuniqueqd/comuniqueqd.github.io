@@ -1024,6 +1024,16 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
 .linhas-precisa li.urgente .precisa-n, .linhas-precisa li.urgente span { color: var(--bad); font-weight: 600; }
 .linhas-precisa li.leve .precisa-n { color: var(--muted); }
 .linhas-precisa li.nada { grid-template-columns: 1fr; color: var(--muted); }
+/* 009y1f: tira de prévia abaixo da linha */
+.linhas-precisa li.aberta { background: var(--gray-soft); }
+.precisa-tira { grid-column: 1 / -1; display: grid; gap: 8px; padding: 4px 0 2px; }
+.tira-cards { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); }
+.tira-card { display: grid; gap: 8px; align-content: space-between; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; min-width: 0; }
+.tira-card.alerta { border-color: var(--bad); }
+.tira-txt { display: grid; gap: 2px; min-width: 0; }
+.tira-txt b { overflow-wrap: anywhere; }
+.tira-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+.precisa-tira > .btn.link { justify-self: start; }
 .funcoes.compacto { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
 .funcoes.compacto a.funcao { display: inline-flex; grid-template-columns: none; align-items: center; gap: 8px; min-height: 44px; padding: 6px 14px; border-radius: 10px;
   border: 1px solid var(--line-forte); box-shadow: none; transform: none; background: var(--surface); color: var(--ink); }

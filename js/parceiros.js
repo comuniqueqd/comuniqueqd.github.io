@@ -193,7 +193,8 @@
         box.hidden = !l.length;
         box.replaceChildren(...(l.length ? [el("h2", { class: "rapidos-titulo", icone: "noticias" }, "Notícias rápidas"),
           el("ul", { class: "noticias" }, l.map((n) => el("li", { class: "noticia" },
-            el("span", { class: "noticia-texto", text: n.equipe ? `A equipe bateu a meta: ${n.titulo}.` : `${n.eu ? "Você" : primeiro(n.quem)} concluiu: ${n.titulo}.` }),
+            el("span", { class: "noticia-texto", text: n.tipo === "acordo" ? `Acordo novo com ${n.titulo}${n.cidade ? " (" + n.cidade + ")" : ""}, registrado por ${n.eu ? "você" : primeiro(n.quem)}.`
+              : n.equipe ? `A equipe bateu a meta: ${n.titulo}.` : `${n.eu ? "Você" : primeiro(n.quem)} concluiu: ${n.titulo}.` }),
             el("span", { class: "meta", text: ha(n.quando) }))))] : []));
       }
       // 009x6: os parceiros ganharam um bloco só deles: a semana (com o + ou − da passada) e os 10 últimos
