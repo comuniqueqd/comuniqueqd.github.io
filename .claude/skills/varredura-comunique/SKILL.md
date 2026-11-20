@@ -13,7 +13,7 @@ Combinado com o usuário em 15/11/2026 a partir da varredura da 009 (`docs/revis
 - **Leve (a cada versão publicada):** suíte de testes verde, detectores (Impeccable `detect`, Modern Web Guidance `legacy-scan`, varredura do e2e), placar comparado e o **a12 Textos e acessibilidade**. Sem os outros agentes. ~1 lote.
 - **Completa (no fim de cada família de versões, ex.: fim da 009):** os 12 especialistas em 3 lotes + revisor + retrospectiva.
 
-## O time (3 lotes, no máximo 5 agentes por vez, por causa do limite de uso)
+## O time (lotes de 3 a 4 agentes por vez, por causa do limite de uso)
 | Lote | Id | Especialista | Skills principais |
 |---|---|---|---|
 | 1 base e números | a2 | Banco e servidor (massa fictícia, explain, bytes, tráfego) | performance-optimization, graphify, ponytail-audit |
@@ -27,7 +27,11 @@ Combinado com o usuário em 15/11/2026 a partir da varredura da 009 (`docs/revis
 | 2 | a12 | **Textos e acessibilidade** (termos, verbo+objeto, aviso repete a palavra, erros e vazios que orientam, "restrição temporária", sem emoji, teclado, leitor de tela, contraste) | frontend-design (escrita), impeccable (clarify, audit), design-taste-frontend (copy) |
 | 3 fora e contra | a6 | Segurança e LGPD | security-and-hardening, security-review |
 | 3 | a8 | Mercado (comparativo; web se a rede deixar, senão marcar "não verificado hoje") | ui-ux-pro-max, impeccable (onboard) |
-| 3 | a9 | **Revisor do contra** (tenta derrubar todo achado crítico/alto, aplica a régua, junta duplicados) | doubt-driven-development |
+| 3 | a13 | **Explorador de agentes** (agentes do dia a dia, especialistas novos, skills e plugins que valham a pena) | SearchPlugins, web |
+| 3 | a14 | **Custos e limites do Supabase** (banco, tráfego, Realtime e CPU do plano; quando passar para o pago) | performance-optimization |
+| 4 | a15 | **Treinamento e materiais da equipe** (tutoriais dentro do app, passo a passo, tour, dicas, materiais de cada versão) | frontend-design (escrita), impeccable (onboard) |
+| 4 | a16 | **Produto e adoção** (o que a equipe usa de fato, avisos automáticos, mensagens rápidas, o que cortar, metas de uso) | product-management:product-brainstorming, data:analyze |
+| 4 | a9 | **Revisor do contra** (tenta derrubar todo achado crítico/alto, aplica a régua, junta duplicados) — sempre o último | doubt-driven-development |
 
 **a10 Dados reais:** tudo o resto mede com dados fictícios. O a10 escreve consultas `select` só de leitura que devolvem **números agregados** (nunca nome, ID, telefone ou texto livre de entregador): tamanho das tabelas, contagens por fluxo e por semana, "revisar" em aberto, fichas sem cidade, nomes repetidos, funções/telas usadas nos últimos 30 dias (pelas tabelas de eventos). O orquestrador entrega as consultas ao usuário, que roda no Supabase e cola o resultado; o a10 então interpreta. Ele nunca acessa o banco real.
 
@@ -47,7 +51,7 @@ Esforço: **pequeno** (até ~1 h, um arquivo), **médio** (um dia, poucos arquiv
 1. **Spec** da rodada (modo, lotes, versão de referência) e ok do usuário.
 2. **Preparar:** `bash .claude/skills/varredura-comunique/scripts/preparar.sh <ids...>` (liga o Postgres, recria cada `teste_<id>` do zero e carrega todas as migrações). Portas: `PORTA_SITE=88NN`, `PORTA_API=544NN` (NN = número do agente).
 3. **Briefing:** copiar `briefing.md` para `<scratchpad>/varredura/BRIEFING.md`, preencher versão e pastas. Pedir também ao a10 as consultas logo no começo (o usuário demora para rodar).
-4. **Lote 1 → Lote 2 → Lote 3**, em segundo plano. Se um agente parar por limite de uso, retomar com SendMessage (o trabalho fica salvo), não abrir outro. Repassar os `alerta` do registro.
+4. **Lotes de 3 a 4 agentes, em segundo plano.** Antes de cada lote, rodar de novo o `preparar.sh` (liga o Postgres, que desliga nas pausas por limite de uso). Se um agente parar por limite de uso, retomar com SendMessage (o trabalho fica salvo), não abrir outro. Repassar os `alerta` do registro.
 5. **Revisor (a9)** por último, com a régua.
 6. **Consolidar:** `python3 .claude/skills/varredura-comunique/scripts/consolidar.py <scratchpad>/varredura docs/revisoes/<versao>` → `mapa.json`, `placar.json` e a comparação com a rodada anterior; atualizar o mapa privado (artifact) com as visões Mapa mental, Objetivos, Telas, Como seguir, Precisa de você e Placar (antes × depois).
 7. **Retrospectiva (obrigatória, sempre, nos dois modos):** responder por escrito ao usuário, com base no que aconteceu na rodada:
@@ -58,6 +62,10 @@ Esforço: **pequeno** (até ~1 h, um arquivo), **médio** (um dia, poucos arquiv
    Propor as mudanças na receita; o que o usuário aprovar entra neste arquivo e no **Histórico da receita** abaixo.
 8. Salvar relatórios, mapa e placar em `docs/revisoes/<versao>/` (sem dados reais; trocar qualquer CPF/telefone de teste por zeros).
 
+## Formato da entrega (desde a v1.2)
+Cada linha do registro já vem no formato do mapa do projeto (`docs/revisoes/009/mapa.json`), com `objetivo`, `tela` e **`versao`** (009y, 009z, 010, 011, 012, ext ou depois). O mapa é o plano do projeto inteiro: o agente lê o mapa antes e usa `mais_evidencia` em vez de repetir.
+
 ## Histórico da receita
 - **v1 (15/11/2026, depois da varredura da 009):** 9 agentes viraram 12 (a10 Dados reais, a11 Extensão, a12 Textos e acessibilidade); lotes de até 5; régua de prioridade comum (o revisor ajustou 19 de 29 altos na 009); registro comum com `alerta` (o problema do schema.sql teve de ser avisado à mão); objetivo e tela marcados na origem (na 009 o orquestrador classificou por palpite); placar comparado; retrospectiva obrigatória (pedido do usuário).
 - **v1.1 (15/11/2026):** a retrospectiva também pergunta se algum agente pode ser incluído no projeto como um todo (agentes do dia a dia, agendados, skills e plugins), não só na varredura (pedido do usuário).
+- **v1.2 (20/11/2026, retrospectiva da varredura de 20/11):** lotes de 3 a 4 (o limite de uso parou 5 agentes de uma vez duas vezes); `preparar.sh` antes de cada lote (o Postgres desliga nas pausas); campo `versao` em cada item e leitura do mapa do projeto antes de começar; a13 Explorador de agentes vira membro fixo; entram a14 Custos e limites do Supabase, a15 Treinamento e materiais da equipe e a16 Produto e adoção (pedido do usuário); o revisor a9 é sempre o último.
