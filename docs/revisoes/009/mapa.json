@@ -6336,8 +6336,8 @@
   "veredito": "",
   "nota": "Os avisos e as tratativas dessas cidades caem nos moderadores.",
   "junto": "AV-1",
-  "versao": "009y2",
-  "situacao": "Lembrete feito na 009x5; falta a distribuição pelo moderador."
+  "versao": "decidido",
+  "situacao": "Decisão do usuário (20/11/2026): fica como está (cada pessoa pede a cidade; o lembrete da tela inicial continua)."
  },
  {
   "ag": "a10",
@@ -6355,7 +6355,8 @@
   "veredito": "",
   "nota": "Números de uso de 20/11/2026.",
   "junto": "",
-  "versao": "009y2"
+  "versao": "decidido",
+  "situacao": "Conferido em 20/11/2026: o campo já começa sem nada marcado e é obrigatório, no site e na extensão (desde a 009b). Os 8 'mercado' vêm do que a equipe escolheu; rever com mais dados."
  },
  {
   "ag": "a10",
