@@ -178,5 +178,22 @@
  "a12.tabs_ate_1o_campo_novo_bloqueio": 19,
  "a12.vazios_sem_proximo_passo": "6/20",
  "a12.textos_aviso_banco": 82,
- "a12.mensagens_erro_banco": 242
+ "a12.mensagens_erro_banco": 242,
+ "a16.modelos_mensagem": 17,
+ "a16.momentos_com_mensagem": 3,
+ "a16.momentos_sem_mensagem": 8,
+ "a16.rotinas_automaticas_no_navegador": 4,
+ "a16.tarefas_automaticas_tipos": 5,
+ "a16.avisos_automaticos_tipos": 6,
+ "a15.telas_com_passo_a_passo": "1/31",
+ "a15.dicas_por_comportamento": 1,
+ "a15.tour_versao": "009m",
+ "a15.versoes_depois_do_tour": 11,
+ "a15.novidades_blocos": 27,
+ "a15.novidades_itens": 118,
+ "a15.novidades_palavras": 3092,
+ "a15.novidades_itens_velhos": 5,
+ "a15.chaves_navegador_ensino": 2,
+ "a15.materiais_no_repo": "0/5",
+ "a15.tutoriais_extensao": 0
 }
