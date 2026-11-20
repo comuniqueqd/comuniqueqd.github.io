@@ -164,6 +164,10 @@ try {
   // 2. moderador (admin final) monta a equipe
   const a = await abrir(admin, "#equipe");
   ok(await esperar(a, "#t-equipe >> text=administrador final"), "admin entra e vê a Equipe com o cadeado de administrador final");
+  // 009x5: moderador recebe só o das cidades sem responsável; o admin do teste liga "receber tudo" (os passos de Avisos contam com isso)
+  { const d0 = new pg.Client({ connectionString: DB }); await d0.connect();
+    await d0.query("insert into preferencias_aviso (para, receber_tudo) select user_id, true from membros where admin_final on conflict (para) do update set receber_tudo = true");
+    await d0.end(); }
   ok((await texto(a, "#papel")) === "Moderador", "papel no topo: Moderador");
   ok(await esperar(a, "#pedidos-box:not([hidden]) >> text=novata@x.com"), "pedido da novata aparece");
   ok((await texto(a, "#c-pedidos")) === "1", "contador de pedidos na aba Equipe");
@@ -958,6 +962,7 @@ try {
     await d8.end(); }
   const a8 = await abrir(admin, "#atividades/avisos");
   ok(await esperar(a8, "#at-avisos .aviso >> text=Você recebeu porque você é moderador"), "moderador recebe os avisos de Registros, com o porquê");
+  ok(await a8.isChecked("#av-receber-tudo"), "009x5: o moderador vê a opção de receber tudo (ligada)");
   await a8.fill("#av-q", "avulso01");
   ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#at-avisos .aviso")]; return l.length && l.every((x) => x.textContent.includes("Avulso da Silva") && !x.textContent.includes("avulso01")); }, null, { timeout: 8000 }).then(() => true, () => false), "busca nos avisos pelo ID (o texto mostra o nome, sem o código)");
   await a8.fill("#av-q", "");
