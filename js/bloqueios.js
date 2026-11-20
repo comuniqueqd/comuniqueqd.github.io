@@ -392,13 +392,15 @@
     document.querySelectorAll("[data-trat]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.trat === B.tratVer)));
     const l = B.tarefas[B.tratVer];
     const box = $("#bq-trat-lista");
-    $("#bq-trat-sub").textContent = mod()
-      ? "Restrições de 10 h ou mais, encerramentos de parceria e contatos por infrações leves de todas as cidades, mais os IDs que precisam de dados. Resolver a tratativa não libera a restrição."
-      : "Restrições de 10 h ou mais, encerramentos de parceria e contatos por infrações leves das suas cidades, mais os IDs que precisam de dados (de qualquer cidade). Resolver a tratativa não libera a restrição.";
+    // 009x6: todos veem as tratativas de todas as cidades; o monitorador pode ficar só com as dele
+    $("#bq-trat-sub").textContent = "Restrições de 10 h ou mais, encerramentos de parceria e contatos por infrações leves de todas as cidades, mais os IDs que precisam de dados. Resolver a tratativa não libera a restrição."
+      + (staff() ? "" : " Você acompanha; quem resolve é o responsável da cidade.");
+    $("#bq-trat-minhas-box").hidden = !(staff() && !mod());
     if (!l) return box.replaceChildren(carregandoEl());
     preencher($("#bq-trat-cidade"), B.tratVer === "concluida" && B.concCidades ? B.concCidades.map((c) => [c, c]) : opcCidades(l.map((t) => t.bloqueio)), "Todas as cidades");
     const q = $("#bq-q-trat").value, cid = $("#bq-trat-cidade").value;
-    const lista = l.filter((t) => buscaB(t.bloqueio, q) && (!cid || t.bloqueio.cidade === cid));
+    const soMinhas = staff() && !mod() && $("#bq-trat-minhas").checked;
+    const lista = l.filter((t) => buscaB(t.bloqueio, q) && (!cid || t.bloqueio.cidade === cid) && (!soMinhas || t.minha));
     if (B.tratVer === "concluida") lista.sort((a, b) => String(b.concluida_em).localeCompare(String(a.concluida_em)));
     // PB-4: nas concluídas a busca roda no banco: lista vazia com filtro é "nada com esse filtro", não "nenhuma ainda"
     if (!l.length && B.tratVer === "concluida" && (q || cid)) return box.replaceChildren(vazio("Nada com esse filtro", "Limpe a busca ou troque a cidade."));
@@ -756,7 +758,7 @@
     const inf = $("#bq-hist-inf").value;
     return { p_pagina: pagina, p_por: por, p_busca: $("#bq-q-hist").value.trim() || null, p_situacao: $("#bq-hist-sit").value || null,
       p_cidade: $("#bq-hist-cidade").value || null, p_infracao: inf ? Number(inf) : null, p_quem: $("#bq-hist-quem").value || null, p_tipo: $("#bq-hist-tipo").value || null,
-      p_meus: staff() && $("#bq-hist-meus").checked };
+      p_meus: $("#bq-hist-meus").checked };
   }
   const chaveHist = () => { const a = argsHist(); delete a.p_pagina; return JSON.stringify(a); };
   async function carregarHist() {
@@ -807,9 +809,9 @@
     preencher($("#bq-hist-quem"), h.quem.slice().sort().map((n) => [n, n]), "Registrado por qualquer pessoa");
     const paginas = Math.max(1, Math.ceil(h.total / h.por));
     const ini = (h.pagina - 1) * h.por;
-    $("#bq-hist-sub").textContent = (staff() ? "Todas as restrições e infrações leves." : "Tudo o que você registrou, com a situação atual.") + " Clique numa linha para ver o histórico de cada um.";
+    $("#bq-hist-sub").textContent = "Todas as restrições e infrações leves. Clique numa linha para ver o histórico de cada um.";
     $("#bq-hist-total").textContent = `${h.total} de ${h.total_geral} restrição(ões)` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + h.por, h.total)}` : "");
-    $("#bq-hist-meus-box").hidden = !staff();
+    $("#bq-hist-meus-box").hidden = false;  // 009x6: o suporte vê tudo e pode filtrar os seus
     // 008d: quadrinhos como os do Histórico da ativação; clicar filtra pela situação
     const c = h.contagens, sitAtual = $("#bq-hist-sit").value;
     const quadro = (k, v, sit, cls = "") => el("button", { type: "button", class: "tile clicavel " + cls + (sitAtual === sit ? " ativo" : ""), "aria-pressed": String(sitAtual === sit),
@@ -998,7 +1000,7 @@
   ["#bq-q-atencao", "#bq-atencao-motivo"].forEach((s) => $(s).addEventListener("input", () => renderAtencao()));
 
   // ---------- filtros que só redesenham ----------
-  ["#bq-q-trat", "#bq-trat-cidade", "#bq-q-ativos", "#bq-ativos-cidade", "#bq-ativos-inf",
+  ["#bq-q-trat", "#bq-trat-cidade", "#bq-trat-minhas", "#bq-q-ativos", "#bq-ativos-cidade", "#bq-ativos-inf",
   ].forEach((s) => $(s).addEventListener("input", render));
   ["#bq-q-hist", "#bq-hist-sit", "#bq-hist-cidade", "#bq-hist-inf", "#bq-hist-quem", "#bq-hist-tipo", "#bq-hist-meus"].forEach((s) => $(s).addEventListener("input", filtrarHist));
 
@@ -1008,8 +1010,8 @@
     acesso: () => !!papel(),
     abas: [
       { id: "novo", nome: "Nova restrição", secao: "v-bq-novo" },
-      { id: "tratativas", nome: "Tratativas", secao: "v-bq-tratativas", pode: staff, contador: "c-trat", alerta: true },
-      { id: "ativos", nome: "Com restrição agora", secao: "v-bq-ativos", pode: staff },
+      { id: "tratativas", nome: "Tratativas", secao: "v-bq-tratativas", contador: "c-trat", alerta: true },  // 009x6: todos veem; só leitura para o suporte
+      { id: "ativos", nome: "Com restrição agora", secao: "v-bq-ativos" },
       { id: "atencao", nome: "Atenção", secao: "v-bq-atencao", contador: "c-atencao" },
       { id: "consultar", nome: "Consultar entregador", secao: "v-bq-consultar" },
       { id: "historico", nome: "Histórico", secao: "v-bq-historico" },

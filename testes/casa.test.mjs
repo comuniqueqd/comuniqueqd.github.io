@@ -39,6 +39,7 @@ for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x2-avisos-sem
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x3-tarefas-automaticas.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x4-restricao.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x5-avisos-que-importam.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x6-suporte-ve-tudo.sql"));
 
 await rpc(admin, "entrar");
 await db.query("update membros set papel_bloqueios = 'moderador' where email = $1", [admin.email]);
@@ -78,10 +79,11 @@ await t("Histórico: busca (sem acento), situação e cidade são filtradas no b
   igual(r.total, 167, "encerrados em Itabaiana (i%10=2 e i%3=0)");
   igual(r.contagens.cadastros, 5000, "as contagens não dependem do filtro de situação");
 });
-await t("Histórico: 'Só os que eu enviei' e o suporte só vê os seus (RLS)", async () => {
+await t("Histórico: 'Só os que eu enviei'; o suporte vê todos (009x6) e filtra os seus", async () => {
   igual((await rpc(admin, "listar_cadastros_pagina", { p_meus: true })).total, 4700, "admin: os seus");
   const s = await rpc(sup, "listar_cadastros_pagina", {});
-  igual([s.total, s.contagens.cadastros], [300, 300], "suporte");
+  igual([s.total, s.contagens.cadastros], [5000, 5000], "suporte vê todos");
+  igual((await rpc(sup, "listar_cadastros_pagina", { p_meus: true })).total, 300, "suporte: os seus");
 });
 await t("Histórico: o CSV pede até 5.000 de uma vez", async () => {
   igual((await rpc(admin, "listar_cadastros_pagina", { p_por: 5000 })).itens.length, 5000);
@@ -110,8 +112,9 @@ await t("Tratativas concluídas: busca no banco acha uma antiga que não estava 
   const r = await rpc(admin, "listar_tarefas_concluidas", { p_limite: 100, p_busca: "ze tratado" });
   igual(r.itens.map((x) => x.bloqueio.id_app), ["tr00077"]);
 });
-await t("Tratativas concluídas: o suporte só vê as dos bloqueios que registrou", async () => {
-  igual((await rpc(sup, "listar_tarefas_concluidas", {})).itens.length, 0);
+await t("Tratativas concluídas: o suporte vê todas (009x6), sem poder agir", async () => {
+  const l = (await rpc(sup, "listar_tarefas_concluidas", {})).itens;
+  igual(l.length, 100); verdade(l.every((x) => !x.minha), "nenhuma é dele");
 });
 
 // atividades: 60 concluídas recentes + 1 aberta
@@ -332,6 +335,28 @@ await t("009x5: aviso com mais de 7 dias sem ler conta como lido; restrições d
       select 'plan0001', 'Da Planilha', 'LAGARTO - SE', id, nome, 1, 1, 1, now() - interval '30 days', now() - interval '29 days', $1, 'Mateus Lopes', false, true, 'Nomes diferentes na planilha' from infracoes where not leve order by id limit 1`, [uAdmin]);
   await db.query(arquivo("../supabase/009x5-avisos-que-importam.sql"));
   igual((await um("select revisar from bloqueios where id_app = 'plan0001'")).revisar, null);
+});
+
+await t("009x6: o suporte vê os cadastros e as tratativas de todos (só leitura) e continua sem anexar nas restrições dos outros", async () => {
+  const h = await rpc(sup, "listar_cadastros_pagina", { p_pagina: 1, p_por: 10 });
+  verdade(h.total > 300, "o suporte vê mais que os 300 dele: " + h.total);
+  const b = await um(`insert into bloqueios (id_app, nome_entregador, cidade, infracao_id, infracao, ocorrencia, ocorrencia_total, horas, inicio, fim, registrado_por, registrado_por_nome, leve)
+      select 'vis00001', 'Visivel Teste', 'LAGARTO - SE', id, nome, 1, 1, 24, now(), now() + interval '24 hours', $1, 'Mateus Lopes', false from infracoes where not leve order by id limit 1 returning id`, [uAdmin]);
+  await db.query("insert into tarefas (modulo, tipo, bloqueio_id, cidade, status) values ('bloqueios', 'tratativa', $1, 'LAGARTO - SE', 'pendente')", [b.id]);
+  const tr = await rpc(sup, "listar_tarefas", { p_status: "pendente" });
+  const x = tr.find((t) => t.bloqueio.id_app === "vis00001");
+  verdade(x && !x.minha, "o suporte vê a tratativa de outra pessoa, sem poder agir");
+  let erro = ""; try { await rpc(sup, "anexar", { p_bloqueio: b.id, p_nome: "a.png", p_tipo: "image/png", p_base64: "iVBORw0KGgo=" }); } catch (e) { erro = e.message; }
+  verdade(/só pode anexar/.test(erro), "anexar continua só nas dele: " + erro);
+  igual(Array.isArray(await rpc(sup, "listar_anexos", { p_bloqueio: b.id })), true, "mas vê a lista de anexos");
+});
+
+await t("009x6: notícias rápidas = tarefas concluídas; parceiros têm a semana e os 10 últimos", async () => {
+  const n = await rpc(sup, "noticias_rapidas", { p_limite: 6 });
+  verdade(n.length && n.every((x) => x.tipo === "tarefa"), "só tarefas: " + JSON.stringify(n.slice(0, 2)));
+  verdade(n.some((x) => x.equipe), "a meta batida pela equipe aparece");
+  const p = await rpc(sup, "parceiros_semana");
+  verdade(p.esta_semana >= 1 && p.ultimos.length >= 1 && p.ultimos.length <= 10 && "semana_passada" in p, JSON.stringify(p).slice(0, 200));
 });
 
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco

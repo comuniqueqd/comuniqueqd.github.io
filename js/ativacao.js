@@ -228,7 +228,7 @@
   let histPag = 1, pagChave = null, pagT = null;
   function argsHist(por = POR_HIST, pagina = histPag) {
     return { p_pagina: pagina, p_por: por, p_busca: $("#q-hist").value.trim() || null, p_status: $("#f-hist-status").value || null,
-      p_cidade: $("#f-hist-cidade").value || null, p_meus: staff() && $("#f-hist-meus").checked };
+      p_cidade: $("#f-hist-cidade").value || null, p_meus: $("#f-hist-meus").checked };
   }
   const chaveDoHist = () => { const a = argsHist(); delete a.p_pagina; return JSON.stringify(a); };
   function paginarAqui(l, a) {   // reserva para o banco sem a 009x
@@ -268,9 +268,9 @@
     if (!h) { $("#hist-total").textContent = ""; return t.replaceChildren(head, el("tbody", {}, App.u.linhasEsqueleto(cols.length))); }
     opcoesCidade($("#f-hist-cidade"), h.cidades.map((cidade) => ({ cidade })));
     // 008c: o Histórico junta o antigo "Meus cadastros" (o suporte já recebe só os dele)
-    $("#hist-sub").textContent = staff() ? "Todos os cadastros recebidos. Clique numa linha para ver o histórico de cada um." : "Tudo o que você enviou, com a situação atual. Clique numa linha para ver o histórico.";
-    $("#f-hist-meus-box").hidden = !staff();
-    const meus = staff() && $("#f-hist-meus").checked, k = h.contagens;
+    $("#hist-sub").textContent = "Todos os cadastros recebidos. Clique numa linha para ver o histórico de cada um.";  // 009x6: o suporte também vê todos
+    $("#f-hist-meus-box").hidden = false;  // 009x6: o suporte também vê todos e pode filtrar os seus
+    const meus = $("#f-hist-meus").checked, k = h.contagens;
     const tile = (rot, v, cls = "") => el("div", { class: "tile " + cls }, el("div", { class: "k", text: rot }), el("div", { class: "v", text: v }));
     $("#hist-tiles").replaceChildren(tile(staff() && !meus ? "Cadastros" : "Enviados por você", k.cadastros), tile("Aguardando análise", k.aguardando_analise, "hl"),
       tile("Aguardando novo contato", k.aguardando_contato, "hl2"), tile("Aprovados", k.aprovado, "good"), tile("Encerrados", k.encerrado));
@@ -400,7 +400,7 @@
     padrao: () => "novo",  // 008c: a primeira tela é o cadastro
     async carregar(aba) {
       if (aba === "novo") atualizarCidades();
-      const t = [rpc("listar_cadastros", { p_escopo: "pendentes" }).then((d) => (S.lista.pendentes = d))];
+      const t = [rpc("listar_cadastros", { p_escopo: "pendentes" }).then((d) => (S.lista.pendentes = staff() ? d : d.filter((c) => c.enviado_por === S.me.id)))];
       if (aba === "historico") t.push(carregarHist());
       await Promise.all(t);
     },

@@ -944,3 +944,5 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
 
 /* 009x (A3-05): o bloco da semana dos parceiros guarda o lugar enquanto os dados chegam (a tela não pula) */
 .pa-semana-reserva { min-height: 132px; }
+/* 009x6: bloco dos parceiros ativados na tela inicial */
+.parceiros-dif { font-family: var(--font-body); font-weight: 400; font-size: .85rem; }

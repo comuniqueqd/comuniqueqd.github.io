@@ -87,7 +87,7 @@
             el("a", { class: "btn link", href: "#bloqueios/tratativas" }, "Ver na tela de tratativas")].filter(Boolean),
           extra: el("div", {}, App.u.previsao(t, "tarefa", t.id, true),
             cx ? el("div", { class: "box" }, el("p", { class: "meta", style: "margin:0", text: "Resolver a tratativa não libera a restrição. Quem registrou recebe um aviso." }), nota) : null) }));
-      } else if (!staffBloq()) {
+      } else if (!staffBloq() && b.registrado_por === S.me.id) {  // 009x6: o suporte vê todas, mas acompanha só as que registrou
         itens.push(item({ modulo: "RESTRIÇÕES", titulo: `Acompanhando: ${tipo.toLowerCase()} de ${b.nome}`, estado: "pendente",
           detalhe: `Pendente com ${t.responsavel_nome} há ${duracao(t.criada_em).txt} · ${b.infracao} · ${punicao}`,
           extra: App.u.previsao(t, "tarefa", t.id, false),

@@ -60,6 +60,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009x2-avisos-sem-codigo
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009x3-tarefas-automaticas.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009x4-restricao.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009x5-avisos-que-importam.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009x6-suporte-ve-tudo.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -118,7 +119,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009x5"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009x6"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -246,8 +247,11 @@ try {
   ok((await texto(s, "#queue")).includes("Reprovado por Monitor Um"), "suporte vê quem reprovou e o motivo");
   await ir(s, "#meus");
   ok(await esperar(s, "#v-historico:not([hidden]) #t-hist tbody tr td .pill"), "o antigo #meus abre o Histórico (008c)");
-  ok((await s.$$("#t-hist tbody tr")).length === 3 && (await texto(s, "#hist-sub")).includes("Tudo o que você enviou"), "Histórico do suporte lista só os 3 dele");
-  ok((await texto(s, "#hist-tiles")).replace(/\s/g, "").includes("Aprovados1") && await s.isHidden("#f-hist-meus-box"), "Histórico do suporte: 1 aprovado, sem 'Só os meus'");
+  // 009x6: o suporte vê todos os cadastros e tem "Só os que eu enviei"
+  ok((await texto(s, "#hist-sub")).includes("Todos os cadastros") && await s.isVisible("#f-hist-meus-box"), "009x6: Histórico do suporte mostra todos, com 'Só os que eu enviei'");
+  await s.check("#f-hist-meus");
+  ok(await s.waitForFunction(() => document.querySelectorAll("#t-hist tbody tr").length === 3, null, { timeout: 8000 }).then(() => true, () => false), "009x6: 'Só os que eu enviei' deixa os 3 do suporte");
+  await s.uncheck("#f-hist-meus");
   await s.click("#t-hist tr:has-text('1a2b3c4d5e6f')");
   ok(await esperar(s, "#t-hist .timeline >> text=Reprovado"), "histórico do cadastro: " + (await texto(s, "#t-hist .timeline")).replace(/\s+/g, " ").slice(0, 120));
   await s.screenshot({ path: path.join(PRINTS, "5-meus-cadastros.png"), fullPage: true });
@@ -416,7 +420,7 @@ try {
     const abasA = await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));
     ok(abasA[0] === "novo" && abasA[1] === "pendentes" && await s.isVisible("nav.tabs a[data-view=pendentes] .count"), "Ativação abre no Novo cadastro, e Pendentes vem em seguida com o número: " + abasA);
     await ir(s, "#bloqueios"); await esperar(s, "#v-bq-novo:not([hidden])"); }
-  ok(JSON.stringify(abasB) === JSON.stringify(["novo", "atencao", "consultar", "historico"]), "suporte vê Novo, Atenção, Consultar e Histórico (008c): " + abasB);
+  ok(JSON.stringify(abasB) === JSON.stringify(["novo", "tratativas", "ativos", "atencao", "consultar", "historico"]), "009x6: suporte vê também Tratativas e Com restrição agora (só leitura): " + abasB);
   await s.fill("#bq-id", "mal00001"); await s.fill("#bq-nome", "Fulano de Tal");
   await s.selectOption("#bq-cidade", "LAGARTO - SE"); await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
   await s.fill("#bq-comentario", "Educado, mas costuma atrasar a coleta.");
@@ -622,7 +626,10 @@ try {
   await a.click("#bq-t-hist tr:has-text('Rápido') >> text=Confirmar exclusão");
   ok(await esperar(a, "#bq-hist-total:has-text('5 de 5')"), "moderador exclui restrição");
   await ir(s, "#bloqueios/historico"); await esperar(s, "#bq-t-hist tbody tr");
-  ok(await s.$$eval("#bq-t-hist tbody tr", (l) => l.every((x) => x.textContent.includes("Suporte Um"))), "o Histórico do suporte mostra só os registros dele");
+  await s.check("#bq-hist-meus");
+  ok(await s.waitForFunction(() => { const l = [...document.querySelectorAll("#bq-t-hist tbody tr:not(.detalhe-hist)")]; return l.length && l.every((x) => x.textContent.includes("Suporte Um")); }, null, { timeout: 8000 }).then(() => true, () => false),
+    "009x6: o suporte vê todas as restrições e 'Só os que eu registrei' deixa só as dele");
+  await s.uncheck("#bq-hist-meus");
 
   // 15. infrações leves
   await ir(s, "#bloqueios/novo"); await s.reload(); await esperar(s, "#bq-form");
@@ -1408,7 +1415,8 @@ try {
   await s8.screenshot({ path: path.join(PRINTS, "o6-ativacoes.png"), fullPage: true });
   await s8.screenshot({ path: path.join(PRINTS, "o3-parceiros-cidade.png"), fullPage: true });
   await ir(a8, "#inicio"); await a8.evaluate(() => App.carregar());
-  ok(await esperar(a8, "#inicio-noticias .noticia >> text=Padaria Sol") && await a8.isVisible("#inicio-noticias >> text=Notícias rápidas"), "tela inicial: notícia comemorativa da ativação");
+  ok(await esperar(a8, "#inicio-parceiros .noticia >> text=Padaria Sol") && await a8.isVisible("#inicio-parceiros >> text=Parceiros ativados na semana"), "009x6: tela inicial: a ativação aparece no bloco dos parceiros, com a semana");
+  ok(!(await texto(a8, "#inicio-noticias")).includes("Padaria Sol"), "009x6: as Notícias rápidas não trazem mais as ativações de parceiros");
   // 009g · tarefa compartilhada: o suporte pega a de entregadores de Lagarto, o admin entra junto
   await ir(s8, "#atividades/sugeridas"); await s8.reload();
   const cardEnt = "#at-sug-lista .tarefa-card[data-tipo=ativar_entregadores]:has-text('LAGARTO - SE'):has(button:has-text('Eu faço'))";

@@ -180,17 +180,34 @@
     (q, e, c) => `${c} ganhou mais um parceiro: ${e}, por ${q}.`,
   ];
   const primeiro = (n) => String(n || "Alguém").split(" ")[0];
+  const ha = (q) => App.u.duracao(q).txt === "0 min" ? "agora" : "há " + App.u.duracao(q).txt;
+  // 009x6 (pedido do usuário): Notícias rápidas = tarefas concluídas nos últimos 7 dias
   App.noticias = {
-    async carregar() { S.noticias = await rpc("noticias_rapidas", { p_limite: 6 }); },
+    async carregar() {
+      [S.noticias, S.parceirosSemana] = await Promise.all([rpc("noticias_rapidas", { p_limite: 6 }), rpc("parceiros_semana").catch(() => null)]);
+    },
     render() {
       const box = $("#inicio-noticias");
-      if (!box) return;
-      const l = S.noticias || [];
-      box.hidden = !l.length;
-      box.replaceChildren(...(l.length ? [el("h2", { class: "rapidos-titulo", icone: "noticias" }, "Notícias rápidas"),
-        el("ul", { class: "noticias" }, l.map((n) => el("li", { class: "noticia" },
+      if (box) {
+        const l = S.noticias || [];
+        box.hidden = !l.length;
+        box.replaceChildren(...(l.length ? [el("h2", { class: "rapidos-titulo", icone: "noticias" }, "Notícias rápidas"),
+          el("ul", { class: "noticias" }, l.map((n) => el("li", { class: "noticia" },
+            el("span", { class: "noticia-texto", text: n.equipe ? `A equipe bateu a meta: ${n.titulo}.` : `${n.eu ? "Você" : primeiro(n.quem)} concluiu: ${n.titulo}.` }),
+            el("span", { class: "meta", text: ha(n.quando) }))))] : []));
+      }
+      // 009x6: os parceiros ganharam um bloco só deles: a semana (com o + ou − da passada) e os 10 últimos
+      const bp = $("#inicio-parceiros"), p = S.parceirosSemana;
+      if (!bp) return;
+      bp.hidden = !p?.ultimos?.length;
+      if (bp.hidden) return bp.replaceChildren();
+      const dif = p.esta_semana - p.semana_passada;
+      bp.replaceChildren(el("h2", { class: "rapidos-titulo", icone: "parceiro" },
+          `Parceiros ativados na semana: ${p.esta_semana}`,
+          el("span", { class: "meta parceiros-dif", text: dif === 0 ? " (igual à semana passada)" : ` (${dif > 0 ? "+" : "−"}${Math.abs(dif)} em relação à semana passada, que teve ${p.semana_passada})` })),
+        el("ul", { class: "noticias" }, p.ultimos.map((n) => el("li", { class: "noticia" },
           el("span", { class: "noticia-texto", text: FRASES[n.id % FRASES.length](n.eu ? "Você" : primeiro(n.quem), n.estabelecimento, n.cidade) }),
-          el("span", { class: "meta", text: App.u.duracao(n.quando).txt === "0 min" ? "agora" : "há " + App.u.duracao(n.quando).txt }))))] : []));
+          el("span", { class: "meta", text: ha(n.quando) })))));
     },
   };
 })();

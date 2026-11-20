@@ -51,11 +51,11 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009x5";
+  const VERSAO = "009x6";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
-    { versao: "009x5", tema: "Missões da equipe", itens: [
+    { versao: "009x6", tema: "Missões da equipe", itens: [
       ["Tarefas automáticas contam para todos", "A tarefa \"Aprovar entregadores\" que nasce sozinha ao ativar um parceiro agora conta todos os entregadores aprovados na cidade desde que ela foi criada, não importa quem aprovou. As tarefas criadas por alguém continuam contando só as aprovações de quem pegou."],
       ["A meta fecha sozinha", "Quando a equipe bate a meta de uma tarefa automática, ela fecha sozinha e avisa todo mundo que participou."],
       ["Adicional repetido", "Se você registrar um adicional igual a um que já existe (mesmo entregador e mesmo pedido, ou mesmo valor no mesmo dia), o Comunique pergunta antes de gravar."],
@@ -64,6 +64,9 @@
       ["Restrição no lugar de bloqueio", "O que antes se chamava bloqueio agora se chama restrição em todas as telas, nos avisos e na extensão: Nova restrição, Com restrição agora, Histórico de restrições."],
       ["Avisos que importam", "Moderadores recebem o que é deles, o das suas cidades e o das cidades sem responsável. Quem quiser receber tudo liga a opção em Avisos. Aviso com mais de 7 dias sem ler deixa de contar."],
       ["Cidades sem responsável", "A tela inicial mostra quantas cidades estão sem responsável, com o atalho para pedir uma."],
+      ["Suporte vê tudo", "O suporte passa a ver o Histórico da ativação e das restrições de toda a equipe, as tratativas de todas as cidades e quem está com restrição agora, só para acompanhar. Os avisos continuam só do que é dele."],
+      ["Notícias rápidas", "As Notícias rápidas da tela inicial agora mostram as tarefas concluídas pela equipe."],
+      ["Parceiros da semana", "Os parceiros ganharam um bloco próprio na tela inicial: quantos foram ativados nesta semana, a diferença para a semana passada e os 10 últimos."],
     ] },
     { versao: "009x", tema: "Casa em ordem", itens: [
       ["Listas mais leves", "O Histórico da ativação vem em páginas de 100, com Anterior e Próxima. As tratativas concluídas e as tarefas concluídas mostram as mais recentes, com o botão \"Ver mais\". A busca roda no banco e acha também os antigos."],
