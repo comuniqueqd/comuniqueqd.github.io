@@ -857,7 +857,7 @@ try {
   const n7 = await abrir(sup, "#inicio", { novidades: true });
   ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Sino com tira"), "janela O que há de novo aparece na primeira vez");
   { const hs = await n7.$$eval("dialog.janela .bloco-versao h4", (l) => l.map((x) => x.textContent));
-    ok(hs.length === 27 && hs[0] === "Agora: Casa em ordem" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
+    ok(hs.length === 28 && hs[0] === "Agora: Missões da equipe" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
