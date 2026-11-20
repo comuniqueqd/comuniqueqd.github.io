@@ -551,7 +551,7 @@
   "junto": "AT3",
   "versao": "009z",
   "feito": "009z1",
-  "situacao": "Feito na 009z parte 1 (falta rodar o SQL): tique sem mudança não redesenha."
+  "situacao": "Feito na 009z parte 1 (publicada em 20/11/2026): tique sem mudança não redesenha."
  },
  {
   "ag": "a3",
@@ -571,7 +571,7 @@
   "junto": "",
   "versao": "009z",
   "feito": "009z1",
-  "situacao": "Feito na 009z parte 1 (falta rodar o SQL): o foco volta ao mesmo botão."
+  "situacao": "Feito na 009z parte 1 (publicada em 20/11/2026): o foco volta ao mesmo botão."
  },
  {
   "ag": "a3",
@@ -1701,7 +1701,7 @@
   "junto": "",
   "versao": "009z",
   "feito": "009z1",
-  "situacao": "Feito na 009z parte 1 (falta rodar o SQL): funções mortas apagadas (o comum.js da extensão fica para depois)."
+  "situacao": "Feito na 009z parte 1 (publicada em 20/11/2026): funções mortas apagadas (o comum.js da extensão fica para depois)."
  },
  {
   "ag": "a7",
@@ -1757,7 +1757,7 @@
   "junto": "",
   "versao": "009z",
   "feito": "009z1",
-  "situacao": "Feito na 009z parte 1 (falta rodar o SQL): GitHub Actions com banco, e2e e extensão."
+  "situacao": "Feito na 009z parte 1 (publicada em 20/11/2026): GitHub Actions com banco, e2e e extensão."
  },
  {
   "ag": "a7",
@@ -1813,7 +1813,7 @@
   "junto": "",
   "versao": "009z",
   "feito": "009z1",
-  "situacao": "Feito na 009z parte 1 (falta rodar o SQL): contagem regressiva com âmbar e vermelho (falta a visão 'vai estourar', na parte 2)."
+  "situacao": "Feito na 009z parte 1 (publicada em 20/11/2026): contagem regressiva com âmbar e vermelho (falta a visão 'vai estourar', na parte 2)."
  },
  {
   "ag": "a8",
@@ -4658,7 +4658,7 @@
   "nota": "6 trechos mantêm o caminho de quando o banco ainda não tinha a 009u/009v/009x; o CLAUDE.md diz que todas já rodaram no Supabase. financeiro.js:31 faz catch(_) e engole qualquer erro de quem_e (não só 'função não existe'), escondendo falha real. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
   "versao": "009z",
-  "situacao": "Feito na 009z parte 1 (falta rodar o SQL): caminhos do banco antigo removidos.",
+  "situacao": "Feito na 009z parte 1 (publicada em 20/11/2026): caminhos do banco antigo removidos.",
   "feito": "009z1"
  },
  {
@@ -4736,7 +4736,7 @@
   "nota": "Aprovar 3 entregadores aceita pela suporte, Mona entra junto, tarefa em 'aguardando'. remover_membro(suporte) → {status: aberta, aceita_por: null, participantes: [Mona], aguardando_desde mantido}; Mona: minhas_em_andamento = 0, sem aviso. Se outra pessoa aceitar, aceitar_atividade recria participantes só com ela (Mona some e o que aprovou deixa de contar). | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "PB-3",
   "versao": "009z",
-  "situacao": "Feito na 009z parte 1 (falta rodar o SQL): a tarefa fica com quem participa, com aviso.",
+  "situacao": "Feito na 009z parte 1 (publicada em 20/11/2026): a tarefa fica com quem participa, com aviso.",
   "feito": "009z1"
  },
  {
@@ -4775,7 +4775,7 @@
   "nota": "registrar_adicional(id 'fin0001' sem ficha, p_nome '') gravou nome_entregador NULL; aviso: 'adicional de R$ 5,00 para sem nome'; a ficha não nasce (exige nome). A extensão e chamadas diretas pulam a trava do front (009u). | Revisor: Antecipar da 011 para a 009z: a extensão (formularios.js:154 manda p_nome null) pula a trava da tela. Junto A8-04 (as duas travas do adicional no banco).",
   "junto": "",
   "versao": "009z",
-  "situacao": "Feito na 009z parte 1 (falta rodar o SQL): o banco recusa lançamento sem nome.",
+  "situacao": "Feito na 009z parte 1 (publicada em 20/11/2026): o banco recusa lançamento sem nome.",
   "feito": "009z1"
  },
  {
@@ -5680,7 +5680,7 @@
   "nota": "Só as ~240 mensagens de raise exception das funções são em português (conferidas no teste_a12). Tudo o que vem do PostgREST/Postgres fora delas passa direto: 'JWT expired', 'Could not find the function public.x(...) in the schema cache' (banco sem a migração, caso real a cada versão nova antes de rodar o SQL), 'duplicate key value violates unique constraint ...', 'permission denied for function ...'. Na extensão nem o erro de rede é traduzido: fetch sem internet lança 'Failed to fetch' e o painel mostra isso. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
   "versao": "009z",
-  "situacao": "Feito na 009z parte 1 (falta rodar o SQL): tradutor único de erros no site e na extensão.",
+  "situacao": "Feito na 009z parte 1 (publicada em 20/11/2026): tradutor único de erros no site e na extensão.",
   "feito": "009z1"
  },
  {
