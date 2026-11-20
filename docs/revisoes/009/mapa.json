@@ -770,7 +770,9 @@
   "veredito": "CONFIRMADO",
   "nota": "O print cortes2/claro-320-ativacao-pendentes.png (cópia reduzida em a9/ap01.png) mostra cerca de 470 px de menu antes do conteúdo. | Varredura 20/11 (a4): 20/11: piorou. Fim da navegação (header+nav.modulos+nav.grupo+nav.tabs) medido: 320 px Pendentes/Histórico 530 px (era 483), Início 408 (era 362); 390 px 447/325; 1024 px 279/158; 1280 px 234/112. Menu de cima tem 9 itens com contadores e quebra em 5 linhas em 320. Script a4/medir.mjs (campo cab), print a4/c320-inicio-top.png.",
   "junto": "",
-  "versao": "009y1"
+  "versao": "009y1",
+  "feito": "009y1",
+  "situacao": "Feito na 009y1 parte 2 (publicada em 20/11/2026): barra de baixo no celular, barra lateral no computador, cabeçalho numa linha."
  },
  {
   "ag": "a4",
@@ -844,7 +846,9 @@
   "veredito": "CONFIRMADO",
   "nota": "Recalculei: --line/surface 1,34 (claro) e 1,30 (escuro); surface/bg 1,07; --marca/bg no escuro 1,04 (o cabeçalho usa --marca, estilo.css:813). | Varredura 20/11 (a4): 20/11: igual. Borda de campo medida em 390: 1,34:1 (108 campos) e 1,25:1 claro; 1,30 e 1,15:1 escuro. Escuro: --marca #0B1813 × --bg #0F1C17 = 1,04:1; surface × bg 1,11:1. Não existe --line-forte.",
   "junto": "",
-  "versao": "009y1"
+  "versao": "009y1",
+  "feito": "009y1",
+  "situacao": "Feito na 009y1 parte 1 (publicada em 20/11/2026): --line-forte nas bordas de campo e botão; o e2e confere borda ≥ 3:1."
  },
  {
   "ag": "a4",
@@ -862,7 +866,9 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: igual. 30 avisos low-contrast em 22 telas no escuro 390 (detector), todos placeholder #757575 sobre #16261F = 3,42:1. estilo.css só define placeholder da busca do topo (linha 817). Correção de 1 linha.",
   "junto": "",
-  "versao": "009y1"
+  "versao": "009y1",
+  "feito": "009y1",
+  "situacao": "Feito na 009y1 parte 1 (publicada em 20/11/2026): placeholder com --muted; o e2e confere ≥ 4,5:1."
  },
  {
   "ag": "a4",
@@ -934,7 +940,9 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Confere. Hoje são **23** códigos de versão na faixa, não 22. É **o mesmo** que o A5 (a1) e o M8 (a8): juntar. | Varredura 20/11 (a4): 20/11: melhorou só a faixa (009w virou botão). Os 8 cartões a.funcao com faixa colorida, ícone em quadrado tingido e seta continuam; Início tem 1.445 px em 1280 e 3.645 em 320. Print a4/c-1280-inicio.png.",
   "junto": "",
-  "versao": "009y1"
+  "versao": "009y1",
+  "feito": "009y1",
+  "situacao": "Feito na 009y1 parte 2 (publicada em 20/11/2026): tela inicial 'mesa do dia': Precisa de você no topo, atalhos compactos."
  },
  {
   "ag": "a4",
@@ -1169,7 +1177,9 @@
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista). | Varredura 20/11 (a4): 20/11: proposta concreta pronta em a4/proposta-DESIGN.md (frontmatter no formato DESIGN.md do Impeccable/Stitch: 4 cantos, 6 tamanhos, 6 espaços, line-forte, 3 camadas no escuro, 5 papéis de botão, linha de fila, barra de filtros, nota e entrada do diário, e a trava visual). O impeccable context confirma: sem PRODUCT.md e sem DESIGN.md hoje.",
   "junto": "",
-  "versao": "009y1"
+  "versao": "009y1",
+  "feito": "009y1",
+  "situacao": "Feito na 009y1 parte 1 (publicada em 20/11/2026): DESIGN.md na raiz com tokens, componentes e escrita."
  },
  {
   "ag": "a4",
@@ -1592,7 +1602,8 @@
   "nota": "Rodei o tarefas.test adaptado: 6/12. Das falhas, \"Ativar\" → \"Aprovar\" (009e), a mensagem do aguardar_terceiro e \"o progresso conta sozinho\" (009e recusa avancar_tarefa) são **mudanças de regra esperadas**. \"Só dá para concluir uma atividade aceita\", o checklist e a @menção parecem **cascata**  | Varredura 20/11 (a7): Remedido em 20/11 (HEAD e0b1487): 17 testes trocando só a lista de migrações pela completa -> 80 de 258 checagens falham (bloqueios 21/41, pao 2/14, espiao 3/15, atividades 10/19, avisos 13/19, entregadores 16/22, equipe 11/15, analises 14/17, tarefas 6/12, painel 5/6, financeiro 10/11). Só 1 de 25 arquivos (casa) usa carregar-banco.mjs. extensao.test.mjs carrega só até a 009s e o e2e pula a 009a | Varredura 20/11 (a11): testes/extensao.test.mjs:22-29 carrega as migrações só até a 009s (sem 009u/009v/009x/009x2); 54 checagens verdes em 7,5 s nas portas 8811/54411. Nenhum caso de tela ambígua (os de A11-01 a A11-05).",
   "junto": "",
   "versao": "009y1",
-  "situacao": "Antes da repaginada (20/11/2026): os testes precisam conferir as versões atuais das funções antes de a 009y mexer em tudo."
+  "situacao": "Feito na 009y1 parte 1 (publicada em 20/11/2026): cada teste antigo carrega as migrações dele e depois todas as seguintes (completar).",
+  "feito": "009y1"
  },
  {
   "ag": "a7",
@@ -2084,7 +2095,9 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a1): Ficou mais visível com a 009v: o menu mostra 'Atividades 2' (abertas da equipe), mas o clique abre 'Minha fila' com 0 cartões; as 2 estão na outra aba (Tarefas, grupo 'Abertas: quem puder, pega'). Ver OP9-01.",
   "junto": "",
-  "versao": "009y1"
+  "versao": "009y1",
+  "feito": "009y1",
+  "situacao": "Feito na 009y1 parte 1 (publicada em 20/11/2026): Minha fila mostra as 3 abertas para a equipe mais urgentes, com 'Eu faço'."
  },
  {
   "ag": "a1",
@@ -3214,8 +3227,9 @@
   "veredito": "CONFIRMADO",
   "nota": "Hoje a decisão termina num toast e a pessoa (muitas vezes o suporte que enviou) escreve à mão no Crisp/Blip o que faltou. A lista de motivos de reprovação é fechada, então cada motivo tem uma resposta padrão natural. Quem usa: quem decide e quem enviou o cadastro. | Revisor: Conferido: decidir() (js/ativacao.js:103) termina num toast e não há nenhum modelo de ativação em modelos_mensagem (só grupos bloqueio, entregador, cidade, parceiro). Os motivos de reprovação são uma lista curta (schema.sql:138), então cada um tem resposta padrão. Fluxo diário; o esforço real inclui o usuário aprovar 7 textos novos.",
   "junto": "MK-2",
-  "situacao": "Estudo de nov/2026, ainda não aprovado.",
-  "versao": "009y1"
+  "situacao": "Feito na 009y1 parte 1 (publicada em 20/11/2026): depois de aprovar ou reprovar, 'Gerar mensagem para o entregador'.",
+  "versao": "009y1",
+  "feito": "009y1"
  },
  {
   "ag": "e1",
@@ -4885,7 +4899,7 @@
   "nota": "Robô: suporte criou 2 tarefas para a equipe; o monitorador vê 'Atividades 2' no menu, clica e cai em 'Minha fila' com 0 cartões; as 2 estão em Tarefas > 'Abertas: quem puder, pega 2'. Toda vez que o número sobe por tarefa aberta, a pessoa paga 1 clique e 1 tela a mais e pode achar que o número está errado (print a1/prints2/n4-minha-fila.png). | Revisor: Mesmo problema do OP-4 (Atividades abre em Minha fila) e PB-7, agravado pela 009v. Sugiro subir o OP-4 da 010 para a 009y: o número leva para onde estão as tarefas.",
   "junto": "",
   "versao": "009y",
-  "situacao": "Revisor do contra: duplicado de op-4.",
+  "situacao": "Em parte: na 009y1c as atividades da equipe saíram do número de 'abertas para pegar'. Conferir de novo depois da 009y2.",
   "feito": "decidido"
  },
  {
@@ -5115,7 +5129,8 @@
   "nota": "Detector renderizado: '#b7791f on #ffffff 3,6:1' em #fn-adicional .funcao-vivo ('2 seu(s) ainda não lançado(s)'), e 4,3:1 no escuro. Calculado no escuro (#16261F): f-fer #2F6E57 2,62:1, f-par #a16207 3,2:1, f-ent jade 3,64:1, f-fin 4,33:1 (texto e ícone). O e2e (009u) não pegou porque, na semeadura dele, o atalho não tinha texto vivo: o contraste depende dos dados. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
   "versao": "009y1",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Feito na 009y1 parte 1 (publicada em 20/11/2026): nenhuma cor escrita fora do :root; o e2e confere.",
+  "feito": "009y1"
  },
  {
   "ag": "a4",
@@ -5209,8 +5224,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Hoje nada impede o desvio de voltar: a cada versão os números de forma ficam iguais ou pioram (cabeçalho 483→530 px em 320; side-tab 26→32; botões 20→21/25). Sem DESIGN.md o detector não sabe o que é da casa. | Revisor: Plano de execução, não defeito: média pela régua. Junta PR-07 (DESIGN.md) e PR-08 (test:visual) do mapa; o passo 1 (correções de 1 linha) já resolve AP-06, AP-13, AP-16, AP-12. Recomendo adotar como roteiro da 009y junto do A3-18.",
   "junto": "",
-  "versao": "009y1",
-  "situacao": "Varredura de 20/11/2026."
+  "versao": "009y2",
+  "situacao": "Vale para a 009y2 (listas em linhas): a parte 1 e 2 da 009y1 já têm as travas de cor, contraste e chaves do CSS."
  },
  {
   "ag": "a6",
@@ -5554,8 +5569,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Sem trava, a 009y vai trocar cartões por linhas mantendo o redesenho total a cada 30 s: Tarefas já está em 0,5-0,7 s por redesenho em 4x. Linhas são menores que cartões (menos elementos), mas a tela inicial nova (diário do dia) junta várias listas numa tela só. | Revisor: Plano, não defeito: pela régua não é alta. Junta A3-S8 (orçamento no e2e), A3-01 e A3-S4 do mapa; fazer como a outra metade do A4-06 (um só \"contrato da 009y\": visual + desempenho).",
   "junto": "A3-01",
-  "versao": "009y1",
-  "situacao": "Varredura de 20/11/2026."
+  "versao": "009y2",
+  "situacao": "Vale para a 009y2 (listas em linhas): a parte 1 e 2 da 009y1 já têm as travas de cor, contraste e chaves do CSS."
  },
  {
   "ag": "a12",
@@ -5745,7 +5760,8 @@
   "nota": "Os desvios desta rodada (A12-01, 02, 03, 05, 08) são todos de falta de regra escrita: cada versão escolheu uma palavra. O rascunho do guia está no relatório do a12 (seção 'Guia de escrita'). | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "PR-07",
   "versao": "009y1",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Feito na 009y1 parte 1 (publicada em 20/11/2026): glossário e regras de escrita no DESIGN.md.",
+  "feito": "009y1"
  },
  {
   "ag": "a12",
@@ -6126,7 +6142,8 @@
   "nota": "Pessoa nova recebe a janela com 27 versões (118 itens) e o tour da 009m sobre 'antes ficava em Registros'; não há nada que diga por onde começar. | Teste: localStorage vazio + membro liberado hoje → a linha aparece e nada sobre 009m; liberado há 30 dias → não aparece.",
   "junto": "OP9-03",
   "versao": "009y1",
-  "situacao": "Proposta da rodada de 20/11 (a15/a16), ainda não aprovada."
+  "situacao": "Feito na 009y1 parte 2 (publicada em 20/11/2026): primeiros passos para quem entrou há menos de 14 dias.",
+  "feito": "009y1"
  },
  {
   "ag": "a15",
@@ -6183,7 +6200,8 @@
   "nota": "Medido: 27 blocos, 118 itens, 3.092 palavras na janela que abre para todos a cada versão (print testes/prints/f1-novidades.png). Itens da 009x falam de dentro ('Contadores certos', 'Ninguém fica com trabalho parado') sem dizer o que fazer. TOUR separado de VERSOES: 11 versões publicadas depois do tour atual. | Teste: comunique-novidades antigo → 1 bloco aberto, anteriores fechadas; item com seletor gera passo do tour; item com papel moderador não aparece ao suporte.",
   "junto": "PB-13, OP9-03, PR-04, A13-01",
   "versao": "009y1",
-  "situacao": "Proposta da rodada de 20/11 (a15/a16), ainda não aprovada."
+  "situacao": "Feito na 009y1 parte 1 (publicada em 20/11/2026): a janela mostra só a versão nova; as antigas ficam recolhidas; 'Mostrar onde'.",
+  "feito": "009y1"
  },
  {
   "ag": "a15",
@@ -6221,7 +6239,8 @@
   "nota": "iniciarTour() descarta passos cujo seletor não existe e, sem passos, não mostra nada; com a 009y trocando o menu, o tour e os tutoriais somem sem nenhum teste falhar. | Teste: Renomear um seletor numa cópia → o teste falha dizendo a dica e o passo.",
   "junto": "A12-09",
   "versao": "009y1",
-  "situacao": "Proposta da rodada de 20/11 (a15/a16), ainda não aprovada."
+  "situacao": "Feito na 009y1 parte 1 (publicada em 20/11/2026): o tour sai dos itens da novidade e o e2e falha se um passo apontar para algo que sumiu.",
+  "feito": "009y1"
  },
  {
   "ag": "a15",
@@ -6375,5 +6394,85 @@
   "junto": "A16-11 A16-12",
   "versao": "depois",
   "situacao": "Adiada: volta quando o uso de tarefas crescer."
+ },
+ {
+  "ag": "usuario",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "objetivo": "menos",
+  "onda": 1,
+  "veredito": "",
+  "junto": "",
+  "id": "U9",
+  "titulo": "Tarefas automáticas pediam 'Eu faço' de alguém",
+  "onde": "",
+  "sugestao": "Atividades da equipe: as automáticas aparecem para todos, sem aceitar, num grupo próprio no topo de Tarefas e da Minha fila.",
+  "tela": "tarefas",
+  "nota": "Pedido do usuário.",
+  "versao": "009y1",
+  "feito": "009y1c",
+  "situacao": "Feito na 009y1c (pedido do usuário em 20/11/2026)."
+ },
+ {
+  "ag": "usuario",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "objetivo": "menos",
+  "onda": 1,
+  "veredito": "",
+  "junto": "",
+  "id": "U10",
+  "titulo": "Não dava para fechar a atividade da equipe sem bater a meta",
+  "onde": "",
+  "sugestao": "Botão Concluir para qualquer pessoa; antes da meta, com o motivo obrigatório.",
+  "tela": "tarefas",
+  "nota": "Pedido do usuário.",
+  "versao": "009y1",
+  "feito": "009y1d",
+  "situacao": "Feito na 009y1d (pedido do usuário em 20/11/2026)."
+ },
+ {
+  "ag": "usuario",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "objetivo": "menos",
+  "onda": 1,
+  "veredito": "",
+  "junto": "",
+  "id": "U11",
+  "titulo": "Logo e Início separados; a logo sumia ao rolar",
+  "onde": "",
+  "sugestao": "No computador a logo é o Início, fixa no topo da barra lateral.",
+  "tela": "navegacao",
+  "nota": "Pedido do usuário.",
+  "versao": "009y1",
+  "feito": "009y1d",
+  "situacao": "Feito na 009y1d (pedido do usuário em 20/11/2026)."
+ },
+ {
+  "ag": "usuario",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "objetivo": "menos",
+  "onda": 1,
+  "veredito": "",
+  "junto": "",
+  "id": "U12",
+  "titulo": "Atalhos longe do Pedir ajuda na tela inicial",
+  "onde": "",
+  "sugestao": "Atalhos entre o Pedir ajuda e as Notícias rápidas.",
+  "tela": "inicio",
+  "nota": "Pedido do usuário.",
+  "versao": "009y1",
+  "feito": "009y1d",
+  "situacao": "Feito na 009y1d (pedido do usuário em 20/11/2026)."
  }
 ]
