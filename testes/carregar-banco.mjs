@@ -16,7 +16,7 @@ export const MIGRACOES = ["testes/supabase-local.sql", "supabase/schema.sql", "s
   "supabase/009f-parceiros-completo.sql", "supabase/009g-tarefas-compartilhadas.sql", "supabase/009h-entregador-pelo-lancamento.sql",
   "supabase/009p-bairros-parecidos.sql", "supabase/009s-sem-cpf.sql", "supabase/009u-sem-cpf-nos-textos.sql",
   "supabase/009v-tarefas-abertas.sql", "supabase/009x-casa-em-ordem.sql",
-  "supabase/009x2-avisos-sem-codigo.sql", "supabase/009x3-tarefas-automaticas.sql", "supabase/009x4-restricao.sql", "supabase/009x5-avisos-que-importam.sql", "supabase/009x6-suporte-ve-tudo.sql", "supabase/009y1-mensagens-ativacao.sql", "supabase/009y1b-entrar-liberado.sql", "supabase/009y1c-atividades-equipe.sql"];
+  "supabase/009x2-avisos-sem-codigo.sql", "supabase/009x3-tarefas-automaticas.sql", "supabase/009x4-restricao.sql", "supabase/009x5-avisos-que-importam.sql", "supabase/009x6-suporte-ve-tudo.sql", "supabase/009y1-mensagens-ativacao.sql", "supabase/009y1b-entrar-liberado.sql", "supabase/009y1c-atividades-equipe.sql", "supabase/009y1d-concluir-atividade-equipe.sql"];
 
 export async function carregarBanco(url) {
   const db = new pg.Client({ connectionString: url });

@@ -64,6 +64,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009x6-suporte-ve-tudo.s
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1-mensagens-ativacao.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1b-entrar-liberado.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1c-atividades-equipe.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1d-concluir-atividade-equipe.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -333,7 +334,7 @@ try {
     });
     ok(r.toasts === 1, "um #toast só na página (estava duplicado)");
     ok(await s.evaluate(() => getComputedStyle(document.querySelector("header.top")).backgroundColor === "rgb(20, 53, 43)"
-        && getComputedStyle(document.querySelector('nav.modulos a[aria-current="page"]')).backgroundColor === "rgb(244, 239, 230)"
+        && ((a) => a.classList.contains("lateral-marca") || getComputedStyle(a).backgroundColor === "rgb(244, 239, 230)")(document.querySelector('nav.modulos a[aria-current="page"]'))
         && !!document.querySelector("header.top h1 svg.simbolo") && document.querySelector("header.top h1").textContent.trim() === "Comunique"
         && /Inter/.test(getComputedStyle(document.body).fontFamily) && /Manrope/.test(getComputedStyle(document.querySelector("h2")).fontFamily)
         && document.querySelector('meta[name="theme-color"]').content === "#14352B"),
@@ -1442,6 +1443,9 @@ try {
   const cardAuto = "#at-sug-lista .grupo:has-text('Atividades da equipe') .tarefa-card[data-tipo=ativar_entregadores]:has-text('LAGARTO - SE')";
   ok(await esperar(s8, cardAuto) && !(await s8.isVisible(cardAuto + " >> text=Eu faço")) && !(await s8.isVisible(cardAuto + " >> text=Pedir para alguém")),
     "009y1c: a tarefa do parceiro fica em Atividades da equipe, sem Eu faço");
+  await s8.click(cardAuto + " >> button:text-is('Concluir')");
+  ok(await esperar(s8, cardAuto + " textarea[placeholder*='Por que concluir']"), "009y1d: Concluir na atividade da equipe pede o motivo");
+  await s8.click(cardAuto + " >> text=Cancelar");
   await ir(s8, "#atividades/pendencias");
   ok(await esperar(s8, "#at-equipe-fila .tarefa-card[data-tipo=ativar_entregadores]"), "009y1c: e aparece no topo da Minha fila de todos");
   // 009g · tarefa compartilhada (manual): o suporte pega, o admin entra junto
@@ -1479,7 +1483,7 @@ try {
 
   // cada item do menu de cima abre uma tela (pelo clique, sem a aba no endereço)
   { await ir(a8, "#inicio");
-    const itens = await a8.$$eval("nav.modulos a:not([hidden])", (l) => l.map((x) => x.textContent.trim().split(" ")[0]));
+    const itens = await a8.$$eval("nav.modulos a:not([hidden])", (l) => l.map((x) => x.dataset.mod === "inicio" ? "Início" : x.textContent.trim().split(" ")[0]));
     let falharam = [];
     for (let i = 0; i < itens.length; i++) {
       await a8.evaluate(() => { location.hash = "#inicio"; });

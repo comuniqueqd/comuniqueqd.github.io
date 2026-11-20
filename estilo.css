@@ -1004,6 +1004,13 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
   nav.modulos { position: fixed; top: 0; left: 0; bottom: 0; width: 216px; margin: 0; padding: 16px 12px; z-index: 20;
     flex-direction: column; flex-wrap: nowrap; gap: 2px; background: var(--marca); overflow-y: auto; }
   nav.modulos a { border-radius: 10px; padding: 9px 12px; justify-content: space-between; }
+  /* a logo é o Início: fica na barra lateral e não some ao rolar */
+  header.top .titlebar h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  nav.modulos a.lateral-marca { justify-content: flex-start; gap: 10px; padding: 6px 8px 14px; margin-bottom: 10px; border-radius: 10px 10px 0 0;
+    border-bottom: 1px solid var(--vidro-16); color: var(--marca-ink); font-family: var(--font-titulo); font-weight: 800; font-size: 20px; letter-spacing: -0.03em; }
+  nav.modulos a.lateral-marca[aria-current="page"] { background: transparent; color: var(--marca-ink); }
+  nav.modulos a.lateral-marca:hover { border-color: transparent; border-bottom-color: var(--vidro-30); }
+  .titlebar { justify-content: flex-end; }
 }
 @media print { body { padding: 0 !important; } .barra-baixo, .bb-mais, nav.modulos { display: none !important; } }
 
@@ -1026,7 +1033,7 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
 .funcoes.compacto .funcao-icone .ic { width: 20px; height: 20px; }
 .funcoes.compacto .funcao-corpo b { font-size: 14px; }
 .funcoes.compacto .funcao-texto, .funcoes.compacto .funcao-vivo, .funcoes.compacto .funcao-seta { display: none; }
-.atalhos-titulo { margin-top: 6px; }
+.atalhos-titulo { margin-top: 18px; }
 .passos { margin-bottom: 16px; }
 .passos summary { cursor: pointer; }
 .passos-lista { margin: 10px 0 6px; padding-left: 22px; display: grid; gap: 6px; }

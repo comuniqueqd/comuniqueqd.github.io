@@ -110,7 +110,7 @@
     const daEquipe = A.atividades.filter((x) => x.automatica && x.status !== "concluida");
     const blocoEquipe = daEquipe.length ? el("div", { class: "grupo", id: "at-equipe-fila" },
       el("h3", {}, "Atividades da equipe", el("span", { class: "count", text: daEquipe.length })),
-      el("p", { class: "meta", style: "margin:0 0 6px", text: "Criadas pelo sistema. Todos participam: cada aprovação na cidade conta, e ela fecha sozinha quando bate a meta." }),
+      el("p", { class: "meta", style: "margin:0 0 6px", text: "Criadas pelo sistema. Todos participam: cada aprovação na cidade conta, e ela fecha sozinha quando bate a meta. Se não precisar mais, qualquer pessoa conclui antes, com o motivo." }),
       el("div", { class: "queue" }, daEquipe.map(cartaoAtividade))) : null;
     box.replaceChildren(...[
       blocoEquipe,
@@ -315,7 +315,8 @@
       : `Sugerida para ${a.sugeridas_nomes.join(", ")} · abre para todos em ${minAbrir} min`;
     const atrasada = a.atrasada;
     const cx = A.caixa["a" + a.id];
-    const nota = cx ? el("textarea", { rows: "2", maxlength: "600", placeholder: "Como ficou? (opcional)", "aria-label": "Nota da conclusão", oninput: (e) => (cx.texto = e.target.value) }) : null;
+    const antesDaMeta = a.automatica && (a.progresso || 0) < (a.meta || 0);  // 009y1d: concluir a atividade da equipe antes da meta pede o motivo
+    const nota = cx ? el("textarea", { rows: "2", maxlength: "600", placeholder: antesDaMeta ? "Por que concluir antes de bater a meta? (obrigatório)" : "Como ficou? (opcional)", "aria-label": "Nota da conclusão", oninput: (e) => (cx.texto = e.target.value) }) : null;
     if (nota) nota.value = cx.texto;
     const prevPassou = a.status === "aceita" && a.previsao && new Date(a.previsao) < Date.now();
     const minha = a.sou_participante;

@@ -41,6 +41,7 @@ for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x4-restricao.
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x5-avisos-que-importam.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x6-suporte-ve-tudo.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1c-atividades-equipe.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1d-concluir-atividade-equipe.sql"));
 
 await rpc(admin, "entrar");
 await db.query("update membros set papel_bloqueios = 'moderador' where email = $1", [admin.email]);
@@ -371,6 +372,19 @@ await t("009y1c: atividade da equipe (automática) não se pega nem conta como a
   const antes = (await rpc(admin, "resumo_inicio")).atividades.abertas_para_pegar;
   await db.query("update atividades set criada_em = now() - interval '1 day' where id = $1", [a.id]);
   igual((await rpc(admin, "resumo_inicio")).atividades.abertas_para_pegar, antes, "não entra nas abertas para pegar (nem para o moderador)");
+});
+
+await t("009y1d: qualquer pessoa conclui a atividade da equipe; antes da meta, só com o motivo", async () => {
+  await rpc(admin, "registrar_parceiro", { p_estabelecimento: "Bar do Fim", p_cidade: "ESTANCIA - SE" });
+  const a = await um("select id from atividades where cidade = 'ESTANCIA - SE' and automatica");
+  igual((await rpc(sup, "listar_atividades")).find((x) => x.id === a.id).pode_concluir, true, "o suporte vê Concluir");
+  let erro = ""; try { await rpc(sup, "concluir_atividade", { p_id: a.id }); } catch (e) { erro = e.message; }
+  verdade(/antes de bater a meta/.test(erro), "sem motivo, recusa: " + erro);
+  await rpc(sup, "concluir_atividade", { p_id: a.id, p_nota: "A cidade já tem entregadores suficientes." });
+  const d = await um("select status, nota, concluida_por_nome is not null quem from atividades where id = $1", [a.id]);
+  igual([d.status, d.nota, d.quem], ["concluida", "A cidade já tem entregadores suficientes.", true]);
+  erro = ""; try { await rpc(admin, "concluir_atividade", { p_id: a.id, p_nota: "de novo" }); } catch (e) { erro = e.message; }
+  verdade(/já foi concluída/.test(erro), "não conclui duas vezes");
 });
 
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco

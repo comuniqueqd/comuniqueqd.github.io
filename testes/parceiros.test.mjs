@@ -138,16 +138,18 @@ await t("009g: ativar parceiro cria 'Aprovar 5 entregadores' aberta na cidade, o
   igual([r.tarefa_entregadores.titulo, r.tarefa_entregadores.meta, r.tarefa_entregadores.nova], ["Aprovar 5 entregador(es) · SIMÃO DIAS - SE", 5, true]);
   let t = (await rpc(mon, "listar_atividades")).find((x) => x.titulo === "Aprovar 5 entregador(es) · SIMÃO DIAS - SE");
   igual([t.status, t.sugeridas_nomes, t.para_todos, t.compartilhavel, t.campos.motivo], ["aberta", [], true, true, "Parceiro novo: Açougue Novo"]);
-  await rpc(mon, "aceitar_atividade", { p_id: t.id });
+  await falha(rpc(mon, "aceitar_atividade", { p_id: t.id }), "");  // 009y1c: atividade da equipe não se pega
   const r2 = await rpc(sup, "registrar_parceiro", { p_estabelecimento: "Bar do Zé", p_cidade: "SIMÃO DIAS - SE" });
   igual([r2.tarefa_entregadores.meta, r2.tarefa_entregadores.nova, r2.tarefa_entregadores.titulo], [10, false, "Aprovar 10 entregador(es) · SIMÃO DIAS - SE"]);
   t = (await rpc(mon, "listar_atividades")).find((x) => x.id === t.id);
   igual([t.meta, t.campos.quantidade, t.descricao.includes("+5 com o parceiro Bar do Zé")], [10, 10, true]);
-  igual((await avisos(mon)).filter((x) => x.startsWith("A tarefa subiu para 10 entregadores")).length, 1);
+  igual((await avisos(mon)).filter((x) => x.startsWith("A tarefa subiu para 10 entregadores")).length, 0, "sem participantes, ninguém é avisado");
 });
 
 await t("009g: tarefa compartilhada: entrar junto, progresso somado, qualquer participante conclui", async () => {
-  const t0 = (await rpc(admin, "listar_atividades")).find((x) => x.cidade === "SIMÃO DIAS - SE" && x.tipo === "ativar_entregadores");
+  // 009y1c: a do parceiro é da equipe (não se pega); a compartilhada é uma pedida à mão
+  const t0 = await rpc(sup2, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "SIMÃO DIAS - SE", quantidade: 10 } });
+  await rpc(mon, "aceitar_atividade", { p_id: t0.id });
   let v = (await rpc(sup, "listar_atividades")).find((x) => x.id === t0.id);
   igual([v.status, v.participantes, v.pode_entrar, v.pode_concluir], ["aceita", ["Monitora Teste"], true, false]);
   await rpc(admin, "aceitar_atividade", { p_id: t0.id });
@@ -160,7 +162,7 @@ await t("009g: tarefa compartilhada: entrar junto, progresso somado, qualquer pa
   await rpc(admin, "decidir", { p_cadastro: ids[2], p_acao: "aprovar" });
   v = (await rpc(admin, "listar_atividades")).find((x) => x.id === t0.id);
   igual([v.progresso, v.participantes, v.sou_participante, v.pode_concluir], [3, ["Monitora Teste", "Mateus Lopes"], true, true]);
-  igual((await rpc(admin, "tarefas_que_contam", { p_tipo: "ativar_entregadores", p_cidade: "SIMÃO DIAS - SE" })).map((x) => x.progresso), [3]);
+  igual((await rpc(admin, "tarefas_que_contam", { p_tipo: "ativar_entregadores", p_cidade: "SIMÃO DIAS - SE" })).filter((x) => x.id === t0.id).map((x) => x.progresso), [3]);
   await falha(rpc(sup, "concluir_atividade", { p_id: t0.id }), "Só quem está na tarefa");
   await rpc(mon, "aguardar_terceiro", { p_id: t0.id, p_motivo: "esperando documentos" });
   await rpc(admin, "aguardar_terceiro", { p_id: t0.id });

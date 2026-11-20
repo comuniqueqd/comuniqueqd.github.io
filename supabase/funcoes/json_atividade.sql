@@ -1,4 +1,4 @@
--- json_atividade(atividades): versão atual (todas as migrações até a 009x3 rodadas), tirada do banco com pg_get_functiondef.
+-- json_atividade(atividades): versão atual (todas as migrações até a 009y1d rodadas), tirada do banco com pg_get_functiondef.
 -- Esta função foi mudada por "remendo" (troca de texto via pg_get_functiondef) em alguma migração, então o corpo
 -- inteiro não existia escrito em nenhum arquivo. A partir daqui, mudar esta função = criar uma migração nova com
 -- o corpo inteiro (create or replace) e atualizar este arquivo. O teste test:casa confere que o arquivo e o banco
@@ -36,7 +36,7 @@ AS $function$
     'pode_agradecer', a.status = 'concluida' and a.aceita_por is not null and a.aceita_por <> auth.uid(),
     'pode_mexer', public.pode_mexer_tarefa(a),
     'pode_aceitar', a.status = 'aberta' and public.atividade_aberta_para_mim(a),
-    'pode_concluir', a.status = 'aceita' and (public.participa(a) or public.meu_papel() = 'moderador'),
+    'pode_concluir', (a.status = 'aceita' and (public.participa(a) or public.meu_papel() = 'moderador')) or (coalesce(a.automatica, false) and a.status in ('aberta', 'aceita')),
     'pode_prever', a.status = 'aceita' and (public.participa(a) or public.meu_papel() = 'moderador'),
     'compartilhavel', public.compartilhavel(a)) || jsonb_build_object(
     'participantes', coalesce((select jsonb_agg(p->>'nome') from jsonb_array_elements(public.participantes_de(a)) p), '[]'),
