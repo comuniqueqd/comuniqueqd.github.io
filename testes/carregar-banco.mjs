@@ -16,7 +16,7 @@ export const MIGRACOES = ["testes/supabase-local.sql", "supabase/schema.sql", "s
   "supabase/009f-parceiros-completo.sql", "supabase/009g-tarefas-compartilhadas.sql", "supabase/009h-entregador-pelo-lancamento.sql",
   "supabase/009p-bairros-parecidos.sql", "supabase/009s-sem-cpf.sql", "supabase/009u-sem-cpf-nos-textos.sql",
   "supabase/009v-tarefas-abertas.sql", "supabase/009x-casa-em-ordem.sql",
-  "supabase/009x2-avisos-sem-codigo.sql", "supabase/009x3-tarefas-automaticas.sql", "supabase/009x4-restricao.sql", "supabase/009x5-avisos-que-importam.sql", "supabase/009x6-suporte-ve-tudo.sql", "supabase/009y1-mensagens-ativacao.sql", "supabase/009y1b-entrar-liberado.sql", "supabase/009y1c-atividades-equipe.sql", "supabase/009y1d-concluir-atividade-equipe.sql", "supabase/009y1e-equipe-sem-dono.sql", "supabase/009z1-base-firme.sql"];
+  "supabase/009x2-avisos-sem-codigo.sql", "supabase/009x3-tarefas-automaticas.sql", "supabase/009x4-restricao.sql", "supabase/009x5-avisos-que-importam.sql", "supabase/009x6-suporte-ve-tudo.sql", "supabase/009y1-mensagens-ativacao.sql", "supabase/009y1b-entrar-liberado.sql", "supabase/009y1c-atividades-equipe.sql", "supabase/009y1d-concluir-atividade-equipe.sql", "supabase/009y1e-equipe-sem-dono.sql", "supabase/009z1-base-firme.sql", "supabase/009z2-funcoes-sem-uso.sql"];
 
 export async function carregarBanco(url) {
   const db = new pg.Client({ connectionString: url });
@@ -42,6 +42,15 @@ export async function completar(db, ultimo, { manterRegras = false } = {}) {
   if (i < 0) throw new Error("migração desconhecida: " + ultimo);
   if (manterRegras) await db.query("drop table if exists _regras_semente; create table _regras_semente as select id, horas_1a, horas_2a, terceira_encerra, fator, janela_dias from public.infracoes");
   for (const f of MIGRACOES.slice(i + 1)) await db.query(fs.readFileSync(path.join(RAIZ, f), "utf8"));
+  await liberarParaTestes(db);
   if (manterRegras) await db.query(`update public.infracoes i set horas_1a = s.horas_1a, horas_2a = s.horas_2a, terceira_encerra = s.terceira_encerra,
       fator = s.fator, janela_dias = s.janela_dias from _regras_semente s where s.id = i.id; drop table _regras_semente`);
+}
+
+// 009z2: estas funções perderam o acesso no Supabase (sem uso no site), mas os testes antigos ainda as usam para
+// montar dados (registrar uma restrição, uma cidade, uma tarefa). Só no banco de teste: devolve o acesso.
+export const SO_PARA_TESTES = ["public.registrar_bloqueio(text, text, text, smallint, text, text)", "public.salvar_cidade(text, text, boolean)",
+  "public.sugerir_atividade(text, text, uuid[], timestamp with time zone)", "public.salvar_telefone(text, text)", "public.aprovados_e_bloqueios()"];
+export async function liberarParaTestes(db) {
+  for (const f of SO_PARA_TESTES) await db.query(`do $$ begin if to_regprocedure('${f}') is not null then execute 'grant execute on function ${f} to authenticated'; end if; end $$`);
 }

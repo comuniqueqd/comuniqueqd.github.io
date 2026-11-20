@@ -67,6 +67,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1c-atividades-equip
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1d-concluir-atividade-equipe.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1e-equipe-sem-dono.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z1-base-firme.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z2-funcoes-sem-uso.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -1690,7 +1691,7 @@ try {
       await v.reload(); await v.setViewportSize({ width: 320, height: 800 });
       if (await esperar(v, "#v-pendentes:not([hidden]) #queue .card.linha-cad")) {
         const alt = (await v.locator("#v-pendentes #queue .card.linha-cad").first().boundingBox())?.height || 0;
-        ok(alt <= 150, "009y2: em 320 px, a linha do cadastro tem até 150 px: " + Math.round(alt));
+        ok(alt <= 170, "009y2: em 320 px, a linha do cadastro tem até 170 px (as fontes do GitHub são maiores): " + Math.round(alt));
       }
       await v.setViewportSize({ width: 1280, height: 900 }); await v.evaluate(() => { location.hash = "#inicio"; }); await esperar(v, "#precisa-lista li"); }
     // 009y2 (A12-06): o primeiro Tab chega no "Ir para o conteúdo", que leva ao título da tela sem trocar o endereço

@@ -5,7 +5,7 @@
 import pg from "pg";
 import { readFileSync, readdirSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { carregarBanco } from "./carregar-banco.mjs";
+import { carregarBanco, liberarParaTestes } from "./carregar-banco.mjs";
 
 const url = process.env.DATABASE_URL || "postgres://postgres@127.0.0.1:54329/teste";
 await carregarBanco(url);
@@ -44,6 +44,12 @@ for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1c-atividade
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1d-concluir-atividade-equipe.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1e-equipe-sem-dono.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z1-base-firme.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z2-funcoes-sem-uso.sql"));
+// 009z2: confere o acesso como ficou no Supabase antes de devolver, só no teste, as que os testes usam para montar dados
+const semUso = (await db.query(`select p.proname, has_function_privilege('authenticated', p.oid, 'execute') pode from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+  where n.nspname = 'public' and p.proname = any($1)`, [["aprovados_e_bloqueios", "salvar_cidade", "salvar_telefone", "sugerir_atividade", "registrar_bloqueio", "assumir_caso", "comentar_caso",
+  "listar_casos", "json_caso", "marcar_checklist_caso", "placar_detetive", "salvar_checklist_casos", "veredito_caso"]])).rows;
+await liberarParaTestes(db);
 
 await rpc(admin, "entrar");
 await db.query("update membros set papel_bloqueios = 'moderador' where email = $1", [admin.email]);
@@ -422,6 +428,11 @@ await t("009z1 (A5-10): quem aceitou a tarefa compartilhada sai da equipe e ela 
   igual([a.status, a.aceita_por_nome, a.n], ["aceita", "Fica Aqui", 1]);
   const uY = (await um("select user_id from membros where email = $1", [y.email])).user_id;
   verdade(await um("select 1 from notificacoes where para = $1 and texto like '%saiu da equipe%'", [uY]), "quem ficou é avisado");
+});
+
+await t("009z2 (A7-06, A5-3): as 13 funções sem uso perderam o acesso (registrar_bloqueio inclusive)", async () => {
+  igual(semUso.length, 13, "as 13 existem");
+  igual(semUso.filter((x) => x.pode).map((x) => x.proname), [], "ainda com acesso");
 });
 
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco

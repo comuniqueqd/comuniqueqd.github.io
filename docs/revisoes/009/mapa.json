@@ -1270,7 +1270,9 @@
   "veredito": "",
   "nota": "",
   "junto": "A7-05",
-  "versao": "009z"
+  "versao": "009z",
+  "feito": "009z2",
+  "situacao": "Feito na 009z2 (falta rodar o SQL): registrar_bloqueio sem acesso (009z2)."
  },
  {
   "ag": "a5",
@@ -1661,7 +1663,8 @@
   "nota": "Varredura 20/11 (a7): Ainda 12 sem uso (aprovados_e_bloqueios, registrar_bloqueio, salvar_cidade, salvar_telefone, sugerir_atividade, 7 de casos). Nova: aviso_sem_id(text,text) da 009v:48 só embrulha a de 3 argumentos e ninguém a chama.",
   "junto": "",
   "versao": "009z",
-  "situacao": "Lista mostrada ao usuário em 20/11/2026; aguardando a decisão antes de tirar o acesso."
+  "situacao": "Feito na 009z2 (falta rodar o SQL): as 13 sem acesso (009z2); apagar de vez na versão seguinte.",
+  "feito": "009z2"
  },
  {
   "ag": "a7",
