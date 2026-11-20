@@ -6494,7 +6494,7 @@
   "sugestao": "As que alguém tinha pegado voltam a ser da equipe, sem dono.",
   "tela": "tarefas",
   "feito": "009y1e",
-  "situacao": "Feito na 009y1e (pedido do usuário em 20/11/2026); falta rodar o SQL."
+  "situacao": "Feito na 009y1e (pedido do usuário em 20/11/2026; publicada em 20/11/2026)."
  },
  {
   "ag": "usuario",
@@ -6514,7 +6514,7 @@
   "sugestao": "'Ver' abre logo abaixo uma tira com até 5 cartões e a ação direta.",
   "tela": "inicio",
   "feito": "009y1e",
-  "situacao": "Feito na 009y1e (pedido do usuário em 20/11/2026); falta rodar o SQL."
+  "situacao": "Feito na 009y1e (pedido do usuário em 20/11/2026; publicada em 20/11/2026)."
  },
  {
   "ag": "usuario",
@@ -6534,6 +6534,6 @@
   "sugestao": "Notícia 'Acordo novo com X (CIDADE)'.",
   "tela": "inicio",
   "feito": "009y1e",
-  "situacao": "Feito na 009y1e (pedido do usuário em 20/11/2026); falta rodar o SQL."
+  "situacao": "Feito na 009y1e (pedido do usuário em 20/11/2026; publicada em 20/11/2026)."
  }
 ]
