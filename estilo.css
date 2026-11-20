@@ -1103,3 +1103,7 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
   .btn, .btn.small, .btn.link, nav.tabs a, nav.grupo a, .chip, .seg button, button.tile.clicavel, .barra-baixo a, .btn-copiar { min-height: 44px; }
   .btn-copiar { min-width: 44px; }
 }
+/* 009z (M2): prazo em contagem regressiva */
+.prazo { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.prazo.perto { color: var(--warn); font-weight: 600; }
+.prazo.vencido { color: var(--bad); font-weight: 600; }

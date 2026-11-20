@@ -3,6 +3,27 @@ const REGRAS_RESTRICAO = [["este bloqueio não está ativo", "esta restrição n
 const regrasRestricao = REGRAS_RESTRICAO.flatMap(([a, b]) => [[a, b], [a[0].toUpperCase() + a.slice(1), b[0].toUpperCase() + b.slice(1)]])
   .map(([a, b]) => [new RegExp(`(?<![\\p{L}])${a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}])`, "gu"), b]);
 const restricao = (t) => typeof t !== "string" || !/bloque/i.test(t) ? t : regrasRestricao.reduce((r, [re, b]) => r.replace(re, b), t);
+// 009z (A12-04): erro técnico do servidor vira frase em português com o que fazer; a mensagem em português
+// que o próprio banco escreve (raise exception) passa como está. MESMA função em js/base.js e extensao/api.js.
+const ERROS_TECNICOS = [
+  [/failed to fetch|networkerror|network request|load failed|fetch/i, "Não foi possível falar com o servidor. Confira a internet e tente de novo em instantes."],
+  [/jwt|token.*(expired|invalid)|refresh token|sess(ion|ão) (expired|expirada)/i, "Sua sessão venceu. Saia e entre de novo."],
+  [/pgrst202|schema cache|could not find the function/i, "O Comunique foi atualizado e o banco ainda não. Avise um moderador."],
+  [/42501|permission denied|row-level security/i, "Seu acesso não permite esta ação."],
+  [/23505|duplicate key|already exists/i, "Isso já foi registrado."],
+  [/23502|not-null/i, "Falta preencher um campo obrigatório."],
+  [/23503|foreign key/i, "Esse registro está ligado a outro e não pode ser mudado assim."],
+  [/23514|check constraint|invalid input/i, "Algum dado não foi aceito. Confira os campos e tente de novo."],
+  [/57014|timeout|canceling statement/i, "O servidor demorou para responder. Tente de novo."],
+];
+const PARECE_INGLES = /\b(the|of|is|not|does|violates|function|relation|column|could|failed|invalid|error|unexpected|null|undefined)\b/i;
+function traduzirErro(msg, codigo) {
+  const m = String(msg || "").trim(), tudo = `${codigo || ""} ${m}`;
+  if (m && !PARECE_INGLES.test(m) && /[a-záéíóúãõâêôç]/i.test(m) && !/^[A-Z0-9]{5}$/.test(m)) return m;  // português do banco
+  for (const [re, frase] of ERROS_TECNICOS) if (re.test(tudo)) return frase;
+  if (m || codigo) console.warn("Erro do servidor:", codigo || "", m);
+  return "Algo deu errado. Tente de novo; se repetir, avise um moderador.";
+}
 // Conversa com o banco do Comunique (Supabase) com o mesmo login Google do site.
 // Usado pelo service worker (importScripts) e pelo painel lateral (<script>). Sem bibliotecas.
 // A sessão fica em chrome.storage.local (o service worker dorme e acorda: nada em variáveis).
@@ -55,12 +76,13 @@ const restricao = (t) => typeof t !== "string" || !/bloque/i.test(t) ? t : regra
   async function rpc(fn, args = {}) {
     let s = await token();
     const chamar = (t) => fetch(`${C.SUPABASE_URL}/rest/v1/rpc/${fn}`, {
-      method: "POST", headers: { ...H, Authorization: `Bearer ${t}` }, body: JSON.stringify(args) });
+      method: "POST", headers: { ...H, Authorization: `Bearer ${t}` }, body: JSON.stringify(args) })
+      .catch((x) => { throw new Error(traduzirErro(x?.message || "fetch")); });
     let r = await chamar(s.access_token);
     if (r.status === 401) { s = await renovar(s); r = await chamar(s.access_token); }
     const txt = await r.text();
     const dados = txt ? JSON.parse(txt) : null;
-    if (!r.ok) throw new Error(restricao(dados?.message) || `Erro ${r.status} ao falar com o Comunique.`);
+    if (!r.ok) throw new Error(restricao(traduzirErro(dados?.message || `Erro ${r.status}`, dados?.code)));
     return dados;
   }
 

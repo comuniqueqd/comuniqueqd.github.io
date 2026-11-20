@@ -3,7 +3,7 @@
 (() => {
   "use strict";
   const App = window.App;
-  const { $, el, dt, fmtCPF, rpc, msgErro, janela } = App.u;
+  const { $, el, dt, rpc, msgErro, janela } = App.u;
   const S = App.S;
 
   // ---------- busca rápida ----------
@@ -51,10 +51,15 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009y2b";
+  const VERSAO = "009z1";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009z1", tema: "Base firme", itens: [
+      ["Veja quanto falta para cada prazo", "Tratativas, tarefas e previsões dizem “vence em 2 h 10 min” ou “venceu há 40 min”; em âmbar quando falta pouco e em vermelho depois.", 'nav.modulos a[data-mod="atividades"]'],
+      ["Leia os erros em português", "Quando algo dá errado no servidor, a mensagem diz em português o que aconteceu e o que fazer, no site e na extensão."],
+      ["Continue de onde parou", "A tela não pisca mais a cada 30 segundos quando nada mudou, e o cursor não volta para o começo da página."],
+    ] },
     { versao: "009y2b", tema: "Tudo mais claro", itens: [
       ["Leia o que aconteceu sem código", "Em Avisos, Toda a equipe mostra o que cada pessoa fez em palavras (ex.: “resolveu a pendência de”), nunca um código interno.", 'nav.modulos a[data-mod="avisos"]'],
       ["Toque com folga no celular", "Botões e abas ficaram maiores no celular, e as listas sem a faixa colorida ao lado: a situação está na etiqueta."],

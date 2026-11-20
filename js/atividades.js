@@ -344,7 +344,7 @@
       // 009j (cartão enxuto): quem criou, quando, cidade, para quem e prazo numa linha só
       el("div", { class: "meta linha-tarefa" },
         `Por ${a.criada_por === S.me.id ? "você" : a.criada_por_nome} · ${dt(a.criada_em)}${a.cidade ? " · " + a.cidade : ""}${a.modo === "registro" ? " · Registro do que já foi feito" : " · " + para}`,
-        a.prazo && a.status !== "concluida" ? el("span", { class: atrasada ? "err" : null, text: ` · Prazo: ${dt(a.prazo)}${atrasada ? " (passou)" : ""}` }) : null),
+        a.prazo && a.status !== "concluida" ? el("span", {}, " · Prazo: ", App.u.prazo(a.prazo, a.criada_em)) : null),  // 009z (M2)
       a.aguardando_desde ? el("div", { class: "bullet aguardando" }, el("span", {}, el("b", { icone: "aguardando" }, "Aguardando terceiro"), ` desde ${dt(a.aguardando_desde)}: ${a.aguardando_motivo}`)) : null,
       a.status === "aceita" && !a.aguardando_desde ? el("div", { class: "bullet pendente" }, el("span", {}, el("b", { text: "Em andamento" }), ` com ${quemEsta} desde ${dt(a.aceita_em)}`, tempos ? el("span", { class: "meta tempos", icone: "tempo" }, tempos) : null)) : null,
       a.pode_entrar ? el("div", { class: "bullet juntos" }, el("span", {}, el("b", { icone: "juntos" }, "Já tem gente trabalhando nela"), ` (${quemEsta}). Dá para entrar junto: as suas aprovações também contam.`)) : null,
@@ -427,14 +427,7 @@
 
 
   // 009x (AT4): só as N concluídas mais recentes (pede uma a mais para saber se há "Ver mais"); 0 = nenhuma.
-  // Banco sem a 009x: a lista de antes (todas as concluídas de 30 dias).
-  async function listarAtividades(n) {
-    try { return await rpc("listar_atividades", { p_concluidas: n }); }
-    catch (e) {
-      if (!/listar_atividades|function|schema cache/i.test(msgErro(e) + (e?.message || ""))) throw e;
-      return rpc("listar_atividades");
-    }
-  }
+  const listarAtividades = (n) => rpc("listar_atividades", { p_concluidas: n });
   App.listarAtividades = listarAtividades;
 
   App.modulo({

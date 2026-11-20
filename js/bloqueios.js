@@ -4,7 +4,7 @@
 (() => {
   "use strict";
   const App = window.App;
-  const { $, el, janela, fmtCPF, norm, dt, dia, duracao, horas, toast, PAPEL, vazio, carregandoEl, rpc, msgErro,
+  const { $, el, janela, norm, dt, dia, duracao, horas, toast, PAPEL, vazio, carregandoEl, rpc, msgErro,
           tabela, barras, baixarCSV } = App.u;
   const S = App.S;
   const B = {
@@ -79,7 +79,6 @@
   }
   const opcCidades = (lista) => [...new Set(lista.map((b) => b.cidade).filter(Boolean))].sort().map((c) => [c, c]);
   const opcInfracoes = () => todasInfracoes().map((i) => [String(i.id), i.leve ? `${i.nome} (leve)` : i.nome]);
-  const filtroTipo = (b, t) => !t || (t === "leve") === !!b.leve;
 
   // ---------- cartão de um bloqueio (tratativas, bloqueados agora, meus registros) ----------
   function bulletTratativa(b) {
@@ -88,7 +87,8 @@
     const tipo = TAREFA[t.tipo] || "Tratativa";
     if (t.status === "pendente") return el("div", { class: "bullet " + (t.atrasada ? "atrasada" : "pendente") }, el("span", {},
       el("b", { text: t.atrasada ? `${tipo} atrasada há ${duracao(t.criada_em).txt}` : `${tipo} pendente` }),
-      ` com ${t.tipo === "completar_dados" ? "o monitoramento" : t.responsavel_nome}` + (t.atrasada ? ` · prazo de ${t.prazo_horas} h` : ` · há ${duracao(t.criada_em).txt}`),
+      ` com ${t.tipo === "completar_dados" ? "o monitoramento" : t.responsavel_nome} · há ${duracao(t.criada_em).txt}`,
+      t.prazo_horas && t.tipo !== "completar_dados" ? [" · ", App.u.prazo(new Date(new Date(t.criada_em).getTime() + t.prazo_horas * 3600000), t.criada_em)] : null,  // 009z (M2)
       t.realocada_em ? ` · realocada por ${t.realocada_por_nome} em ${dt(t.realocada_em)}` : ""));
     return el("div", { class: "bullet concluida" }, el("span", {},
       el("b", { text: `${tipo} realizada` }),
@@ -416,17 +416,10 @@
 
   document.querySelectorAll("[data-trat]").forEach((b) => b.addEventListener("click", () => { B.tratVer = b.dataset.trat; B.concLimite = 100; render(); carregar(); }));
   // 009x (AT4): as concluídas vêm as mais recentes (100 por vez, "Ver mais"); busca e cidade vão para o banco.
-  // Banco sem a 009x: a lista inteira, como antes.
   async function carregarConcluidas() {
     const a = { p_limite: B.concLimite || 100, p_busca: $("#bq-q-trat").value.trim() || null, p_cidade: $("#bq-trat-cidade").value || null };
     const chave = JSON.stringify(a);
-    let d;
-    try { d = await rpc("listar_tarefas_concluidas", a); }
-    catch (e) {
-      if (!/listar_tarefas_concluidas|function|schema cache/i.test(msgErro(e) + (e?.message || ""))) throw e;
-      const l = await rpc("listar_tarefas", { p_status: "concluida" });
-      d = { itens: l, mais: false, cidades: null };
-    }
+    const d = await rpc("listar_tarefas_concluidas", a);
     if (chave !== JSON.stringify({ p_limite: B.concLimite || 100, p_busca: $("#bq-q-trat").value.trim() || null, p_cidade: $("#bq-trat-cidade").value || null })) return;
     B.tarefas.concluida = d.itens; B.concMais = d.mais; B.concCidades = d.cidades;
   }

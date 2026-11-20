@@ -66,6 +66,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1b-entrar-liberado.
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1c-atividades-equipe.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1d-concluir-atividade-equipe.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1e-equipe-sem-dono.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z1-base-firme.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -124,7 +125,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009y2b"); localStorage.setItem("comunique-tour", "009y2b"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009z1"); localStorage.setItem("comunique-tour", "009z1"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -889,22 +890,20 @@ try {
     await d7.query("select importar_bloqueio('rev00002', 'Nome Velho', 'ITABAIANA - SE', 'Avaria de Produto', now() - interval '120 days', 'Planilha', 'Nome diferente na planilha', '24')");
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
-  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Leia o que aconteceu sem código"), "janela O que há de novo aparece na primeira vez");
+  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Veja quanto falta para cada prazo"), "janela O que há de novo aparece na primeira vez");
   // 009y1 (A15-06): só a versão nova aberta; as anteriores recolhidas
   ok(!(await n7.isVisible("dialog.janela >> text=Sino com tira")) && await n7.isVisible("dialog.janela details.versoes-antigas > summary")
       && await n7.isVisible("dialog.janela .mostrar-onde"), "009y1: a janela mostra só a versão nova, com Mostrar onde; as anteriores ficam recolhidas");
   { const hs = await n7.$$eval("dialog.janela .bloco-versao h4", (l) => l.map((x) => x.textContent));
-    ok(hs.length === 32 && hs[0] === "Agora: Tudo mais claro" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
+    ok(hs.length === 33 && hs[0] === "Agora: Base firme" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
-  ok(await esperar(n7, "#tour-passo:popover-open >> text=Leia o que aconteceu sem código") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
+  ok(await esperar(n7, "#tour-passo:popover-open >> text=Veja quanto falta para cada prazo") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
       && (await n7.getAttribute("#tour-passo", "role")) === "dialog", "009n: tour das novidades abre no 1º passo, com o foco dentro do balão");
   await n7.screenshot({ path: path.join(PRINTS, "f1b-tour.png") });
-  await n7.click("#tour-passo >> text=Próximo");
-  ok(await esperar(n7, "#tour-passo >> text=Encontre o Painel das tarefas"), "009n: o tour passa pelos passos (009y1: saem dos itens da versão)");
   await n7.click("#tour-passo >> text=Entendi");
-  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009y2b"), "009n: “Entendi” fecha o tour e ele não volta");
+  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z1"), "009n: “Entendi” fecha o tour e ele não volta");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
   ok(!(await n7.isVisible("dialog.janela")), "e não aparece de novo" + ((await n7.isVisible("dialog.janela")) ? ": " + (await n7.textContent("dialog.janela[open]").catch(() => "?")) : ""));
   // suporte envia sem nome: marca revisar e tarefa para o admin (opcional para os outros)
@@ -1667,6 +1666,19 @@ try {
     await v.setViewportSize({ width: 1280, height: 900 });
     ok(await v.isVisible("nav.modulos a[data-mod='atividades']") && await v.isHidden("#barra-baixo") && await esperar(v, "#precisa-lista li"),
       "009y1: no computador, o menu fica na lateral e a tela inicial começa pelo que precisa de você");
+    // 009z (M2, A12-04, A3-01): prazo em contagem regressiva, erro técnico em português, tique sem mudança não redesenha
+    { const pz = await v.evaluate(() => {
+        const ver = (fim, ini) => { const x = App.u.prazo(new Date(Date.now() + fim * 60000), new Date(Date.now() + ini * 60000).toISOString()); return [x.textContent, x.className]; };
+        return [ver(300, -60), ver(30, -600), ver(-40, -600)]; });
+      ok(pz[0][0] === "vence em 5 h" && pz[0][1] === "prazo" && pz[1][0] === "vence em 30 min" && pz[1][1].includes("perto") && pz[2][0] === "venceu há 40 min" && pz[2][1].includes("vencido"),
+        "009z: prazo em contagem regressiva, âmbar perto do fim e vermelho depois: " + JSON.stringify(pz));
+      const er = await v.evaluate(() => [App.u.traduzirErro("permission denied for function listar_x", "42501"), App.u.traduzirErro("Could not find the function public.y in the schema cache", "PGRST202"),
+        App.u.traduzirErro("Escolha o motivo da reprovação."), App.u.traduzirErro("TypeError: Failed to fetch"), App.u.traduzirErro("unexpected end of JSON input")]);
+      ok(er[0] === "Seu acesso não permite esta ação." && /banco ainda não/.test(er[1]) && er[2] === "Escolha o motivo da reprovação." && /falar com o servidor/.test(er[3]) && /Algo deu errado/.test(er[4]),
+        "009z: erro técnico vira frase em português; a mensagem do banco em português passa como está: " + JSON.stringify(er));
+      await v.waitForTimeout(1500);
+      const tq = await v.evaluate(async () => { const li = document.querySelector("#precisa-lista li"); const n0 = App.semRedesenho || 0; await App.tique(); return [li?.isConnected, (App.semRedesenho || 0) - n0]; });
+      ok(tq[0] === true && tq[1] === 1, "009z: o tique sem mudança no banco não redesenha a tela: " + JSON.stringify(tq)); }
     // 009y2: no celular de 320 px a linha do cadastro é curta e nada passa da tela
     { await v.setViewportSize({ width: 320, height: 800 });
       for (const r of ["#ativacao/pendentes", "#analises/tarefas", "#financeiro/acordos", "#ativacao/historico"]) {

@@ -7,7 +7,7 @@
     corrigido: "corrigiu os dados de", tratativa_concluida: "concluiu a tratativa de", encerrado: "encerrou o cadastro de" };
   const acaoTexto = (a) => (/^[a-z]+(_[a-z]+)+$|^[a-z]+$/.test(a || "") ? VERBOS[a] || "atualizou o registro de" : a);
   const App = window.App;
-  const { $, el, fmtCPF, vazio, carregandoEl, rpc, msgErro } = App.u;
+  const { $, el, vazio, carregandoEl, rpc, msgErro } = App.u;
   const S = App.S;
   const R = { itens: null, fim: false, mais: false, filtros: "", erro: null };
   const POR_PAGINA = 100;

@@ -43,6 +43,7 @@ for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x6-suporte-ve
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1c-atividades-equipe.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1d-concluir-atividade-equipe.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1e-equipe-sem-dono.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z1-base-firme.sql"));
 
 await rpc(admin, "entrar");
 await db.query("update membros set papel_bloqueios = 'moderador' where email = $1", [admin.email]);
@@ -400,6 +401,27 @@ await t("009y1e: atividade da equipe que alguém tinha pegado volta a ser da equ
   await rpc(sup, "registrar_acordo", { p_estabelecimento: "Pizzaria Boa", p_cidade: "LAGARTO - SE", p_acordo: "Taxa fixa por uma semana", p_vence_em: "2026-12-31" });
   const n = (await rpc(admin, "noticias_rapidas", { p_limite: 20 })).find((x) => x.tipo === "acordo");
   igual([n?.titulo, n?.cidade], ["Pizzaria Boa", "LAGARTO - SE"]);
+});
+
+await t("009z1 (A5-12): adicional sem nome do entregador é recusado pelo banco", async () => {
+  let erro = ""; try {
+    await rpc(sup, "registrar_adicional", { p_cidade: "LAGARTO - SE", p_id_app: "semficha9z", p_nome: null, p_origem: "qd", p_mercado: false, p_motivo: "Distância",
+      p_valor_entrega: 5, p_valor_pedido: 40, p_valor_combinado: 12, p_pedido: "ZZ-QQ" });
+  } catch (e) { erro = e.message; }
+  verdade(/preencha o nome/.test(erro), "recusa: " + erro);
+});
+
+await t("009z1 (A5-10): quem aceitou a tarefa compartilhada sai da equipe e ela fica com quem participa", async () => {
+  const x = pessoa("sai.casa@x.com", "Sai Daqui"), y = pessoa("fica.casa@x.com", "Fica Aqui");
+  for (const p of [x, y]) { await db.query("insert into membros (email, nome, papel) values ($1, $2, 'monitorador') on conflict do nothing", [p.email, p.nome]); await rpc(p, "entrar"); }
+  const tf = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "LAGARTO - SE", quantidade: 3 } });
+  await rpc(x, "aceitar_atividade", { p_id: tf.id });
+  await rpc(y, "aceitar_atividade", { p_id: tf.id });
+  await db.query("delete from membros where email = $1", [x.email]);
+  const a = await um("select status, aceita_por_nome, jsonb_array_length(participantes) n from atividades where id = $1", [tf.id]);
+  igual([a.status, a.aceita_por_nome, a.n], ["aceita", "Fica Aqui", 1]);
+  const uY = (await um("select user_id from membros where email = $1", [y.email])).user_id;
+  verdade(await um("select 1 from notificacoes where para = $1 and texto like '%saiu da equipe%'", [uY]), "quem ficou é avisado");
 });
 
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco

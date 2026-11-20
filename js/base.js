@@ -30,17 +30,6 @@
     return n;
   };
   const onlyDigits = (s) => String(s || "").replace(/\D/g, "");
-  const fmtCPF = (d) => { d = onlyDigits(d).slice(0, 11); return d.replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d)/, "$1.$2").replace(/(\d{3})(\d{1,2})$/, "$1-$2"); };
-  function cpfValido(c) {
-    c = onlyDigits(c);
-    if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
-    for (let t = 9; t < 11; t++) {
-      let s = 0;
-      for (let i = 0; i < t; i++) s += Number(c[i]) * (t + 1 - i);
-      if (((s * 10) % 11) % 10 !== Number(c[t])) return false;
-    }
-    return true;
-  }
   const norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
   // 009j: datas e horas sempre no horário de Brasília (o mesmo do banco), mesmo num computador com outro fuso
   const FUSO = "America/Sao_Paulo";
@@ -123,7 +112,28 @@
   const regrasRestricao = REGRAS_RESTRICAO.flatMap(([a, b]) => [[a, b], [a[0].toUpperCase() + a.slice(1), b[0].toUpperCase() + b.slice(1)]])
     .map(([a, b]) => [new RegExp(`(?<![\\p{L}])${a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}])`, "gu"), b]);
   const restricao = (t) => typeof t !== "string" || !/bloque/i.test(t) ? t : regrasRestricao.reduce((r, [re, b]) => r.replace(re, b), t);
-  const msgErro = (e) => e?.message && !/fetch|network/i.test(e.message) ? restricao(e.message) : "Não foi possível falar com o servidor. Tente de novo em instantes.";
+  // 009z (A12-04): erro técnico do servidor vira frase em português com o que fazer; a mensagem em português
+  // que o próprio banco escreve (raise exception) passa como está. MESMA função em js/base.js e extensao/api.js.
+  const ERROS_TECNICOS = [
+    [/failed to fetch|networkerror|network request|load failed|fetch/i, "Não foi possível falar com o servidor. Confira a internet e tente de novo em instantes."],
+    [/jwt|token.*(expired|invalid)|refresh token|sess(ion|ão) (expired|expirada)/i, "Sua sessão venceu. Saia e entre de novo."],
+    [/pgrst202|schema cache|could not find the function/i, "O Comunique foi atualizado e o banco ainda não. Avise um moderador."],
+    [/42501|permission denied|row-level security/i, "Seu acesso não permite esta ação."],
+    [/23505|duplicate key|already exists/i, "Isso já foi registrado."],
+    [/23502|not-null/i, "Falta preencher um campo obrigatório."],
+    [/23503|foreign key/i, "Esse registro está ligado a outro e não pode ser mudado assim."],
+    [/23514|check constraint|invalid input/i, "Algum dado não foi aceito. Confira os campos e tente de novo."],
+    [/57014|timeout|canceling statement/i, "O servidor demorou para responder. Tente de novo."],
+  ];
+  const PARECE_INGLES = /\b(the|of|is|not|does|violates|function|relation|column|could|failed|invalid|error|unexpected|null|undefined)\b/i;
+  function traduzirErro(msg, codigo) {
+    const m = String(msg || "").trim(), tudo = `${codigo || ""} ${m}`;
+    if (m && !PARECE_INGLES.test(m) && /[a-záéíóúãõâêôç]/i.test(m) && !/^[A-Z0-9]{5}$/.test(m)) return m;  // português do banco
+    for (const [re, frase] of ERROS_TECNICOS) if (re.test(tudo)) return frase;
+    if (m || codigo) console.warn("Erro do servidor:", codigo || "", m);
+    return "Algo deu errado. Tente de novo; se repetir, avise um moderador.";
+  }
+  const msgErro = (e) => restricao(traduzirErro(e?.message, e?.code));
 
   // tabela simples: cols = [[título, numérico?]], linhas = <tr>s
   const tabela = (cols, linhas, vazioTxt) => [
@@ -173,22 +183,6 @@
     const a = el("a", { href: url, download: `${nome}-${new Date().toISOString().slice(0, 10)}.csv` });
     document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
-  // segmentos "Todos / Só eu / Escolher pessoas": devolve null (todos) ou lista de ids
-  function filtroPessoas(estado) {
-    if (estado.filtro === "eu") return [S.me.id];
-    if (estado.filtro === "escolher") return estado.escolhidos.size ? [...estado.escolhidos] : [S.me.id];
-    return null;
-  }
-  function caixaPessoas(box, estado, aoMudar) {
-    box.hidden = estado.filtro !== "escolher";
-    if (box.hidden) return;
-    box.replaceChildren(...S.pessoas.map((p) => {
-      const cb = el("input", { type: "checkbox", value: p.id, onchange: (e) => { if (e.target.checked) estado.escolhidos.add(p.id); else estado.escolhidos.delete(p.id); aoMudar(); } });
-      cb.checked = estado.escolhidos.has(p.id);
-      return el("label", {}, cb, p.id === S.me.id ? `${p.nome} (você)` : p.nome);
-    }));
-  }
-  const nomesEscolhidos = (estado) => S.pessoas.filter((p) => estado.escolhidos.has(p.id)).map((p) => (p.id === S.me.id ? "você" : p.nome)).join(", ");
 
   // 009j (copy-button): ID/CPF com um botãozinho de copiar ao lado. O balão "Copiado" é o mesmo para quem vê e
   // para o leitor de tela (role=status); some com opacidade, e o botão nunca fica desabilitado.
@@ -295,6 +289,27 @@
   // previsão de término de uma tarefa (cadastro, tratativa, atividade): linha + botão que abre a janela.
   // item: { previsao, previsao_por_nome }; tipo: 'cadastro' | 'tarefa' | 'atividade'; pode: quem está com a tarefa
   const paraCampo = (d) => { const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 16); };
+  // 009z (M2): prazo em contagem regressiva ("vence em 2 h 10 min", "venceu há 40 min"); âmbar quando falta pouco
+  // (menos de 2 h ou menos de 25% do prazo), vermelho depois de vencer. data-fim deixa o tique atualizar só o texto.
+  function tempoCurto(ms) {
+    const m = Math.max(1, Math.round(ms / 60000));
+    if (m < 60) return `${m} min`;
+    if (m < 1440) { const h = Math.floor(m / 60), r = m % 60; return r ? `${h} h ${r} min` : `${h} h`; }
+    const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60); return h ? `${d} d ${h} h` : `${d} d`;
+  }
+  function pintarPrazo(span) {
+    const fim = new Date(span.dataset.fim).getTime(), ini = span.dataset.inicio ? new Date(span.dataset.inicio).getTime() : null, falta = fim - Date.now();
+    const perto = falta >= 0 && (falta < 2 * 3600000 || (ini && falta < 0.25 * (fim - ini)));
+    span.textContent = falta >= 0 ? `vence em ${tempoCurto(falta)}` : `venceu há ${tempoCurto(-falta)}`;
+    span.classList.toggle("perto", perto); span.classList.toggle("vencido", falta < 0);
+  }
+  function prazo(fim, inicio) {
+    if (!fim) return null;
+    const span = el("span", { class: "prazo", "data-fim": new Date(fim).toISOString(), "data-inicio": inicio || null, title: "Prazo: " + dt(new Date(fim).toISOString()) });
+    pintarPrazo(span);
+    return span;
+  }
+  const atualizarPrazos = () => document.querySelectorAll(".prazo[data-fim]").forEach(pintarPrazo);
   function previsao(item, tipo, id, pode) {
     const p = item?.previsao ? new Date(item.previsao) : null;
     const passou = p && p < Date.now();
@@ -302,7 +317,7 @@
     const hoje = p && diaChave(p) === diaChave(Date.now());
     const quando = p ? (hoje ? "hoje às " + p.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: FUSO }) : dt(p.toISOString())) : null;
     return el("div", { class: "previsao" + (passou ? " passou" : "") },
-      p ? el("span", {}, el("b", { text: passou ? `Previsão passou (${quando})` : `Previsão: até ${quando}` }), item.previsao_por_nome ? ` · por ${item.previsao_por_nome}` : "") : null,
+      p ? el("span", {}, el("b", { text: passou ? `Previsão passou (${quando})` : `Previsão: até ${quando}` }), " · ", prazo(item.previsao), item.previsao_por_nome ? ` · por ${item.previsao_por_nome}` : "") : null,
       pode ? el("button", { class: "btn link", type: "button", onclick: (e) => { e.stopPropagation(); abrirPrevisao(item, tipo, id); } }, p ? "Alterar previsão" : "Informar previsão de término") : null);
   }
   function abrirPrevisao(item, tipo, id) {
@@ -331,8 +346,8 @@
 
   // 009y2 (A12-08): "1 aviso novo" / "3 avisos novos", no lugar de "aviso(s) novo(s)"
   const plural = (n, um, varios) => `${n} ${Number(n) === 1 ? um : varios}`;
-  App.u = { plural, restricao, REGRAS_RESTRICAO, semEmoji, progresso, ordenavel, grifar, FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
-            vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas, nomesEscolhidos, papelAtiv, papelBloq };
+  App.u = { plural, traduzirErro, prazo, atualizarPrazos, restricao, REGRAS_RESTRICAO, semEmoji, progresso, ordenavel, grifar, FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
+            vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, papelAtiv, papelBloq };
 
   // ---------- módulos e rotas ----------
   // Rotas: #modulo/aba (ex.: #bloqueios/novo). As antigas (#pendentes, #novo...) continuam valendo para a ativação.
@@ -542,7 +557,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009y2b";
+  const VERSAO_APP = "009z1";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;
@@ -567,7 +582,8 @@
     if (Date.now() - mexeuEm > 300000 && Date.now() - ultimoTique < 120000) return;
     ultimoTique = Date.now();
     if (versao != null && Date.now() - ultimaCompleta < 300000) {
-      try { const v = await rpc("ultima_mudanca"); if (v != null && Number(v) === versao) { App.render(); return; } } catch (_) {}
+      // 009z (A3-01): nada mudou no banco = não redesenha a tela; só os prazos em contagem regressiva andam
+      try { const v = await rpc("ultima_mudanca"); if (v != null && Number(v) === versao) { App.semRedesenho = (App.semRedesenho || 0) + 1; atualizarPrazos(); return; } } catch (_) {}
     }
     App.carregar();
   }
@@ -593,7 +609,19 @@
     $("#c-avisos").replaceChildren(App.ic("sino"), ...(nAv ? [el("b", { class: "num", text: String(nAv) })] : []));
     $("#b-avisos").dataset.novas = String(nAv > 0);
     $("#b-avisos").setAttribute("aria-label", nAv ? `${nAv} aviso(s) novo(s)` : "Avisos");
+    // 009z (A3-02): o foco do teclado volta para o mesmo botão/link depois do redesenho (antes ia para o começo da página)
+    const marca = ativo && sec?.contains(ativo) && ativo !== document.body ? {
+      id: ativo.id || null, chave: ativo.closest("[data-id],[data-chave]")?.getAttribute("data-id") || ativo.closest("[data-chave]")?.getAttribute("data-chave") || null,
+      tag: ativo.tagName, texto: (ativo.textContent || "").trim().slice(0, 60) } : null;
     mod.render?.(App.atual.aba);
+    if (marca && !sec.contains(document.activeElement)) {
+      let alvo = marca.id ? document.getElementById(marca.id) : null;
+      if (!alvo) {
+        const raiz = marca.chave ? sec.querySelector(`[data-id="${CSS.escape(marca.chave)}"],[data-chave="${CSS.escape(marca.chave)}"]`) : sec;
+        alvo = raiz ? [...raiz.querySelectorAll(marca.tag)].find((x) => (x.textContent || "").trim().slice(0, 60) === marca.texto) : null;
+      }
+      alvo?.focus({ preventScroll: true });
+    }
     sec?.querySelectorAll("table[data-ordenavel]").forEach(ordenavel);  // 009l: tabelas que ordenam pelo cabeçalho
     montarBarraBaixo();
   };

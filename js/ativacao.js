@@ -2,7 +2,7 @@
 (() => {
   "use strict";
   const App = window.App;
-  const { $, el, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
+  const { $, el, onlyDigits, norm, dt, dia, duracao, num, horas, toast, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
           vazio, carregandoEl, rpc, msgErro, tabela, barras, baixarCSV } = App.u;
   const S = App.S;
   Object.assign(S, {
@@ -296,7 +296,6 @@
 
   // ---------- histórico ----------
   // 009x (AT4): a busca e os filtros rodam no banco, que devolve só a página da tela (100 por vez) e as contagens.
-  // Banco sem a 009x: cai no jeito antigo (lista inteira) e pagina aqui mesmo.
   const POR_HIST = 100;
   let histPag = 1, pagChave = null, pagT = null;
   function argsHist(por = POR_HIST, pagina = histPag) {
@@ -304,23 +303,7 @@
       p_cidade: $("#f-hist-cidade").value || null, p_meus: $("#f-hist-meus").checked };
   }
   const chaveDoHist = () => { const a = argsHist(); delete a.p_pagina; return JSON.stringify(a); };
-  function paginarAqui(l, a) {   // reserva para o banco sem a 009x
-    const base = l.filter((c) => !a.p_meus || c.enviado_por === S.me.id);
-    const cont = (f) => base.filter(f).length;
-    const f = base.filter((c) => busca(c, a.p_busca) && (!a.p_status || (a.p_status === "revisar" ? !!c.revisar : c.status === a.p_status)) && (!a.p_cidade || c.cidade === a.p_cidade))
-      .sort((x, y) => String(y.enviado_em).localeCompare(String(x.enviado_em)));
-    return { itens: f.slice((a.p_pagina - 1) * a.p_por, a.p_pagina * a.p_por), total: f.length, pagina: a.p_pagina, por: a.p_por,
-      contagens: { cadastros: base.length, aguardando_analise: cont((c) => c.status === "aguardando_analise"), aguardando_contato: cont((c) => c.status === "aguardando_contato"),
-        aprovado: cont((c) => c.status === "aprovado"), encerrado: cont((c) => c.status === "encerrado") },
-      cidades: [...new Set(base.map((c) => c.cidade).filter(Boolean))].sort() };
-  }
-  async function pedirHist(a) {
-    try { return await rpc("listar_cadastros_pagina", a); }
-    catch (e) {
-      if (!/listar_cadastros_pagina|function|schema cache/i.test(msgErro(e) + (e?.message || ""))) throw e;
-      return paginarAqui(await rpc("listar_cadastros", { p_escopo: "todos" }), a);
-    }
-  }
+  const pedirHist = (a) => rpc("listar_cadastros_pagina", a);  // 009z (A7-15): sem o caminho do banco antigo
   async function carregarHist() {
     const chave = chaveDoHist();
     if (pagChave !== chave) { pagChave = chave; histPag = 1; }
