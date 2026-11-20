@@ -329,7 +329,9 @@
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
 
-  App.u = { restricao, REGRAS_RESTRICAO, semEmoji, progresso, ordenavel, grifar, FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
+  // 009y2 (A12-08): "1 aviso novo" / "3 avisos novos", no lugar de "aviso(s) novo(s)"
+  const plural = (n, um, varios) => `${n} ${Number(n) === 1 ? um : varios}`;
+  App.u = { plural, restricao, REGRAS_RESTRICAO, semEmoji, progresso, ordenavel, grifar, FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
             vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas, nomesEscolhidos, papelAtiv, papelBloq };
 
   // ---------- módulos e rotas ----------
@@ -540,7 +542,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009y2a";
+  const VERSAO_APP = "009y2b";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;
@@ -598,6 +600,13 @@
   // 009y1 parte 2 (AP-01): no celular, Início · Entregadores · Atividades · Avisos numa barra embaixo e o resto em
   // "Mais" (copiados do menu de cima: mesmo endereço, mesmo número, mesma tela atual). No computador a barra some.
   const NA_BARRA = { inicio: 'a[data-mod="inicio"]', entregadores: 'a[data-grupo="entregadores"]', atividades: 'a[data-mod="atividades"]', avisos: 'a[data-mod="avisos"]' };
+  // 009y2 (A12-06): "Ir para o conteúdo" pula o menu sem trocar o endereço (o # é das rotas)
+  document.querySelector(".pular")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    const alvo = document.querySelector("section.view:not([hidden]) h2") || document.getElementById("conteudo");
+    if (!alvo.hasAttribute("tabindex")) alvo.setAttribute("tabindex", "-1");
+    alvo.focus();
+  });
   function montarBarraBaixo() {
     const barra = $("#barra-baixo"), mais = $("#bb-mais");
     if (!barra || !mais) return;

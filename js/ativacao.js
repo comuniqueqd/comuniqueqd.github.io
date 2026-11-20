@@ -40,7 +40,8 @@
     const q = $("#q-pend").value, st = $("#f-pend-status").value, cid = $("#f-pend-cidade").value;
     const lista = S.lista.pendentes.filter((c) => busca(c, q) && (!st || c.status === st) && (!cid || c.cidade === cid));
     if (!S.lista.pendentes.length) return box.replaceChildren(vazio("Nada em andamento", staff() ? "Nenhum cadastro esperando. Os novos aparecem aqui assim que forem enviados." : "Quando você enviar um cadastro, ele aparece aqui com a situação da análise."));
-    if (!lista.length) return box.replaceChildren(vazio("Nenhum cadastro com esse filtro", "Limpe a busca ou troque os filtros."));
+    if (!lista.length) return box.replaceChildren(vazio("Nenhum cadastro com esse filtro", "Limpe a busca ou troque os filtros."),
+      el("button", { class: "btn small", type: "button", onclick: () => { $("#q-pend").value = ""; $("#f-pend-status").value = ""; $("#f-pend-cidade").value = ""; render(); } }, "Limpar filtros"));  // 009y2 (A12-12)
     const grupos = ["aguardando_analise", "aguardando_contato"].map((s) => [s, lista.filter((c) => c.status === s)]).filter(([, l]) => l.length);
     // 009y2 (A3-15): no máximo 50 por grupo; "Mostrar mais" traz mais 50
     S.limPend = S.limPend || {};
@@ -231,9 +232,9 @@
   function resumoHistorico(h, idApp) {
     const partes = [];
     if (h.nome) partes.push(`ficha: ${h.nome}${h.cidade ? " · " + h.cidade : ""}`);
-    if (h.bloqueios) partes.push(`${h.bloqueios} restrição(ões)${h.ultimo_infracao ? ` (a última: ${h.ultimo_infracao}, ${dt(h.ultimo_em)})` : ""}`);
-    if (h.leves) partes.push(`${h.leves} leve(s)`);
-    if (h.comentarios) partes.push(`${h.comentarios} comentário(s)`);
+    if (h.bloqueios) partes.push(`${App.u.plural(h.bloqueios, "restrição", "restrições")}${h.ultimo_infracao ? ` (a última: ${h.ultimo_infracao}, ${dt(h.ultimo_em)})` : ""}`);
+    if (h.leves) partes.push(App.u.plural(h.leves, "leve", "leves"));
+    if (h.comentarios) partes.push(App.u.plural(h.comentarios, "comentário", "comentários"));
     return el("div", { class: "quadrinho" + (h.encerrado ? " grave" : "") },
       h.encerrado ? el("p", { style: "margin:0" }, el("b", { icone: "alerta" }, "Este ID está com a parceria encerrada"), h.encerrado_infracao ? ` (${h.encerrado_infracao}, ${dt(h.encerrado_em)})` : "") : null,
       el("p", { style: "margin:0" }, el("b", { text: "Este ID já existe no Comunique: " }), partes.join(" · ") || "sem registros", h.bloqueado_agora ? " · com restrição agora" : ""),
@@ -351,8 +352,8 @@
     $("#hist-tiles").replaceChildren(tile(staff() && !meus ? "Cadastros" : "Enviados por você", k.cadastros, ""), tile("Aguardando análise", k.aguardando_analise, "aguardando_analise", "hl"),
       tile("Aguardando novo contato", k.aguardando_contato, "aguardando_contato", "hl2"), tile("Aprovados", k.aprovado, "aprovado", "good"), tile("Encerrados", k.encerrado, "encerrado"));
     const paginas = Math.max(1, Math.ceil(h.total / h.por)), ini = (h.pagina - 1) * h.por;
-    $("#hist-total").textContent = h.total === k.cadastros ? `${h.total} cadastro(s)` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + h.por, h.total)}` : "")
-      : `${h.total} de ${k.cadastros} cadastro(s)` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + h.por, h.total)}` : "");
+    $("#hist-total").textContent = h.total === k.cadastros ? App.u.plural(h.total, "cadastro", "cadastros") + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + h.por, h.total)}` : "")
+      : `${h.total} de ${App.u.plural(k.cadastros, "cadastro", "cadastros")}` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + h.por, h.total)}` : "");
     const body = el("tbody");
     if (!h.itens.length) body.append(el("tr", {}, el("td", { colspan: cols.length, class: "meta", text: k.cadastros ? "Nenhum cadastro encontrado." : "Você ainda não enviou cadastros." })));
     for (const c of h.itens) {
@@ -363,7 +364,7 @@
         else acoes.append(el("button", { class: "btn quiet", type: "button", onclick: () => { S.confirmar["x" + c.id] = true; render(); } }, "Excluir"));
       }
       body.append(el("tr", { class: "clicavel", onclick: () => alternar(c.id) },
-        el("td", {}, pill(c.status, true), c.reprovacoes ? el("div", { class: "meta", text: `${c.reprovacoes} reprovação(ões)` }) : null),
+        el("td", {}, pill(c.status, true), c.reprovacoes ? el("div", { class: "meta", text: App.u.plural(c.reprovacoes, "reprovação", "reprovações") }) : null),
         celEntregador(c),
         el("td", { text: c.cidade }), el("td", { text: c.enviado_por === S.me.id ? "Você" : c.enviado_por_nome }), el("td", { text: dt(c.enviado_em) }),
         el("td", { class: "meta", text: c.decidido_em ? `${dt(c.decidido_em)} por ${c.decidido_por_nome}${c.motivo ? ` · ${c.motivo}${c.detalhe ? ": " + c.detalhe : ""}` : ""}` : "—" }),

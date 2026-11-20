@@ -397,7 +397,7 @@
   App.atalhoPendentes = () => {
     const n = S.resumo?.financeiro_pendentes || 0;
     document.querySelectorAll("[data-fin-atalho]").forEach((box) => box.replaceChildren(...(n ? [el("a", { class: "fin-pend", href: "#financeiro/pendentes" },
-      el("strong", { text: `${n} ${n === 1 ? "registro seu ainda não foi lançado" : "registros seus ainda não foram lançados"} no sistema` }), " · ver pendentes →")] : [])));
+      el("strong", { text: `${n} ${n === 1 ? "registro seu ainda não foi lançado" : "registros seus ainda não foram lançados"} no sistema` }), " · ver pendentes")] : [])));
   };
 
   App.modulo({

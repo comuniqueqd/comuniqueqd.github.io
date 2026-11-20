@@ -790,7 +790,9 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "O fato confere: há border-left em vários cartões. A prioridade vem de um detector de \"cara de IA\", não de um defeito, e o recomeço já foi decidido pelo dono (Mesa + Caderno). Entra no recomeço; não é item à parte. | Varredura 20/11 (a4): 20/11: igual. impeccable detect renderizado, 1280 claro: side-tab 32 em 9 telas (era 26 em 6): Pendentes, Tarefas, Bloqueados agora, Tratativas, Adicional, Lançamentos, Início (a.funcao::before, article.rapido.ajuda, .aviso-geral, notícias). No CSS: 13 regras border-left/top 3-5 px (estilo.css:94,136,137,182,317,322,366,457,500,522,567,583,635,640). Painel da extensão painel.css:40 igual.",
   "junto": "",
-  "versao": "009y2"
+  "versao": "009y2",
+  "feito": "009y2b",
+  "situacao": "Feito na 009y2 parte 2 (publicada em 20/11/2026): sem a faixa colorida; borda vermelha só no que exige atenção."
  },
  {
   "ag": "a4",
@@ -906,7 +908,9 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: igual. 1.089 a 1.117 de 1.287 alvos clicáveis com menos de 44 px de altura (31 telas); mais comuns 39 (279), 28 (126), 30 (107), 32 (80) px. Campos com 30 px (31) no celular.",
   "junto": "",
-  "versao": "009y2"
+  "versao": "009y2",
+  "feito": "009y2b",
+  "situacao": "Feito na 009y2 parte 2 (publicada em 20/11/2026): alvos de 44 px no toque."
  },
  {
   "ag": "a4",
@@ -982,7 +986,9 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: em parte. text-transform uppercase restou em 4 regras (estilo.css:329,402,468,523); renderizado: .rapido-tipo ('PEDIDO DE AJUDA: OPERAÇÃO – MONITORAMENTO', quebra em 2 linhas no cartão) e 'SEUS NÚMEROS'. A seta → decorativa continua em .funcao-seta (js/inicio.js:37) e 'Ver mais nas Análises →'.",
   "junto": "",
-  "versao": "009y2"
+  "versao": "009y2",
+  "feito": "009y2b",
+  "situacao": "Feito na 009y2 parte 2 (publicada em 20/11/2026): etiquetas em caixa normal e sem setas decorativas."
  },
  {
   "ag": "a4",
@@ -1000,7 +1006,9 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: ainda aberto no banco. listar_registros (pg_get_functiondef no teste_a4, linha 32) mapeia registrado/liberado/corrigido/... mas não 'pendencia_resolvida' e cai em 'else e.tipo': a linha de Avisos → Toda a equipe mostra o código cru. O js/bloqueios.js:161 (EVB) já tem o rótulo, mas o feed não passa por ele. | Varredura 20/11 (a12): Ainda aberto na 009x: o axe/varredura do a12 achou 'pendencia_resolvida' na tela #avisos/equipe. E é maior: listar_registros() (função viva no teste_a12) também cai no código para a ativação: 'editado' e 'revisado' saem crus ('else e.tipo end'). O front tem a tradução pronta em js/base.js EVENTO e js/bloqueios.js:161 EVB, mas o feed usa o texto do banco.",
   "junto": "",
-  "versao": "009y2"
+  "versao": "009y2",
+  "feito": "009y2b",
+  "situacao": "Feito na 009y2 parte 2 (publicada em 20/11/2026): Registros traduzem os códigos; nunca mostram o código."
  },
  {
   "ag": "a4",
@@ -1037,7 +1045,8 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: em parte. Tratativa e Acordo vencido corrigidos na 009u (--bad-forte #a8231b, 7,2:1). Continua: cabeçalho × fundo 1,04:1, surface × bg 1,11:1, dark-glow no detector estático, atalhos com cor própria ilegíveis no escuro (ver A4-01).",
   "junto": "",
-  "versao": "009y2"
+  "versao": "009y2",
+  "situacao": "Em parte (009y2b): divisórias do escuro mais visíveis; falta o terceiro nível de superfície."
  },
  {
   "ag": "a4",
@@ -1055,7 +1064,9 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: igual. O h2 'Tarefas' sai com contorno de foco jade ao trocar de tela (print a4/c-e1280-tarefas.png); js/base.js:443 continua sem regra [tabindex=\"-1\"]:focus.",
   "junto": "",
-  "versao": "009y2"
+  "versao": "009y2",
+  "feito": "009y2b",
+  "situacao": "Feito na 009y2 parte 2 (publicada em 20/11/2026): título focado sem contorno."
  },
  {
   "ag": "a4",
@@ -5598,7 +5609,7 @@
   "nota": "A mesma RPC aceitar_atividade aparece na tela como 'Pegar' (Minha fila) e 'Eu faço' (Tarefas), no aviso como 'aceitou a atividade' e no toast como 'Tarefa aceita'. Desde a 009d2 a tela só fala 'tarefa', mas 6 textos de aviso gravados no banco ainda dizem 'atividade'. Medido com grep e com a lista de format() das funções vivas no banco teste_a12 (82 textos). | Revisor: Acabamento (régua: baixa). Resolver pelo glossário do A12-10.",
   "junto": "A12-11",
   "versao": "009y2",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Em parte (009y2b): 'Eu faço' no lugar de 'Pegar'; falta tarefa × atividade e Excluir × Remover."
  },
  {
   "ag": "a12",
@@ -5674,7 +5685,8 @@
   "nota": "Medido nas 31 abas do administrador (a12/auditoria.json: titulos por rota × nomes das abas em js/*.js). Quem clica 'Toda a equipe' e vê 'Registros' não sabe se chegou ao lugar certo; o histórico de novidades e os avisos falam 'Registros'. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
   "versao": "009y2",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Feito na 009y2 parte 2 (publicada em 20/11/2026): aba 'Painel das tarefas'.",
+  "feito": "009y2b"
  },
  {
   "ag": "a12",
@@ -5693,7 +5705,8 @@
   "nota": "Gravação de 30 Tabs em #bloqueios/novo (a12/auditoria.json, campo foco): 8 itens do menu, 2 da segunda barra, 7 abas e 2 botões de tipo antes de chegar em #bq-id. Com o leitor de tela é igual. O axe não acusa (há landmarks), mas é atrito diário para quem usa teclado. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "M3",
   "versao": "009y2",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Feito na 009y2 parte 2 (publicada em 20/11/2026): 'Ir para o conteúdo' como primeiro Tab.",
+  "feito": "009y2b"
  },
  {
   "ag": "a12",
@@ -5731,7 +5744,7 @@
   "nota": "Na gravação de foco os links aparecem como 'Ativação4', 'Tratativas3', 'Aguardando análise4' nos títulos h3. O leitor de tela lê 'Ativação 4' sem dizer 4 o quê; '(s)' é lido como 'aviso abre parêntese s'. Não há função de plural no App.u. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
   "versao": "009y2",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Em parte (009y2b): plural certo no sino, Minha fila, Histórico e quadrinho do ID; faltam Análises e passagem de turno."
  },
  {
   "ag": "a12",
@@ -5808,7 +5821,7 @@
   "nota": "Levantamento das 20 chamadas de vazio() em js/*.js: 14 dizem o que fazer, 6 não. 'Nada com esse filtro' sem dizer qual filtro está ligado nem oferecer 'Limpar filtros'. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas. | a15: Tela vazia pode abrir o tutorial: 'Nenhum adicional seu ainda. Ver como registrar (3 passos)' (A15-02, T2).",
   "junto": "",
   "versao": "009y2",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Em parte (009y2b): 'Limpar filtros' em Pendentes; faltam as outras telas."
  },
  {
   "ag": "a12",

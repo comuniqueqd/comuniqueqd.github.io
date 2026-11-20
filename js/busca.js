@@ -39,7 +39,7 @@
       el("button", { type: "button", onclick: () => ir(() => (location.hash = x.link || "#avisos/para-mim")) },
         el("span", { text: corta(x.texto) }), el("span", { class: "meta", text: dt(x.criada_em) }))));
     if (!linhas.length) linhas.push(el("p", { class: "meta", style: "margin:6px 8px", text: "Nada encontrado." }));
-    if (bloq) linhas.push(el("button", { type: "button", onclick: () => ir(() => App.abrirFicha(q)) }, el("span", { class: "meta", text: `Consultar “${q}” na tela Consultar entregador →` })));
+    if (bloq) linhas.push(el("button", { type: "button", onclick: () => ir(() => App.abrirFicha(q)) }, el("span", { class: "meta", text: `Consultar “${q}” na tela Consultar entregador` })));
     res.replaceChildren(...linhas);
     App.u.grifar("busca-topo", res, q);  // 009l: grifa o termo nos resultados
     res.hidden = false;
@@ -51,10 +51,16 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009y2a";
+  const VERSAO = "009y2b";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009y2b", tema: "Tudo mais claro", itens: [
+      ["Leia o que aconteceu sem código", "Em Avisos, Toda a equipe mostra o que cada pessoa fez em palavras (ex.: “resolveu a pendência de”), nunca um código interno.", 'nav.modulos a[data-mod="avisos"]'],
+      ["Toque com folga no celular", "Botões e abas ficaram maiores no celular, e as listas sem a faixa colorida ao lado: a situação está na etiqueta."],
+      ["Pule o menu com o teclado", "Quem usa o teclado chega ao conteúdo pelo “Ir para o conteúdo”, o primeiro Tab da página."],
+      ["Encontre o Painel das tarefas", "Nas Análises, a aba das tarefas agora se chama Painel das tarefas.", 'nav.modulos a[data-mod="analises"]'],
+    ] },
     { versao: "009y2a", tema: "Resolva sem trocar de tela", itens: [
       ["Veja e resolva na tela inicial", "Em Precisa de você, “Ver” abre os cartões logo abaixo: aprove ou reprove um cadastro, pegue uma tarefa ou marque um lançamento sem sair da tela.", "#inicio-precisa"],
       ["Decida os cadastros em linhas", "Em Pendentes cada cadastro é uma linha com Aprovar e Reprovar; “Detalhes” abre o resto. A lista vem de 50 em 50."],

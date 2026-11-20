@@ -2,6 +2,10 @@
 // cada pessoa vê os módulos a que tem acesso). Vem de listar_registros() (supabase/004).
 (() => {
   "use strict";
+  // 009y2 (AP-13): o banco devolve o código do evento quando não conhece o verbo; a tela nunca mostra o código
+  const VERBOS = { pendencia_resolvida: "resolveu a pendência de", editado: "alterou os dados do cadastro de", revisado: "conferiu os dados de",
+    corrigido: "corrigiu os dados de", tratativa_concluida: "concluiu a tratativa de", encerrado: "encerrou o cadastro de" };
+  const acaoTexto = (a) => (/^[a-z]+(_[a-z]+)+$|^[a-z]+$/.test(a || "") ? VERBOS[a] || "atualizou o registro de" : a);
   const App = window.App;
   const { $, el, fmtCPF, vazio, carregandoEl, rpc, msgErro } = App.u;
   const S = App.S;
@@ -78,7 +82,7 @@
         d !== diaAtual ? el("div", { class: "dia", text: diaLongo(x.em) }) : null,
         el("span", { class: "quando" }, hora(x.em), el("br"), el("span", { class: "tag", text: x.modulo === "ativacao" ? "ATIVAÇÃO" : "RESTRIÇÕES" })),
         el("div", {},
-          el("div", {}, el("b", { text: x.por_nome || "—" }), " ", App.u.restricao(x.acao), " ", entregador(x)),
+          el("div", {}, el("b", { text: x.por_nome || "—" }), " ", App.u.restricao(acaoTexto(x.acao)), " ", entregador(x)),
           x.detalhe ? el("div", { class: "det", text: App.u.restricao(x.detalhe) }) : null));
       diaAtual = d;
       linhas.push(li);

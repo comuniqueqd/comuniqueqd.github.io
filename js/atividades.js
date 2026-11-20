@@ -39,7 +39,7 @@
     for (const a of A.atividades.filter((x) => x.status === "aberta" && x.opcional_para_mim && x.pode_aceitar))
       opcionais.push(item({ modulo: "ATIVIDADE", titulo: a.titulo, opcional: true,
         detalhe: `${a.descricao || ""} Quem pegar primeiro tira dos outros.`.trim(),
-        acoes: [el("button", { class: "btn small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Tarefa aceita. Ela está com você.") }, "Pegar"),
+        acoes: [el("button", { class: "btn small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Tarefa aceita. Ela está com você.") }, "Eu faço"),
           a.cadastro_id ? el("button", { class: "btn link", type: "button", onclick: () => App.abrirCadastro(a.cadastro_id) }, "Completar agora") : null].filter(Boolean) }));
     // os "revisar" dos bloqueios (vindos da planilha): um cartão só, opcional
     const nRev = S.resumo?.bloqueios_revisar || 0;
@@ -63,8 +63,8 @@
     };
     // Ativação
     if (staffAtiv() && r.ativacao.aguardando_analise)
-      itens.push(item({ modulo: "ATIVAÇÃO", titulo: `${r.ativacao.aguardando_analise} cadastro(s) aguardando análise`,
-        detalhe: "Aprovar, reprovar ou encerrar.", ...porta("cadastros", `${r.ativacao.aguardando_analise} cadastro(s) aguardando análise`, "#ativacao/pendentes", "Ver os cadastros") }));
+      itens.push(item({ modulo: "ATIVAÇÃO", titulo: App.u.plural(r.ativacao.aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"),
+        detalhe: "Aprovar, reprovar ou encerrar.", ...porta("cadastros", App.u.plural(r.ativacao.aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"), "#ativacao/pendentes", "Ver os cadastros") }));
     if (!staffAtiv() && (r.ativacao.aguardando_analise || r.ativacao.aguardando_contato))
       itens.push(item({ modulo: "ATIVAÇÃO", titulo: "Seus cadastros em andamento", estado: "sem",
         detalhe: `${r.ativacao.aguardando_analise} aguardando análise · ${r.ativacao.aguardando_contato} aguardando novo contato. Você acompanha, quem decide é o responsável.`,

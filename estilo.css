@@ -32,7 +32,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --marca: #0B1813; --marca-forte: #08120E; --marca-ink: #F4EFE6;
-    --bg: #0F1C17; --surface: #16261F; --ink: #EDE7DB; --muted: #A7B4AC; --line: #273A31;
+    --bg: #0F1C17; --surface: #16261F; --ink: #EDE7DB; --muted: #A7B4AC; --line: #34503F;
     --accent: #6CCB9A; --accent-ink: #0F1C17; --accent-soft: #19352A;
     --ok: #5fd08e; --ok-soft: #15301f; --bad: #ff8a80; --bad-soft: #3a1a18; --bad-forte: #a8231b; --warn: #f0c060; --warn-soft: #35290f;
     --gray: #A3ADA7; --gray-soft: #22322B;
@@ -42,7 +42,7 @@
 }
 :root[data-theme="dark"] {
   --marca: #0B1813; --marca-forte: #08120E; --marca-ink: #F4EFE6;
-  --bg: #0F1C17; --surface: #16261F; --ink: #EDE7DB; --muted: #A7B4AC; --line: #273A31;
+  --bg: #0F1C17; --surface: #16261F; --ink: #EDE7DB; --muted: #A7B4AC; --line: #34503F;
   --accent: #6CCB9A; --accent-ink: #0F1C17; --accent-soft: #19352A;
   --ok: #5fd08e; --ok-soft: #15301f; --bad: #ff8a80; --bad-soft: #3a1a18; --bad-forte: #a8231b; --warn: #f0c060; --warn-soft: #35290f;
   --gray: #A3ADA7; --gray-soft: #22322B;
@@ -1082,4 +1082,24 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
   /* 009y2: na linha do cadastro, com nome, o ID fica para os Detalhes (a linha cabe em menos altura) */
   .card.linha-cad .name > span:first-child + .copiavel { display: none; }
   .card.linha-cad .actions { gap: 6px; }
+}
+
+/* ---------- 009y2 parte 2: acabamento ---------- */
+/* AP-02: sem a faixa colorida à esquerda (a situação já está na pílula); só o que exige atenção ganha borda vermelha */
+.card, .rapido, .acordo, .pa-resumo, .noticia, .fin-card.pendente, .tarefa-card.aguardando { border-left-width: 1px; border-left-color: var(--line); }
+.card.atrasada, .card.previsao-passou, .rapido.ajuda:not(.aceita), .acordo.vencido { border-color: var(--bad); }
+/* AP-12: etiquetas e títulos pequenos em caixa normal */
+.tag, .rapido-tipo { text-transform: lowercase; letter-spacing: 0; }
+.tag::first-letter, .rapido-tipo::first-letter { text-transform: uppercase; }
+.rapido-tipo { display: inline-block; }
+.busca-res h4, .inicio-dados-topo h3, .detalhe-bloqueio .det-bloco h4 { text-transform: none; letter-spacing: 0; }
+/* AP-16: o título recebe o foco ao trocar de tela (para o leitor de tela), sem o contorno de foco aparecendo */
+[tabindex="-1"]:focus { outline: none; }
+/* A12-06: atalho para pular o menu, visível só no foco */
+.pular { position: absolute; left: 8px; top: -60px; z-index: 100; background: var(--surface); color: var(--ink); border: 2px solid var(--accent); border-radius: 8px; padding: 8px 14px; font-weight: 600; }
+.pular:focus { top: 8px; }
+/* AP-08: no toque, alvos de pelo menos 44 px */
+@media (pointer: coarse) {
+  .btn, .btn.small, .btn.link, nav.tabs a, nav.grupo a, .chip, .seg button, button.tile.clicavel, .barra-baixo a, .btn-copiar { min-height: 44px; }
+  .btn-copiar { min-width: 44px; }
 }

@@ -87,7 +87,7 @@
     const partes = [[d.cadastros, "cadastro(s)"], [d.aprovados, "aprovado(s)"], [d.bloqueios, "bloqueio(s)"], [d.leves, "leve(s)"],
       [d.tratativas, "tratativa(s) resolvida(s)"], [d.saem_hoje, "saem da restrição hoje"]].filter(([v]) => v != null);
     return el("div", { class: "resumo-dia" }, el("b", { text: "Hoje na equipe: " }), partes.map(([v, t]) => `${v} ${t}`).join(" · "),
-      el("br"), `Você fez ${d.voce} registro(s) hoje.`);
+      el("br"), `Você fez ${App.u.plural(d.voce, "registro", "registros")} hoje.`);
   }
 
   function marcarLidos() {
@@ -128,7 +128,7 @@
     const cw = document.documentElement.clientWidth, larg = Math.min(500, cw - 16);
     tira.style.right = `${Math.max(8, Math.min(cw - b.right, cw - larg - 8))}px`;
     tira.replaceChildren(
-      el("div", { class: "tira-topo" }, el("b", { text: n?.nao_lidas ? `${n.nao_lidas} aviso(s) novo(s)` : "Avisos recentes" }),
+      el("div", { class: "tira-topo" }, el("b", { text: n?.nao_lidas ? App.u.plural(n.nao_lidas, "aviso novo", "avisos novos") : "Avisos recentes" }),
         el("button", { class: "btn link", type: "button", onclick: fecharTira, "aria-label": "Fechar" }, App.ic("fechar"))),
       linhaDia(),
       itens.length ? el("ul", { class: "lista-avisos" }, itens.slice(0, 12).map((x) => linhaAviso(x, () => fecharTira())))
@@ -202,7 +202,7 @@
         d.cidades.length ? el("span", { class: "meta", text: " · quer acompanhar uma? Peça para ser a responsável" }) : null),
       el("p", { class: "meta", text: "Os avisos destas cidades vão só para os moderadores. Quer acompanhar uma delas? Peça para ser a responsável: um moderador aprova, e você passa a receber tudo o que acontece lá." }),
       d.cidades.length ? el("ul", { class: "cidades-livres" }, d.cidades.map((c) => el("li", {},
-        el("span", {}, c.cidade, c.pedidos ? el("span", { class: "meta", text: ` · ${c.pedidos} pedido(s) esperando` }) : null),
+        el("span", {}, c.cidade, c.pedidos ? el("span", { class: "meta", text: ` · ${App.u.plural(c.pedidos, "pedido esperando", "pedidos esperando")}` }) : null),
         c.meu_pedido ? el("span", { class: "tag", text: "Você já pediu" })
           : el("button", { class: "btn link", type: "button", onclick: (e) => pedir(c.cidade, e.currentTarget) }, "Pedir para ser responsável")))) : null,
       meus.length ? el("div", {}, el("h4", { style: "margin:12px 0 6px", text: "Seus pedidos" }),
