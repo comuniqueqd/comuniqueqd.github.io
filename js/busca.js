@@ -51,10 +51,17 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009x6";
+  const VERSAO = "009y1";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    // 009y1: até 5 itens começando por verbo; o 3º campo (seletor) dá o "Mostrar onde" e vira o tour da versão
+    { versao: "009y1", tema: "Mais rápido no dia a dia", itens: [
+      ["Pegue tarefas pela Minha fila", "As 3 tarefas abertas mais urgentes da equipe aparecem na Minha fila, com o botão Eu faço, sem trocar de tela.", 'nav.modulos a[data-mod="atividades"]'],
+      ["Mande a mensagem logo depois de decidir", "Ao aprovar ou reprovar um cadastro, o botão Gerar mensagem para o entregador já traz o nome e o que falta reenviar.", 'nav.modulos a[data-grupo="entregadores"]'],
+      ["Enxergue melhor os campos", "Campos, botões e textos de exemplo ganharam mais contraste, no tema claro e no escuro."],
+      ["Veja só o que mudou", "Esta janela agora mostra só a versão nova. As anteriores ficam em Versões anteriores, logo abaixo."],
+    ] },
     { versao: "009x6", tema: "Missões da equipe", itens: [
       ["Tarefas automáticas contam para todos", "A tarefa \"Aprovar entregadores\" que nasce sozinha ao ativar um parceiro agora conta todos os entregadores aprovados na cidade desde que ela foi criada, não importa quem aprovou. As tarefas criadas por alguém continuam contando só as aprovações de quem pegou."],
       ["A meta fecha sozinha", "Quando a equipe bate a meta de uma tarefa automática, ela fecha sozinha e avisa todo mundo que participou."],
@@ -237,14 +244,20 @@
 
   // grava na hora (o evento "close" chega um instante depois; recarregar logo em seguida perderia a marca)
   const marcarVisto = () => { try { localStorage.setItem("comunique-novidades", VERSAO); } catch (_) {} };
+  // 009y1 (A15-06): a janela mostra só a versão nova (escrita em até 5 itens, começando por verbo); as anteriores
+  // ficam recolhidas em "Versões anteriores". Item com seletor (3º campo) ganha "Mostrar onde", que aponta na tela.
   function mostrarNovidades() {
     let visto = null;
     try { visto = localStorage.getItem("comunique-novidades"); } catch (_) {}
     if (visto === VERSAO) return setTimeout(iniciarTour, 600);  // 009n: janela já vista: o tour pode aparecer
+    const [atual, ...antigas] = VERSOES;
+    const bloco = (v, i) => el("div", { class: "bloco-versao" + (i ? " antiga" : "") },
+      el("h4", { text: i ? v.tema : `Agora: ${v.tema}` }),   // 009u: sem os códigos internos das versões
+      el("ol", { class: "novidades" }, v.itens.map(([t, x, sel]) => el("li", {}, el("b", { text: t + ": " }), x,
+        !i && sel ? el("button", { class: "btn link small mostrar-onde", type: "button", onclick: () => { marcarVisto(); d.close(); setTimeout(() => iniciarTour([[sel, t, x]]), 250); } }, "Mostrar onde") : null))));
     const d = janela("O que há de novo",
-      ...VERSOES.map((v, i) => el("div", { class: "bloco-versao" + (i ? " antiga" : "") },
-        el("h4", { text: i ? v.tema : `Agora: ${v.tema}` }),   // 009u: sem os códigos internos das versões
-        el("ol", { class: "novidades" }, v.itens.map(([t, x]) => el("li", {}, el("b", { text: t + ": " }), x))))),
+      bloco(atual, 0),
+      antigas.length ? el("details", { class: "versoes-antigas" }, el("summary", { text: `Versões anteriores (${antigas.length})` }), ...antigas.map((v, i) => bloco(v, i + 1))) : null,
       el("div", { class: "actions" }, el("button", { class: "btn primary", type: "button", onclick: () => { marcarVisto(); d.close(); } }, "Entendi")));
     d.addEventListener("close", marcarVisto);  // o e o Esc também contam como visto
     d.addEventListener("close", () => setTimeout(iniciarTour, 300));  // 009n: depois da janela, o tour mostra onde fica o que mudou
@@ -254,20 +267,24 @@
   // Balõezinhos que apontam para o que mudou nesta versão, um de cada vez. popover="manual" (não some com um clique
   // fora), role="dialog" com título, e o foco vai para dentro do balão. Sem anchor positioning no navegador, a posição
   // é calculada pelo tamanho do alvo. Aparece uma vez por versão (localStorage "comunique-tour").
-  const TOUR = { versao: "009m", passos: [
+  // 009y1 (A15-06): o tour da versão sai dos próprios itens de VERSOES que têm seletor; sem nenhum, fica o último tour (já visto)
+  const TOUR_ANTIGO = { versao: "009m", passos: [
     ['nav.modulos a[data-mod="avisos"]', "Avisos agora fica aqui", "Para mim: os seus avisos. Toda a equipe: o que antes ficava em Registros. O sino continua levando para cá."],
     ['nav.modulos a[data-mod="atividades"]', "Minha fila", "Em Atividades, a Minha fila junta tudo o que está com você, com os cartões completos das suas tarefas."],
     ['nav.modulos a[data-mod="analises"]', "O Painel mudou de lugar", "O Painel das tarefas agora fica em Análises → Tarefas."],
   ] };
+  const passosDaVersao = VERSOES[0].itens.filter((x) => x[2]).map(([t, x, sel]) => [sel, t, x]);
+  const TOUR = passosDaVersao.length ? { versao: VERSAO, passos: passosDaVersao } : TOUR_ANTIGO;
   let tourAtivo = false;
-  function iniciarTour() {
+  // avulso = um passo só, pedido pelo "Mostrar onde" (não marca o tour da versão como visto)
+  function iniciarTour(avulso) {
     let visto = null;
     try { visto = localStorage.getItem("comunique-tour"); } catch (_) {}
-    if (tourAtivo || visto === TOUR.versao || document.querySelector("dialog:modal") || !App.u.temPopover) return;
-    const passos = TOUR.passos.filter(([sel]) => { const n = document.querySelector(sel); return n && n.offsetParent; });
+    if (tourAtivo || (!avulso && visto === TOUR.versao) || document.querySelector("dialog:modal") || !App.u.temPopover) return;
+    const passos = (avulso || TOUR.passos).filter(([sel]) => { const n = document.querySelector(sel); return n && n.offsetParent; });
     if (!passos.length) return;
     tourAtivo = true;
-    const acabar = () => { try { localStorage.setItem("comunique-tour", TOUR.versao); } catch (_) {} tourAtivo = false; caixa.remove(); };
+    const acabar = () => { if (!avulso) try { localStorage.setItem("comunique-tour", TOUR.versao); } catch (_) {} tourAtivo = false; caixa.remove(); };
     const titulo = el("h3", { id: "tour-titulo" }), texto = el("p", { class: "meta" }), contagem = el("span", { class: "meta" });
     const proximo = el("button", { class: "btn primary small", type: "button" }), pular = el("button", { class: "btn link", type: "button", onclick: acabar }, "Pular");
     const caixa = el("div", { class: "tour-passo", id: "tour-passo", popover: "manual", role: "dialog", "aria-labelledby": "tour-titulo" },
@@ -291,5 +308,5 @@
   }
 
   App.aoEntrar.push(() => { form.hidden = false; }, mostrarNovidades);
-  App.novidades = { VERSAO, NOVIDADES, mostrar: () => { try { localStorage.removeItem("comunique-novidades"); } catch (_) {} mostrarNovidades(); } };
+  App.novidades = { VERSAO, NOVIDADES, TOUR, mostrar: () => { try { localStorage.removeItem("comunique-novidades"); } catch (_) {} mostrarNovidades(); } };
 })();

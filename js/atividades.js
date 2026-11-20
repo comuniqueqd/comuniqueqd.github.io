@@ -94,11 +94,23 @@
           acoes: [el("a", { class: "btn small", href: "#bloqueios/historico" }, "Ver no Histórico")] }));
       }
     }
-    if (!itens.length && !opcionais.length && !minhas.length) return box.replaceChildren(vazio("Tudo em dia", "Nenhuma pendência para você agora. Novas tarefas aparecem aqui assim que forem criadas."));
+    // 009y1 (OP-4): as 3 tarefas abertas para a equipe mais urgentes (prazo mais perto, depois a mais antiga), com
+    // "Eu faço", sem ir até a aba Tarefas
+    const ja = new Set(minhas.map((x) => x.id));
+    const abertas = A.atividades.filter((x) => x.status === "aberta" && x.pode_aceitar && !x.opcional_para_mim && x.criada_por !== S.me.id && !ja.has(x.id))
+      .sort((x, y) => String(x.prazo || "9").localeCompare(String(y.prazo || "9")) || String(x.criada_em).localeCompare(String(y.criada_em)));
+    const blocoAbertas = abertas.length ? el("div", { class: "grupo", id: "at-abertas-fila" },
+      el("h3", {}, "Abertas para a equipe", el("span", { class: "count", text: abertas.length })),
+      el("ul", { class: "queue", style: "padding:0;margin:0" }, abertas.slice(0, 3).map((a) => item({ modulo: "TAREFA", titulo: a.titulo,
+        detalhe: [a.cidade, a.prazo ? `prazo ${App.u.dt(a.prazo)}` : "sem prazo", a.criada_por_nome ? `pedida por ${a.criada_por_nome}` : null].filter(Boolean).join(" · "),
+        acoes: [el("button", { class: "btn primary small", type: "button", onclick: (e) => acaoAtividade("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Tarefa aceita. Ela está com você.") }, "Eu faço")] }))),
+      abertas.length > 3 ? el("a", { class: "btn link", href: "#atividades/sugeridas" }, `Ver todas as ${abertas.length} abertas`) : null) : null;
+    if (!itens.length && !opcionais.length && !minhas.length && !blocoAbertas) return box.replaceChildren(vazio("Tudo em dia", "Nenhuma pendência para você agora. Novas tarefas aparecem aqui assim que forem criadas."));
     box.replaceChildren(...[
       minhas.length ? el("div", { class: "grupo" }, el("h3", {}, "Tarefas com você", el("span", { class: "count", text: minhas.length })),
         el("div", { class: "queue" }, minhas.map(cartaoAtividade))) : null,
-      itens.length ? el("ul", { class: "queue", style: "padding:0;margin:0" }, itens) : minhas.length ? null : vazio("Tudo em dia", "Nenhuma pendência só sua agora."),
+      itens.length ? el("ul", { class: "queue", style: "padding:0;margin:0" }, itens) : minhas.length || blocoAbertas ? null : vazio("Tudo em dia", "Nenhuma pendência só sua agora."),
+      blocoAbertas,
       opcionais.length ? el("div", { class: "grupo" }, el("h3", {}, "Opcionais: quem puder, pega", el("span", { class: "count", text: opcionais.length })),
         el("ul", { class: "queue", style: "padding:0;margin:0" }, opcionais)) : null].filter(Boolean));
   }

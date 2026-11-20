@@ -110,8 +110,37 @@
       // 009e: a aprovação conta nas tarefas "Aprovar entregadores" de quem aprovou, na cidade
       const contou = acao === "aprovar" ? await rpc("tarefas_que_contam", { p_tipo: "ativar_entregadores", p_cidade: c.cidade }).catch(() => []) : [];
       toast({ aprovar: "Cadastro aprovado.", reprovar: "Cadastro reprovado: agora aguarda novo contato.", encerrar: "Cadastro encerrado." }[acao] + (App.contouPara?.(contou) || ""));
+      // 009y1 (NF-1): depois de aprovar ou reprovar, a mensagem pronta para o entregador fica a um clique
+      S.ultimaDecisao = acao === "encerrar" ? null : { c, acao, motivo, detalhe };
+      mostrarDecisao();
       await carregar();
     } catch (e) { btn.disabled = false; toast(msgErro(e)); }
+  }
+
+  // 009y1 (NF-1): o que o entregador precisa mandar de novo, por motivo de reprovação (os motivos da tabela "motivos")
+  const REENVIAR = {
+    "Documento ilegível": "Envie de novo a foto do documento, bem iluminada e sem cortes, com todos os dados legíveis.",
+    "Documento pendente": "Envie o documento que faltou (frente e verso, quando houver).",
+    "Dados divergentes": "Confira o nome e os dados que você informou e envie de novo, iguais aos do documento.",
+    "Fotos sem camisa": "Envie uma nova foto de perfil, com camisa, de frente e com o rosto visível.",
+    "Documentação bancária com dados insuficientes": "Envie os dados bancários completos: banco, agência, conta e o nome do titular.",
+    "Fora da área de atuação": "No momento ainda não atendemos a sua região; avisamos quando chegarmos aí.",
+  };
+  function mensagemDecisao({ c, acao, motivo, detalhe }) {
+    const nome = App.mensagens?.primeiroNome(c.nome) || "";
+    if (acao === "aprovar") return App.mensagens?.abrir("ativacao_aprovado", { nome, cidade: c.cidade }, "Mensagem: cadastro aprovado");
+    const m = motivo === "Outro" ? String(detalhe || "").trim() : motivo + (detalhe ? ` (${String(detalhe).trim()})` : "");
+    return App.mensagens?.abrir("ativacao_reprovado", { nome, cidade: c.cidade, motivo: m, reenviar: motivo === "Outro" ? "" : REENVIAR[motivo] || "" }, "Mensagem: cadastro com pendência");
+  }
+  function mostrarDecisao() {
+    const box = $("#pend-decisao"), d = S.ultimaDecisao;
+    if (!box) return;
+    box.hidden = !d;
+    if (!d) return box.replaceChildren();
+    const quem = d.c.nome || (d.c.id_app ? "ID " + d.c.id_app : "o entregador");
+    box.replaceChildren(el("span", { text: `${d.acao === "aprovar" ? "Aprovado" : "Reprovado"}: ${quem}.` }),
+      el("button", { class: "btn small primary", type: "button", onclick: () => mensagemDecisao(d) }, "Gerar mensagem para o entregador"),
+      el("button", { class: "btn link", type: "button", onclick: () => { S.ultimaDecisao = null; mostrarDecisao(); } }, "Fechar"));
   }
 
   async function copiar(c) {

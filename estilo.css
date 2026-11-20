@@ -960,3 +960,9 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
 .pa-semana-reserva { min-height: 132px; }
 /* 009x6: bloco dos parceiros ativados na tela inicial */
 .parceiros-dif { font-family: var(--font-body); font-weight: 400; font-size: .85rem; }
+/* 009y1 (A15-06): versões anteriores recolhidas na janela de novidades */
+.versoes-antigas { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.versoes-antigas > summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+.mostrar-onde { margin-left: 6px; }
+/* 009y1 (NF-1): faixa depois de aprovar ou reprovar, com a mensagem para o entregador */
+.decisao-feita { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--accent-soft); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin-bottom: 12px; }
