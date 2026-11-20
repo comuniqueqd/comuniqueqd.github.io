@@ -522,7 +522,7 @@ try {
   await m.click(`${cardL} >> text=Confirmar reversão`);
   ok(await esperar(m, "#toast:has-text('Encerramento de Ladrão revertido')"), "encerramento revertido com motivo");
   // 009x3 (A5-09): reverter fecha a tarefa de encerramento; o cartão sai de "Bloqueados agora"
-  ok(await m.waitForFunction((sel) => !document.querySelector(sel), cardL, { timeout: 8000 }).then(() => true, () => false), "009x3: revertido sai de Bloqueados agora (a tarefa de encerramento fechou)");
+  ok(await m.locator(cardL).waitFor({ state: "detached", timeout: 8000 }).then(() => true, () => false), "009x3: revertido sai de Bloqueados agora (a tarefa de encerramento fechou)");
   await ir(m, "#atividades");
   await esperar(m, "#at-lista");
   ok(!(await texto(m, "#at-lista")).includes("Encerramento de parceria: Ladrão"), "009x3: a tarefa de encerramento revertido não fica pendente nas Atividades");
