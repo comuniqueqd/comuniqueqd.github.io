@@ -16,6 +16,22 @@
     return s;
   };
 
+  // 009z (AT8): limpeza de avisos antigos (120 dias, decisão do usuário): primeiro conta, depois apaga com confirmação
+  $("#b-limpeza-contar")?.addEventListener("click", async (e) => {
+    const bt = e.currentTarget, res = $("#limpeza-res");
+    bt.disabled = true;
+    try {
+      const c = await rpc("limpar_avisos_antigos");
+      res.replaceChildren(c.avisos ? el("span", {}, `${App.u.plural(c.avisos, "aviso antigo", "avisos antigos")} para apagar. `,
+        el("button", { class: "btn small danger", type: "button", onclick: async (ev) => {
+          ev.currentTarget.disabled = true;
+          try { const r = await rpc("limpar_avisos_antigos", { p_apagar: true }); res.textContent = `${App.u.plural(r.avisos, "aviso apagado", "avisos apagados")}.`; toast("Avisos antigos apagados."); }
+          catch (err) { toast(msgErro(err)); ev.currentTarget.disabled = false; } } }, `Apagar ${c.avisos}`))
+        : "Nenhum aviso com mais de 120 dias para apagar.");
+    } catch (err) { toast(msgErro(err)); }
+    bt.disabled = false;
+  });
+
   function renderEquipe() {
     const eq = S.equipe;
     const ped = eq?.pedidos || [];

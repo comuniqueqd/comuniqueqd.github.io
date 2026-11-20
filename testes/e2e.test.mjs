@@ -68,6 +68,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1d-concluir-ativida
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009y1e-equipe-sem-dono.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z1-base-firme.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z2-funcoes-sem-uso.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z3-mais-rapido.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -126,7 +127,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009z1"); localStorage.setItem("comunique-tour", "009z1"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009z3"); localStorage.setItem("comunique-tour", "009z3"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -891,20 +892,22 @@ try {
     await d7.query("select importar_bloqueio('rev00002', 'Nome Velho', 'ITABAIANA - SE', 'Avaria de Produto', now() - interval '120 days', 'Planilha', 'Nome diferente na planilha', '24')");
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
-  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Veja quanto falta para cada prazo"), "janela O que há de novo aparece na primeira vez");
+  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Aperte Ctrl+K em qualquer tela"), "janela O que há de novo aparece na primeira vez");
   // 009y1 (A15-06): só a versão nova aberta; as anteriores recolhidas
   ok(!(await n7.isVisible("dialog.janela >> text=Sino com tira")) && await n7.isVisible("dialog.janela details.versoes-antigas > summary")
       && await n7.isVisible("dialog.janela .mostrar-onde"), "009y1: a janela mostra só a versão nova, com Mostrar onde; as anteriores ficam recolhidas");
   { const hs = await n7.$$eval("dialog.janela .bloco-versao h4", (l) => l.map((x) => x.textContent));
-    ok(hs.length === 33 && hs[0] === "Agora: Base firme" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
+    ok(hs.length === 34 && hs[0] === "Agora: Mais rápido de achar" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
-  ok(await esperar(n7, "#tour-passo:popover-open >> text=Veja quanto falta para cada prazo") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
+  ok(await esperar(n7, "#tour-passo:popover-open >> text=Aperte Ctrl+K em qualquer tela") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
       && (await n7.getAttribute("#tour-passo", "role")) === "dialog", "009n: tour das novidades abre no 1º passo, com o foco dentro do balão");
   await n7.screenshot({ path: path.join(PRINTS, "f1b-tour.png") });
+  await n7.click("#tour-passo >> text=Próximo");
+  ok(await esperar(n7, "#tour-passo >> text=Veja só o que vence hoje"), "009n: o tour passa pelos passos (009y1: saem dos itens da versão)");
   await n7.click("#tour-passo >> text=Entendi");
-  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z1"), "009n: “Entendi” fecha o tour e ele não volta");
+  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z3"), "009n: “Entendi” fecha o tour e ele não volta");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
   ok(!(await n7.isVisible("dialog.janela")), "e não aparece de novo" + ((await n7.isVisible("dialog.janela")) ? ": " + (await n7.textContent("dialog.janela[open]").catch(() => "?")) : ""));
   // suporte envia sem nome: marca revisar e tarefa para o admin (opcional para os outros)
@@ -1680,6 +1683,36 @@ try {
       await v.waitForTimeout(1500);
       const tq = await v.evaluate(async () => { const li = document.querySelector("#precisa-lista li"); const n0 = App.semRedesenho || 0; await App.tique(); return [li?.isConnected, (App.semRedesenho || 0) - n0]; });
       ok(tq[0] === true && tq[1] === 1, "009z: o tique sem mudança no banco não redesenha a tela: " + JSON.stringify(tq)); }
+    // 009z parte 2 (A2): Ctrl+K abre a paleta; filtra ações e procura entregador; Enter leva à tela
+    { await v.keyboard.press("Control+k");
+      ok(await esperar(v, "dialog.paleta[open] input") && await v.evaluate(() => document.activeElement?.closest("dialog.paleta") != null), "009z: Ctrl+K abre a paleta com o foco na busca");
+      await v.keyboard.type("adicional");
+      ok(await esperar(v, "dialog.paleta li.sel >> text=Registrar adicional"), "009z: a paleta filtra as ações pelo que se digita");
+      await v.keyboard.press("Enter");
+      ok(await v.waitForFunction(() => location.hash === "#financeiro/adicional" && !document.querySelector("dialog.paleta[open]"), null, { timeout: 5000 }).then(() => true, () => false), "009z: Enter abre a tela escolhida e fecha a paleta");
+      await v.keyboard.press("Control+k"); await esperar(v, "dialog.paleta[open] input");
+      await v.keyboard.type("Rita");
+      ok(await esperar(v, "dialog.paleta li >> text=Entregador"), "009z: com 3 letras a paleta procura entregadores também");
+      await v.keyboard.press("Escape");
+      await v.evaluate(() => { location.hash = "#atividades/pendencias"; });
+      ok(await esperar(v, "#at-vence-hoje") || await esperar(v, "#at-lista"), "009z: Minha fila abre");
+      if (await v.$("#at-vence-hoje")) { await v.click("#at-vence-hoje");
+        ok(await v.getAttribute("#at-vence-hoje", "aria-pressed") === "true", "009z: 'Vence hoje' filtra a Minha fila");
+        await v.click("#at-vence-hoje"); }
+      await v.evaluate(() => { location.hash = "#inicio"; }); await esperar(v, "#precisa-lista li"); }
+    // 009z parte 2 (A13-12): acessibilidade automática (axe-core) nas telas principais: nada grave nem crítico
+    { const axeSrc = fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "node_modules/axe-core/axe.min.js"), "utf8");
+      const graves = new Map();
+      for (const r of ["#inicio", "#ativacao/novo", "#ativacao/pendentes", "#bloqueios/novo", "#bloqueios/historico", "#atividades/pendencias", "#atividades/sugeridas", "#avisos/para-mim", "#financeiro/adicional", "#analises/simples"]) {
+        await v.evaluate((h) => { location.hash = h; }, r); await v.waitForTimeout(1200);
+        if (!(await v.evaluate(() => !!window.axe))) await v.evaluate(axeSrc);
+        const vs = await v.evaluate(async () => (await window.axe.run(document, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa"] }, resultTypes: ["violations"] }))
+          .violations.filter((x) => ["critical", "serious"].includes(x.impact)).map((x) => ({ id: x.id, n: x.nodes.length, alvo: x.nodes[0]?.target?.join(" ") })));
+        for (const x of vs) graves.set(r + " " + x.id, x);
+      }
+      [...graves].forEach(([k, x]) => console.log("AXE", k, x.n, x.alvo));
+      ok(!graves.size, "009z: axe-core sem problema grave ou crítico de acessibilidade em 10 telas" + (graves.size ? ": " + [...graves.keys()].join(", ") : ""));
+      await v.evaluate(() => { location.hash = "#inicio"; }); await esperar(v, "#precisa-lista li"); }
     // 009y2: no celular de 320 px a linha do cadastro é curta e nada passa da tela
     { await v.setViewportSize({ width: 320, height: 800 });
       for (const r of ["#ativacao/pendentes", "#analises/tarefas", "#financeiro/acordos", "#ativacao/historico"]) {

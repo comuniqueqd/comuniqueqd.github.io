@@ -33,7 +33,9 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Confere: busca.js:50 só trata Esc, e não há Ctrl+K. É funcionalidade nova, não defeito. É **o mesmo** que o M3 do a8. | Varredura 20/11 (a1): Remedido 20/11: Enter na busca do topo não abre o 1º resultado, seta não entra na lista, Ctrl+K e / deixam o foco no body. Resultado continua só abrindo ficha/cadastro (sem 'Novo bloqueio'/'Adicional'); ficha só tem Ficar de olho / Comentário / Corrigir / Anexar.",
   "junto": "M3",
-  "versao": "009z"
+  "versao": "009z",
+  "feito": "009z3",
+  "situacao": "Feito na 009z parte 2 (falta rodar o SQL): paleta Ctrl+K com ações e busca."
  },
  {
   "ag": "a1",
@@ -313,7 +315,9 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a2): Continua na 009x2: listar_registros 1,43 s (moderador) / 1,85 s (suporte) na massa; 40% vem de nome_de() perguntando o papel a cada linha (ver A2-01).",
   "junto": "",
-  "versao": "009z"
+  "versao": "009z",
+  "feito": "009z3",
+  "situacao": "Feito na 009z parte 2 (falta rodar o SQL): listar_registros corta cada parte antes de juntar."
  },
  {
   "ag": "a2",
@@ -369,7 +373,9 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a2): Projeção: avisos são ~63% dos bytes gravados por ação (5 avisos x 469 B num bloqueio de ~3,7 KB). Modelo de 100 bloqueios/leves + 50 cadastros + 30 outras ações por dia = ~13 MB/mês, igual ao crescimento real observado (29 -> 33 MB em 10 dias). No ritmo de hoje o plano de 500 MB dura ~3 anos; os avisos crescem com o número de moderadores x ações, então dobrar a equipe com o dobro de moderadores co",
   "junto": "",
-  "versao": "009z"
+  "versao": "009z",
+  "feito": "009z3",
+  "situacao": "Feito na 009z parte 2 (falta rodar o SQL): limpeza de avisos lidos com mais de 120 dias, pelo moderador."
  },
  {
   "ag": "a2",
@@ -1816,7 +1822,7 @@
   "junto": "",
   "versao": "009z",
   "feito": "009z1",
-  "situacao": "Feito na 009z parte 1 (publicada em 20/11/2026): contagem regressiva com âmbar e vermelho (falta a visão 'vai estourar', na parte 2)."
+  "situacao": "Feito: contagem regressiva (009z1) e 'Vence hoje' na Minha fila (009z3)."
  },
  {
   "ag": "a8",
@@ -4527,7 +4533,8 @@
   "nota": "O e2e confere contraste, rolagem e textos, mas não regras de acessibilidade em geral (rótulos, nomes de botões, ARIA, ordem de foco), que hoje dependem da leitura do a12. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas. | Varredura 20/11 (a12): Prova feita: axe-core 4.10.2 local (npm, nada sai da máquina) rodou nas 37 telas/estados em ~3 min dentro de uma cópia do e2e (a12/auditoria.mjs). Resultado: 3 regras, 5 nós serious, 9 minor (ver A12-07). Pronto para virar parte do e2e.",
   "junto": "",
   "versao": "009z",
-  "situacao": "Varredura de 20/11/2026."
+  "situacao": "Feito na 009z parte 2 (falta rodar o SQL): axe-core no e2e em 10 telas.",
+  "feito": "009z3"
  },
  {
   "ag": "a13",

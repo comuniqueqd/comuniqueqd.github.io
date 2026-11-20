@@ -45,6 +45,7 @@ for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1d-concluir-
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1e-equipe-sem-dono.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z1-base-firme.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z2-funcoes-sem-uso.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z3-mais-rapido.sql"));
 // 009z2: confere o acesso como ficou no Supabase antes de devolver, só no teste, as que os testes usam para montar dados
 const semUso = (await db.query(`select p.proname, has_function_privilege('authenticated', p.oid, 'execute') pode from pg_proc p join pg_namespace n on n.oid = p.pronamespace
   where n.nspname = 'public' and p.proname = any($1)`, [["aprovados_e_bloqueios", "salvar_cidade", "salvar_telefone", "sugerir_atividade", "registrar_bloqueio", "assumir_caso", "comentar_caso",
@@ -433,6 +434,28 @@ await t("009z1 (A5-10): quem aceitou a tarefa compartilhada sai da equipe e ela 
 await t("009z2 (A7-06, A5-3): as 13 funções sem uso perderam o acesso (registrar_bloqueio inclusive)", async () => {
   igual(semUso.length, 13, "as 13 existem");
   igual(semUso.filter((x) => x.pode).map((x) => x.proname), [], "ainda com acesso");
+});
+
+await t("009z3 (AT5): Toda a equipe devolve as mais recentes, em ordem, e as páginas não repetem nem pulam", async () => {
+  const p1 = await rpc(admin, "listar_registros", { p_limite: 5 });
+  igual(p1.length, 5, "5 na 1ª página");
+  verdade(p1.every((x, i) => !i || x.em <= p1[i - 1].em), "em ordem do mais recente");
+  const p2 = await rpc(admin, "listar_registros", { p_limite: 5, p_antes: p1[4].em });
+  verdade(p2.length && p2.every((x) => x.em < p1[4].em) && !p2.some((x) => p1.some((y) => y.chave === x.chave)), "2ª página continua de onde parou");
+  const todos = await rpc(admin, "listar_registros", { p_limite: 300 });
+  igual(p1.map((x) => x.chave), todos.slice(0, 5).map((x) => x.chave), "as 5 primeiras são as mesmas da lista grande");
+});
+
+await t("009z3 (AT8): limpar avisos lidos com mais de 120 dias (conta, apaga, só moderador)", async () => {
+  const uSup = (await um("select user_id from membros where email = $1", [sup.email])).user_id;
+  await db.query("insert into notificacoes (para, texto, criada_em, lida_em) values ($1, 'velho lido', now() - interval '130 days', now() - interval '129 days'), ($1, 'velho sem ler', now() - interval '130 days', null), ($1, 'novo lido', now() - interval '10 days', now())", [uSup]);
+  let erro = ""; try { await rpc(sup, "limpar_avisos_antigos"); } catch (e) { erro = e.message; }
+  verdade(/moderador/.test(erro), "suporte não limpa");
+  const c = await rpc(admin, "limpar_avisos_antigos");
+  verdade(c.avisos >= 1 && c.apagados === false, "conta sem apagar: " + JSON.stringify(c));
+  await rpc(admin, "limpar_avisos_antigos", { p_apagar: true });
+  const rest = (await db.query("select texto from notificacoes where para = $1 and texto in ('velho lido', 'velho sem ler', 'novo lido') order by texto", [uSup])).rows.map((x) => x.texto);
+  igual(rest, ["novo lido"], "os antigos saíram (desde a 009x5, aviso com mais de 7 dias já conta como lido); o recente fica");
 });
 
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco

@@ -30,6 +30,7 @@
       extra);
   }
 
+  const venceHoje = (fim) => App.u.diaChave(fim) <= App.u.diaChave(Date.now());
   function renderPendencias() {
     const box = $("#at-lista");
     const r = S.resumo;
@@ -81,6 +82,7 @@
       }
       const punicao = App.bloqueios.horasTxt(b.horas);
       const atraso = t.atrasada ? `Atrasada há ${duracao(t.criada_em).txt} (prazo ${t.prazo_horas} h) · ` : "";
+      const fimTrat = t.prazo_horas ? new Date(new Date(t.criada_em).getTime() + t.prazo_horas * 3600000) : null;
       if (staffBloq() && t.minha) {
         const cx = A.caixa[t.id];
         const nota = cx ? el("textarea", { rows: "2", maxlength: "600", placeholder: "O que foi feito? (opcional)", "aria-label": "Nota da tratativa", oninput: (e) => (cx.texto = e.target.value) }) : null;
@@ -95,6 +97,7 @@
             el("a", { class: "btn link", href: "#bloqueios/tratativas" }, "Ver na tela de tratativas")].filter(Boolean),
           extra: el("div", {}, App.u.previsao(t, "tarefa", t.id, true),
             cx ? el("div", { class: "box" }, el("p", { class: "meta", style: "margin:0", text: "Resolver a tratativa não libera a restrição. Quem registrou recebe um aviso." }), nota) : null) }));
+        if (fimTrat && venceHoje(fimTrat)) itens[itens.length - 1].dataset.hoje = "1";  // 009z (M2): conta no "Vence hoje"
       } else if (!staffBloq() && b.registrado_por === S.me.id) {  // 009x6: o suporte vê todas, mas acompanha só as que registrou
         itens.push(item({ modulo: "RESTRIÇÕES", titulo: `Acompanhando: ${tipo.toLowerCase()} de ${b.nome}`, estado: "pendente",
           detalhe: `Pendente com ${t.responsavel_nome} há ${duracao(t.criada_em).txt} · ${b.infracao} · ${punicao}`,
@@ -120,7 +123,19 @@
       el("h3", {}, "Atividades da equipe", el("span", { class: "count", text: daEquipe.length })),
       el("p", { class: "meta", style: "margin:0 0 6px", text: "Criadas pelo sistema. Todos participam: cada aprovação na cidade conta, e ela fecha sozinha quando bate a meta. Se não precisar mais, qualquer pessoa conclui antes, com o motivo." }),
       el("div", { class: "queue" }, daEquipe.map(cartaoAtividade))) : null;
+    // 009z (M2): "Vence hoje" mostra só o que é seu e vence até o fim do dia (ou já venceu), do mais urgente ao resto
+    const minhasHoje = minhas.filter((a) => a.prazo && venceHoje(a.prazo));
+    const tratHoje = itens.filter((x) => x.dataset.hoje);
+    const nHoje = minhasHoje.length + tratHoje.length;
+    const chave = el("div", { class: "fila-filtro" },
+      el("button", { class: "chip" + (A.soHoje ? " ativo" : ""), type: "button", "aria-pressed": String(!!A.soHoje), id: "at-vence-hoje",
+        onclick: () => { A.soHoje = !A.soHoje; render(); } }, `Vence hoje (${nHoje})`));
+    if (A.soHoje) return box.replaceChildren(chave, ...(nHoje ? [
+      minhasHoje.length ? el("div", { class: "grupo" }, el("h3", {}, "Tarefas", el("span", { class: "count", text: minhasHoje.length })), el("div", { class: "queue" }, minhasHoje.map(cartaoAtividade))) : null,
+      tratHoje.length ? el("div", { class: "grupo" }, el("h3", {}, "Tratativas", el("span", { class: "count", text: tratHoje.length })), el("ul", { class: "queue", style: "padding:0;margin:0" }, tratHoje)) : null].filter(Boolean)
+      : [vazio("Nada vence hoje", "Nenhuma tarefa ou tratativa sua vence até o fim do dia. Clique em “Vence hoje” de novo para ver tudo.")]));
     box.replaceChildren(...[
+      nHoje ? chave : null,
       blocoEquipe,
       minhas.length ? el("div", { class: "grupo" }, el("h3", {}, "Tarefas com você", el("span", { class: "count", text: minhas.length })),
         el("div", { class: "queue" }, minhas.map(cartaoAtividade))) : null,

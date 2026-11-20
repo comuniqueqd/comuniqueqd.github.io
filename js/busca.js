@@ -50,11 +50,81 @@
   form.addEventListener("keydown", (e) => { if (e.key === "Escape") { fechar(); campo.blur(); } });
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
+  // ---------- 009z (A2): Ctrl+K, a paleta de busca e ações de qualquer tela ----------
+  // Digite para filtrar as ações (Nova restrição, Registrar adicional…); com 3 letras ou mais, procura também
+  // entregadores e cadastros (a mesma busca do topo). Setas escolhem, Enter abre, Esc fecha.
+  const sem = (t) => String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  function acoesPaleta() {
+    const bloq = !!S.me?.papel_bloqueios;
+    return [
+      ["Nova ativação", "#ativacao/novo"], bloq ? ["Nova restrição", "#bloqueios/novo"] : null, bloq ? ["Cadastrar entregador", "#entregadores/cadastrar"] : null,
+      ["Registrar adicional", "#financeiro/adicional"], ["Calculadora de bairro", "#ferramentas/calculadora"], ["Ativar parceiro", "#parceiros/novo"],
+      ["Nova tarefa", "#atividades/sugeridas"], ["Minha fila", "#atividades/pendencias"], ["Cadastros pendentes", "#ativacao/pendentes"],
+      bloq ? ["Tratativas", "#bloqueios/tratativas"] : null, bloq ? ["Consultar entregador", "#bloqueios/consultar"] : null,
+      ["Histórico da ativação", "#ativacao/historico"], bloq ? ["Histórico de restrições", "#bloqueios/historico"] : null,
+      ["Lançamentos", "#financeiro/lancamentos"], ["Acordos", "#financeiro/acordos"], ["Mensagens prontas", "#ferramentas/mensagens"],
+      ["Avisos", "#avisos/para-mim"], ["Análises", "#analises/simples"], ["Início", "#inicio"],
+      ["Pedir ajuda", () => App.agora?.pedirAjuda()], ["Trocar tema claro/escuro", () => App.trocarTema?.()],
+    ].filter(Boolean).map(([nome, alvo]) => ({ nome, tipo: "Ação", ir: typeof alvo === "string" ? () => { location.hash = alvo; } : alvo }));
+  }
+  let paleta = null;
+  function abrirPaleta() {
+    if (!S.me || paleta?.open) return;
+    const entrada = el("input", { type: "search", placeholder: "O que você quer fazer? Ou digite um ID ou nome", "aria-label": "Buscar ações, entregadores e cadastros",
+      autocomplete: "off", role: "combobox", "aria-expanded": "true", "aria-controls": "paleta-lista" });
+    const lista = el("ul", { id: "paleta-lista", class: "paleta-lista", role: "listbox" });
+    let itens = [], sel = 0, ultimaQ = "", tq = null;
+    const desenhar = () => {
+      lista.replaceChildren(...(itens.length ? itens.map((it, i) => el("li", { role: "option", id: "pal-" + i, "aria-selected": String(i === sel), class: i === sel ? "sel" : null,
+        onclick: () => escolher(i), onmousemove: () => { if (sel !== i) { sel = i; desenhar(); } } },
+        el("span", { text: it.nome }), el("span", { class: "meta", text: it.tipo + (it.extra ? " · " + it.extra : "") })))
+        : [el("li", { class: "meta vazio-pal", text: entrada.value.trim().length >= 3 ? "Nada encontrado." : "Nenhuma ação com esse nome." })]));
+      entrada.setAttribute("aria-activedescendant", itens.length ? "pal-" + sel : "");
+      lista.querySelector("li.sel")?.scrollIntoView({ block: "nearest" });
+    };
+    const filtrar = async () => {
+      const q = entrada.value.trim();
+      const acoes = acoesPaleta().filter((a) => !q || sem(a.nome).includes(sem(q)));
+      itens = acoes; sel = 0; desenhar();
+      if (q.length < 3 || q === ultimaQ) return;
+      ultimaQ = q;
+      try {
+        const r = await rpc("busca_rapida", { p_q: q });
+        if (entrada.value.trim() !== q) return;
+        itens = [...r.entregadores.map((x) => ({ nome: x.nome || "(sem nome)", tipo: "Entregador", extra: x.cidade || "", ir: () => App.abrirFicha(x.id_app) })),
+          ...r.cadastros.map((x) => ({ nome: x.nome || (x.id_app ? "ID " + x.id_app : "Sem ID"), tipo: "Cadastro", extra: [x.cidade, x.situacao].filter(Boolean).join(" · "), ir: () => App.abrirCadastro(x.id) })),
+          ...acoes];
+        sel = 0; desenhar();
+      } catch (_) {}
+    };
+    const escolher = (i) => { const it = itens[i]; if (!it) return; paleta.close(); it.ir(); };
+    entrada.addEventListener("input", () => { clearTimeout(tq); tq = setTimeout(filtrar, 200); itens = acoesPaleta().filter((a) => sem(a.nome).includes(sem(entrada.value.trim()))); sel = 0; desenhar(); });
+    entrada.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") { e.preventDefault(); sel = Math.min(itens.length - 1, sel + 1); desenhar(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); sel = Math.max(0, sel - 1); desenhar(); }
+      else if (e.key === "Enter") { e.preventDefault(); escolher(sel); }
+      else if (e.key === "Escape") { e.preventDefault(); paleta.close(); }  // o campo de busca limparia o texto em vez de fechar
+    });
+    paleta = janela("Ir para…", entrada, lista, el("p", { class: "meta paleta-dica", text: "Setas para escolher · Enter para abrir · Esc para fechar · Ctrl+K de qualquer tela" }));
+    paleta.classList.add("paleta");
+    itens = acoesPaleta(); desenhar(); entrada.focus();
+  }
+  App.abrirPaleta = abrirPaleta;
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === "k" || e.key === "K")) { e.preventDefault(); abrirPaleta(); }
+  });
+  campo.placeholder = "Buscar ID ou nome (Ctrl+K)";
+
   // ---------- o que há de novo ----------
-  const VERSAO = "009z1";
+  const VERSAO = "009z3";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009z3", tema: "Mais rápido de achar", itens: [
+      ["Aperte Ctrl+K em qualquer tela", "Abre uma busca que leva direto para o que você quer fazer (Nova restrição, Registrar adicional, Pendentes…) e acha entregadores e cadastros pelo nome ou ID.", "#q-topo"],
+      ["Veja só o que vence hoje", "Na Minha fila, o botão “Vence hoje” mostra só as suas tarefas e tratativas que vencem até o fim do dia ou já venceram.", 'nav.modulos a[data-mod="atividades"]'],
+      ["Abra Toda a equipe mais rápido", "Os registros da equipe carregam mais leves."],
+    ] },
     { versao: "009z1", tema: "Base firme", itens: [
       ["Veja quanto falta para cada prazo", "Tratativas, tarefas e previsões dizem “vence em 2 h 10 min” ou “venceu há 40 min”; em âmbar quando falta pouco e em vermelho depois.", 'nav.modulos a[data-mod="atividades"]'],
       ["Leia os erros em português", "Quando algo dá errado no servidor, a mensagem diz em português o que aconteceu e o que fazer, no site e na extensão."],

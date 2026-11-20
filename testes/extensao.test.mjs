@@ -44,8 +44,10 @@ const man = JSON.parse(fs.readFileSync(path.join(RAIZ, "extensao/manifest.json")
 fs.writeFileSync(path.join(EXT, "manifest.json"), JSON.stringify({ ...man, host_permissions: [...man.host_permissions, `http://127.0.0.1:${PORTA}/*`] }));
 
 const ctx = await chromium.launchPersistentContext(fs.mkdtempSync(path.join(os.tmpdir(), "comunique-ext-")), {
-  headless: true, executablePath: process.env.CHROMIUM || undefined,
-  args: [`--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`],
+  // 009z: o Chromium "headless shell" do Playwright não carrega extensões (falhava no GitHub); o Chromium completo
+  // com o headless novo carrega. headless: false + --headless=new usa o completo sem abrir janela.
+  headless: false, executablePath: process.env.CHROMIUM || undefined,
+  args: ["--headless=new", `--disable-extensions-except=${EXT}`, `--load-extension=${EXT}`],
 });
 try {
   let [sw] = ctx.serviceWorkers();

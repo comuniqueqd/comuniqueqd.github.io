@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009z1">
+<link rel="stylesheet" href="estilo.css?v=009z3">
 </head>
 <body>
 <a class="pular" href="#conteudo">Ir para o conteúdo</a>
@@ -659,6 +659,11 @@
   <section class="view" id="v-equipe" hidden>
     <div class="inicio-topo"><h2>Equipe</h2><button class="btn small" type="button" id="b-teste-som" data-teste-som><span data-icone="som"></span>Testar avisos e sons</button></div>
     <p class="sub">Cada pessoa tem um acesso por módulo. <b>Moderador</b>: tudo, inclusive desfazer, excluir, regras e equipe. <b>Monitorador</b>: aprova/reprova na ativação; nas restrições, faz tratativas e libera antes do prazo. <b>Suporte</b>: envia cadastros, registra restrições e acompanha.</p>
+    <details class="panel" id="eq-limpeza">
+      <summary>Limpar avisos antigos</summary>
+      <p class="meta">Apaga os avisos com mais de 120 dias que já foram lidos (todo aviso com mais de 7 dias conta como lido). O histórico de cadastros, restrições e comentários não é apagado.</p>
+      <div class="actions"><button class="btn small" type="button" id="b-limpeza-contar">Contar avisos antigos</button><span id="limpeza-res" role="status"></span></div>
+    </details>
     <form class="panel" id="f-membro" novalidate>
       <h3>Autorizar acesso</h3>
       <div class="grid2">
@@ -723,23 +728,23 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="js/base.js?v=009z1"></script>
-<script src="js/icones.js?v=009z1"></script>
-<script src="js/inicio.js?v=009z1"></script>
-<script src="js/ativacao.js?v=009z1"></script>
-<script src="js/bloqueios.js?v=009z1"></script>
-<script src="js/entregadores.js?v=009z1"></script>
-<script src="js/atividades.js?v=009z1"></script>
-<script src="js/painel.js?v=009z1"></script>
-<script src="js/avisos.js?v=009z1"></script>
-<script src="js/analises.js?v=009z1"></script>
-<script src="js/registros.js?v=009z1"></script>
-<script src="js/equipe.js?v=009z1"></script>
-<script src="js/ferramentas.js?v=009z1"></script>
-<script src="js/financeiro.js?v=009z1"></script>
-<script src="js/parceiros.js?v=009z1"></script>
-<script src="js/busca.js?v=009z1"></script>
-<script src="js/sons.js?v=009z1"></script>
-<script src="js/agora.js?v=009z1"></script>
+<script src="js/base.js?v=009z3"></script>
+<script src="js/icones.js?v=009z3"></script>
+<script src="js/inicio.js?v=009z3"></script>
+<script src="js/ativacao.js?v=009z3"></script>
+<script src="js/bloqueios.js?v=009z3"></script>
+<script src="js/entregadores.js?v=009z3"></script>
+<script src="js/atividades.js?v=009z3"></script>
+<script src="js/painel.js?v=009z3"></script>
+<script src="js/avisos.js?v=009z3"></script>
+<script src="js/analises.js?v=009z3"></script>
+<script src="js/registros.js?v=009z3"></script>
+<script src="js/equipe.js?v=009z3"></script>
+<script src="js/ferramentas.js?v=009z3"></script>
+<script src="js/financeiro.js?v=009z3"></script>
+<script src="js/parceiros.js?v=009z3"></script>
+<script src="js/busca.js?v=009z3"></script>
+<script src="js/sons.js?v=009z3"></script>
+<script src="js/agora.js?v=009z3"></script>
 </body>
 </html>

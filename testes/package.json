@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@supabase/supabase-js": "2.117.3",
+    "axe-core": "4.10.2",
     "pg": "8.13.1",
     "playwright": "1.48.2"
   }

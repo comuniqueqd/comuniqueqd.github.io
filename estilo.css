@@ -1107,3 +1107,15 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
 .prazo { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .prazo.perto { color: var(--warn); font-weight: 600; }
 .prazo.vencido { color: var(--bad); font-weight: 600; }
+/* 009z (A2): paleta Ctrl+K */
+dialog.janela.paleta { width: min(560px, 94vw); }
+.paleta input[type="search"] { width: 100%; font-size: 16px; }
+.paleta-lista { list-style: none; margin: 8px 0 0; padding: 0; max-height: min(52vh, 420px); overflow-y: auto; display: grid; gap: 2px; }
+.paleta-lista li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 10px; border-radius: 8px; cursor: pointer; }
+.paleta-lista li.sel { background: var(--accent-soft); color: var(--ink); }
+.paleta-lista li .meta { white-space: nowrap; }
+.paleta-dica { margin: 8px 0 0; font-size: 12px; }
+/* 009z (M2): filtro "Vence hoje" na Minha fila */
+.fila-filtro { display: flex; gap: 8px; margin: 0 0 12px; }
+.chip.ativo { background: var(--accent-soft); outline: 2px solid var(--accent); outline-offset: -2px; }
+.fila-filtro .chip { font-size: 14px; padding: 6px 12px; min-height: 36px; }
