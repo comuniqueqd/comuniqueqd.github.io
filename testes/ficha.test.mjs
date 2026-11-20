@@ -15,7 +15,11 @@ for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/
   "../supabase/004-atividades-registros.sql", "../supabase/005-analises-anexos.sql", "../supabase/006-equipe-previsao-atencao.sql",
   "../supabase/007-pao-quentinho.sql", "../supabase/008-espionagem.sql", "../supabase/008b-cadastrar-entregador.sql",
   "../supabase/008b-notificacoes.sql", "../supabase/008c-analises.sql", "../supabase/008d-avisos-parte2.sql",
-  "../supabase/009a-regras-politica.sql", "../supabase/009b-ferramentas-financeiro.sql"]) await db.query(arquivo(f));
+  "../supabase/009a-regras-politica.sql", "../supabase/009b-ferramentas-financeiro.sql",
+  // A7-04: as que vêm antes da 009h, para depois completar até a mais nova
+  "../supabase/009c-mensagens-agravante.sql", "../supabase/009c2-mensagens-opcoes.sql", "../supabase/009d-ajuda-aviso-turno.sql",
+  "../supabase/009d2-tarefas-cards.sql", "../supabase/009d3-painel-metas-recorrentes.sql", "../supabase/009e-parceiros.sql",
+  "../supabase/009f-parceiros-completo.sql", "../supabase/009g-tarefas-compartilhadas.sql"]) await db.query(arquivo(f));
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -52,8 +56,9 @@ for (const [p, pa, pb] of [[mon, "monitorador", "monitorador"], [sup, "suporte",
   await rpc(admin, "salvar_membro", { p_email: p.email, p_nome: p.nome, p_papel: pa, p_papel_bloqueios: pb });
 for (const p of [mon, sup, sup2]) await rpc(p, "entrar");
 await rpc(admin, "salvar_cidade", { p_nome: "LAGARTO - SE", p_responsavel_email: mon.email, p_ativa: true });
+let completo = false;   // depois de completar as migrações (009x3 tem p_confirmar)
 const adicional = (quem, id, nome, cidade = "LAGARTO - SE") => rpc(quem, "registrar_adicional", { p_cidade: cidade, p_id_app: id, p_nome: nome,
-  p_origem: "qd", p_mercado: false, p_motivo: "Chuva", p_valor_entrega: 5, p_valor_pedido: 50, p_valor_combinado: 10 });
+  p_origem: "qd", p_mercado: false, p_motivo: "Chuva", p_valor_entrega: 5, p_valor_pedido: 50, p_valor_combinado: 10, ...(completo ? { p_confirmar: true } : {}) });   // 009x3: o mesmo adicional de novo pede confirmação
 const ficha = async (id) => um("select nome, cidade, criado_por_nome from entregadores where id_app = $1", [id]);
 
 // antes da 009h: um lançamento com nome, outro sem nome do mesmo ID, e um cadastro pendente, nenhum com ficha
@@ -66,6 +71,7 @@ const f009h = "../supabase/009h-entregador-pelo-lancamento.sql";
 await db.query(arquivo(f009h));
 await db.query(arquivo(f009h)); // rodar de novo não pode quebrar
 await completar(db, "009h-entregador-pelo-lancamento.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
+completo = true;
 
 await t("registros antigos: lançamento com nome e cadastro pendente ganham a ficha; lançamento sem nome recebe o nome", async () => {
   igual(await ficha("ant00001"), { nome: "Rita Antiga", cidade: "LAGARTO - SE", criado_por_nome: "Eduarda" });

@@ -85,18 +85,22 @@ await t("campos validados por tipo e título montado", async () => {
 let ativ;
 await t("ativar entregadores: pedido para alguém, progresso conta sozinho com os aprovados de quem pegou", async () => {
   ativ = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "LAGARTO - SE", quantidade: 2 }, p_para: [sup.sub] });
-  igual([ativ.titulo, ativ.meta, ativ.progresso, ativ.progresso_automatico, ativ.para_mim], ["Ativar 2 entregador(es) · LAGARTO - SE", 2, 0, true, false]);
-  igual((await avisos(sup)).filter((x) => x.includes("pediu para você: Ativar 2")).length, 1);
+  igual([ativ.titulo, ativ.meta, ativ.progresso, ativ.progresso_automatico, ativ.para_mim], ["Aprovar 2 entregador(es) · LAGARTO - SE", 2, 0, true, false]);
+  igual((await avisos(sup)).filter((x) => x.includes("pediu para você: Aprovar 2")).length, 1);
   await falha(rpc(sup, "avancar_tarefa", { p_id: ativ.id }), "conta sozinho");
   await rpc(sup, "aceitar_atividade", { p_id: ativ.id });
   const ids = [];
   for (const [i, cid] of [["lag0001", "LAGARTO - SE"], ["lag0002", "LAGARTO - SE"], ["ita0001", "ITABAIANA - SE"]])
     ids.push((await rpc(sup, "enviar_cadastro", { p_id_app: i, p_cpf: null, p_cidade: cid, p_nome: "Teste " + i })).id);
+  // 009e: contam as aprovações FEITAS por quem pegou; aqui quem pegou aprova (vira monitorador só para isso)
+  await db.query("update membros set papel = 'monitorador' where email = $1", [sup.email]);
   await rpc(mon, "decidir", { p_cadastro: ids[0], p_acao: "aprovar" });
-  await rpc(mon, "decidir", { p_cadastro: ids[2], p_acao: "aprovar" });
-  igual((await tarefa(sup, ativ.id)).progresso, 1, "só o da cidade:");
-  await rpc(mon, "decidir", { p_cadastro: ids[1], p_acao: "aprovar" });
-  igual((await tarefa(sup, ativ.id)).progresso, 2);
+  igual((await tarefa(sup, ativ.id)).progresso, 0, "aprovação de outra pessoa não conta:");
+  await rpc(sup, "decidir", { p_cadastro: ids[2], p_acao: "aprovar" });
+  igual((await tarefa(sup, ativ.id)).progresso, 0, "só o da cidade:");
+  await rpc(sup, "decidir", { p_cadastro: ids[1], p_acao: "aprovar" });
+  await db.query("update membros set papel = 'suporte' where email = $1", [sup.email]);
+  igual((await tarefa(sup, ativ.id)).progresso, 1);
 });
 
 await t("aguardando terceiro pausa o relógio e empurra o prazo", async () => {
@@ -139,10 +143,10 @@ await t("comentários com @menção avisam quem foi mencionado, quem criou e que
 await t("concluir guarda quem concluiu; agradecer liga e desliga (não a si mesmo)", async () => {
   await rpc(sup, "concluir_atividade", { p_id: ativ.id, p_nota: "Os dois aprovados" });
   const x = await tarefa(admin, ativ.id);
-  igual([x.status, x.progresso, x.pode_agradecer], ["concluida", 2, true]);
+  igual([x.status, x.progresso, x.pode_agradecer], ["concluida", 1, true]);
   await falha(rpc(sup, "agradecer_tarefa", { p_id: ativ.id }), "a si mesmo");
   igual(await rpc(admin, "agradecer_tarefa", { p_id: ativ.id }), true);
-  igual((await avisos(sup)).filter((x) => x.startsWith("👏 Mateus Lopes agradeceu")).length, 1);
+  igual((await avisos(sup)).filter((x) => x.startsWith("Mateus Lopes agradeceu")   /* 009u: sem emoji */).length, 1);
   igual((await tarefa(mon, ativ.id)).agradecimentos, ["Mateus Lopes"]);
   igual(await rpc(admin, "agradecer_tarefa", { p_id: ativ.id }), false);
   igual((await tarefa(mon, ativ.id)).agradecimentos, []);
@@ -151,8 +155,7 @@ await t("concluir guarda quem concluiu; agradecer liga e desliga (não a si mesm
 await t("registrar o que já fiz: entra direto como concluída e com progresso", async () => {
   const r = await rpc(sup, "criar_tarefa", { p_tipo: "ativar_parceiro", p_campos: { cidade: "LAGARTO - SE", quantidade: 1 }, p_modo: "registro" });
   igual([r.status, r.aceita_por_nome, r.concluida_por_nome, r.modo, r.prazo], ["concluida", "Suporte Teste", "Suporte Teste", "registro", null]);
-  await rpc(sup, "avancar_tarefa", { p_id: r.id });
-  igual((await tarefa(sup, r.id)).progresso, 1);
+  igual((await tarefa(sup, r.id)).progresso, 1);   // 009e: o registro já conta a quantidade informada
   await falha(rpc(sup, "criar_tarefa", { p_tipo: "livre", p_titulo: "x", p_modo: "outro" }), "Escolha se é um pedido");
 });
 

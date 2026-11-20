@@ -103,7 +103,8 @@ await t("Aprovar entregadores: conta as aprovações feitas por quem pegou (não
   await rpc(mon, "decidir", { p_cadastro: ids[2], p_acao: "aprovar" });
   await rpc(admin, "decidir", { p_cadastro: ids[3], p_acao: "aprovar" });
   igual([(await tarefa(mon, te.id)).progresso, (await tarefa(mon, te2.id)).progresso], [2, 2], "as duas tarefas no nome dela contam:");
-  igual((await rpc(mon, "tarefas_que_contam", { p_tipo: "ativar_entregadores", p_cidade: "LAGARTO - SE" })).length, 2);
+  const contam = (await rpc(mon, "tarefas_que_contam", { p_tipo: "ativar_entregadores", p_cidade: "LAGARTO - SE" })).map((x) => x.id);
+  igual([contam.includes(te.id), contam.includes(te2.id)], [true, true]);   // 009x3: a automática da cidade também aparece
   await rpc(admin, "desfazer", { p_cadastro: ids[1] });
   igual((await tarefa(mon, te.id)).progresso, 1, "desfeita:");
 });
@@ -125,10 +126,11 @@ await t("009f: por cidade e notícias rápidas", async () => {
   const c = (await rpc(mon, "parceiros_por_cidade")).find((x) => x.cidade === "LAGARTO - SE");
   igual([c.ativos > 0, c.ultimo.estabelecimento != null, c.quem_mais.n > 0], [true, true, true]);
   igual(c.ativos, (await rpc(mon, "listar_parceiros", { p_cidade: "LAGARTO - SE" })).itens.length);
+  // 009x6: as Notícias rápidas são as tarefas concluídas; os parceiros têm o bloco da semana (parceiros_semana)
   const n = await rpc(sup2, "noticias_rapidas", { p_limite: 3 });
-  igual([n.length, n[0].tipo, typeof n[0].quem], [3, "parceiro", "string"]);
-  await db.query("update parceiros set criado_em = now() - interval '8 days' where cidade = 'ITABAIANA - SE'");
-  igual((await rpc(sup2, "noticias_rapidas", { p_limite: 20 })).some((x) => x.cidade === "ITABAIANA - SE"), false, "mais de 7 dias sai:");
+  igual(n.every((x) => x.tipo === "tarefa" && typeof x.quem === "string"), true);
+  const ps = await rpc(sup2, "parceiros_semana");
+  igual([ps.ultimos.length > 0, ps.ultimos.length <= 10, typeof ps.esta_semana], [true, true, "number"]);
 });
 
 await t("009g: ativar parceiro cria 'Aprovar 5 entregadores' aberta na cidade, ou soma 5 na que já existe", async () => {

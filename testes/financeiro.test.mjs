@@ -82,8 +82,10 @@ await t("tarifas: todos consultam, com o que o entregador recebe; só o moderado
 await t("salvar bairro: cria em maiúsculas; recusa nome repetido, apelido de outro e taxa maior que o valor", async () => {
   const b = await rpc(admin, "salvar_bairro", { p_id: null, p_cidade: "LAGARTO - SE", p_nome: "  horta  ", p_valor: 5.99, p_taxa_log: 0.99, p_apelidos: ["hortinha"] });
   igual([b.nome, b.apelidos], ["HORTA", ["HORTINHA"]]);
-  await falha(rpc(admin, "salvar_bairro", { p_id: null, p_cidade: "LAGARTO - SE", p_nome: "centro", p_valor: 6, p_taxa_log: 1 }), "Já existe");
-  await falha(rpc(admin, "salvar_bairro", { p_id: null, p_cidade: "LAGARTO - SE", p_nome: "Aldemar de Carvalho", p_valor: 6, p_taxa_log: 1 }), "Já existe");
+  // 009p: bairro novo com o mesmo nome de um existente não duplica: devolve o existente (juntado_com), com o valor dele
+  igual((await rpc(admin, "salvar_bairro", { p_id: null, p_cidade: "LAGARTO - SE", p_nome: "centro", p_valor: 6, p_taxa_log: 1 })).juntado_com, "CENTRO");
+  // 009p: nome praticamente igual a um apelido existente vira apelido dele (mesmo valor), em vez de recusar
+  igual(!!(await rpc(admin, "salvar_bairro", { p_id: null, p_cidade: "LAGARTO - SE", p_nome: "Aldemar de Carvalho", p_valor: 6, p_taxa_log: 1 })).juntado_com, true);
   await falha(rpc(admin, "salvar_bairro", { p_id: null, p_cidade: "LAGARTO - SE", p_nome: "Teste", p_valor: 1, p_taxa_log: 2 }), "negativo");
   const e = await rpc(admin, "salvar_bairro", { p_id: b.id, p_cidade: "LAGARTO - SE", p_nome: "Horta", p_valor: 6.49, p_taxa_log: 0.99, p_apelidos: [] });
   igual([num(e.recebe), e.apelidos], [5.5, []]);
@@ -134,7 +136,7 @@ await t("aviso: a responsável da cidade recebe (categoria financeiro); quem reg
   igual([m.length, m[0]?.categoria, m[0]?.motivo, m[0]?.link], [1, "financeiro", "cidade", "#financeiro/lancamentos"]);
   if (!m[0].texto.includes("R$ 3,00") || !m[0].texto.includes("Lucas")) throw new Error("texto: " + m[0].texto);
   igual((await novos(sup2)).length, 0, "quem registrou:");
-  igual((await novos(admin)).length, 1, "moderador:");
+  igual((await novos(admin)).length, 0, "moderador (009x5: cidade com responsável, sem 'receber tudo'):");
   await rpc(mon, "salvar_preferencias", { p_silenciados: ["financeiro"] });
   await marca();
   await rpc(sup2, "registrar_adicional", { p_cidade: "LAGARTO - SE", p_id_app: "fin00003", p_nome: "Pedro Teste", p_origem: "qd", p_mercado: false,
