@@ -93,11 +93,11 @@
       funcao({ id: "fn-ativacao", href: "#ativacao/novo", icone: "ativacao", cor: "f-ativ", titulo: "Nova ativação",
         texto: "Enviar o cadastro de um entregador para aprovação.",
         vivo: a ? (staffAtiv() ? `${a.equipe_aguardando_analise ?? a.aguardando_analise} aguardando análise` : `${a.meus_aguardando_analise} ${a.meus_aguardando_analise === 1 ? "seu" : "seus"} em análise`) : null }),
-      S.me.papel_bloqueios ? funcao({ id: "fn-bloqueio", href: "#bloqueios/novo", icone: "bloqueio", cor: "f-bloq", titulo: "Novo bloqueio",
-        texto: "Registrar um bloqueio ou uma infração leve, com a punição calculada.",
-        vivo: b ? `${b.equipe_bloqueados_agora ?? b.meus_bloqueados_agora ?? 0} bloqueados agora` : null }) : null,
+      S.me.papel_bloqueios ? funcao({ id: "fn-bloqueio", href: "#bloqueios/novo", icone: "bloqueio", cor: "f-bloq", titulo: "Nova restrição",
+        texto: "Registrar uma restrição ou uma infração leve, com a punição calculada.",
+        vivo: b ? `${b.equipe_bloqueados_agora ?? b.meus_bloqueados_agora ?? 0} com restrição agora` : null }) : null,
       S.me.papel_bloqueios ? funcao({ id: "card-entregadores", href: "#entregadores/cadastrar", icone: "entregador", cor: "f-ent", titulo: "Cadastrar entregador",
-        texto: "Criar a ficha com ID, nome e cidade, sem ativar nem bloquear." }) : null,
+        texto: "Criar a ficha com ID, nome e cidade, sem ativar nem aplicar restrição." }) : null,
       funcao({ id: "fn-parceiro", href: "#parceiros/novo", icone: "parceiro", cor: "f-par", titulo: "Ativar parceiro",
         texto: "Registrar um estabelecimento que você ativou." }),
       funcao({ id: "fn-calculadora", href: "#ferramentas/calculadora", icone: "calculadora", cor: "f-fer", titulo: "Calculadora de bairro",
@@ -124,13 +124,13 @@
            numero(a?.meus_aguardando_contato, "seus aguardando novo contato", naEquipe(a?.equipe_aguardando_contato))])));
     if (S.me.papel_bloqueios) {
       cards.push(el("a", { class: "modulo-card bloq", href: "#bloqueios/" + (staffBloq() ? "tratativas" : "historico"), id: "card-bloqueios" },
-        el("h3", { text: "Bloqueios" }),
+        el("h3", { text: "Restrições" }),
         el("div", { class: "numeros" }, staffBloq()
-          ? [numero(b?.equipe_bloqueados_agora, "bloqueados agora", b ? `${b.meus_bloqueados_agora} registrados por você` : null),
+          ? [numero(b?.equipe_bloqueados_agora, "com restrição agora", b ? `${b.meus_bloqueados_agora} registrados por você` : null),
              numero(b?.tratativas_pendentes, S.me.papel_bloqueios === "moderador" ? "tratativas pendentes" : "tratativas para você", naEquipe(b?.equipe_tratativas_pendentes)),
              b?.tratativas_atrasadas ? numero(b.tratativas_atrasadas, `atrasadas (mais de ${r.prazo_tratativa_horas ?? 32} h)`, null, true) : null,
              b?.atencao ? numero(b.atencao, "entregadores de atenção") : null]
-          : [numero(b?.meus_bloqueados_agora, "seus bloqueados agora", naEquipe(b?.equipe_bloqueados_agora)),
+          : [numero(b?.meus_bloqueados_agora, "seus entregadores com restrição agora", naEquipe(b?.equipe_bloqueados_agora)),
              numero(b?.tratativas_pendentes, "suas tratativas em andamento", naEquipe(b?.equipe_tratativas_pendentes)),
              b?.atencao ? numero(b.atencao, "entregadores de atenção") : null])));
     }
@@ -146,12 +146,24 @@
     const nv = App.novidades;
     $("#inicio-novidades").replaceChildren(nv ? el("button", { class: "btn small historico-versoes", type: "button", onclick: () => nv.mostrar(),
       title: `Última: ${nv.NOVIDADES.tema}` }, App.ic("tempo"), "Histórico de atualizações") : "");
+
+    // 009x5: um lembrete discreto das cidades sem responsável (os avisos delas vão para todos os moderadores)
+    const sr = I.semResp?.cidades?.length || 0;
+    $("#inicio-cidades").replaceChildren(sr ? el("p", { class: "meta lembrete-cidades" }, `${sr} ${sr === 1 ? "cidade está" : "cidades estão"} sem responsável: os avisos delas vão para todos os moderadores. `,
+      el("a", { href: "#avisos/para-mim", onclick: () => { const b = document.querySelector("#av-cidades"); if (b) b.dataset.aberto = "1"; } }, "Ver e pedir uma")) : "");
+  }
+  // 009x5: cidades sem responsável, no máximo a cada 5 min
+  const I = { semResp: null, em: 0 };
+  async function carregarCidades() {
+    if (Date.now() - I.em < 300000) return;
+    I.em = Date.now();
+    try { I.semResp = await App.u.rpc("cidades_sem_responsavel"); } catch (_) { I.em = 0; }
   }
 
   App.modulo({
     id: "inicio", nome: "Início",
     abas: [{ id: "inicio", nome: "Início", secao: "v-inicio" }],
-    carregar: () => App.noticias?.carregar(),   // 009f: notícias rápidas só quando a tela inicial está aberta
+    carregar: () => Promise.all([App.noticias?.carregar(), carregarCidades()]),   // 009f: notícias rápidas só quando a tela inicial está aberta
     render,
   });
 })();

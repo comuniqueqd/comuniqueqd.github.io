@@ -33,7 +33,7 @@ $("#b-entrar").addEventListener("click", async (e) => {
 });
 $("#b-sair").addEventListener("click", async () => { await Api.sair(); await chrome.runtime.sendMessage({ tipo: "conferir" }); await mostrar(); });
 // os botões de registrar: leem a página aberta e mostram o formulário aqui mesmo
-const TITULOS = { bloqueio: "Novo bloqueio", cadastro: "Nova ativação", adicional: "Registrar adicional", entregador: "Cadastrar entregador",
+const TITULOS = { bloqueio: "Nova restrição", cadastro: "Nova ativação", adicional: "Registrar adicional", entregador: "Cadastrar entregador",
   calculadora: "Calculadora de bairro", parceiro: "Ativar parceiro", ajuda: "Pedir ajuda" };
 // a aba lida é a aba ativa da janela do painel (?aba=<id> só nos testes, onde o painel abre numa aba)
 const ABA_TESTE = Number(new URLSearchParams(location.search).get("aba")) || null;
@@ -110,7 +110,7 @@ async function buscar(forcar) {
   const linhas = [];
   if (r.entregadores?.length) linhas.push(el("p", { class: "grupo", text: "Entregadores" }), ...r.entregadores.map((x) =>
     el("button", { class: "item", type: "button", onclick: () => abrir("#ficha/" + encodeURIComponent(x.id_app)) },
-      el("span", { text: x.nome || "(sem nome)" }), el("span", { class: "sub", text: `${x.id_app} · ${x.cidade || "sem cidade"} · ${x.bloqueios} bloqueio(s)` }))));
+      el("span", { text: x.nome || "(sem nome)" }), el("span", { class: "sub", text: `${x.id_app} · ${x.cidade || "sem cidade"} · ${x.bloqueios} restrição(ões)` }))));
   if (r.cadastros?.length) linhas.push(el("p", { class: "grupo", text: "Cadastros da ativação" }), ...r.cadastros.map((x) =>
     el("button", { class: "item", type: "button", onclick: () => abrir("#cadastro/" + x.id) },
       el("span", { text: x.nome || (x.id_app ? "ID " + x.id_app : "Sem ID") }), el("span", { class: "sub", text: [x.id_app, x.cidade, x.situacao].filter(Boolean).join(" · ") }))));

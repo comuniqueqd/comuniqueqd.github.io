@@ -96,7 +96,7 @@
       };
     } else if (acao === "bloqueio") {
       const infs = (regras?.infracoes || []).filter((i) => !i.leve && i.ativa);
-      const sel = el("select", { "aria-label": "Motivo do bloqueio" }, el("option", { value: "", text: infs.length ? "Escolha o motivo" : "Não foi possível carregar os motivos" }),
+      const sel = el("select", { "aria-label": "Motivo da restrição" }, el("option", { value: "", text: infs.length ? "Escolha o motivo" : "Não foi possível carregar os motivos" }),
         infs.map((i) => el("option", { value: i.id, text: i.nome })));
       const previa = el("div", { class: "previa", hidden: true });
       const agr = el("input", { type: "checkbox" }), agrBox = el("label", { class: "linha", hidden: true }, agr, el("span"));
@@ -116,17 +116,17 @@
       };
       sel.addEventListener("change", verPrevia);
       id.addEventListener("change", verPrevia);
-      extra.push(el("label", {}, "Motivo do bloqueio", sel), previa, agrBox, sol, el("label", {}, "Observação", obs));
-      textoBotao = "Registrar bloqueio"; foco = sel;
+      extra.push(el("label", {}, "Motivo da restrição", sel), previa, agrBox, sol, el("label", {}, "Observação", obs));
+      textoBotao = "Registrar restrição"; foco = sel;
       gravar = async (v, form) => {
         if (!v.nome) throw new Error("Preencha o nome do entregador.");
         if (!cidades.includes(v.cidade)) throw new Error("Escolha uma cidade da lista do Comunique.");
-        if (!sel.value) throw new Error("Escolha o motivo do bloqueio.");
+        if (!sel.value) throw new Error("Escolha o motivo da restrição.");
         const solV = marcado(form, "sol");
         if (pv?.pendencia && !solV) throw new Error("Diga se já foi solucionado.");
         const r = await rpc("registrar_bloqueio_agravante", { p_id_app: v.id, p_nome: v.nome, p_cidade: v.cidade, p_infracao: Number(sel.value),
           p_observacao: limpo(obs.value) || null, p_comentario: null, p_agravante: !!(agr.checked && pv?.agravante), p_solucionado: pv?.pendencia ? solV === "sim" : null });
-        return r?.horas == null ? "Encerramento de parceria registrado." : `Bloqueio registrado: aplique ${horasTxt(r.horas)}.`;
+        return r?.horas == null ? "Encerramento de parceria registrado." : `Restrição registrada: aplique ${horasTxt(r.horas)}.`;
       };
     } else if (acao === "adicional") {
       const ent = el("input", { inputmode: "decimal", placeholder: "0,00", "aria-label": "Valor da entrega" });

@@ -76,10 +76,10 @@
       const d = App.u.diaChave(x.em);
       const li = el("li", {},
         d !== diaAtual ? el("div", { class: "dia", text: diaLongo(x.em) }) : null,
-        el("span", { class: "quando" }, hora(x.em), el("br"), el("span", { class: "tag", text: x.modulo === "ativacao" ? "ATIVAÇÃO" : "BLOQUEIOS" })),
+        el("span", { class: "quando" }, hora(x.em), el("br"), el("span", { class: "tag", text: x.modulo === "ativacao" ? "ATIVAÇÃO" : "RESTRIÇÕES" })),
         el("div", {},
-          el("div", {}, el("b", { text: x.por_nome || "—" }), " ", x.acao, " ", entregador(x)),
-          x.detalhe ? el("div", { class: "det", text: x.detalhe }) : null));
+          el("div", {}, el("b", { text: x.por_nome || "—" }), " ", App.u.restricao(x.acao), " ", entregador(x)),
+          x.detalhe ? el("div", { class: "det", text: App.u.restricao(x.detalhe) }) : null));
       diaAtual = d;
       linhas.push(li);
     }

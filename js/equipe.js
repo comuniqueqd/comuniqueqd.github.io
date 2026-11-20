@@ -21,10 +21,10 @@
     const ped = eq?.pedidos || [];
     $("#pedidos-box").hidden = !ped.length;
     $("#t-pedidos").replaceChildren(
-      el("thead", {}, el("tr", {}, ["E-mail", "Nome", "Pediu há", "Ativação", "Bloqueios", ""].map((h) => el("th", { text: h })))),
+      el("thead", {}, el("tr", {}, ["E-mail", "Nome", "Pediu há", "Ativação", "Restrições", ""].map((h) => el("th", { text: h })))),
       el("tbody", {}, ped.map((p) => {
         const sa = selPapel([...OPC_ATIV].reverse(), "suporte", "Acesso na ativação para " + p.email);
-        const sb = selPapel(OPC_BLOQ, "", "Acesso nos bloqueios para " + p.email);
+        const sb = selPapel(OPC_BLOQ, "", "Acesso nas restrições para " + p.email);
         const nome = el("input", { "aria-label": "Nome", maxlength: "80", value: p.nome || "" });
         return el("tr", {}, el("td", { text: p.email }), el("td", {}, nome), el("td", { text: duracao(p.pedido_em).txt }), el("td", {}, sa), el("td", {}, sb),
           el("td", { style: "white-space:nowrap" },
@@ -32,7 +32,7 @@
             el("button", { class: "btn link", type: "button", onclick: (e) => recusar(p.email, e.currentTarget) }, "Recusar")));
       })));
     const t = $("#t-equipe");
-    const head = el("thead", {}, el("tr", {}, ["Nome", "E-mail", "Ativação", "Bloqueios", "Situação", ""].map((h) => el("th", { text: h }))));
+    const head = el("thead", {}, el("tr", {}, ["Nome", "E-mail", "Ativação", "Restrições", "Situação", ""].map((h) => el("th", { text: h }))));
     if (!eq) return t.replaceChildren(head, el("tbody", {}, App.u.linhasEsqueleto("6")));
     t.replaceChildren(head, el("tbody", {}, eq.membros.map((m) => {
       let pa, pb;
@@ -42,8 +42,8 @@
       } else {
         pa = selPapel(OPC_ATIV, m.papel, "Acesso de " + m.nome + " na ativação",
           (e) => salvarMembro(m.email, m.nome, e.target.value, m.papel_bloqueios, e.target, `Ativação: ${m.nome} agora é ${PAPEL[e.target.value]}.`));
-        pb = selPapel(OPC_BLOQ, m.papel_bloqueios, "Acesso de " + m.nome + " nos bloqueios",
-          (e) => salvarMembro(m.email, m.nome, m.papel, e.target.value, e.target, `Bloqueios: ${m.nome} agora tem ${nomeBloq(e.target.value)}.`));
+        pb = selPapel(OPC_BLOQ, m.papel_bloqueios, "Acesso de " + m.nome + " nas restrições",
+          (e) => salvarMembro(m.email, m.nome, m.papel, e.target.value, e.target, `Restrições: ${m.nome} agora tem ${nomeBloq(e.target.value)}.`));
       }
       const acoes = el("td", { style: "white-space:nowrap" });
       if (!m.admin_final && m.email !== S.me.email) {
@@ -75,7 +75,7 @@
     const email = $("#m-email").value.trim().toLowerCase(), nome = $("#m-nome").value.trim(), papel = $("#m-papel").value, papelBloq = $("#m-papel-bloq").value;
     $("#m-erro").textContent = !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? "Digite um e-mail válido." : !nome ? "Digite o nome." : "";
     if ($("#m-erro").textContent) return;
-    await salvarMembro(email, nome, papel, papelBloq, ev.submitter, `${nome} pode entrar: ativação como ${PAPEL[papel]}, bloqueios: ${nomeBloq(papelBloq)}.`);
+    await salvarMembro(email, nome, papel, papelBloq, ev.submitter, `${nome} pode entrar: ativação como ${PAPEL[papel]}, restrições: ${nomeBloq(papelBloq)}.`);
     $("#f-membro").reset();
   });
 
@@ -148,7 +148,7 @@
     $("#eq-resp-op").replaceChildren(...[el("h3", { text: "Responsável pelos operadores logísticos" }),
       el("p", { class: "sub", text: "Recebe os avisos de todas as cidades de operador logístico." }),
       pode ? sel : el("p", {}, el("b", { text: ro?.nome || "Ninguém escolhido (vai para os moderadores)" })),
-      ro && !ro.recebe_tratativas ? el("p", { class: "alerta-revisar bloco", text: `${ro.nome} não é monitorador nos bloqueios: as tratativas dessas cidades vão para os moderadores (os outros avisos chegam normalmente).` }) : null].filter(Boolean));
+      ro && !ro.recebe_tratativas ? el("p", { class: "alerta-revisar bloco", text: `${ro.nome} não é monitorador nas restrições: as tratativas dessas cidades vão para os moderadores (os outros avisos chegam normalmente).` }) : null].filter(Boolean));
     // 008d5: as cidades de cada operador aparecem ao lado do nome
     $("#eq-t-operadores").replaceChildren(...App.u.tabela([["Operador"], ["Cidades"], ["Contato"], [""]],
       D.operadores.map((o) => {

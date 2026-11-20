@@ -37,6 +37,8 @@ const um = async (sql, p = []) => (await db.query(sql, p)).rows[0];
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x-casa-em-ordem.sql"));   // pode rodar de novo
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x2-avisos-sem-codigo.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x3-tarefas-automaticas.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x4-restricao.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x5-avisos-que-importam.sql"));
 
 await rpc(admin, "entrar");
 await db.query("update membros set papel_bloqueios = 'moderador' where email = $1", [admin.email]);
@@ -285,6 +287,51 @@ await t("009x3 (A8-04): adicional repetido pergunta antes; com p_confirmar grava
   const r4 = await rpc(admin, "registrar_adicional", { ...args, p_confirmar: true });
   verdade(r4.id, "confirmado: grava");
   igual((await um("select count(*)::int n from lancamentos_financeiros where id_app = 'rep00001'")).n, 3);
+});
+
+await t("009x4: aviso novo e erro dizem 'restrição'; as regras do banco, do site e da extensão são as mesmas", async () => {
+  await db.query("insert into notificacoes (para, texto) values ($1, 'Fulano registrou um bloqueio em LAGARTO.')", [uSup]);
+  igual((await um("select texto from notificacoes where para = $1 order by id desc limit 1", [uSup])).texto, "Fulano registrou uma restrição em LAGARTO.");
+  igual((await um("select public.texto_restricao('Este bloqueio não está ativo.') t")).t, "Esta restrição não está ativa.");
+  const pega = (f) => JSON.parse(readFileSync(new URL(f, import.meta.url), "utf8").match(/const REGRAS_RESTRICAO = (\[.*?\]);/s)[1]);
+  const site = pega("../js/base.js"), ext = pega("../extensao/api.js");
+  igual(ext, site, "extensão = site");
+  const sql = readFileSync(new URL("../supabase/009x4-restricao.sql", import.meta.url), "utf8");
+  for (const [a, b] of site) verdade(sql.includes(`'\\1${b}'`) && sql.includes(a.replace(/[().]/g, (c) => "\\" + c)), "regra no banco: " + a);
+});
+
+await t("009x5: moderador recebe o aviso de cidade sem responsável, não o de cidade com responsável (a menos que peça tudo)", async () => {
+  const mod2 = pessoa("mod.dois@x.com", "Moderador Dois"), resp = pessoa("resp.cidade@x.com", "Responsavel Cidade");
+  await db.query("insert into membros (email, nome, papel, papel_bloqueios) values ($1, $2, 'moderador', 'moderador'), ($3, $4, 'monitorador', 'monitorador') on conflict do nothing",
+    [mod2.email, mod2.nome, resp.email, resp.nome]);
+  await rpc(mod2, "entrar"); await rpc(resp, "entrar");
+  const uMod2 = (await um("select user_id from membros where email = $1", [mod2.email])).user_id;
+  const uResp = (await um("select user_id from membros where email = $1", [resp.email])).user_id;
+  await db.query("insert into cidades (nome, responsavel_email) values ('ARACAJU - SE', $1), ('ESTANCIA - SE', null) on conflict (nome) do update set responsavel_email = excluded.responsavel_email", [resp.email]);
+  const conta = async (u) => (await um("select count(*)::int n from notificacoes where para = $1", [u])).n;
+  const enviar = (cid, id) => rpc(sup, "enviar_cadastro", { p_id_app: id, p_cpf: null, p_nome: "Teste Avisos", p_cidade: cid });
+  let a = await conta(uMod2), r = await conta(uResp);
+  await enviar("ARACAJU - SE", "avis0001");
+  igual([await conta(uMod2) - a, await conta(uResp) - r], [0, 1], "cidade com responsável: só o responsável");
+  a = await conta(uMod2);
+  await enviar("ESTANCIA - SE", "avis0002");
+  igual(await conta(uMod2) - a, 1, "cidade sem responsável: o moderador recebe");
+  const pr = await rpc(mod2, "salvar_receber_tudo", { p_receber: true });
+  igual([pr.receber_tudo, pr.sou_moderador], [true, true]);
+  a = await conta(uMod2);
+  await enviar("ARACAJU - SE", "avis0003");
+  igual(await conta(uMod2) - a, 1, "pediu tudo: recebe também");
+});
+
+await t("009x5: aviso com mais de 7 dias sem ler conta como lido; restrições da planilha deixam de pedir revisão", async () => {
+  await db.query("insert into notificacoes (para, texto, criada_em) values ($1, 'Velho', now() - interval '8 days')", [uSup]);
+  await db.query("insert into notificacoes (para, texto) values ($1, 'Novo')", [uSup]);
+  igual((await um("select lida_em is not null l from notificacoes where para = $1 and texto = 'Velho'", [uSup])).l, true, "o velho ficou lido");
+  igual((await um("select lida_em is null l from notificacoes where para = $1 and texto = 'Novo'", [uSup])).l, true, "o novo continua sem ler");
+  await db.query(`insert into bloqueios (id_app, nome_entregador, cidade, infracao_id, infracao, ocorrencia, ocorrencia_total, horas, inicio, fim, registrado_por, registrado_por_nome, leve, importado, revisar)
+      select 'plan0001', 'Da Planilha', 'LAGARTO - SE', id, nome, 1, 1, 1, now() - interval '30 days', now() - interval '29 days', $1, 'Mateus Lopes', false, true, 'Nomes diferentes na planilha' from infracoes where not leve order by id limit 1`, [uAdmin]);
+  await db.query(arquivo("../supabase/009x5-avisos-que-importam.sql"));
+  igual((await um("select revisar from bloqueios where id_app = 'plan0001'")).revisar, null);
 });
 
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco

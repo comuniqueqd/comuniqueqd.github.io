@@ -159,12 +159,12 @@
   function resumoHistorico(h, idApp) {
     const partes = [];
     if (h.nome) partes.push(`ficha: ${h.nome}${h.cidade ? " · " + h.cidade : ""}`);
-    if (h.bloqueios) partes.push(`${h.bloqueios} bloqueio(s)${h.ultimo_infracao ? ` (último: ${h.ultimo_infracao}, ${dt(h.ultimo_em)})` : ""}`);
+    if (h.bloqueios) partes.push(`${h.bloqueios} restrição(ões)${h.ultimo_infracao ? ` (a última: ${h.ultimo_infracao}, ${dt(h.ultimo_em)})` : ""}`);
     if (h.leves) partes.push(`${h.leves} leve(s)`);
     if (h.comentarios) partes.push(`${h.comentarios} comentário(s)`);
     return el("div", { class: "quadrinho" + (h.encerrado ? " grave" : "") },
       h.encerrado ? el("p", { style: "margin:0" }, el("b", { icone: "alerta" }, "Este ID está com a parceria encerrada"), h.encerrado_infracao ? ` (${h.encerrado_infracao}, ${dt(h.encerrado_em)})` : "") : null,
-      el("p", { style: "margin:0" }, el("b", { text: "Este ID já existe no Comunique: " }), partes.join(" · ") || "sem registros", h.bloqueado_agora ? " · bloqueado agora" : ""),
+      el("p", { style: "margin:0" }, el("b", { text: "Este ID já existe no Comunique: " }), partes.join(" · ") || "sem registros", h.bloqueado_agora ? " · com restrição agora" : ""),
       App.abrirFicha ? el("button", { class: "btn link", type: "button", onclick: () => App.abrirFicha(idApp) }, "Consultar entregador") : null);
   }
 

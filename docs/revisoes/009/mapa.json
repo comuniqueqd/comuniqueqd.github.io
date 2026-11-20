@@ -770,7 +770,7 @@
   "veredito": "CONFIRMADO",
   "nota": "O print cortes2/claro-320-ativacao-pendentes.png (cópia reduzida em a9/ap01.png) mostra cerca de 470 px de menu antes do conteúdo. | Varredura 20/11 (a4): 20/11: piorou. Fim da navegação (header+nav.modulos+nav.grupo+nav.tabs) medido: 320 px Pendentes/Histórico 530 px (era 483), Início 408 (era 362); 390 px 447/325; 1024 px 279/158; 1280 px 234/112. Menu de cima tem 9 itens com contadores e quebra em 5 linhas em 320. Script a4/medir.mjs (campo cab), print a4/c320-inicio-top.png.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y1"
  },
  {
   "ag": "a4",
@@ -788,7 +788,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "O fato confere: há border-left em vários cartões. A prioridade vem de um detector de \"cara de IA\", não de um defeito, e o recomeço já foi decidido pelo dono (Mesa + Caderno). Entra no recomeço; não é item à parte. | Varredura 20/11 (a4): 20/11: igual. impeccable detect renderizado, 1280 claro: side-tab 32 em 9 telas (era 26 em 6): Pendentes, Tarefas, Bloqueados agora, Tratativas, Adicional, Lançamentos, Início (a.funcao::before, article.rapido.ajuda, .aviso-geral, notícias). No CSS: 13 regras border-left/top 3-5 px (estilo.css:94,136,137,182,317,322,366,457,500,522,567,583,635,640). Painel da extensão painel.css:40 igual.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -806,7 +806,7 @@
   "veredito": "CONFIRMADO",
   "nota": "O print confirma: nome 2×, ID 2×. Em 320 px dá cerca de 650 px por cartão. | Varredura 20/11 (a4): 20/11: igual (o quadrinho falso saiu, AP-04). Pendentes em 320 = 4.249 px para 6 cadastros (~650 px cada); nome e ID repetidos no título e nos campos; 3 estilos de botão no cartão. Print a4/c-pend.png.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -844,7 +844,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Recalculei: --line/surface 1,34 (claro) e 1,30 (escuro); surface/bg 1,07; --marca/bg no escuro 1,04 (o cabeçalho usa --marca, estilo.css:813). | Varredura 20/11 (a4): 20/11: igual. Borda de campo medida em 390: 1,34:1 (108 campos) e 1,25:1 claro; 1,30 e 1,15:1 escuro. Escuro: --marca #0B1813 × --bg #0F1C17 = 1,04:1; surface × bg 1,11:1. Não existe --line-forte.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y1"
  },
  {
   "ag": "a4",
@@ -862,7 +862,7 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: igual. 30 avisos low-contrast em 22 telas no escuro 390 (detector), todos placeholder #757575 sobre #16261F = 3,42:1. estilo.css só define placeholder da busca do topo (linha 817). Correção de 1 linha.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y1"
  },
  {
   "ag": "a4",
@@ -880,7 +880,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "É consistência, não defeito. Entra no recomeço e no DESIGN.md (PR-07). | Varredura 20/11 (a4): 20/11: igual. Renderizado (31 telas × 8 modos): 12 cantos (3,999,10,12,14,4,8,6,20,16,2px,50%), 13 tamanhos de letra (10 a 26 px, com 12.5), 6 pesos (900 apareceu), 21 variações de botão em 1280 e 25 em 320, 6 sombras, 33 fundos. No CSS: 14 cantos escritos (só 25 de 92 usam var(--radius)), 15 tamanhos, 12 hex fora de :root (era 21), 21 valores de espaçamento sem token, nenhum token de letra/espaço",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -898,7 +898,7 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: igual. 1.089 a 1.117 de 1.287 alvos clicáveis com menos de 44 px de altura (31 telas); mais comuns 39 (279), 28 (126), 30 (107), 32 (80) px. Campos com 30 px (31) no celular.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -916,7 +916,7 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: igual. detector undersized-ui-text 33 em Análises simples e Tarefas; texto < 12 px: .tag 11px (27), SVG text 11px (24, encolhe), .calor .h 10px (24), span 10px (21).",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -934,7 +934,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Confere. Hoje são **23** códigos de versão na faixa, não 22. É **o mesmo** que o A5 (a1) e o M8 (a8): juntar. | Varredura 20/11 (a4): 20/11: melhorou só a faixa (009w virou botão). Os 8 cartões a.funcao com faixa colorida, ícone em quadrado tingido e seta continuam; Início tem 1.445 px em 1280 e 3.645 em 320. Print a4/c-1280-inicio.png.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y1"
  },
  {
   "ag": "a4",
@@ -952,7 +952,7 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: igual. nested-cards 8 em 6 telas (Análises Tarefas, Novo bloqueio, Calculadora, Adicional, Lançamentos, Parceiros Ativações); border-accent-on-rounded 4 (Histórico da ativação, Lançamentos, Análises Tarefas).",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -970,7 +970,7 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: em parte. text-transform uppercase restou em 4 regras (estilo.css:329,402,468,523); renderizado: .rapido-tipo ('PEDIDO DE AJUDA: OPERAÇÃO – MONITORAMENTO', quebra em 2 linhas no cartão) e 'SEUS NÚMEROS'. A seta → decorativa continua em .funcao-seta (js/inicio.js:37) e 'Ver mais nas Análises →'.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -988,7 +988,7 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: ainda aberto no banco. listar_registros (pg_get_functiondef no teste_a4, linha 32) mapeia registrado/liberado/corrigido/... mas não 'pendencia_resolvida' e cai em 'else e.tipo': a linha de Avisos → Toda a equipe mostra o código cru. O js/bloqueios.js:161 (EVB) já tem o rótulo, mas o feed não passa por ele. | Varredura 20/11 (a12): Ainda aberto na 009x: o axe/varredura do a12 achou 'pendencia_resolvida' na tela #avisos/equipe. E é maior: listar_registros() (função viva no teste_a12) também cai no código para a ativação: 'editado' e 'revisado' saem crus ('else e.tipo end'). O front tem a tradução pronta em js/base.js EVENTO e js/bloqueios.js:161 EVB, mas o feed usa o texto do banco.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -1006,7 +1006,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Ver o detalhe abaixo da tabela. | Varredura 20/11 (a4): 20/11: telas sem emoji (medido nas 31 telas × 8 modos: 0 caracteres pictográficos). Restam: extensao/loja/print-1 e print-2 (14/11) com 7 emojis e sem o Ativar parceiro da 1.3; tipos_tarefa.icone com 10 emojis no banco; 11 modelos_mensagem com emoji (decisão em aberto). | Varredura 20/11 (a12): Conferido no banco com todas as migrações (teste_a12): revisar_qualidade ainda formata '✅ %s revisou' e '✏️ %s revisou' (só o gatilho de 009x2 tira, e só no começo do texto); minhas_metas usa '🎯' e json_atividade '📝' como padrão; tipos_tarefa.icone tem 10 emojis; 13 modelos_mensagem (engajamento e parceiro) terminam com emoji (🛵🚀💪🙌🙂). As telas escondem, mas os dados continuam saindo pela API e pel",
   "junto": "",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Em parte: as telas e os avisos já estão sem emoji (009u, 009x2). Falta refazer as imagens da loja da extensão."
  },
  {
@@ -1025,7 +1025,7 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: em parte. Tratativa e Acordo vencido corrigidos na 009u (--bad-forte #a8231b, 7,2:1). Continua: cabeçalho × fundo 1,04:1, surface × bg 1,11:1, dark-glow no detector estático, atalhos com cor própria ilegíveis no escuro (ver A4-01).",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -1043,7 +1043,7 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a4): 20/11: igual. O h2 'Tarefas' sai com contorno de foco jade ao trocar de tela (print a4/c-e1280-tarefas.png); js/base.js:443 continua sem regra [tabindex=\"-1\"]:focus.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -1061,7 +1061,7 @@
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -1079,7 +1079,7 @@
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -1097,7 +1097,7 @@
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -1115,7 +1115,7 @@
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista). | a15: Além da sombra: o balão do tour só tem Pular e Próximo (js/busca.js:258-262), sem Voltar e sem Esc; diretriz de onboarding (ui-ux-pro-max ux: 'Provide Skip and Back buttons').",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -1133,7 +1133,7 @@
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -1151,7 +1151,7 @@
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista).",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a4",
@@ -1169,7 +1169,7 @@
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista). | Varredura 20/11 (a4): 20/11: proposta concreta pronta em a4/proposta-DESIGN.md (frontmatter no formato DESIGN.md do Impeccable/Stitch: 4 cantos, 6 tamanhos, 6 espaços, line-forte, 3 camadas no escuro, 5 papéis de botão, linha de fila, barra de filtros, nota e entrada do diário, e a trava visual). O impeccable context confirma: sem PRODUCT.md e sem DESIGN.md hoje.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y1"
  },
  {
   "ag": "a4",
@@ -1187,7 +1187,7 @@
   "veredito": "",
   "nota": "Texto da sugestão recuperado do relatório original em 20/11/2026 (o mapa não o tinha lido por causa do formato em lista). | Varredura 20/11 (a4): 20/11: a varredura do e2e roda em 1200 e 390 só (e2e.test.mjs:489-496,1530): perdeu a rolagem lateral em 320 (A4-02). O teste de contraste (009u) mede o texto que existe na semeadura: perdeu .funcao-vivo (A4-01). O medir.mjs do a4 (8 modos, 31 telas, ~35 min) é a base do npm run test:visual.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y2"
  },
  {
   "ag": "a5",
@@ -1591,7 +1591,8 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Rodei o tarefas.test adaptado: 6/12. Das falhas, \"Ativar\" → \"Aprovar\" (009e), a mensagem do aguardar_terceiro e \"o progresso conta sozinho\" (009e recusa avancar_tarefa) são **mudanças de regra esperadas**. \"Só dá para concluir uma atividade aceita\", o checklist e a @menção parecem **cascata**  | Varredura 20/11 (a7): Remedido em 20/11 (HEAD e0b1487): 17 testes trocando só a lista de migrações pela completa -> 80 de 258 checagens falham (bloqueios 21/41, pao 2/14, espiao 3/15, atividades 10/19, avisos 13/19, entregadores 16/22, equipe 11/15, analises 14/17, tarefas 6/12, painel 5/6, financeiro 10/11). Só 1 de 25 arquivos (casa) usa carregar-banco.mjs. extensao.test.mjs carrega só até a 009s e o e2e pula a 009a | Varredura 20/11 (a11): testes/extensao.test.mjs:22-29 carrega as migrações só até a 009s (sem 009u/009v/009x/009x2); 54 checagens verdes em 7,5 s nas portas 8811/54411. Nenhum caso de tela ambígua (os de A11-01 a A11-05).",
   "junto": "",
-  "versao": "009z"
+  "versao": "009y1",
+  "situacao": "Antes da repaginada (20/11/2026): os testes precisam conferir as versões atuais das funções antes de a 009y mexer em tudo."
  },
  {
   "ag": "a7",
@@ -1793,7 +1794,8 @@
   "veredito": "",
   "nota": "",
   "junto": "A2",
-  "versao": "009z"
+  "versao": "depois",
+  "situacao": "Para depois (20/11/2026): equipe pequena, rende pouco agora."
  },
  {
   "ag": "a8",
@@ -2082,7 +2084,7 @@
   "veredito": "",
   "nota": "Varredura 20/11 (a1): Ficou mais visível com a 009v: o menu mostra 'Atividades 2' (abertas da equipe), mas o clique abre 'Minha fila' com 0 cartões; as 2 estão na outra aba (Tarefas, grupo 'Abertas: quem puder, pega'). Ver OP9-01.",
   "junto": "",
-  "versao": "009y"
+  "versao": "009y1"
  },
  {
   "ag": "a1",
@@ -3213,7 +3215,7 @@
   "nota": "Hoje a decisão termina num toast e a pessoa (muitas vezes o suporte que enviou) escreve à mão no Crisp/Blip o que faltou. A lista de motivos de reprovação é fechada, então cada motivo tem uma resposta padrão natural. Quem usa: quem decide e quem enviou o cadastro. | Revisor: Conferido: decidir() (js/ativacao.js:103) termina num toast e não há nenhum modelo de ativação em modelos_mensagem (só grupos bloqueio, entregador, cidade, parceiro). Os motivos de reprovação são uma lista curta (schema.sql:138), então cada um tem resposta padrão. Fluxo diário; o esforço real inclui o usuário aprovar 7 textos novos.",
   "junto": "MK-2",
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
-  "versao": "009z"
+  "versao": "009y1"
  },
  {
   "ag": "e1",
@@ -4672,9 +4674,9 @@
   "veredito": "CONFIRMADO",
   "nota": "Terceiros com agravante (encerra) → tarefa encerramento_parceria pendente; liberar_bloqueio(motivo 'engano') → situação 'revertido', tarefa continua {tipo: encerramento_parceria, status: pendente}. Ela entra em tratativas_pendentes e vira atrasada depois de 32 h (verificar_atrasos avisa os moderadores). | Revisor: Conferido: liberar_bloqueio() só faz update em bloqueios, nada em tarefas.",
   "junto": "",
-  "versao": "009x3",
-  "situacao": "Feito na 009x3: reverter o encerramento fecha a tarefa de encerramento com o motivo.",
-  "feito": "009x3"
+  "versao": "009x5",
+  "situacao": "Feito na 009x5: reverter o encerramento fecha a tarefa de encerramento com o motivo.",
+  "feito": "009x5"
  },
  {
   "ag": "a5",
@@ -4825,7 +4827,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "0,7 KB por cadastro pendente (aguardando análise + aguardando contato, sem limite). Na massa (2.000 pendentes): 1,35 MB cru / 114 KB gzip / 350-420 ms em cada recarga de quem está no Histórico, que com a 009x caiu para 57 KB. Cadastros em 'aguardando contato' não vencem: quem ninguém encerra fica na lista para sempre. Regra de bolso medida: cada 1 KB a mais numa resposta recarregada no tique = ~0,3 GB/mês com 15 pessoas na equipe ativa (sem gzip). | Revisor: Medido com 205 pendentes de massa; sem número real. Junto A3-15 (Pendentes em páginas na 009y). | Varredura 20/11 (a3): Medido no navegador (a3, 205 pendentes): Novo cadastro e Histórico baixam listar_cadastros pendentes 176 KB (39 ms no banco). A aba Pendentes em si continua sem página: 8.091 elementos, 61 mil px de altura, redesenho 43-56 ms (1x) e 181-234 ms (4x) a cada tique; pronta em 183/583 ms. Ver A3-15.",
   "junto": "AT4",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -4844,7 +4846,7 @@
   "veredito": "CONFIRMADO",
   "nota": "json_atividade = ~1,4 KB por tarefa (comentários, participantes, tempos). Na massa (200 abertas + 200 em andamento): listar_atividades(0) 551 KB / 30 KB gzip / 250 ms por recarga; participa() 1.133 chamadas e meu_papel 1.467. Tarefas em andamento não vencem nem saem sozinhas, então a lista cresce com a equipe. | Revisor: Junto A3-13 (mesma lista). | Varredura 20/11 (a3): Medido no navegador (a3): Minha fila baixa listar_tarefas 148 KB + listar_atividades 838 KB por carga; redesenho 268-349 ms em 4x; 7.916 elementos e 89 mil px.",
   "junto": "AT4",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -4902,7 +4904,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Com 250 cadastros: 'Página 1 de 3', 100 linhas; para ir à página 2 a pessoa rola as 100 linhas até o botão. Depois do clique a tela volta ao topo da tabela (y=0, certo). A busca pelo ID achou o 230º em 841 ms (com a espera de 300 ms) e a busca do topo acha o mesmo em 2 cliques, então o atrito é pequeno. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -4921,7 +4923,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Com 'comunique-tour' diferente de 009m, a tela inicial abre o balão 'Avisos agora fica aqui · 1 de 3' por cima do 'Acontecendo agora' (a1/prints/inicio-celular.png). Quem entra na equipe hoje recebe o tour de uma mudança de 6 versões atrás, que fala de 'antes ficava em Registros'. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas. | a15: Proposta completa para pessoa nova no A15-03 ('Primeiros passos' por papel, liberado_em < 14 dias). Também: a janela automática mostra as 27 versões (118 itens, 3.092 palavras) a quem acabou de entrar.",
   "junto": "",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5112,7 +5114,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Detector renderizado: '#b7791f on #ffffff 3,6:1' em #fn-adicional .funcao-vivo ('2 seu(s) ainda não lançado(s)'), e 4,3:1 no escuro. Calculado no escuro (#16261F): f-fer #2F6E57 2,62:1, f-par #a16207 3,2:1, f-ent jade 3,64:1, f-fin 4,33:1 (texto e ícone). O e2e (009u) não pegou porque, na semeadura dele, o atalho não tinha texto vivo: o contraste depende dos dados. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
-  "versao": "009y",
+  "versao": "009y1",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5131,7 +5133,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "scrollWidth 340 com viewport 320 (claro e escuro; a4/medidas.json). O elemento que estica: select#pn-meta-tipo, right=340, width=307 (a4/largura.mjs). A varredura do e2e só roda em 1200 e 390, por isso não acusa. | Revisor: 320 px é raro na equipe (Chrome/Edge no computador); vale como regra do test:visual (PR-08) mais do que como conserto isolado.",
   "junto": "",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5150,7 +5152,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Em 320 px o aviso vermelho ocupa ~330 px de altura, com 'Acordo vencido há 2 dia(s): fazer o ajuste · Mercado Modelo (LAGARTO - SE)' em 9 linhas ao lado de 'Ajuste feito' (a4/c320-inicio-top.png, a4/c-e320-inicio.png). | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5169,7 +5171,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "grep: 'margin:0' em 37 lugares do JS e 13 no HTML; cores por style: background:var(--bad/--gray/--warn). Nenhum token de espaço em :root. | Revisor: Organização (régua: baixa). Resolver tela a tela dentro do A4-06.",
   "junto": "",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5188,7 +5190,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Print a4/c-pend.png: os dois filtros lado a lado em 320 px mostram 'Todas as situ' e 'Todas as cida'. A varredura do e2e só confere rótulos, não o texto do select. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5207,7 +5209,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Hoje nada impede o desvio de voltar: a cada versão os números de forma ficam iguais ou pioram (cabeçalho 483→530 px em 320; side-tab 26→32; botões 20→21/25). Sem DESIGN.md o detector não sabe o que é da casa. | Revisor: Plano de execução, não defeito: média pela régua. Junta PR-07 (DESIGN.md) e PR-08 (test:visual) do mapa; o passo 1 (correções de 1 linha) já resolve AP-06, AP-13, AP-16, AP-12. Recomendo adotar como roteiro da 009y junto do A3-18.",
   "junto": "",
-  "versao": "009y",
+  "versao": "009y1",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5226,9 +5228,9 @@
   "veredito": "CONFIRMADO",
   "nota": "Banco teste_a6: removi sup@x.com e, com o token dele, 'select texto from notificacoes' devolveu 'Bloqueio de Maria Teste em LAGARTO'. Removi sup2@x.com, o moderador aprovou o cadastro que ele tinha enviado e o ex-membro leu o aviso novo: 'Seu cadastro Ana Teste foi aprovado por Mateus Lopes.' minhas_notificacoes() recusa (exige papel), mas a tabela é exposta pela API REST (/rest/v1/notificacoes) e está na publicação do Realtime. A sessão do Google/Supabase continua valendo depois da remoção. Um moderador removido leva junto o histórico de tudo (moderadores recebem todos os avisos). O mesmo vale para quem perde o módulo de bloqueios. | Revisor: Reproduzido no teste_a9: membro removido com o próprio token leu \"Bloqueio de Fulano em LAGARTO\" direto da tabela; minhas_notificacoes() recusa, mas a política notificacoes_leitura é só para = auth.uid() e authenticated tem SELECT; Realtime usa a mesma política. Alcance real: os avisos antigos (moderador removido leva o histórico de tudo) + avisos pessoais novos via notificar() (decisão de cadastro que enviou, comentários de tarefa, tratativa concluída); avisar_registro() já filtra por membros. Migração pequena: sai antes da 009y, sozinha, se o dono quiser.",
   "junto": "S1",
-  "versao": "009x3",
-  "situacao": "Feito na 009x3: só membros leem avisos; ex-membro não recebe aviso novo; remover apaga avisos, seguindo e preferências.",
-  "feito": "009x3"
+  "versao": "009x5",
+  "situacao": "Feito na 009x5: só membros leem avisos; ex-membro não recebe aviso novo; remover apaga avisos, seguindo e preferências.",
+  "feito": "009x5"
  },
  {
   "ag": "a6",
@@ -5361,9 +5363,9 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "registrar_adicional valida origem, mercado, motivo e valores, mas não procura lançamento igual (grep 'duplic|mesmo pedido' sem resultado). Com site + extensão registrando, duas pessoas podem lançar o mesmo pedido. Mercado: Ramp e Expensify comparam cada despesa com as anteriores e marcam a suspeita de duplicado antes da aprovação; quem revisa confirma ou ignora (ramp.com/answers/.../duplicate-reimbursement-claims-detected; help.expensify.com Duplicate-Detection; verificados hoje). | Revisor: Adicional repetido = dinheiro pago duas vezes; trava pequena no banco (mesmo ID + pedido em 7 dias → pergunta). Junto A5-12.",
   "junto": "",
-  "versao": "009x3",
-  "situacao": "Feito na 009x3: o adicional igual (ID + pedido, ou ID + valor no dia) pergunta antes de gravar, no site e na extensão.",
-  "feito": "009x3"
+  "versao": "009x5",
+  "situacao": "Feito na 009x5: o adicional igual (ID + pedido, ou ID + valor no dia) pergunta antes de gravar, no site e na extensão.",
+  "feito": "009x5"
  },
  {
   "ag": "a8",
@@ -5457,7 +5459,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Massa a3: 577 abertas (399 opcionais 'revisar cadastro') + 85 em andamento + 51 concluídas. listar_atividades(51) = 996 KB e 0,42 s no banco; tela com 12.867 elementos e 131 mil px; pronta em 675 ms (1x) / 1.645 ms (4x); redesenho 94-161 / 501-716 ms (era 212-632 em 4x na 009t). Cada item ~1,4 KB. | Revisor: Código confirmado (abertas/em andamento sem limite), mas os números vêm da massa do a3 (577 abertas, 399 opcionais); não há número real (a10 ainda na fase 1). Hoje é atrito; vira alta se a fase 2 mostrar mais de ~150 abertas. Como a 009y reescreve a tela de Tarefas em linhas, entra nela. Junto A2-03 e do resto do AT4/A3-03 (feitos só para concluídas).",
   "junto": "A2-03",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5495,7 +5497,7 @@
   "veredito": "CONFIRMADO",
   "nota": "205 pendentes = 8.091 elementos, 61 mil px, pronta em 183/583 ms (1x/4x), redesenho 43-56 / 181-234 ms a cada tique, long task de 185 ms em 4x. 'Aguardando contato' não vence: a fila só cresce. | Revisor: \"Aguardando contato\" não vence (NF-5): a fila só cresce. Junto A2-02.",
   "junto": "A2-02",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5533,7 +5535,7 @@
   "veredito": "CONFIRMADO",
   "nota": "probe2 (fontes do salto): Início -> Bloqueios main 112 -> 234 px (CLS 0,073); Bloqueios -> Avisos 234 -> 171 (0,035); numa rodada Avisos/para-mim deu CLS 0,589 (1x) e 0 (4x). Com clique real o navegador perdoa os primeiros 500 ms, mas o olho vê a tela inteira mudar de lugar. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "AP-01",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5552,7 +5554,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Sem trava, a 009y vai trocar cartões por linhas mantendo o redesenho total a cada 30 s: Tarefas já está em 0,5-0,7 s por redesenho em 4x. Linhas são menores que cartões (menos elementos), mas a tela inicial nova (diário do dia) junta várias listas numa tela só. | Revisor: Plano, não defeito: pela régua não é alta. Junta A3-S8 (orçamento no e2e), A3-01 e A3-S4 do mapa; fazer como a outra metade do A4-06 (um só \"contrato da 009y\": visual + desempenho).",
   "junto": "A3-01",
-  "versao": "009y",
+  "versao": "009y1",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5571,7 +5573,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "A mesma RPC aceitar_atividade aparece na tela como 'Pegar' (Minha fila) e 'Eu faço' (Tarefas), no aviso como 'aceitou a atividade' e no toast como 'Tarefa aceita'. Desde a 009d2 a tela só fala 'tarefa', mas 6 textos de aviso gravados no banco ainda dizem 'atividade'. Medido com grep e com a lista de format() das funções vivas no banco teste_a12 (82 textos). | Revisor: Acabamento (régua: baixa). Resolver pelo glossário do A12-10.",
   "junto": "A12-11",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5590,7 +5592,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Na tela inicial, 'Nova ativação' leva a um formulário chamado 'Novo cadastro', e o botão vizinho 'Cadastrar entregador' faz outra coisa (ficha sem ativação). A busca do topo, o Histórico ('Histórico de cadastros') e os avisos usam 'cadastro' para a ativação. Para quem chega, 'cadastrar entregador' e 'novo cadastro' parecem o mesmo. | Revisor: Idem: glossário do A12-10.",
   "junto": "A12-01",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5609,7 +5611,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Mesma palavra para notificação do sino, infração leve, recado da equipe na tela inicial, pendência de prestação de contas e a mensagem rápida que some em 4 s. Na tela de teste de sons aparece até o jargão 'toast'. Ao registrar uma 'Infração leve (aviso)' a pessoa recebe um 'aviso' sobre um 'aviso'. | Revisor: Idem: glossário do A12-10.",
   "junto": "A12-11",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5647,7 +5649,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Medido nas 31 abas do administrador (a12/auditoria.json: titulos por rota × nomes das abas em js/*.js). Quem clica 'Toda a equipe' e vê 'Registros' não sabe se chegou ao lugar certo; o histórico de novidades e os avisos falam 'Registros'. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5666,7 +5668,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Gravação de 30 Tabs em #bloqueios/novo (a12/auditoria.json, campo foco): 8 itens do menu, 2 da segunda barra, 7 abas e 2 botões de tipo antes de chegar em #bq-id. Com o leitor de tela é igual. O axe não acusa (há landmarks), mas é atrito diário para quem usa teclado. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "M3",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5704,7 +5706,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Na gravação de foco os links aparecem como 'Ativação4', 'Tratativas3', 'Aguardando análise4' nos títulos h3. O leitor de tela lê 'Ativação 4' sem dizer 4 o quê; '(s)' é lido como 'aviso abre parêntese s'. Não há função de plural no App.u. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5742,7 +5744,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Os desvios desta rodada (A12-01, 02, 03, 05, 08) são todos de falta de regra escrita: cada versão escolheu uma palavra. O rascunho do guia está no relatório do a12 (seção 'Guia de escrita'). | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas.",
   "junto": "PR-07",
-  "versao": "009y",
+  "versao": "009y1",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -5780,7 +5782,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Levantamento das 20 chamadas de vazio() em js/*.js: 14 dizem o que fazer, 6 não. 'Nada com esse filtro' sem dizer qual filtro está ligado nem oferecer 'Limpar filtros'. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas. | a15: Tela vazia pode abrir o tutorial: 'Nenhum adicional seu ainda. Ver como registrar (3 passos)' (A15-02, T2).",
   "junto": "",
-  "versao": "009y",
+  "versao": "009y2",
   "situacao": "Varredura de 20/11/2026."
  },
  {
@@ -6008,9 +6010,9 @@
   "veredito": "",
   "nota": "Hoje, se ninguém pega a tarefa, ela fica em 0 com a cidade recebendo aprovações; o pedido do dono de 20/11. | Teste: 0/5 ao criar; outra pessoa aprova 2 na cidade = 2/5 sem ninguém pegar; outra cidade não conta; desfazer+refazer = 1; 5ª fecha e avisa; aprovação anterior à criação não conta.",
   "junto": "A5-1",
-  "versao": "009x3",
-  "situacao": "Feito na 009x3: contam as aprovações de toda a equipe na cidade desde a criação; fecha sozinha ao bater a meta e avisa quem participou.",
-  "feito": "009x3"
+  "versao": "009x5",
+  "situacao": "Feito na 009x5: contam as aprovações de toda a equipe na cidade desde a criação; fecha sozinha ao bater a meta e avisa quem participou.",
+  "feito": "009x5"
  },
  {
   "ag": "a16",
@@ -6123,7 +6125,7 @@
   "veredito": "",
   "nota": "Pessoa nova recebe a janela com 27 versões (118 itens) e o tour da 009m sobre 'antes ficava em Registros'; não há nada que diga por onde começar. | Teste: localStorage vazio + membro liberado hoje → a linha aparece e nada sobre 009m; liberado há 30 dias → não aparece.",
   "junto": "OP9-03",
-  "versao": "009y",
+  "versao": "009y1",
   "situacao": "Proposta da rodada de 20/11 (a15/a16), ainda não aprovada."
  },
  {
@@ -6180,7 +6182,7 @@
   "veredito": "",
   "nota": "Medido: 27 blocos, 118 itens, 3.092 palavras na janela que abre para todos a cada versão (print testes/prints/f1-novidades.png). Itens da 009x falam de dentro ('Contadores certos', 'Ninguém fica com trabalho parado') sem dizer o que fazer. TOUR separado de VERSOES: 11 versões publicadas depois do tour atual. | Teste: comunique-novidades antigo → 1 bloco aberto, anteriores fechadas; item com seletor gera passo do tour; item com papel moderador não aparece ao suporte.",
   "junto": "PB-13, OP9-03, PR-04, A13-01",
-  "versao": "009y",
+  "versao": "009y1",
   "situacao": "Proposta da rodada de 20/11 (a15/a16), ainda não aprovada."
  },
  {
@@ -6218,7 +6220,7 @@
   "veredito": "",
   "nota": "iniciarTour() descarta passos cujo seletor não existe e, sem passos, não mostra nada; com a 009y trocando o menu, o tour e os tutoriais somem sem nenhum teste falhar. | Teste: Renomear um seletor numa cópia → o teste falha dizendo a dica e o passo.",
   "junto": "A12-09",
-  "versao": "009y",
+  "versao": "009y1",
   "situacao": "Proposta da rodada de 20/11 (a15/a16), ainda não aprovada."
  },
  {
@@ -6258,5 +6260,120 @@
   "junto": "A15-06",
   "versao": "010",
   "situacao": "Proposta da rodada de 20/11 (a15/a16), ainda não aprovada."
+ },
+ {
+  "ag": "a10",
+  "id": "AV-1",
+  "titulo": "Avisos demais: moderador recebia tudo (1.881 avisos em 3 semanas, 453 sem ler)",
+  "prio": "alta",
+  "prio_orig": "alta",
+  "esforco": "pequeno",
+  "tipo": "achado",
+  "onde": "avisar_registro (008d)",
+  "sugestao": "Moderador recebe só o seu, o das suas cidades e o das cidades sem responsável; opção receber tudo; aviso com 7+ dias sem ler conta como lido.",
+  "objetivo": "menos",
+  "tela": "avisos",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Números de uso de 20/11/2026: 7 de 10 pessoas são moderadoras; uma pessoa com 317 não lidos; 18,9% lidos em 1 hora.",
+  "junto": "PX5",
+  "versao": "009x5",
+  "feito": "009x5",
+  "situacao": "Feito na 009x5 (Avisos que importam)."
+ },
+ {
+  "ag": "a10",
+  "id": "RV-1",
+  "titulo": "115 restrições da planilha com 'revisar' em aberto",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "achado",
+  "onde": "bloqueios.revisar (importado)",
+  "sugestao": "Marcar como revisadas as importadas da planilha (a planilha não é mais usada).",
+  "objetivo": "menos",
+  "tela": "bloqueios",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Decisão do usuário em 20/11/2026: marcar de uma vez.",
+  "junto": "",
+  "versao": "009x5",
+  "feito": "009x5",
+  "situacao": "Feito na 009x5."
+ },
+ {
+  "ag": "a10",
+  "id": "CD-1",
+  "titulo": "17 de 38 cidades ativas sem responsável",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "achado",
+  "onde": "cidades.responsavel_email",
+  "sugestao": "Lembrete na tela inicial com atalho para pedir a cidade (feito na 009x5). Depois: o moderador distribuir as cidades numa tela só.",
+  "objetivo": "menos",
+  "tela": "inicio",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Os avisos e as tratativas dessas cidades caem nos moderadores.",
+  "junto": "AV-1",
+  "versao": "009y2",
+  "situacao": "Lembrete feito na 009x5; falta a distribuição pelo moderador."
+ },
+ {
+  "ag": "a10",
+  "id": "FN-1",
+  "titulo": "Todos os 8 adicionais estão marcados como 'mercado'",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "achado",
+  "onde": "js/financeiro.js (pergunta 'Pedido de mercado?')",
+  "sugestao": "Conferir com a equipe se a pergunta está clara; se não, reescrever ou trocar por uma lista (mercado, restaurante, farmácia...).",
+  "objetivo": "analises",
+  "tela": "financeiro",
+  "onda": 2,
+  "veredito": "",
+  "nota": "Números de uso de 20/11/2026.",
+  "junto": "",
+  "versao": "009y2"
+ },
+ {
+  "ag": "a10",
+  "id": "CG-1",
+  "titulo": "Congelar as funções pouco usadas até termos 8 semanas de dados",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "onde": "tarefas (recorrentes, checklist, comentários, agradecimentos, @menções, aguardando terceiro, entrar junto), anexos, agravante, seguir cidade, silenciar, parceiros",
+  "sugestao": "Nenhum esforço novo nelas. Revisar em ~5 semanas: o que seguir sem uso vai para 'guardado' (sai da tela, fica no banco).",
+  "objetivo": "menos",
+  "tela": "geral",
+  "onda": 2,
+  "veredito": "",
+  "nota": "Números de uso de 20/11/2026: todas com 0 ou 1 uso em 3 semanas.",
+  "junto": "",
+  "versao": "depois",
+  "situacao": "Decidido em 20/11/2026: congelar e revisar com 8 semanas de dados."
+ },
+ {
+  "ag": "a16",
+  "id": "MT-1",
+  "titulo": "Metas da equipe completas (criar, acompanhar, fechar e avisar)",
+  "prio": "média",
+  "prio_orig": "média",
+  "esforco": "médio",
+  "tipo": "sugestao",
+  "onde": "metas, tarefas automáticas (009x3)",
+  "sugestao": "Moderador cria meta da equipe (tipo, quantidade, prazo, cidade); conta o trabalho de todos; fecha sozinha e avisa; sem placar por pessoa. A tarefa automática do parceiro já é a versão mínima.",
+  "objetivo": "esforco",
+  "tela": "tarefas",
+  "onda": 3,
+  "veredito": "",
+  "nota": "Spec aprovada em 20/11/2026, adiada pelos números de uso (tarefas ainda pouco usadas).",
+  "junto": "A16-11 A16-12",
+  "versao": "depois",
+  "situacao": "Adiada: volta quando o uso de tarefas crescer."
  }
 ]

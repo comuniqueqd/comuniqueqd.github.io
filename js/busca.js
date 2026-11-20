@@ -24,7 +24,7 @@
     if (r.entregadores.length) linhas.push(el("h4", { text: "Entregadores" }), ...r.entregadores.map((x) =>
       el("button", { type: "button", onclick: () => ir(() => App.abrirFicha(x.id_app)) },
         el("span", { text: x.nome || "(sem nome)" }),
-        el("span", { class: "meta mono", text: `${x.id_app} · ${x.cidade || "sem cidade"} · ${x.bloqueios} bloqueio(s)` }))));
+        el("span", { class: "meta mono", text: `${x.id_app} · ${x.cidade || "sem cidade"} · ${x.bloqueios} restrição(ões)` }))));
     if (r.cadastros.length) linhas.push(el("h4", { text: "Cadastros da ativação" }), ...r.cadastros.map((x) =>
       el("button", { type: "button", onclick: () => ir(() => App.abrirCadastro(x.id)) },
         el("span", { text: x.nome || (x.id_app ? "ID " + x.id_app : "Sem ID") }),
@@ -51,23 +51,26 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009x3";
+  const VERSAO = "009x5";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
-    { versao: "009x3", tema: "Missões da equipe", itens: [
+    { versao: "009x5", tema: "Missões da equipe", itens: [
       ["Tarefas automáticas contam para todos", "A tarefa \"Aprovar entregadores\" que nasce sozinha ao ativar um parceiro agora conta todos os entregadores aprovados na cidade desde que ela foi criada, não importa quem aprovou. As tarefas criadas por alguém continuam contando só as aprovações de quem pegou."],
       ["A meta fecha sozinha", "Quando a equipe bate a meta de uma tarefa automática, ela fecha sozinha e avisa todo mundo que participou."],
       ["Adicional repetido", "Se você registrar um adicional igual a um que já existe (mesmo entregador e mesmo pedido, ou mesmo valor no mesmo dia), o Comunique pergunta antes de gravar."],
       ["Encerramento revertido", "Reverter um encerramento de parceria fecha a tarefa de encerramento que estava pendente."],
       ["Mais segurança", "Quem sai da equipe deixa de ver os avisos do Comunique."],
+      ["Restrição no lugar de bloqueio", "O que antes se chamava bloqueio agora se chama restrição em todas as telas, nos avisos e na extensão: Nova restrição, Com restrição agora, Histórico de restrições."],
+      ["Avisos que importam", "Moderadores recebem o que é deles, o das suas cidades e o das cidades sem responsável. Quem quiser receber tudo liga a opção em Avisos. Aviso com mais de 7 dias sem ler deixa de contar."],
+      ["Cidades sem responsável", "A tela inicial mostra quantas cidades estão sem responsável, com o atalho para pedir uma."],
     ] },
     { versao: "009x", tema: "Casa em ordem", itens: [
       ["Listas mais leves", "O Histórico da ativação vem em páginas de 100, com Anterior e Próxima. As tratativas concluídas e as tarefas concluídas mostram as mais recentes, com o botão \"Ver mais\". A busca roda no banco e acha também os antigos."],
       ["Busca sem travar", "No Histórico, a busca espera você parar de digitar e redesenha só a lista."],
       ["Análises com horário", "As Análises dizem de quando são os números (\"Números de 14:32\") e têm o botão \"Atualizar\"."],
       ["Contadores certos", "O número de tarefas em aberto conta só as que você pode ver e pegar. Quem entra junto numa tarefa também passa a contá-la."],
-      ["Ninguém fica com trabalho parado", "Quando alguém perde o acesso aos bloqueios ou sai da equipe, as cidades e as tratativas dessa pessoa passam para os moderadores, e as tarefas que ela tinha pegado voltam a ficar abertas."],
+      ["Ninguém fica com trabalho parado", "Quando alguém perde o acesso às restrições ou sai da equipe, as cidades e as tratativas dessa pessoa passam para os moderadores, e as tarefas que ela tinha pegado voltam a ficar abertas."],
       ["Avisos como foram escritos", "Pedidos de ajuda e avisos gerais chegam com o texto exatamente como a pessoa escreveu."],
     ] },
     { versao: "009w", tema: "Tela inicial mais limpa", itens: [
@@ -89,7 +92,7 @@
     ] },
     { versao: "009t", tema: "Extensão do Comunique", itens: [
       ["Comunique no Chrome", "Saiu a extensão do Comunique: o número de avisos no ícone, notificação de pedido de ajuda, o Comunique no painel lateral e atalhos para as telas mais usadas."],
-      ["Um clique do painel para o Comunique", "Na tela do entregador no Quero Log e no Crisp, a extensão mostra os botões Cadastrar, Nova ativação, Bloquear e Adicional, que abrem o formulário já com o ID, o nome e a cidade. Você confere e salva."],
+      ["Um clique do painel para o Comunique", "Na tela do entregador no Quero Log e no Crisp, a extensão mostra os botões Cadastrar, Nova ativação, Aplicar restrição e Adicional, que abrem o formulário já com o ID, o nome e a cidade. Você confere e salva."],
     ] },
     { versao: "009s", tema: "Sem CPF", itens: [
       ["CPF fora do Comunique", "Para proteger os dados dos entregadores (LGPD), o Comunique não guarda mais CPF: o campo saiu do Novo cadastro, nenhuma tela mostra CPF e os que estavam guardados foram apagados."],
@@ -182,9 +185,9 @@
       ["Acordos com parceiros", "Em Financeiro → Acordos: estabelecimento, cidade, o que foi acordado e quando vence. No dia do vencimento, um aviso vermelho aparece no topo da tela inicial de todos e só sai quando alguém marcar “Ajuste feito”."],
       ["Sons", "Avisos novos tocam um som conforme a urgência (4 níveis; o pedido de ajuda é o mais forte). Em Atividades → Avisos você ouve cada um, desliga o que quiser e liga a notificação do sistema."]] },
     { versao: "009c", tema: "Mensagens prontas e agravante", itens: [
-      ["Gerar mensagem", "Depois de registrar um bloqueio ou uma leve (e no Histórico), o botão “Gerar mensagem” traz o texto pronto, já com o nome do entregador, o motivo, a regra explicada e o tempo. É só copiar."],
-      ["Restrição temporária", "Nas mensagens ao entregador, o bloqueio temporário aparece como “restrição temporária”."],
-      ["Agravante", "Algumas infrações têm agravante na política (ex.: não responder o suporte em 8 horas na retenção). Marque a caixinha no Novo bloqueio e a punição sobe."],
+      ["Gerar mensagem", "Depois de registrar uma restrição ou uma leve (e no Histórico), o botão “Gerar mensagem” traz o texto pronto, já com o nome do entregador, o motivo, a regra explicada e o tempo. É só copiar."],
+      ["Restrição temporária", "Nas mensagens ao entregador, o restrição temporária aparece como “restrição temporária”."],
+      ["Agravante", "Algumas infrações têm agravante na política (ex.: não responder o suporte em 8 horas na retenção). Marque a caixinha no Nova restrição e a punição sobe."],
       ["Avisos rápidos", "Retenção de valores ainda não resolvida? Marque “Não” em “Já foi solucionado?” e ela fica na tela inicial de todos como “Aguardando prestação de contas”, até alguém marcar como resolvido."],
       ["Mensagens prontas", "Em Ferramentas: engajamento de entregadores (3 opções de texto cada) e o primeiro contato com o parceiro, que avisa do PDF e do áudio. Sem o nome do entregador, o “movimento alto” sai para a cidade toda."],
       ["O que diz cada regra", "A explicação de cada infração, tirada da política, fica em Ferramentas → Mensagens prontas."]] },
@@ -194,10 +197,10 @@
       ["Registrar adicional", "No Financeiro: valor da entrega, do pedido e o combinado; o app calcula o adicional. Com botões de adicional rápido (+R$ 2, +R$ 5…)."],
       ["Adicionais pendentes", "Registrou e ainda não lançou no sistema? Fica na sua lista de pendentes, com o número no menu, até alguém lançar."],
       ["Lançamentos e números", "Quanto se paga a mais por cidade, motivo, tamanho do pedido, origem (QD ou outros), mercado e os bairros mais trocados."],
-      ["Regras pela política", "As punições seguem a Política de Boas Práticas e Conduta (continuam editáveis em Bloqueios → Regras)."],
+      ["Regras pela política", "As punições seguem a Política de Boas Práticas e Conduta (continuam editáveis em Restrições → Regras)."],
       ["Aviso de adicional", "O responsável da cidade recebe um aviso a cada adicional ou ajuste (dá para silenciar em Avisos)."]] },
     { versao: "008d", tema: "De olho em tudo (e só no que importa)", itens: [
-      ["De olho nele", "Na ficha do entregador, “Ficar de olho”: você recebe tudo o que acontecer com ele (bloqueio, leve, comentário, cadastro), de qualquer cidade."],
+      ["De olho nele", "Na ficha do entregador, “Ficar de olho”: você recebe tudo o que acontecer com ele (restrição, leve, comentário, cadastro), de qualquer cidade."],
       ["Seguir cidade", "Em Avisos, “O que você acompanha e recebe”: siga as cidades que quiser, mesmo sem ser a responsável."],
       ["Silenciar o que não precisa", "Escolha que tipos de aviso receber. O que é para você e o “de olho nele” sempre chegam."],
       ["Leves agrupadas", "As infrações leves viram um aviso só por cidade e dia, que vai somando: “3 infrações leves novas em LAGARTO hoje”."],
@@ -205,13 +208,13 @@
       ["Resumo do dia no sino", "Ao abrir o sino: o que rolou hoje na equipe e quantos registros você fez."],
       ["O suporte revisa a planilha", "O cartão “Revisar registros da planilha” agora abre a lista também para o suporte."],
       ["Operadores logísticos com aba própria", "Em Equipe: a aba Operadores logísticos tem o responsável por eles e a lista com os contatos. A Regras de equipe ficou só com as cidades."],
-      ["Histórico de bloqueios mais completo", "Como o da ativação: quadrinhos com os totais (clique para filtrar), “Só os que eu registrei” e o histórico de cada registro ao clicar na linha."],
+      ["Histórico de restrições mais completo", "Como o da ativação: quadrinhos com os totais (clique para filtrar), “Só os que eu registrei” e o histórico de cada registro ao clicar na linha."],
     ] },
     { versao: "008c", tema: "Tudo mais à mão", itens: [
-      ["Tela inicial com atalhos", "Nova ativação, Novo bloqueio, Cadastrar entregador, Sugerir atividade e Registros viraram botões grandes, logo no início. Os seus números ficaram embaixo, mais discretos."],
-      ["Começa pelo que mais se faz", "Ativação abre no Novo cadastro (Pendentes vem em seguida, com o número na aba) e Bloqueios abre no Novo bloqueio (depois, as Tratativas)."],
+      ["Tela inicial com atalhos", "Nova ativação, Nova restrição, Cadastrar entregador, Sugerir atividade e Registros viraram botões grandes, logo no início. Os seus números ficaram embaixo, mais discretos."],
+      ["Começa pelo que mais se faz", "Ativação abre no Novo cadastro (Pendentes vem em seguida, com o número na aba) e Restrições abre no Nova restrição (depois, as Tratativas)."],
       ["Menos telas", "“Meus cadastros” e “Meus registros” viraram o Histórico de cada módulo (quem é do suporte vê ali só o que enviou). Os Painéis viraram parte das Análises."],
-      ["Análises simples e complexas", "Nas simples: por que não aprovou, quem sai do bloqueio hoje, bloqueados por cidade, quando você registra (e o seu pico), o que você fez no período, gráficos por dia e mais. Nas complexas: qual infração mais se repete, escada da reincidência, cidades, tempo de resposta da ativação, punições desfeitas e por pessoa."],
+      ["Análises simples e complexas", "Nas simples: por que não aprovou, quem sai da restrição hoje, com restrição por cidade, quando você registra (e o seu pico), o que você fez no período, gráficos por dia e mais. Nas complexas: qual infração mais se repete, escada da reincidência, cidades, tempo de resposta da ativação, punições desfeitas e por pessoa."],
       ["Mais leve", "O app só recarrega as listas quando algo mudou de verdade: menos espera e menos consumo."],
     ] },
     { versao: "008b", tema: "Espião ou fofoqueiro? Virou rede social?", itens: [
@@ -221,8 +224,8 @@
       ["O suporte também revisa", "Registros marcados “revisar” e os que você registrou podem ser corrigidos pelo suporte (com motivo); e “Os dados estão certos” nos cadastros."],
     ] },
     { versao: "008", tema: "Espionagem profissional", itens: [
-      ["Cadastrar entregador", "A ficha do entregador (ID, nome e cidade) pode ser criada sem ativar nem bloquear."],
-      ["Menu mais enxuto", "Ativação, Bloqueios e Cadastrar entregador ficam dentro de Entregadores, numa segunda barra."],
+      ["Cadastrar entregador", "A ficha do entregador (ID, nome e cidade) pode ser criada sem ativar nem aplicar restrição."],
+      ["Menu mais enxuto", "Ativação, Restrições e Cadastrar entregador ficam dentro de Entregadores, numa segunda barra."],
       ["Busca do topo mais esperta", "A busca acha também comentários sobre entregadores e os seus avisos."],
       ["Casos suspeitos: em revisão", "A tela de casos saiu por enquanto e vai voltar revisada."],
     ] },

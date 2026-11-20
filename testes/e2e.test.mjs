@@ -58,6 +58,8 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009v-tarefas-abertas.sq
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009x-casa-em-ordem.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009x2-avisos-sem-codigo.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009x3-tarefas-automaticas.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009x4-restricao.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009x5-avisos-que-importam.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -116,7 +118,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009x3"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009x5"); localStorage.setItem("comunique-tour", "009m"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -192,7 +194,7 @@ try {
   await s.fill("#f-idapp", ""); await s.fill("#f-cidade", "RECIFE - PE"); await s.click("#b-enviar");
   ok((await texto(s, "#e-idapp")).includes("Preencha o ID do entregador"), "009s: sem ID o cadastro não sai");
   await s.fill("#f-idapp", "1A2B3C4D5E6F"); await s.click("#b-enviar");
-  ok(await esperar(s, "#form-erro:not([hidden])"), "ID repetido é bloqueado: " + (await texto(s, "#form-erro")));
+  ok(await esperar(s, "#form-erro:not([hidden])"), "ID repetido é com restrição: " + (await texto(s, "#form-erro")));
   ok((await texto(s, "#form-erro")).includes("já está cadastrado") && !(await texto(s, "#form-erro")).includes("CPF") && !(await s.isVisible("dialog.janela")), "009s: ID repetido só é recusado, sem citar CPF");
   await s.fill("#f-idapp", "abc12345"); await s.click("#b-enviar");
   await esperar(s, "#v-pendentes:not([hidden]) .card.destaque");
@@ -394,7 +396,7 @@ try {
   await s.click("#aviso-versao >> text=Depois"); await s.unroute("**/versao.txt*");
   // 008c: funções em destaque na tela inicial
   { const fns = await s.$$eval("#inicio-funcoes a.funcao", (l) => l.map((x) => x.querySelector("b").textContent));
-    ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Novo bloqueio", "Cadastrar entregador", "Ativar parceiro", "Calculadora de bairro", "Registrar adicional", "Nova tarefa", "Registros"]), "tela inicial: as 8 funções em destaque: " + fns); }
+    ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Nova restrição", "Cadastrar entregador", "Ativar parceiro", "Calculadora de bairro", "Registrar adicional", "Nova tarefa", "Registros"]), "tela inicial: as 8 funções em destaque: " + fns); }
   await s.click("#fn-sugerir");
   ok(await esperar(s, "#v-at-sugeridas:not([hidden])") && await s.waitForFunction(() => document.querySelector("#at-nova-box")?.open && document.activeElement?.id === "at-titulo", null, { timeout: 5000 }).then(() => true, () => false), "Nova tarefa abre a tela com o formulário aberto e o cursor no título");
   await ir(s, "#inicio"); await esperar(s, "#fn-ativacao");
@@ -402,9 +404,9 @@ try {
   ok(await esperar(s, "#v-novo:not([hidden])"), "Nova ativação abre o Novo cadastro");
   await ir(s, "#inicio"); await esperar(s, "#fn-bloqueio");
   await s.click("#fn-bloqueio");
-  ok(await esperar(s, "#v-bq-novo:not([hidden])"), "o atalho Novo bloqueio abre o Novo bloqueio");
+  ok(await esperar(s, "#v-bq-novo:not([hidden])"), "o atalho Nova restrição abre o Nova restrição");
   await ir(s, "#bloqueios");
-  ok(await esperar(s, "#v-bq-novo:not([hidden])"), "Bloqueios abre em Novo bloqueio (008c)");
+  ok(await esperar(s, "#v-bq-novo:not([hidden])"), "Restrições abre em Nova restrição (008c)");
   const abasB = await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));
   { await ir(s, "#ativacao"); await esperar(s, "#v-novo:not([hidden])");
     const abasA = await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));
@@ -414,11 +416,11 @@ try {
   await s.fill("#bq-id", "mal00001"); await s.fill("#bq-nome", "Fulano de Tal");
   await s.selectOption("#bq-cidade", "LAGARTO - SE"); await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
   await s.fill("#bq-comentario", "Educado, mas costuma atrasar a coleta.");
-  ok(await esperar(s, "#bq-previa >> text=Aplicar 2 dias (48 h) de bloqueio"), "prévia: 1ª ocorrência de mal uso = 48 h");
+  ok(await esperar(s, "#bq-previa >> text=Aplicar 2 dias (48 h) de restrição"), "prévia: 1ª ocorrência de mal uso = 48 h");
   ok((await texto(s, "#bq-previa")).includes("Gera tratativa para Monitor Um"), "prévia: avisa que gera tratativa para o responsável");
   await s.screenshot({ path: path.join(PRINTS, "b2-novo-previa.png"), fullPage: true });
   await s.click("#bq-enviar");
-  ok(await esperar(s, "#bq-previa >> text=Aplique 2 dias (48 h) de bloqueio"), "após registrar: mostra o tempo a aplicar");
+  ok(await esperar(s, "#bq-previa >> text=Aplique 2 dias (48 h) de restrição"), "após registrar: mostra o tempo a aplicar");
   ok((await texto(s, "#bq-previa")).includes("Tratativa enviada para Monitor Um"), "após registrar: tratativa enviada");
   await s.click("text=Registrar outro");
   ok((await s.inputValue("#bq-comentario")) === "", "comentário limpo depois de registrar");
@@ -441,14 +443,14 @@ try {
   await s.click("text=Registrar outro");
   await s.fill("#bq-id", "reab0001"); await s.fill("#bq-nome", "Rápido"); await s.selectOption("#bq-cidade", "ITABAIANA - SE");
   await s.selectOption("#bq-infracao", { label: "Reabrir Pedido Após Aceite Sem Justificativa Plausível" });
-  ok(await esperar(s, "#bq-previa >> text=não gera tratativa"), "bloqueio de 1 h não gera tratativa");
+  ok(await esperar(s, "#bq-previa >> text=não gera tratativa"), "restrição de 1 h não gera tratativa");
   await s.click("#bq-enviar"); await esperar(s, "#bq-previa >> text=Aplique 1 h");
 
   // 11. monitorador: tratativas
   await ir(m, "#bloqueios"); await m.reload();
-  ok(await esperar(m, "#v-bq-novo:not([hidden])"), "monitorador também abre os Bloqueios no Novo bloqueio");
+  ok(await esperar(m, "#v-bq-novo:not([hidden])"), "monitorador também abre os Restrições no Nova restrição");
   { const abasMB = await m.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));
-    ok(abasMB[0] === "novo" && abasMB[1] === "tratativas", "Novo bloqueio e, em seguida, Tratativas: " + abasMB); }
+    ok(abasMB[0] === "novo" && abasMB[1] === "tratativas", "Nova restrição e, em seguida, Tratativas: " + abasMB); }
   await ir(m, "#bloqueios/tratativas");
   ok(await esperar(m, "#v-bq-tratativas:not([hidden]) .card"), "monitorador vê as Tratativas");
   ok((await texto(m, "#c-trat")) === "2", "contador de tratativas: 2 (mal uso e furto em LAGARTO)");
@@ -462,7 +464,7 @@ try {
   ok(!(await m.isVisible(cardF)), "tratativa resolvida sai das pendentes");
   await m.click("[data-trat=concluida]");
   ok(await esperar(m, "#bq-trat-lista >> text=Orientado por telefone"), "aparece em Concluídas com a nota");
-  ok((await texto(m, "#bq-trat-lista .card:has-text('Fulano de Tal')")).includes("Bloqueado"), "o bloqueio continua depois da tratativa");
+  ok((await texto(m, "#bq-trat-lista .card:has-text('Fulano de Tal')")).includes("Com restrição"), "a restrição continua depois da tratativa");
 
   // 12. suporte recebe o aviso e acompanha
   await ir(s, "#bloqueios/meus"); await s.reload();
@@ -513,7 +515,7 @@ try {
   await m.fill(`${cardA} textarea`, "Comprovou que foi erro do app");
   await m.click(`${cardA} >> text=Confirmar liberação`);
   await m.waitForTimeout(1200);
-  ok(!(await m.isVisible(cardA)), "liberado sai de Bloqueados agora");
+  ok(!(await m.isVisible(cardA)), "liberado sai de Com restrição agora");
   const cardL = "#bq-ativos-lista .card:has-text('Ladrão')";
   await esperar(m, cardL);
   ok(await m.isVisible(`${cardL} >> text=Reverter encerramento…`) && !(await m.isVisible(`${cardL} >> text=Liberar antes do prazo…`)), "encerramento: botão vira Reverter encerramento");
@@ -522,7 +524,7 @@ try {
   await m.click(`${cardL} >> text=Confirmar reversão`);
   ok(await esperar(m, "#toast:has-text('Encerramento de Ladrão revertido')"), "encerramento revertido com motivo");
   // 009x3 (A5-09): reverter fecha a tarefa de encerramento; o cartão sai de "Bloqueados agora"
-  ok(await m.locator(cardL).waitFor({ state: "detached", timeout: 8000 }).then(() => true, () => false), "009x3: revertido sai de Bloqueados agora (a tarefa de encerramento fechou)");
+  ok(await m.locator(cardL).waitFor({ state: "detached", timeout: 8000 }).then(() => true, () => false), "009x3: revertido sai de Com restrição agora (a tarefa de encerramento fechou)");
   await ir(m, "#atividades");
   await esperar(m, "#at-lista");
   ok(!(await texto(m, "#at-lista")).includes("Encerramento de parceria: Ladrão"), "009x3: a tarefa de encerramento revertido não fica pendente nas Atividades");
@@ -530,14 +532,14 @@ try {
 
   // 14. o antigo Painel de bloqueios agora está nas Análises (008c); consulta e histórico
   await ir(s, "#bloqueios/painel");
-  ok(await esperar(s, "#v-an-simples:not([hidden]) #as-cards h3:text-is('Bloqueios por dia')"), "o antigo Painel de bloqueios abre as Análises simples, com o gráfico por dia");
+  ok(await esperar(s, "#v-an-simples:not([hidden]) #as-cards h3:text-is('Restrições por dia')"), "o antigo Painel de restrições abre as Análises simples, com o gráfico por dia");
   await s.screenshot({ path: path.join(PRINTS, "b6-painel.png"), fullPage: true });
   await ir(s, "#bloqueios/consultar");
   await s.fill("#bq-q-consulta", "mal00001"); await s.click("#bq-f-consulta button[type=submit]");
-  ok(await esperar(s, "#bq-consulta >> text=1 bloqueio(s)"), "consulta por ID");
+  ok(await esperar(s, "#bq-consulta >> text=1 restrição(ões)"), "consulta por ID");
   ok(await s.isVisible("#bq-consulta .comentarios >> text=Educado, mas costuma atrasar a coleta."), "consulta mostra o comentário feito no registro");
   ok(!(await texto(s, "#bq-consulta")).includes("null"), "consulta sem textos vazios (null)");
-  ok(!(await s.isVisible("#bq-consulta >> text=Alterar dados")) && await s.isVisible("#bq-consulta button:text-is('Corrigir')"), "suporte não altera a ficha, mas corrige o bloqueio que registrou (008b)");
+  ok(!(await s.isVisible("#bq-consulta >> text=Alterar dados")) && await s.isVisible("#bq-consulta button:text-is('Corrigir')"), "suporte não altera a ficha, mas corrige a restrição que registrou (008b)");
   await s.fill("#bq-consulta textarea", "Ligou pedindo para ser liberado.");
   await s.click("#bq-consulta >> text=Adicionar comentário");
   ok(await esperar(s, "#bq-consulta .comentarios >> text=Ligou pedindo para ser liberado."), "suporte adiciona comentário na consulta");
@@ -551,10 +553,10 @@ try {
   // 008b: módulo Entregadores, cadastro avulso (sem ativação e sem bloqueio)
   ok(!(await s.isVisible("nav.grupo a[data-grupo-mod=entregadores]")), "009m: Cadastrar entregador saiu da barra de Entregadores (virou janela)");
   { const topo = await s.$$eval("nav.modulos a:not([hidden])", (as) => as.map((x) => x.textContent.trim()));
-    ok(topo.some((t) => t.startsWith("Entregadores")) && !topo.some((t) => /Ativação|Bloqueios|Casos/.test(t)), "menu de cima: Ativação e Bloqueios ficam dentro de Entregadores, e Casos não aparece: " + topo.join(", "));
+    ok(topo.some((t) => t.startsWith("Entregadores")) && !topo.some((t) => /Ativação|Bloqueios|Casos/.test(t)), "menu de cima: Ativação e Restrições ficam dentro de Entregadores, e Casos não aparece: " + topo.join(", "));
     const grupo = await s.$$eval("nav.grupo a", (as) => as.map((x) => x.dataset.grupoMod));
-    ok(JSON.stringify(grupo) === JSON.stringify(["ativacao", "bloqueios"]), "barra de Entregadores: Ativação e Bloqueios (Cadastrar entregador é uma janela; Casos guardados): " + grupo);
-    ok(await s.getAttribute("nav.modulos a[data-grupo=entregadores]", "aria-current") === "page", "Entregadores fica marcado no menu dentro dos Bloqueios"); }
+    ok(JSON.stringify(grupo) === JSON.stringify(["ativacao", "bloqueios"]), "barra de Entregadores: Ativação e Restrições (Cadastrar entregador é uma janela; Casos guardados): " + grupo);
+    ok(await s.getAttribute("nav.modulos a[data-grupo=entregadores]", "aria-current") === "page", "Entregadores fica marcado no menu dentro dos Restrições"); }
   await s.screenshot({ path: path.join(PRINTS, "a1-menu-entregadores.png") });
   await s.fill("#bq-q-consulta", "avulso01"); await s.click("#bq-f-consulta button[type=submit]");
   ok(await esperar(s, "#bq-consulta >> text=Cadastrar este entregador"), "consulta sem resultado oferece cadastrar o entregador");
@@ -570,7 +572,7 @@ try {
   await s.fill("#en-comentario", "Cadastrado pela tela nova.");
   await s.screenshot({ path: path.join(PRINTS, "b6d-cadastrar-entregador.png"), fullPage: true });
   await s.click("#en-enviar");
-  ok(await esperar(s, "#toast:has-text('Entregador cadastrado')"), "entregador cadastrado sem ativação nem bloqueio");
+  ok(await esperar(s, "#toast:has-text('Entregador cadastrado')"), "entregador cadastrado sem ativação nem restrição");
   ok(await esperar(s, "#en-recentes li:has-text('Avulso da Silva'):has-text('por você')") && await s.isVisible("#en-feito >> text=Avulso da Silva"), "aparece em Cadastrados recentemente e no quadro de confirmação");
   ok(await s.inputValue("#en-id") === "" && await s.inputValue("#en-nome") === "", "o formulário fica limpo para o próximo");
   await s.screenshot({ path: path.join(PRINTS, "b6e-entregador-cadastrado.png"), fullPage: true });
@@ -591,11 +593,11 @@ try {
   await a.check("dialog.janela input[type=checkbox]");
   await a.screenshot({ path: path.join(PRINTS, "b6c-alterar-dados.png") });
   await a.click("dialog.janela >> text=Salvar");
-  ok(await esperar(a, "#toast:has-text('aplicados a 1 bloqueio')"), "alteração aplicada ao bloqueio já registrado");
+  ok(await esperar(a, "#toast:has-text('aplicados a 1 restrição')"), "alteração aplicada à restrição já registrado");
   ok(await esperar(a, "#bq-consulta h3:has-text('Fulano de Tal Souza')") && await a.isVisible("#bq-consulta .comentarios .alteracao >> text=Fulano de Tal → Fulano de Tal Souza"), "consulta mostra o novo nome e a alteração no histórico");
   await ir(a, "#bloqueios/historico"); await a.reload();
-  ok(await esperar(a, "#bq-t-hist tbody tr:has-text('Fulano de Tal')"), "histórico de bloqueios para o moderador");
-  ok((await texto(a, "#bq-hist-total")).startsWith("6 de 6"), "histórico com 6 bloqueios");
+  ok(await esperar(a, "#bq-t-hist tbody tr:has-text('Fulano de Tal')"), "histórico de restrições para o moderador");
+  ok((await texto(a, "#bq-hist-total")).startsWith("6 de 6"), "histórico com 6 restrições");
   // alerta "revisar" vira botão que abre a correção
   await a.click("#bq-t-hist tr:has-text('Nome Errado') button.alerta-revisar");
   ok(await esperar(a, "dialog.janela >> text=ID usado com 2 nomes diferentes na planilha"), "revisar abre a janela com o motivo do alerta");
@@ -611,10 +613,10 @@ try {
   ok(await esperar(a, "dialog.janela >> text=Dados corrigidos por Mateus Lopes") && !(await texto(a, "dialog.janela")).includes("null"), "correção aparece no histórico do registro");
   await a.click("dialog.janela >> text=Cancelar");
   const [dlb] = await Promise.all([a.waitForEvent("download"), a.click("#bq-export")]);
-  ok(fs.readFileSync(await dlb.path(), "utf8").includes("id_entregador;nome;cidade;tipo;infracao"), "CSV de bloqueios");
+  ok(fs.readFileSync(await dlb.path(), "utf8").includes("id_entregador;nome;cidade;tipo;infracao"), "CSV de restrições");
   await a.click("#bq-t-hist tr:has-text('Rápido') >> text=Excluir");
   await a.click("#bq-t-hist tr:has-text('Rápido') >> text=Confirmar exclusão");
-  ok(await esperar(a, "#bq-hist-total:has-text('5 de 5')"), "moderador exclui bloqueio");
+  ok(await esperar(a, "#bq-hist-total:has-text('5 de 5')"), "moderador exclui restrição");
   await ir(s, "#bloqueios/historico"); await esperar(s, "#bq-t-hist tbody tr");
   ok(await s.$$eval("#bq-t-hist tbody tr", (l) => l.every((x) => x.textContent.includes("Suporte Um"))), "o Histórico do suporte mostra só os registros dele");
 
@@ -639,9 +641,9 @@ try {
   await esperar(s, "#bq-previa >> text=2ª infração leve"); await s.click("#bq-enviar"); await esperar(s, "#bq-previa >> text=Aplique aviso");
   await s.click("text=Registrar outra");
   await s.fill("#bq-id", "desc0001"); await s.selectOption("#bq-infracao", { label: "Atraso na Coleta (aviso)" });
-  ok(await esperar(s, "#bq-previa >> text=Gera também: bloqueio de 24 h"), "3ª leve: prévia avisa que gera bloqueio normal");
+  ok(await esperar(s, "#bq-previa >> text=Gera também: restrição de 24 h"), "3ª leve: prévia avisa que gera restrição normal");
   await s.click("#bq-enviar");
-  ok(await esperar(s, "#bq-previa >> text=Aplique também: bloqueio de 24 h"), "3ª leve: bloqueio normal gerado e mostrado ao suporte");
+  ok(await esperar(s, "#bq-previa >> text=Aplique também: restrição de 24 h"), "3ª leve: restrição normal gerada e mostrado ao suporte");
   await s.screenshot({ path: path.join(PRINTS, "b8-leve-gerou.png"), fullPage: true });
 
   // monitorador completa os dados; a tarefa de contato vai para o responsável da cidade
@@ -724,7 +726,7 @@ try {
   ok(await esperar(m, "#at-sug-lista .card:has-text('Sabor') >> text=Entregue, confirmado"), "monitorador conclui com nota");
   // registros: feed geral também para o suporte; nome abre a ficha
   await ir(s, "#registros");
-  ok(await esperar(s, "#rg-lista .feed >> text=registrou bloqueio") && await s.isVisible("#rg-lista .feed >> text=Monitor Um"), "suporte vê os registros de todos");
+  ok(await esperar(s, "#rg-lista .feed >> text=registrou restrição") && await s.isVisible("#rg-lista .feed >> text=Monitor Um"), "suporte vê os registros de todos");
   ok(await s.evaluate(() => location.hash) === "#avisos/equipe" && !(await s.isVisible("nav.modulos a[data-mod=registros]")), "009m: o link antigo dos Registros abre Avisos → Toda a equipe");
   ok(await s.isVisible("#rg-lista >> text=reverteu o encerramento"), "registros mostram a reversão do encerramento");
   await s.screenshot({ path: path.join(PRINTS, "c3-registros.png"), fullPage: true });
@@ -733,7 +735,7 @@ try {
   await s.click("#rg-lista .link-ficha >> nth=0");
   ok(await esperar(s, "#v-bq-consultar:not([hidden]) #bq-consulta h3:has-text('Atrasildo')"), "clicar no entregador abre a ficha");
   await s.click("#bq-consulta summary:has-text('Linha do tempo')");
-  ok(await esperar(s, "#bq-consulta .timeline >> text=Bloqueio: Mal Uso Proposital do Aplicativo"), "ficha mostra a linha do tempo");
+  ok(await esperar(s, "#bq-consulta .timeline >> text=Restrição: Mal Uso Proposital do Aplicativo"), "ficha mostra a linha do tempo");
   await s.screenshot({ path: path.join(PRINTS, "c4-ficha.png"), fullPage: true });
   // ativação: cidades vêm da tabela
   await ir(s, "#ativacao/novo");
@@ -743,7 +745,7 @@ try {
   // 17. migração 005: análises, resumo semanal, aprovados no histórico e anexos
   await ir(s, "#analises");
   ok(await esperar(s, "#v-an-simples:not([hidden]) #as-cards >> text=Ativação de entregadores"), "Análises abre nas simples");
-  for (const t of ["Por que não aprovou", "Bloqueios agora", "Bloqueados agora, por cidade", "Quando você registra", "Quando a equipe registra", "Você no período", "Tempo até reincidir", "Conversão das infrações leves", "Infrações mais registradas", "Tratativas no prazo", "Atividades"])
+  for (const t of ["Por que não aprovou", "Restrições agora", "Com restrição agora, por cidade", "Quando você registra", "Quando a equipe registra", "Você no período", "Tempo até reincidir", "Conversão das infrações leves", "Infrações mais registradas", "Tratativas no prazo", "Atividades"])
     ok(await s.isVisible(`#as-cards h3:text-is('${t}')`), "análises simples: cartão " + t);
   ok(await s.isVisible("#as-cards >> text=Seu pico:") && (await s.$$("#as-cards .calor .c")).length === 336, "dois mapas dia × hora (você e a equipe), com o seu pico");
   ok(await s.isVisible("#as-cards >> text=Fotos sem camisa"), "motivos das não aprovações aparecem");
@@ -751,17 +753,17 @@ try {
   ok((await texto(s, "#as-sub")).includes("desde o início"), "período 'Tudo' nas análises simples");
   await s.screenshot({ path: path.join(PRINTS, "d0-analises-simples.png"), fullPage: true });
   await ir(s, "#analises/complexas");
-  ok(await esperar(s, "#an-cards >> text=Eficácia da punição") && await s.isVisible("#an-cards >> text=Da ativação ao bloqueio"), "análises complexas, com os cartões de sempre");
+  ok(await esperar(s, "#an-cards >> text=Eficácia da punição") && await s.isVisible("#an-cards >> text=Da ativação à restrição"), "análises complexas, com os cartões de sempre");
   for (const t of ["Qual infração mais se repete", "Escada da reincidência", "Cidades", "Tempo de resposta da ativação", "Punições desfeitas", "Tratativas por responsável"])
     ok(await s.isVisible(`#an-cards h3:text-is('${t}')`), "análises complexas: cartão " + t);
   ok((await texto(s, "#an-sub")).includes("desde o início"), "o período escolhido vale nas duas abas");
   await s.screenshot({ path: path.join(PRINTS, "d1-analises.png"), fullPage: true });
   await ir(s, "#analises/resumo");
-  ok(await esperar(s, "#rs-corpo >> text=Bloqueios registrados") && (await texto(s, "#rs-titulo")).includes("terça"), "resumo semanal de terça a segunda");
+  ok(await esperar(s, "#rs-corpo >> text=Restrições registradas") && (await texto(s, "#rs-titulo")).includes("terça"), "resumo semanal de terça a segunda");
   ok(await s.isVisible("#rs-corpo th:has-text('Diferença')"), "resumo compara com a semana anterior");
   await s.screenshot({ path: path.join(PRINTS, "d2-resumo.png"), fullPage: true });
   const [dlr] = await Promise.all([s.waitForEvent("download"), s.click("#rs-csv")]);
-  ok(fs.readFileSync(await dlr.path(), "utf8").includes("Bloqueios registrados"), "resumo baixado em CSV");
+  ok(fs.readFileSync(await dlr.path(), "utf8").includes("Restrições registradas"), "resumo baixado em CSV");
   await s.evaluate(() => { window.print = () => { window.__imprimiu = document.querySelector("#v-an-resumo").classList.contains("imprimir"); }; });
   await s.click("#rs-pdf");
   ok(await s.evaluate(() => window.__imprimiu === true), "PDF: abre a impressão só com o resumo");
@@ -769,7 +771,7 @@ try {
   ok(await esperar(s, "#rs-corpo table") && !(await s.isVisible("#rs-corpo th:has-text('Diferença')")), "resumo sem comparação");
   // histórico da ativação: aprovados e bloqueios depois (moderador)
   await ir(a2, "#ativacao/historico");
-  ok(await esperar(a2, "#t-hist tbody tr") && !(await a2.$("#t-aprovados")), "histórico da ativação sem a lista 'aprovados: foram bloqueados depois?' (retirada; o número está nas Análises complexas)");
+  ok(await esperar(a2, "#t-hist tbody tr") && !(await a2.$("#t-aprovados")), "histórico da ativação sem a lista 'aprovados: receberam restrição depois?' (retirada; o número está nas Análises complexas)");
   // anexos: suporte anexa uma imagem no próprio bloqueio
   await ir(s, "#bloqueios/historico"); await s.reload();
   const cardAx = "#bq-t-hist tr:has-text('Atrasildo')";
@@ -880,7 +882,7 @@ try {
   ok(await esperar(a7, "#at-lista .card:not(.opcional):has-text('Completar cadastro: ID semnome77')"), "para o administrador final a tarefa é normal");
   // o cartão da planilha leva ao Histórico filtrado
   await m7.click("#at-lista .card.opcional:has-text('Revisar registros da planilha') button");
-  ok(await esperar(m7, "#bq-t-hist tbody tr:has-text('rev00002')") && (await m7.inputValue("#bq-hist-sit")) === "revisar", "abre o Histórico de bloqueios filtrado por revisar");
+  ok(await esperar(m7, "#bq-t-hist tbody tr:has-text('rev00002')") && (await m7.inputValue("#bq-hist-sit")) === "revisar", "abre o Histórico de restrições filtrado por revisar");
   ok((await texto(m7, "#bq-hist-total")).startsWith("1 de"), "só o registro para revisar: " + (await texto(m7, "#bq-hist-total")));
   // qualquer pessoa completa (aqui, o monitorador pela tarefa), a tarefa conclui sozinha
   await ir(m7, "#atividades/pendencias"); await esperar(m7, "#at-lista .card.opcional:has-text('semnome77')");
@@ -909,7 +911,7 @@ try {
   // histórico do ID ao digitar no Novo cadastro (monitorador tem os bloqueios)
   await ir(m7, "#ativacao/novo"); await esperar(m7, "#form");
   await m7.fill("#f-idapp", "rev00002");
-  ok(await esperar(m7, "#f-historico .quadrinho >> text=Este ID já existe no Comunique"), "ao digitar um ID com bloqueios, aparece o quadrinho");
+  ok(await esperar(m7, "#f-historico .quadrinho >> text=Este ID já existe no Comunique"), "ao digitar um ID com restrições, aparece o quadrinho");
   ok((await texto(m7, "#f-historico")).includes("Nome Velho"), "o quadrinho mostra a ficha");
   await m7.screenshot({ path: path.join(PRINTS, "f3-historico-id.png"), fullPage: true });
   await m7.fill("#f-idapp", "semnome77");
@@ -960,10 +962,10 @@ try {
   ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#at-avisos .aviso")]; return l.length && l.every((x) => x.textContent.includes("Avulso da Silva") && !x.textContent.includes("avulso01")); }, null, { timeout: 8000 }).then(() => true, () => false), "busca nos avisos pelo ID (o texto mostra o nome, sem o código)");
   await a8.fill("#av-q", "");
   await a8.selectOption("#av-filtro", "bloqueios");
-  ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#at-avisos .aviso .tag")]; return l.length && l.every((x) => x.textContent === "BLOQUEIOS"); }, null, { timeout: 8000 }).then(() => true, () => false), "filtro por tipo: só bloqueios");
+  ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#at-avisos .aviso .tag")]; return l.length && l.every((x) => x.textContent === "RESTRIÇÕES"); }, null, { timeout: 8000 }).then(() => true, () => false), "filtro por tipo: só restrições");
   await a8.screenshot({ path: path.join(PRINTS, "h2-tela-avisos.png"), fullPage: true });
   await a8.click("#at-avisos .aviso a[href^='#ficha/']");
-  ok(await esperar(a8, "#v-bq-consultar:not([hidden]) #bq-consulta h3"), "clicar num aviso de bloqueio abre a ficha do entregador");
+  ok(await esperar(a8, "#v-bq-consultar:not([hidden]) #bq-consulta h3"), "clicar num aviso de restrição abre a ficha do entregador");
   // cidade sem responsável: o suporte pede, o moderador aprova nas Pendências
   const s8 = await abrir(sup, "#atividades/avisos");
   await esperar(s8, "#av-cidades summary"); await s8.click("#av-cidades summary");
@@ -1024,7 +1026,7 @@ try {
 
   // Histórico de bloqueios como o da ativação: quadrinhos clicáveis, "só os que eu registrei" e o histórico de cada registro
   await ir(a8, "#bloqueios/historico"); await a8.reload();
-  ok(await esperar(a8, "#bq-hist-tiles button.tile >> text=Bloqueados agora") && await a8.isVisible("#bq-hist-meus-box"), "Histórico de bloqueios com os quadrinhos e 'Só os que eu registrei'");
+  ok(await esperar(a8, "#bq-hist-tiles button.tile >> text=Com restrição agora") && await a8.isVisible("#bq-hist-meus-box"), "Histórico de restrições com os quadrinhos e 'Só os que eu registrei'");
   await a8.click("#bq-hist-tiles button.tile:has-text('Liberados antes')");
   ok(await a8.waitForFunction(() => { const l = [...document.querySelectorAll("#bq-t-hist tbody tr.clicavel")]; return l.length && l.every((x) => x.textContent.includes("Liberado antes do prazo")); }, null, { timeout: 8000 }).then(() => true, () => false), "clicar num quadrinho filtra a tabela");
   await a8.click("#bq-t-hist tbody tr.clicavel >> nth=0");
@@ -1176,7 +1178,7 @@ try {
     if (op.length) {
       await a8.selectOption("#fe-msg-bloqueio", op[0][0]);
       const t = await a8.inputValue("#fe-msg-texto");
-      ok(t.startsWith("Olá, ") && !t.includes("[infração]") && !t.includes("[tempo") && !/bloqueio/i.test(t) && await a8.isHidden("#fe-msg-infracao"), "escolhido o entregador, a mensagem vem pronta com os dados do bloqueio");
+      ok(t.startsWith("Olá, ") && !t.includes("[infração]") && !t.includes("[tempo") && !/bloqueio/i.test(t) && await a8.isHidden("#fe-msg-infracao"), "escolhido o entregador, a mensagem vem pronta com os dados da restrição");
       await a8.selectOption("#fe-msg-bloqueio", "");
     } }
   ok(await esperar(a8, "#fe-msg-regras tr:has-text('Retenção de Valores') >> text=até 1 hora") && await a8.isVisible("#fe-msg-modelos >> text=Editar"), "explicação de cada regra e moderador edita os modelos");
@@ -1464,7 +1466,7 @@ try {
     await esperar(x, "#v-bq-novo:not([hidden]), #bq-id");
     await x.waitForFunction(() => document.querySelector("#bq-cidade")?.value === "LAGARTO - SE", null, { timeout: 5000 }).catch(() => {});
     const v = await x.evaluate(() => ({ h: location.hash, id: document.querySelector("#bq-id").value, nome: document.querySelector("#bq-nome").value, cid: document.querySelector("#bq-cidade").value }));
-    ok(v.h === "#bloqueios/novo" && v.id === "ext12345" && v.nome === "Fulano Extensao" && v.cid === "LAGARTO - SE", "009t: a extensão abre o Novo bloqueio com ID, nome e cidade: " + JSON.stringify(v));
+    ok(v.h === "#bloqueios/novo" && v.id === "ext12345" && v.nome === "Fulano Extensao" && v.cid === "LAGARTO - SE", "009t: a extensão abre o Nova restrição com ID, nome e cidade: " + JSON.stringify(v));
     ok(await esperar(x, "#toast:has-text('confira e complete')"), "009t: avisa para conferir antes de salvar");
     await x.evaluate(() => { location.hash = "#preencher/cadastro?id=ext99887&nome=Ciclano+Ext&cidade=Lagarto+-+SE"; });
     await x.waitForFunction(() => document.querySelector("#f-idapp")?.value === "ext99887", null, { timeout: 5000 }).catch(() => {});
@@ -1522,6 +1524,8 @@ try {
             if (/[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{2}/.test(t.data)) lista.push(`CPF na tela "${t.data.trim().slice(0, 50)}" em <${p.tagName.toLowerCase()}>`);
             // 009u: nenhuma tela mostra emoji (regra do usuário; as mensagens de WhatsApp ficam dentro de caixas de texto)
             if (/\p{Extended_Pictographic}/u.test(t.data) && !p.closest("textarea")) lista.push(`emoji na tela "${t.data.trim().slice(0, 40)}" em <${p.tagName.toLowerCase()}${p.id ? "#" + p.id : ""}>`);
+            // 009x4: "bloqueio" se chama "restrição" em tudo o que a equipe lê
+            if (/bloque/i.test(t.data) && !p.closest("textarea") && !/bloqueada \(libere/.test(t.data)) lista.push(`"bloqueio" na tela "${t.data.trim().slice(0, 50)}" em <${p.tagName.toLowerCase()}${p.id ? "#" + p.id : ""}>`);
             if (/\b(null|undefined|NaN)\b|\[object Object\]/.test(t.data)) lista.push(`texto quebrado "${t.data.trim().slice(0, 50)}" em <${p.tagName.toLowerCase()}${p.id ? "#" + p.id : ""}>`);
           }
           return lista;

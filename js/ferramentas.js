@@ -350,7 +350,7 @@
   function renderListas(D) {
     // lista dos modelos (moderador edita)
     $("#fe-msg-modelos").replaceChildren(el("ul", { class: "lista-modelos" }, D.modelos.map((m) => el("li", {},
-      el("strong", { text: m.titulo }), el("span", { class: "meta", text: (opcaoDe(m) > 1 || D.modelos.some((x) => x !== m && tipoDe(x) === tipoDe(m)) ? ` · opção ${opcaoDe(m)}` : "") + (m.grupo === "bloqueio" ? " · também pelo “Gerar mensagem” do bloqueio" : "") }),
+      el("strong", { text: m.titulo }), el("span", { class: "meta", text: (opcaoDe(m) > 1 || D.modelos.some((x) => x !== m && tipoDe(x) === tipoDe(m)) ? ` · opção ${opcaoDe(m)}` : "") + (m.grupo === "bloqueio" ? " · também pelo “Gerar mensagem” da restrição" : "") }),
       D.pode_editar ? el("button", { class: "btn link", type: "button", onclick: () => editarModelo(m) }, "Editar") : null))));
     // explicação de cada regra
     $("#fe-msg-regras").replaceChildren(...tabela([["Infração"], ["O que diz a regra"], ["Agravante"], [""]],

@@ -44,8 +44,8 @@
     // os "revisar" dos bloqueios (vindos da planilha): um cartão só, opcional
     const nRev = S.resumo?.bloqueios_revisar || 0;
     if (S.me.papel_bloqueios && nRev)
-      opcionais.push(item({ modulo: "BLOQUEIOS", opcional: true, titulo: `Revisar registros da planilha: faltam ${nRev}`,
-        detalhe: "Bloqueios com a marca “revisar” (dados conflitantes da importação). Cada um corrigido ou conferido sai da conta.",
+      opcionais.push(item({ modulo: "RESTRIÇÕES", opcional: true, titulo: `Revisar registros da planilha: faltam ${nRev}`,
+        detalhe: "Restrições com a marca “revisar” (dados conflitantes da importação). Cada uma corrigida ou conferida sai da conta.",
         acoes: [el("button", { class: "btn small", type: "button", onclick: () => App.bloqueios?.abrirRevisar?.() }, "Abrir os registros para revisar")] }));
     // 009m (Minha fila): as tarefas para você ou com você aparecem com o cartão completo (dá para aceitar, concluir,
     // comentar sem trocar de tela); as abertas para a equipe continuam na aba Tarefas
@@ -66,7 +66,7 @@
       const b = t.bloqueio;
       const tipo = App.bloqueios.TAREFA[t.tipo] || "Tratativa";
       if (t.tipo === "completar_dados") {
-        if (staffBloq()) itens.push(item({ modulo: "BLOQUEIOS", titulo: `${tipo}: ID ${b.id_app}`,
+        if (staffBloq()) itens.push(item({ modulo: "RESTRIÇÕES", titulo: `${tipo}: ID ${b.id_app}`,
           detalhe: `Registrado só com o ID (${b.infracao}) por ${b.registrado_por_nome} há ${duracao(t.criada_em).txt}. Falta nome e cidade.`,
           acoes: [el("a", { class: "btn approve small", href: "#bloqueios/tratativas" }, "Completar na tela de tratativas")] }));
         continue;
@@ -77,7 +77,7 @@
         const cx = A.caixa[t.id];
         const nota = cx ? el("textarea", { rows: "2", maxlength: "600", placeholder: "O que foi feito? (opcional)", "aria-label": "Nota da tratativa", oninput: (e) => (cx.texto = e.target.value) }) : null;
         if (nota) nota.value = cx.texto;
-        itens.push(item({ modulo: "BLOQUEIOS", titulo: `${tipo}: ${b.nome}`, estado: t.atrasada ? "atrasada" : "pendente", atrasada: t.atrasada,
+        itens.push(item({ modulo: "RESTRIÇÕES", titulo: `${tipo}: ${b.nome}`, estado: t.atrasada ? "atrasada" : "pendente", atrasada: t.atrasada,
           detalhe: `${atraso}${b.infracao} · ${App.bloqueios.ord(b.ocorrencia)} ocorrência · ${punicao} · ${b.cidade || "sem cidade"} · com ${t.responsavel_nome} · registrado por ${b.registrado_por_nome} há ${duracao(t.criada_em).txt}`,
           acoes: [cx
             ? el("button", { class: "btn approve small", type: "button", onclick: (e) => App.bloqueios.concluir(t.id, cx.texto, e.currentTarget).then(() => { delete A.caixa[t.id]; }) }, "Confirmar")
@@ -86,9 +86,9 @@
             S.me.papel_bloqueios === "moderador" ? el("button", { class: "btn link", type: "button", onclick: () => App.bloqueios.realocar(t, b) }, "Realocar…") : null,
             el("a", { class: "btn link", href: "#bloqueios/tratativas" }, "Ver na tela de tratativas")].filter(Boolean),
           extra: el("div", {}, App.u.previsao(t, "tarefa", t.id, true),
-            cx ? el("div", { class: "box" }, el("p", { class: "meta", style: "margin:0", text: "Resolver a tratativa não libera o bloqueio. Quem registrou recebe um aviso." }), nota) : null) }));
+            cx ? el("div", { class: "box" }, el("p", { class: "meta", style: "margin:0", text: "Resolver a tratativa não libera a restrição. Quem registrou recebe um aviso." }), nota) : null) }));
       } else if (!staffBloq()) {
-        itens.push(item({ modulo: "BLOQUEIOS", titulo: `Acompanhando: ${tipo.toLowerCase()} de ${b.nome}`, estado: "pendente",
+        itens.push(item({ modulo: "RESTRIÇÕES", titulo: `Acompanhando: ${tipo.toLowerCase()} de ${b.nome}`, estado: "pendente",
           detalhe: `Pendente com ${t.responsavel_nome} há ${duracao(t.criada_em).txt} · ${b.infracao} · ${punicao}`,
           extra: App.u.previsao(t, "tarefa", t.id, false),
           acoes: [el("a", { class: "btn small", href: "#bloqueios/historico" }, "Ver no Histórico")] }));

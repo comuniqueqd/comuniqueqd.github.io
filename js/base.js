@@ -116,7 +116,14 @@
     if (error) throw error;
     return data;
   }
-  const msgErro = (e) => e?.message && !/fetch|network/i.test(e.message) ? e.message : "Não foi possível falar com o servidor. Tente de novo em instantes.";
+  // 009x4: "bloqueio" se chama "restrição" em tudo o que a equipe lê. Mesmas regras de public.texto_restricao()
+  // (supabase/009x4-restricao.sql; o test:casa confere que as duas listas são iguais). Usado nas mensagens de erro e
+  // nos textos que o banco monta (Registros, linha do tempo, Atenção, Análises).
+  const REGRAS_RESTRICAO = [["este bloqueio não está ativo", "esta restrição não está ativa"], ["bloqueio não está ativo", "restrição não está ativa"], ["bloqueio não encontrado", "restrição não encontrada"], ["nenhum bloqueio", "nenhuma restrição"], ["todos os bloqueios", "todas as restrições"], ["quantos bloqueios", "quantas restrições"], ["próximos bloqueios", "próximas restrições"], ["bloqueio excluído", "restrição excluída"], ["bloqueio curto", "restrição curta"], ["bloqueio definitivo", "restrição definitiva"], ["bloqueios liberados", "restrições liberadas"], ["bloqueio normal gerado", "restrição normal gerada"], ["voltaram a ser bloqueados", "voltaram a receber restrição"], ["os bloqueados", "os entregadores com restrição"], ["seus bloqueados", "seus entregadores com restrição"], ["bloqueio temporário", "restrição temporária"], ["um bloqueio e o seguinte", "uma restrição e a seguinte"], ["bloqueio(s) já registrados", "restrição(ões) já registradas"], ["bloqueio(s)", "restrição(ões)"], ["bloqueado(s)", "com restrição"], ["Bloqueado(s)", "Com restrição"], ["novo bloqueio", "nova restrição"], ["um bloqueio", "uma restrição"], ["o bloqueio", "a restrição"], ["os bloqueios", "as restrições"], ["do bloqueio", "da restrição"], ["dos bloqueios", "das restrições"], ["no bloqueio", "na restrição"], ["nos bloqueios", "nas restrições"], ["ao bloqueio", "à restrição"], ["aos bloqueios", "às restrições"], ["pelo bloqueio", "pela restrição"], ["pelos bloqueios", "pelas restrições"], ["este bloqueio", "esta restrição"], ["esse bloqueio", "essa restrição"], ["deste bloqueio", "desta restrição"], ["desse bloqueio", "dessa restrição"], ["neste bloqueio", "nesta restrição"], ["seu bloqueio", "sua restrição"], ["seus bloqueios", "suas restrições"], ["outro bloqueio", "outra restrição"], ["mesmo bloqueio", "mesma restrição"], ["primeiro bloqueio", "primeira restrição"], ["último bloqueio", "última restrição"], ["1º bloqueio", "1ª restrição"], ["bloqueio gerado", "restrição gerada"], ["bloqueios gerados", "restrições geradas"], ["bloqueio registrado", "restrição registrada"], ["bloqueios registrados", "restrições registradas"], ["bloqueio ativo", "restrição ativa"], ["bloqueios ativos", "restrições ativas"], ["bloqueio novo", "restrição nova"], ["bloqueio corrigido", "restrição corrigida"], ["bloqueio normal", "restrição normal"], ["bloqueios normais", "restrições normais"], ["bloqueio apagado", "restrição apagada"], ["foi bloqueado", "recebeu restrição"], ["foram bloqueados", "receberam restrição"], ["já bloqueado", "já com restrição"], ["está bloqueado", "está com restrição"], ["estão bloqueados", "estão com restrição"], ["ficou bloqueado", "ficou com restrição"], ["bloqueados", "com restrição"], ["bloqueado", "com restrição"], ["bloqueadas", "com restrição"], ["bloqueada", "com restrição"], ["bloqueios", "restrições"], ["bloqueio", "restrição"], ["bloquear", "aplicar restrição"]];
+  const regrasRestricao = REGRAS_RESTRICAO.flatMap(([a, b]) => [[a, b], [a[0].toUpperCase() + a.slice(1), b[0].toUpperCase() + b.slice(1)]])
+    .map(([a, b]) => [new RegExp(`(?<![\\p{L}])${a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}])`, "gu"), b]);
+  const restricao = (t) => typeof t !== "string" || !/bloque/i.test(t) ? t : regrasRestricao.reduce((r, [re, b]) => r.replace(re, b), t);
+  const msgErro = (e) => e?.message && !/fetch|network/i.test(e.message) ? restricao(e.message) : "Não foi possível falar com o servidor. Tente de novo em instantes.";
 
   // tabela simples: cols = [[título, numérico?]], linhas = <tr>s
   const tabela = (cols, linhas, vazioTxt) => [
@@ -322,7 +329,7 @@
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
   }
 
-  App.u = { semEmoji, progresso, ordenavel, grifar, FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
+  App.u = { restricao, REGRAS_RESTRICAO, semEmoji, progresso, ordenavel, grifar, FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, fmtCPF, cpfValido, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
             vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, filtroPessoas, caixaPessoas, nomesEscolhidos, papelAtiv, papelBloq };
 
   // ---------- módulos e rotas ----------
@@ -343,7 +350,7 @@
   App.grupos = {
     entregadores: { nome: "Entregadores", membros: [
       { mod: "ativacao", nome: "Ativação", contador: "c-pend" },
-      { mod: "bloqueios", nome: "Bloqueios", contador: "c-trat", alerta: true }],  // 009m: Cadastrar entregador virou janela
+      { mod: "bloqueios", nome: "Restrições", contador: "c-trat", alerta: true }],  // 009m: Cadastrar entregador virou janela
       // número no item do menu de cima: o que está esperando pela pessoa dentro do grupo
       aviso: () => App.valores["c-trat"] || 0 },
   };
@@ -533,7 +540,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009x3";
+  const VERSAO_APP = "009x5";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;
@@ -672,7 +679,7 @@
   // papel no topo: um só quando é igual nos dois módulos; senão, os dois
   function mostrarPapel() {
     const a = S.me.papel, b = S.me.papel_bloqueios;
-    $("#papel").textContent = !b || a === b ? PAPEL[a] + (b ? "" : " (ativação)") : `Ativação: ${PAPEL[a]} · Bloqueios: ${PAPEL[b]}`;
+    $("#papel").textContent = !b || a === b ? PAPEL[a] + (b ? "" : " (ativação)") : `Ativação: ${PAPEL[a]} · Restrições: ${PAPEL[b]}`;
     $("#papel").hidden = false;
   }
 

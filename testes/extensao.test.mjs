@@ -172,16 +172,16 @@ try {
   ok(await feito("Ficha de Fulano de Teste"), "Cadastrar entregador: cria a ficha pelo painel");
 
   // Novo bloqueio: lê a página, preenche, escolhe o motivo, vê a prévia e registra
-  await abrirForm("Novo bloqueio");
-  ok(JSON.stringify(await campos()) === JSON.stringify(["novo1234", "Fulano de Teste", "LAGARTO - SE"]), "Novo bloqueio: abre no painel já com ID, nome e cidade da página");
+  await abrirForm("Nova restrição");
+  ok(JSON.stringify(await campos()) === JSON.stringify(["novo1234", "Fulano de Teste", "LAGARTO - SE"]), "Nova restrição: abre no painel já com ID, nome e cidade da página");
   const sel = p.locator("#caixa-form select").first();
-  ok((await sel.locator("option").count()) > 1, "Novo bloqueio: tem a lista de motivos");
+  ok((await sel.locator("option").count()) > 1, "Nova restrição: tem a lista de motivos");
   await sel.selectOption({ index: 1 });
-  ok(await p.locator(".previa").waitFor({ timeout: 5000 }).then(() => true).catch(() => false), "Novo bloqueio: mostra a prévia ao escolher o motivo");
+  ok(await p.locator(".previa").waitFor({ timeout: 5000 }).then(() => true).catch(() => false), "Nova restrição: mostra a prévia ao escolher o motivo");
   if (await p.locator('#caixa-form input[type=radio][value="sim"]').count()) await p.locator('#caixa-form input[type=radio][value="sim"]').first().check();
   await p.locator("#caixa-form button.primario").click();
-  ok(await feito("Bloqueio registrado"), "Novo bloqueio: registra pelo painel e volta com ✓");
-  ok(Number((await um("select count(*) n from bloqueios where id_app = 'novo1234'")).n) === 1, "o bloqueio está no banco");
+  ok(await feito("Restrição registrada"), "Nova restrição: registra pelo painel e volta com ✓");
+  ok(Number((await um("select count(*) n from bloqueios where id_app = 'novo1234'")).n) === 1, "a restrição está no banco");
   ok((await p.context().pages()).every((pg) => !pg.url().includes("comuniqueqd.github.io")), "nenhum botão abriu o Comunique");
 
   // a ficha já existe (o bloqueio cria): Cadastrar avisa e o banco recusa repetir
@@ -233,14 +233,14 @@ try {
   // ID com ficha de outro nome: avisa; tela sem ID: avisa e deixa digitar
   await db.query("insert into entregadores (id_app, nome, cidade) values ('outro5678', 'Nome Oficial', 'LAGARTO - SE') on conflict do nothing");
   await painelDe(await abaDe("outro5678"));
-  await abrirForm("Novo bloqueio");
+  await abrirForm("Nova restrição");
   ok(await p.locator("#caixa-form .alerta", { hasText: "Nome Oficial" }).isVisible(), "ID com outro nome no Comunique: o formulário avisa");
   // 1.2.2: Crisp sem nome na tela: o painel usa o nome da ficha do Comunique e diz de onde veio
   await db.query("insert into entregadores (id_app, nome, cidade) values ('semnome999', 'Nome Da Ficha', 'LAGARTO - SE') on conflict do nothing");
   await painelDe(abaSemBotao);
   const viuFicha = await p.locator("#tela", { hasText: "nome da ficha do Comunique" }).waitFor({ timeout: 5000 }).then(() => true).catch(() => false);
   ok(viuFicha && await p.locator("#tela", { hasText: "Nome Da Ficha" }).isVisible(), "1.2.2 Crisp sem nome: o painel mostra o nome da ficha e avisa a origem");
-  await abrirForm("Novo bloqueio");
+  await abrirForm("Nova restrição");
   ok((await campos())[1] === "Nome Da Ficha" && await p.locator("#caixa-form .alerta", { hasText: "ficha do Comunique" }).isVisible(), "1.2.2 Crisp sem nome: o formulário vem com o nome da ficha e o aviso");
   // 1.3: Ativar parceiro pela tela do estabelecimento
   await painelDe(abaEst);
@@ -259,7 +259,7 @@ try {
   ok(Number((await um("select count(*) n from parceiros where estabelecimento = 'Biju Teste Presentes'")).n) === 1, "1.3 continua um parceiro só");
   await painelDe(abaOutra);
   ok(await p.locator("#tela", { hasText: "Não encontrei entregador nem estabelecimento" }).isVisible(), "tela sem ID: o painel avisa");
-  await abrirForm("Novo bloqueio");
+  await abrirForm("Nova restrição");
   ok(await p.locator("#caixa-form .alerta", { hasText: "Não encontrei ID" }).isVisible() && (await campos())[0] === "", "tela sem ID: o formulário abre vazio para digitar");
   ok(await semNull(), "formulários sem texto quebrado (null)");
 } finally {

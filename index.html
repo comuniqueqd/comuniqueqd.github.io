@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009x3">
+<link rel="stylesheet" href="estilo.css?v=009x5">
 </head>
 <body>
 <header class="top">
@@ -59,6 +59,7 @@
     <div class="inicio-topo"><p class="sub">O que você quer fazer agora?</p><div class="acoes-agora" id="inicio-acoes"></div></div>
     <div id="inicio-acordos"></div>
     <div id="inicio-novidades"></div>
+    <div id="inicio-cidades"></div>
     <section class="rapidos" id="inicio-rapidos" aria-label="Acontecendo agora" hidden></section>
     <section class="noticias-box" id="inicio-noticias" aria-label="Notícias rápidas" hidden></section>
     <nav class="funcoes" id="inicio-funcoes" aria-label="Atalhos do dia a dia"></nav>
@@ -150,12 +151,12 @@
   </section>
 
   <section class="view" id="v-bq-novo" hidden>
-    <h2>Novo bloqueio</h2>
-    <p class="sub">A ocorrência e o tempo de bloqueio são calculados automaticamente pelas regras. Confira antes de registrar.</p>
+    <h2>Nova restrição</h2>
+    <p class="sub">A ocorrência e o tempo de restrição são calculados automaticamente pelas regras. Confira antes de registrar.</p>
     <div class="two" style="align-items:start">
       <form class="cad" id="bq-form" novalidate>
         <div class="seg" role="group" aria-label="Tipo de registro" style="justify-self:start">
-          <button type="button" data-tipo-bq="normal" aria-pressed="true">Bloqueio</button>
+          <button type="button" data-tipo-bq="normal" aria-pressed="true">Restrição</button>
           <button type="button" data-tipo-bq="leve" aria-pressed="false">Infração leve (aviso)</button>
         </div>
         <p class="sub" id="bq-tipo-ajuda" style="margin:0"></p>
@@ -182,7 +183,7 @@
           <textarea id="bq-comentario" maxlength="1500" rows="2"></textarea>
         </label>
         <p class="warn-msg" id="bq-erro" role="alert" hidden></p>
-        <div class="actions"><button class="btn primary" type="submit" id="bq-enviar">Registrar bloqueio</button><button class="btn" type="reset">Limpar</button></div>
+        <div class="actions"><button class="btn primary" type="submit" id="bq-enviar">Registrar restrição</button><button class="btn" type="reset">Limpar</button></div>
       </form>
       <div id="bq-previa" aria-live="polite" style="display:grid;gap:12px"></div>
     </div>
@@ -190,7 +191,7 @@
 
   <section class="view" id="v-en-cadastrar" hidden>
     <h2>Cadastrar entregador</h2>
-    <p class="sub">Cria a ficha do entregador sem precisar de ativação nem de bloqueio. Os próximos registros deste ID (bloqueios e infrações leves) já vêm com estes dados.</p>
+    <p class="sub">Cria a ficha do entregador sem precisar de ativação nem de restrição. Os próximos registros deste ID (restrições e infrações leves) já vêm com estes dados.</p>
     <div class="two" style="align-items:start">
       <form class="cad" id="en-form" novalidate>
         <div class="grid2">
@@ -275,12 +276,12 @@
 
   <section class="view" id="v-fe-mensagens" hidden>
     <h2>Mensagens prontas</h2>
-    <p class="sub">Escolha o modelo, preencha o que falta e copie. As mensagens de restrição temporária, encerramento, liberação e infração leve saem prontas no próprio bloqueio (botão "Gerar mensagem").</p>
+    <p class="sub">Escolha o modelo, preencha o que falta e copie. As mensagens de restrição temporária, encerramento, liberação e infração leve saem prontas no próprio restrição (botão "Gerar mensagem").</p>
     <div class="two" style="align-items:start">
       <form class="cad" id="fe-msg-form" novalidate>
         <label for="fe-msg-modelo">Modelo <select id="fe-msg-modelo"></select></label>
         <div class="chips" id="fe-msg-opcoes" aria-label="Opções do texto"></div>
-        <label for="fe-msg-bloqueio" id="fe-msg-bloqueio-box" hidden>Entregador com restrição <span class="hint">Escolha para já preencher com os dados do bloqueio</span><select id="fe-msg-bloqueio"></select></label>
+        <label for="fe-msg-bloqueio" id="fe-msg-bloqueio-box" hidden>Entregador com restrição <span class="hint">Escolha para já preencher com os dados da restrição</span><select id="fe-msg-bloqueio"></select></label>
         <div class="grid2">
           <label for="fe-msg-nome" data-msg-campo="nome">Nome do entregador <input id="fe-msg-nome" autocomplete="off" maxlength="120"></label>
           <label for="fe-msg-estab" data-msg-campo="estabelecimento">Nome do estabelecimento <input id="fe-msg-estab" autocomplete="off" maxlength="120"></label>
@@ -296,7 +297,7 @@
       </form>
       <div class="panel" style="margin:0">
         <h3>Modelos</h3>
-        <p class="meta" id="fe-msg-ajuda">Os marcadores entre chaves, como {nome}, são preenchidos sozinhos. As mensagens de restrição, encerramento e aviso também saem prontas pelo botão “Gerar mensagem” do bloqueio.</p>
+        <p class="meta" id="fe-msg-ajuda">Os marcadores entre chaves, como {nome}, são preenchidos sozinhos. As mensagens de restrição, encerramento e aviso também saem prontas pelo botão “Gerar mensagem” da restrição.</p>
         <div id="fe-msg-modelos"></div>
       </div>
     </div>
@@ -430,7 +431,7 @@
 
   <section class="view" id="v-bq-atencao" hidden>
     <h2>Entregadores de atenção</h2>
-    <p class="sub" id="bq-atencao-sub">Quem está perto de uma punição maior: a uma infração leve do limite, reincidentes, com mais de um tipo de infração, ou aprovados há pouco que já levaram bloqueio. Quem está com a parceria encerrada não aparece.</p>
+    <p class="sub" id="bq-atencao-sub">Quem está perto de uma punição maior: a uma infração leve do limite, reincidentes, com mais de um tipo de infração, ou aprovados há pouco que já levaram restrição. Quem está com a parceria encerrada não aparece.</p>
     <div class="toolbar">
       <input id="bq-q-atencao" type="search" placeholder="Buscar por nome, ID ou cidade" aria-label="Buscar entregadores de atenção">
       <select id="bq-atencao-motivo" aria-label="Motivo"><option value="">Todos os motivos</option><option value="leve">A uma leve do limite</option><option value="reincidente">Reincidentes</option><option value="tipos">Mais de um tipo de infração</option><option value="aprovado">Aprovados há pouco</option></select>
@@ -439,10 +440,10 @@
   </section>
 
   <section class="view" id="v-bq-ativos" hidden>
-    <h2>Bloqueados agora</h2>
-    <p class="sub">Quem está bloqueado neste momento (do que libera primeiro para o último) e encerramentos com tratativa pendente. O bloqueio é retirado automaticamente no fim do prazo.</p>
+    <h2>Com restrição agora</h2>
+    <p class="sub">Quem está com restrição neste momento (do que libera primeiro para o último) e encerramentos com tratativa pendente. A restrição é retirado automaticamente no fim do prazo.</p>
     <div class="toolbar">
-      <input id="bq-q-ativos" type="search" placeholder="Buscar por nome, ID ou infração" aria-label="Buscar bloqueados">
+      <input id="bq-q-ativos" type="search" placeholder="Buscar por nome, ID ou infração" aria-label="Buscar com restrição">
       <select id="bq-ativos-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
       <select id="bq-ativos-inf" aria-label="Filtrar por infração"><option value="">Todas as infrações</option></select>
     </div>
@@ -451,7 +452,7 @@
 
   <section class="view" id="v-bq-consultar" hidden>
     <h2>Consultar entregador</h2>
-    <p class="sub">Tudo sobre um entregador nos dois módulos: dados, comentários da equipe, linha do tempo, bloqueios e cadastro na ativação.</p>
+    <p class="sub">Tudo sobre um entregador nos dois módulos: dados, comentários da equipe, linha do tempo, restrições e cadastro na ativação.</p>
     <form class="toolbar" id="bq-f-consulta">
       <input id="bq-q-consulta" type="search" placeholder="ID do entregador ou parte do nome" aria-label="ID ou nome do entregador">
       <button class="btn primary" type="submit" style="flex:0 0 auto">Consultar</button>
@@ -461,7 +462,7 @@
   </section>
 
   <section class="view" id="v-bq-historico" hidden>
-    <h2>Histórico de bloqueios</h2>
+    <h2>Histórico de restrições</h2>
     <p class="sub" id="bq-hist-sub"></p>
     <div class="tiles" id="bq-hist-tiles"></div>
     <p class="meta" id="bq-hist-total"></p>
@@ -469,7 +470,7 @@
       <input id="bq-q-hist" type="search" placeholder="Buscar por nome, ID, infração, cidade ou pessoa" aria-label="Buscar no histórico">
       <select id="bq-hist-sit" aria-label="Filtrar por situação">
         <option value="">Todas as situações</option>
-        <option value="bloqueado">Bloqueado agora</option>
+        <option value="bloqueado">Com restrição agora</option>
         <option value="liberado">Liberado (prazo cumprido)</option>
         <option value="liberado_antes">Liberado antes do prazo</option>
         <option value="encerramento">Parceria encerrada</option>
@@ -477,7 +478,7 @@
         <option value="revisar">Marcados para revisão</option>
         <option value="dados_pendentes">Dados a completar</option>
       </select>
-      <select id="bq-hist-tipo" aria-label="Filtrar por tipo"><option value="">Bloqueios e infrações leves</option><option value="normal">Só bloqueios</option><option value="leve">Só infrações leves</option></select>
+      <select id="bq-hist-tipo" aria-label="Filtrar por tipo"><option value="">Restrições e infrações leves</option><option value="normal">Só restrições</option><option value="leve">Só infrações leves</option></select>
       <select id="bq-hist-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
       <select id="bq-hist-inf" aria-label="Filtrar por infração"><option value="">Todas as infrações</option></select>
       <select id="bq-hist-quem" aria-label="Filtrar por quem registrou"><option value="">Registrado por qualquer pessoa</option></select>
@@ -489,15 +490,15 @@
   </section>
 
   <section class="view" id="v-bq-regras" hidden>
-    <h2>Regras de bloqueio</h2>
-    <p class="sub">Horas vazias = <b>encerramento de parceria</b>. A partir da 3ª ocorrência, a punição é a anterior + o aumento (30% por padrão), a não ser que a 3ª encerre a parceria. “Zera a contagem após” (o atraso usa 60 dias): se passar esse tempo sem a infração, a punição volta a ser a da 1ª, sem apagar o histórico. Mudanças valem para os próximos bloqueios.</p>
-    <div class="panel"><h3>Infrações (bloqueios)</h3><div class="tablewrap"><table id="bq-t-regras" class="regras protege-foco"></table></div></div>
+    <h2>Regras de restrição</h2>
+    <p class="sub">Horas vazias = <b>encerramento de parceria</b>. A partir da 3ª ocorrência, a punição é a anterior + o aumento (30% por padrão), a não ser que a 3ª encerre a parceria. “Zera a contagem após” (o atraso usa 60 dias): se passar esse tempo sem a infração, a punição volta a ser a da 1ª, sem apagar o histórico. Mudanças valem para os próximas restrições.</p>
+    <div class="panel"><h3>Infrações (restrições)</h3><div class="tablewrap"><table id="bq-t-regras" class="regras protege-foco"></table></div></div>
     <div class="panel">
       <h3>Infrações leves (avisos)</h3>
-      <p class="sub">Registradas só com o ID e o motivo. Contam separado dos bloqueios. Ao acumular o limite dentro do período (os motivos contam juntos), a última gera um bloqueio normal da infração escolhida e uma tarefa de contato para o responsável da cidade; depois disso a contagem zera.</p>
+      <p class="sub">Registradas só com o ID e o motivo. Contam separado das restrições. Ao acumular o limite dentro do período (os motivos contam juntos), a última gera uma restrição normal da infração escolhida e uma tarefa de contato para o responsável da cidade; depois disso a contagem zera.</p>
       <form class="toolbar protege-foco" id="bq-f-leves" novalidate>
         <label class="check" style="display:inline-flex;gap:6px;align-items:center;font-weight:400">A cada <input id="bq-leves-limite" type="number" min="2" max="20" style="width:72px" aria-label="Quantidade de infrações leves"> infrações leves em</label>
-        <label class="check" style="display:inline-flex;gap:6px;align-items:center;font-weight:400"><input id="bq-leves-janela" type="number" min="1" max="365" style="width:80px" aria-label="Período em dias"> dias → bloqueio normal + contato</label>
+        <label class="check" style="display:inline-flex;gap:6px;align-items:center;font-weight:400"><input id="bq-leves-janela" type="number" min="1" max="365" style="width:80px" aria-label="Período em dias"> dias → restrição normal + contato</label>
         <button class="btn primary small" type="submit" style="flex:0 0 auto">Salvar</button>
       </form>
       <div class="tablewrap"><table id="bq-t-leves" class="regras protege-foco"></table></div>
@@ -512,7 +513,7 @@
     </div>
     <div class="panel">
       <h3>Cidades e responsáveis pela tratativa</h3>
-      <p class="sub">Bloqueios de 10 h ou mais e encerramentos geram uma tratativa para o responsável da cidade (sem responsável, vai para todos os moderadores). Cidades, responsáveis, operadores e tarifas ficam em <a href="#equipe/regras">Equipe → Regras de equipe</a>.</p>
+      <p class="sub">Restrições de 10 h ou mais e encerramentos geram uma tratativa para o responsável da cidade (sem responsável, vai para todos os moderadores). Cidades, responsáveis, operadores e tarifas ficam em <a href="#equipe/regras">Equipe → Regras de equipe</a>.</p>
       <div class="tablewrap"><table id="bq-t-cidades" class="regras"></table></div>
     </div>
   </section>
@@ -630,7 +631,7 @@
     <p class="sub">Tudo o que a equipe fez nos módulos, do mais recente para o mais antigo.</p>
     <div class="toolbar">
       <input id="rg-q" type="search" placeholder="Buscar por nome, ID, cidade ou ação" aria-label="Buscar nos registros">
-      <select id="rg-modulo" aria-label="Módulo"><option value="">Todos os módulos</option><option value="ativacao">Ativação</option><option value="bloqueios">Bloqueios</option></select>
+      <select id="rg-modulo" aria-label="Módulo"><option value="">Todos os módulos</option><option value="ativacao">Ativação</option><option value="bloqueios">Restrições</option></select>
       <select id="rg-pessoa" aria-label="Pessoa"><option value="">Qualquer pessoa</option></select>
     </div>
     <div id="rg-lista"></div>
@@ -639,14 +640,14 @@
   <!-- ===================== EQUIPE ===================== -->
   <section class="view" id="v-equipe" hidden>
     <div class="inicio-topo"><h2>Equipe</h2><button class="btn small" type="button" id="b-teste-som" data-teste-som><span data-icone="som"></span>Testar avisos e sons</button></div>
-    <p class="sub">Cada pessoa tem um acesso por módulo. <b>Moderador</b>: tudo, inclusive desfazer, excluir, regras e equipe. <b>Monitorador</b>: aprova/reprova na ativação; nos bloqueios, faz tratativas e libera antes do prazo. <b>Suporte</b>: envia cadastros, registra bloqueios e acompanha.</p>
+    <p class="sub">Cada pessoa tem um acesso por módulo. <b>Moderador</b>: tudo, inclusive desfazer, excluir, regras e equipe. <b>Monitorador</b>: aprova/reprova na ativação; nas restrições, faz tratativas e libera antes do prazo. <b>Suporte</b>: envia cadastros, registra restrições e acompanha.</p>
     <form class="panel" id="f-membro" novalidate>
       <h3>Autorizar acesso</h3>
       <div class="grid2">
         <label>E-mail Google <input id="m-email" type="email" autocomplete="off" placeholder="nome@empresa.com"></label>
         <label>Nome <input id="m-nome" autocomplete="off" maxlength="80" placeholder="Nome e sobrenome"></label>
         <label>Ativação <select id="m-papel"><option value="suporte">Suporte</option><option value="monitorador">Monitorador</option><option value="moderador">Moderador</option></select></label>
-        <label>Bloqueios <select id="m-papel-bloq"><option value="">Sem acesso</option><option value="suporte" selected>Suporte</option><option value="monitorador">Monitorador</option><option value="moderador">Moderador</option></select></label>
+        <label>Restrições <select id="m-papel-bloq"><option value="">Sem acesso</option><option value="suporte" selected>Suporte</option><option value="monitorador">Monitorador</option><option value="moderador">Moderador</option></select></label>
       </div>
       <div class="actions" style="margin-top:12px"><button class="btn primary" type="submit">Autorizar</button><span class="err" id="m-erro"></span></div>
     </form>
@@ -704,23 +705,23 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="js/base.js?v=009x3"></script>
-<script src="js/icones.js?v=009x3"></script>
-<script src="js/inicio.js?v=009x3"></script>
-<script src="js/ativacao.js?v=009x3"></script>
-<script src="js/bloqueios.js?v=009x3"></script>
-<script src="js/entregadores.js?v=009x3"></script>
-<script src="js/atividades.js?v=009x3"></script>
-<script src="js/painel.js?v=009x3"></script>
-<script src="js/avisos.js?v=009x3"></script>
-<script src="js/analises.js?v=009x3"></script>
-<script src="js/registros.js?v=009x3"></script>
-<script src="js/equipe.js?v=009x3"></script>
-<script src="js/ferramentas.js?v=009x3"></script>
-<script src="js/financeiro.js?v=009x3"></script>
-<script src="js/parceiros.js?v=009x3"></script>
-<script src="js/busca.js?v=009x3"></script>
-<script src="js/sons.js?v=009x3"></script>
-<script src="js/agora.js?v=009x3"></script>
+<script src="js/base.js?v=009x5"></script>
+<script src="js/icones.js?v=009x5"></script>
+<script src="js/inicio.js?v=009x5"></script>
+<script src="js/ativacao.js?v=009x5"></script>
+<script src="js/bloqueios.js?v=009x5"></script>
+<script src="js/entregadores.js?v=009x5"></script>
+<script src="js/atividades.js?v=009x5"></script>
+<script src="js/painel.js?v=009x5"></script>
+<script src="js/avisos.js?v=009x5"></script>
+<script src="js/analises.js?v=009x5"></script>
+<script src="js/registros.js?v=009x5"></script>
+<script src="js/equipe.js?v=009x5"></script>
+<script src="js/ferramentas.js?v=009x5"></script>
+<script src="js/financeiro.js?v=009x5"></script>
+<script src="js/parceiros.js?v=009x5"></script>
+<script src="js/busca.js?v=009x5"></script>
+<script src="js/sons.js?v=009x5"></script>
+<script src="js/agora.js?v=009x5"></script>
 </body>
 </html>

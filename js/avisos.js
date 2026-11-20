@@ -9,12 +9,12 @@
   const S = App.S;
   const V = { lista: null, mais: false, cidades: [], carregandoMais: false, semResp: null, marcando: false, pref: null, dia: null };
   const FILTROS = [["", "Todos os avisos"], ["pessoal", "Para você (tarefas e decisões)"], ["ativacao", "Ativação"],
-    ["bloqueios", "Bloqueios"], ["leves", "Infrações leves (agrupadas)"], ["comentarios", "Comentários e fichas"], ["cidades", "Pedidos de cidade"], ["financeiro", "Financeiro"]];
-  const ROTULO = { ativacao: "ATIVAÇÃO", bloqueios: "BLOQUEIOS", leves: "LEVES", comentarios: "FICHA", cidades: "CIDADE", financeiro: "FINANCEIRO", ajuda: "AJUDA", aviso_geral: "AVISO GERAL", turno: "TURNO" };
+    ["bloqueios", "Restrições"], ["leves", "Infrações leves (agrupadas)"], ["comentarios", "Comentários e fichas"], ["cidades", "Pedidos de cidade"], ["financeiro", "Financeiro"]];
+  const ROTULO = { ativacao: "ATIVAÇÃO", bloqueios: "RESTRIÇÕES", leves: "LEVES", comentarios: "FICHA", cidades: "CIDADE", financeiro: "FINANCEIRO", ajuda: "AJUDA", aviso_geral: "AVISO GERAL", turno: "TURNO" };
   const porque = (x) => ({ cidade: `você é responsável por ${x.cidade}`, moderador: "você é moderador", seguindo: `você segue ${x.cidade}`,
     de_olho: "você está de olho neste entregador" })[x.motivo] || null;
   // tipos que dá para silenciar (o que é para você e o "de olho nele" sempre chegam)
-  const TIPOS = [["ativacao", "Ativação (cadastros enviados e decididos)"], ["bloqueios", "Bloqueios, tratativas e correções"],
+  const TIPOS = [["ativacao", "Ativação (cadastros enviados e decididos)"], ["bloqueios", "Restrições, tratativas e correções"],
     ["leves", "Infrações leves (um aviso por cidade e dia)"], ["comentarios", "Comentários e alterações nas fichas"], ["cidades", "Pedidos para ser responsável de cidade"], ["financeiro", "Financeiro (adicionais e ajustes de bairro)"]];
 
   // ---------- o que acompanho e o que recebo ----------
@@ -56,7 +56,17 @@
             });
             return el("label", { class: "marcar" }, cb, t);
           }),
-          el("p", { class: "meta", text: "O que é para você (tarefas, decisões dos seus cadastros, previsões vencidas) e o que vem do “de olho nele” sempre chega." })),
+          el("p", { class: "meta", text: "O que é para você (tarefas, decisões dos seus cadastros, previsões vencidas) e o que vem do “de olho nele” sempre chega." }),
+          // 009x5: moderador recebe o das cidades sem responsável; receber tudo é opção
+          p.sou_moderador ? (() => {
+            const cb = el("input", { type: "checkbox", switch: true, role: "switch", id: "av-receber-tudo" }); cb.checked = !!p.receber_tudo;
+            cb.addEventListener("change", async () => {
+              try { V.pref = await rpc("salvar_receber_tudo", { p_receber: cb.checked }); toast(cb.checked ? "Você vai receber os avisos de todas as cidades." : "Você vai receber só o seu, o das suas cidades e o das cidades sem responsável."); App.render(); }
+              catch (e) { cb.checked = !cb.checked; toast(msgErro(e)); }
+            });
+            return el("div", {}, el("label", { class: "marcar" }, cb, "Receber também os avisos das cidades que têm responsável"),
+              el("p", { class: "meta", text: "Como moderador, você já recebe o que é seu, o das cidades que segue e o das cidades sem responsável." }));
+          })() : null),
         el("div", {}, el("h4", { text: "Cidades que você segue" }),
           cidadesSeg.length ? el("div", { class: "chips-seguindo" }, cidadesSeg.map((x) => el("span", { class: "chip" }, x.alvo,
             el("button", { type: "button", title: "Deixar de seguir", "aria-label": "Deixar de seguir " + x.alvo, onclick: (e) => alternar("cidade", x.alvo, false, e.currentTarget) }, App.ic("fechar")))))
@@ -75,7 +85,7 @@
     const d = V.dia;
     if (!d) return el("div", { class: "resumo-dia", text: "Hoje: carregando…" });
     const partes = [[d.cadastros, "cadastro(s)"], [d.aprovados, "aprovado(s)"], [d.bloqueios, "bloqueio(s)"], [d.leves, "leve(s)"],
-      [d.tratativas, "tratativa(s) resolvida(s)"], [d.saem_hoje, "saem do bloqueio hoje"]].filter(([v]) => v != null);
+      [d.tratativas, "tratativa(s) resolvida(s)"], [d.saem_hoje, "saem da restrição hoje"]].filter(([v]) => v != null);
     return el("div", { class: "resumo-dia" }, el("b", { text: "Hoje na equipe: " }), partes.map(([v, t]) => `${v} ${t}`).join(" · "),
       el("br"), `Você fez ${d.voce} registro(s) hoje.`);
   }

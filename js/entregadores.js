@@ -28,7 +28,7 @@
       const r = await rpc("cadastrar_entregador", { p_id_app: id, p_nome: nome, p_cidade: $("#en-cidade").value || null, p_comentario: $("#en-comentario").value.trim() || null });
       form.reset();
       E.feito = r;
-      toast(r.bloqueios_completados ? `Entregador cadastrado. Nome e cidade completados em ${r.bloqueios_completados} bloqueio(s).` : "Entregador cadastrado.");
+      toast(r.bloqueios_completados ? `Entregador cadastrado. Nome e cidade completados em ${r.bloqueios_completados} restrição(ões).` : "Entregador cadastrado.");
       await carregar(); renderCadastrar();
     } catch (err) {
       const msg = msgErro(err);
@@ -46,8 +46,8 @@
       el("div", { class: "meta", text: "Entregador cadastrado" }),
       el("div", { class: "grande", text: r.nome }),
       el("div", {}, el("span", { class: "mono", text: r.id_app }), " · ", r.cidade || "sem cidade"),
-      r.bloqueios_completados ? el("div", { text: `Nome e cidade completados em ${r.bloqueios_completados} bloqueio(s) que esperavam os dados.` }) : null,
-      r.bloqueios_pendentes ? el("div", { text: `Este ID tem ${r.bloqueios_pendentes} bloqueio(s) esperando o monitoramento completar os dados.` }) : null,
+      r.bloqueios_completados ? el("div", { text: `Nome e cidade completados em ${r.bloqueios_completados} restrição(ões) que esperavam os dados.` }) : null,
+      r.bloqueios_pendentes ? el("div", { text: `Este ID tem ${r.bloqueios_pendentes} restrição(ões) esperando o monitoramento completar os dados.` }) : null,
       el("div", { class: "actions" }, el("button", { class: "btn small", type: "button", onclick: () => fecharEAbrirFicha(r.id_app) }, "Abrir a ficha"))));
   }
 
@@ -74,12 +74,12 @@
   // recentemente" são os mesmos elementos de antes: vão para a janela ao abrir e voltam para a seção ao fechar.
   const bloco = $("#v-en-cadastrar .two"), casa = bloco.parentElement;
   App.cadastrarEntregador = async (id = "") => {
-    if (!S.me?.papel_bloqueios) return toast("Cadastrar entregador é para quem tem o módulo de bloqueios.");
+    if (!S.me?.papel_bloqueios) return toast("Cadastrar entregador é para quem tem o módulo de restrições.");
     let d = document.getElementById("janela-cad-ent");
     if (!d) {
       form.reset(); E.feito = null;
       d = App.u.janela("Cadastrar entregador",
-        el("p", { class: "sub", style: "margin:0", text: "Cria a ficha do entregador sem precisar de ativação nem de bloqueio. Os próximos registros deste ID já vêm com estes dados." }), bloco);
+        el("p", { class: "sub", style: "margin:0", text: "Cria a ficha do entregador sem precisar de ativação nem de restrição. Os próximos registros deste ID já vêm com estes dados." }), bloco);
       d.id = "janela-cad-ent"; d.classList.add("larga");
       d.addEventListener("close", () => casa.append(bloco));
     }
