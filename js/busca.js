@@ -51,10 +51,13 @@
   document.addEventListener("click", (e) => { if (!form.contains(e.target)) fechar(); });
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009x";
+  const VERSAO = "009x3";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009x3", tema: "Missões da equipe", itens: [
+      ["Tarefas automáticas contam para todos", "A tarefa \"Aprovar entregadores\" que nasce sozinha ao ativar um parceiro agora conta todos os entregadores aprovados na cidade desde que ela foi criada, não importa quem aprovou. As tarefas criadas por alguém continuam contando só as aprovações de quem pegou."],
+    ] },
     { versao: "009x", tema: "Casa em ordem", itens: [
       ["Listas mais leves", "O Histórico da ativação vem em páginas de 100, com Anterior e Próxima. As tratativas concluídas e as tarefas concluídas mostram as mais recentes, com o botão \"Ver mais\". A busca roda no banco e acha também os antigos."],
       ["Busca sem travar", "No Histórico, a busca espera você parar de digitar e redesenha só a lista."],

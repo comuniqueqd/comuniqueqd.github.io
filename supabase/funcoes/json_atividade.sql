@@ -1,4 +1,4 @@
--- json_atividade(atividades): versão atual (todas as migrações até a 009x rodadas), tirada do banco com pg_get_functiondef.
+-- json_atividade(atividades): versão atual (todas as migrações até a 009x3 rodadas), tirada do banco com pg_get_functiondef.
 -- Esta função foi mudada por "remendo" (troca de texto via pg_get_functiondef) em alguma migração, então o corpo
 -- inteiro não existia escrito em nenhum arquivo. A partir daqui, mudar esta função = criar uma migração nova com
 -- o corpo inteiro (create or replace) e atualizar este arquivo. O teste test:casa confere que o arquivo e o banco
@@ -44,6 +44,7 @@ AS $function$
     'pode_entrar', a.status = 'aceita' and public.compartilhavel(a) and not coalesce(public.participa(a), false),
     'pode_excluir', a.criada_por = auth.uid() or public.meu_papel() = 'moderador',
     'recorrente', a.recorrente_id is not null,
+    'automatica', a.automatica,
     'revisao', (select jsonb_build_object('resultado', v.resultado, 'comentario', v.comentario, 'por_nome', v.por_nome, 'em', v.em)
                   from public.revisoes_qualidade v where v.atividade_id = a.id and (a.aceita_por = auth.uid() or public.sou_moderador())))
   from (select 1) _ left join public.tipos_tarefa t on t.tipo = a.tipo

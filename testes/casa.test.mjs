@@ -36,6 +36,7 @@ const um = async (sql, p = []) => (await db.query(sql, p)).rows[0];
 
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x-casa-em-ordem.sql"));   // pode rodar de novo
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x2-avisos-sem-codigo.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009x3-tarefas-automaticas.sql"));
 
 await rpc(admin, "entrar");
 await db.query("update membros set papel_bloqueios = 'moderador' where email = $1", [admin.email]);
@@ -192,6 +193,31 @@ await t("009x2: aviso pessoal sobre cadastro (link #ativacao/meus) perde o códi
   const l = (await db.query("select texto, id_app from notificacoes where para = $1 order by id desc limit 3", [uSup])).rows.reverse();
   igual(l, [{ texto: "Seu cadastro Pessoa Pessoal foi aprovado por Monitor.", id_app: "pess0001" },
     { texto: "Suporte: cadastro para completar.", id_app: "pess0001" }, { texto: 'Mateus revisou "Ligar": tudo certo.', id_app: null }]);
+});
+
+await t("009x3: tarefa automática do parceiro conta as aprovações de qualquer pessoa na cidade, desde que nasceu; a manual só as de quem pegou", async () => {
+  const aprovar = async (id, quem) => {
+    const c = await um("insert into cadastros (id_app, nome, cidade, status, enviado_por) values ($1, 'Aprovado Auto', 'CARPINA - PE', 'aprovado', $2) returning id", [id, quem]);
+    await db.query("insert into eventos (cadastro_id, tipo, status_novo, por) values ($1, 'aprovado', 'aprovado', $2)", [c.id, quem]);
+  };
+  await aprovar("auto0000", uSup);   // antes da tarefa existir: não conta
+  await db.query("update eventos set em = now() - interval '1 hour' where cadastro_id = (select id from cadastros where id_app = 'auto0000')");
+  const r = await rpc(admin, "registrar_parceiro", { p_estabelecimento: "Sorveteria Teste", p_cidade: "CARPINA - PE" });
+  igual(r.tarefa_entregadores.nova, true, "nasceu a automática");
+  const auto = await um("select id, automatica from atividades where cidade = 'CARPINA - PE' and tipo = 'ativar_entregadores'");
+  igual(auto.automatica, true, "marcada como automática");
+  const manual = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: JSON.stringify({ cidade: "CARPINA - PE", quantidade: 3 }) });
+  const idManual = manual.id || manual;
+  await rpc(admin, "aceitar_atividade", { p_id: idManual });
+  await aprovar("auto0001", uSup);   // o suporte aprova, ninguém pegou a automática
+  await aprovar("auto0002", uAdmin);
+  const prog = async (id) => (await um("select public.progresso_tarefa(a) p from atividades a where id = $1", [id])).p;
+  igual(await prog(auto.id), 2, "automática: as duas aprovações de pessoas diferentes");
+  igual(await prog(idManual), 1, "manual: só a de quem pegou");
+  const conta = await rpc(sup, "tarefas_que_contam", { p_tipo: "ativar_entregadores", p_cidade: "CARPINA - PE" });
+  igual(conta.map((x) => x.id), [auto.id], "para o suporte, contou na automática");
+  const j = await rpc(sup, "listar_atividades");
+  verdade(j.find((x) => x.id === auto.id)?.automatica === true, "o cartão sabe que é automática");
 });
 
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco
