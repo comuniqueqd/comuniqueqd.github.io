@@ -1272,7 +1272,7 @@
   "junto": "A7-05",
   "versao": "009z",
   "feito": "009z2",
-  "situacao": "Feito na 009z2 (falta rodar o SQL): registrar_bloqueio sem acesso (009z2)."
+  "situacao": "Feito na 009z2 (rodada no Supabase em 20/11/2026): registrar_bloqueio sem acesso (009z2)."
  },
  {
   "ag": "a5",
@@ -1663,7 +1663,7 @@
   "nota": "Varredura 20/11 (a7): Ainda 12 sem uso (aprovados_e_bloqueios, registrar_bloqueio, salvar_cidade, salvar_telefone, sugerir_atividade, 7 de casos). Nova: aviso_sem_id(text,text) da 009v:48 só embrulha a de 3 argumentos e ninguém a chama.",
   "junto": "",
   "versao": "009z",
-  "situacao": "Feito na 009z2 (falta rodar o SQL): as 13 sem acesso (009z2); apagar de vez na versão seguinte.",
+  "situacao": "Feito na 009z2 (rodada no Supabase em 20/11/2026): as 13 sem acesso (009z2); apagar de vez na versão seguinte.",
   "feito": "009z2"
  },
  {
