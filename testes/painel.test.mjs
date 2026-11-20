@@ -1,6 +1,7 @@
 // Testes da 009d parte 3 (supabase/009d3-painel-metas-recorrentes.sql): painel, metas, placar, recorrentes e revisão de qualidade.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node painel.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -17,6 +18,7 @@ for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/
   "../supabase/009c2-mensagens-opcoes.sql", "../supabase/009d-ajuda-aviso-turno.sql",
   "../supabase/009d2-tarefas-cards.sql",
   "../supabase/009d3-painel-metas-recorrentes.sql", "../supabase/009d3-painel-metas-recorrentes.sql"]) await db.query(arquivo(f));
+await completar(db, "009d3-painel-metas-recorrentes.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -135,7 +137,7 @@ await t("revisão de qualidade: amostra e revisão só de moderadores; quem fez 
   await falha(rpc(mod2, "revisar_qualidade", { p_id: t2.id, p_resultado: "ajustar" }), "o que precisa ajustar");
   await falha(rpc(mod2, "revisar_qualidade", { p_id: t1.id, p_resultado: "ok" }), "concluídas");
   await rpc(mod2, "revisar_qualidade", { p_id: t2.id, p_resultado: "ajustar", p_comentario: "Faltou o print do comunicado" });
-  igual((await avisos(sup)).filter((x) => x.startsWith("✏️ Moderadora Dois revisou")).length, 1);
+  igual((await avisos(sup)).filter((x) => x.startsWith("Moderadora Dois revisou")   /* 009x2: aviso não começa com emoji */).length, 1);
   igual((await tarefa(sup, t2.id)).revisao.resultado, "ajustar");
   igual((await tarefa(mon, t2.id)).revisao, null, "outra pessoa:");
   igual((await rpc(mod2, "amostra_revisao", { p_qtd: 10 })).map((x) => x.id), [t3.id]);

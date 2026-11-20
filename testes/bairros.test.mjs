@@ -2,6 +2,7 @@
 // vira apelido dele (mesmo valor); parecido mas duvidoso pergunta antes; números diferentes nunca juntam.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node bairros.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -20,6 +21,7 @@ const M = ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/002-bl
   "../supabase/009g-tarefas-compartilhadas.sql", "../supabase/009h-entregador-pelo-lancamento.sql",
   "../supabase/009p-bairros-parecidos.sql", "../supabase/009p-bairros-parecidos.sql"];  // a 009p duas vezes: pode rodar de novo
 for (const f of M) await db.query(arquivo(f));
+await completar(db, "009p-bairros-parecidos.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");

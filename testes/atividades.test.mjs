@@ -2,6 +2,7 @@
 // tratativas atrasadas e realocação, atividades sugeridas, registros, ficha, tela inicial.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node atividades.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -11,6 +12,7 @@ await db.connect();
 const arquivo = (f) => readFileSync(new URL(f, import.meta.url), "utf8");
 for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/002-bloqueios.sql", "../supabase/003-entregadores.sql",
   "../supabase/004-atividades-registros.sql", "../supabase/004-atividades-registros.sql"]) await db.query(arquivo(f));
+await completar(db, "004-atividades-registros.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -79,8 +81,10 @@ await t("verificar_atrasos avisa os moderadores uma vez só", async () => {
   igual(await rpc(sup, "verificar_atrasos"), 1);
   igual(await rpc(mon, "verificar_atrasos"), 0);
   const n = (await db.query("select m.email, n.texto from notificacoes n join membros m on m.user_id = n.para where n.texto like 'Tratativa atrasada%' order by 1")).rows;
-  igual(n.map((x) => x.email), [mod2.email, admin.email].sort());
-  if (!n[0].texto.includes("Atrasado Um") || !n[0].texto.includes("Jocimara")) throw new Error(n[0].texto);
+  // 006: o responsável da cidade também é avisado
+  igual(n.map((x) => x.email), [mod2.email, admin.email, mon.email].sort());
+  const doAdmin = n.find((x) => x.email === admin.email).texto;
+  if (!doAdmin.includes("Atrasado Um") || !doAdmin.includes("Jocimara")) throw new Error(doAdmin);
   igual(await rpc(estranho, "verificar_atrasos"), 0);
 });
 await t("tela inicial conta as atrasadas (moderador: todas; monitorador: as suas)", async () => {
@@ -99,7 +103,7 @@ await t("só moderador realoca; destino precisa ser monitorador ou moderador", a
   igual((await um("select count(*)::int n from notificacoes n join membros m on m.user_id = n.para where m.email = $1 and n.texto like '%passou para você%'", [mon2.email])).n, 1);
   igual((await um("select detalhe from eventos_bloqueio where bloqueio_id = $1 and tipo = 'realocada'", [b1.id])).detalhe, "de Jocimara para Lucas");
   // o novo responsável conclui; o antigo não vê mais
-  igual((await rpc(mon, "listar_tarefas", { p_status: "pendente" })).some((t) => t.bloqueio.id === b1.id), false);
+  igual((await rpc(mon, "listar_tarefas", { p_status: "pendente" })).some((t) => t.bloqueio.id === b1.id && t.minha), false);   // 009x6: vê, mas não é mais dele
   await rpc(mon2, "concluir_tratativa", { p_tarefa: tar, p_nota: "feito" });
 });
 await t("trocar o responsável da cidade não desfaz uma realocação manual", async () => {
@@ -155,7 +159,7 @@ await t("aceitar: uma pessoa só; quem criou é avisado", async () => {
   igual((await rpc(mon2, "resumo_inicio")).atividades.minhas_em_andamento, 1);
 });
 await t("concluir: quem aceitou ou moderador", async () => {
-  await falha(rpc(sup, "concluir_atividade", { p_id: a1 }), "Só quem aceitou");
+  await falha(rpc(sup, "concluir_atividade", { p_id: a1 }), "Só quem está na tarefa");
   await rpc(mon2, "concluir_atividade", { p_id: a1, p_nota: "Confirmado" });
   const a = (await rpc(sup, "listar_atividades")).find((x) => x.id === a1);
   igual([a.status, a.concluida_por_nome, a.nota], ["concluida", "Lucas", "Confirmado"]);
@@ -178,13 +182,13 @@ await t("registros: feed dos dois módulos, também para o suporte", async () =>
   const acoes = r.map((x) => `${x.modulo}:${x.por_nome}:${x.acao}`);
   for (const esperado of ["ativacao:Joyce:enviou o cadastro", "bloqueios:Eduarda:registrou bloqueio", "bloqueios:Jocimara:reverteu o encerramento", "bloqueios:Mateus Lopes:realocou a tratativa", "bloqueios:Lucas:concluiu a tratativa"])
     if (!acoes.includes(esperado)) throw new Error("faltou " + esperado + " em " + acoes.join(" | "));
-  igual(r.find((x) => x.modulo === "ativacao").cpf, "52998224725");
+  igual(r.find((x) => x.modulo === "ativacao").cpf ?? null, null);   // 009s: o CPF não é guardado
   for (let i = 1; i < r.length; i++) if (r[i].em > r[i - 1].em) throw new Error("fora de ordem");
 });
 await t("registros: filtros, busca por CPF e paginação", async () => {
   igual((await rpc(sup, "listar_registros", { p_modulo: "ativacao" })).every((x) => x.modulo === "ativacao"), true);
   igual((await rpc(sup, "listar_registros", { p_pessoa: "Joyce" })).every((x) => x.por_nome === "Joyce"), true);
-  igual((await rpc(sup, "listar_registros", { p_busca: "529.982.247-25" })).length, 1);
+  igual((await rpc(sup, "listar_registros", { p_busca: "cad00001" })).length >= 1, true);   // 009s: busca pelo ID (o CPF não é guardado)
   igual((await rpc(sup, "listar_registros", { p_busca: "ladrão" })).length >= 2, true);
   const p1 = await rpc(sup, "listar_registros", { p_limite: 3 });
   const p2 = await rpc(sup, "listar_registros", { p_limite: 3, p_antes: p1[2].em });
@@ -206,7 +210,7 @@ await t("ficha: linha do tempo junta ativação e bloqueios; leves contadas à p
   const textos = f.linha_do_tempo.map((x) => x.texto);
   for (const e of ["Cadastro enviado", "Cadastro aprovado", "Infração leve: Reabertura de Pedido (aviso)"]) if (!textos.includes(e)) throw new Error("faltou " + e + ": " + textos);
   const c = (await rpc(sup, "consultar_entregador", { p_busca: "cad00001" })).cadastros[0];
-  igual([c.cpf, c.enviado_por_nome, c.situacao], ["52998224725", "Joyce", "Aprovado"]);
+  igual([c.cpf ?? null, c.enviado_por_nome, c.situacao], [null, "Joyce", "Aprovado"]);
 });
 
 // ---------- tela inicial ----------

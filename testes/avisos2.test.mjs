@@ -2,6 +2,7 @@
 // leves agrupadas, previsão vencida, resumo do dia e a lista de revisar para o suporte.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node avisos2.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -14,6 +15,7 @@ for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/
   "../supabase/007-pao-quentinho.sql", "../supabase/008-espionagem.sql", "../supabase/008b-cadastrar-entregador.sql",
   "../supabase/008b-notificacoes.sql", "../supabase/008c-analises.sql", "../supabase/008d-avisos-parte2.sql",
   "../supabase/008d-avisos-parte2.sql"]) await db.query(arquivo(f));
+await completar(db, "008d-avisos-parte2.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -93,6 +95,7 @@ await t("preferências: o moderador silencia bloqueios e não recebe; o aviso pe
 });
 
 await t("leves agrupadas: um aviso por cidade e dia, que vai somando e volta para o topo como não lido", async () => {
+  await rpc(admin, "salvar_receber_tudo", { p_receber: true });   // 009x5: o moderador recebe o de cidade com responsável só pedindo tudo
   await marca();
   for (const id of ["leve0001", "leve0002", "leve0003"]) {
     await db.query("insert into entregadores (id_app, nome, cidade) values ($1, $2, 'LAGARTO - SE') on conflict do nothing", [id, "Leve " + id]);

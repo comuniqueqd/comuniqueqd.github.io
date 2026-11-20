@@ -2,6 +2,7 @@
 // tarifas dos bairros, calculadora/ajuste de bairro, adicionais, pendentes, avisos e resumo.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node financeiro.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -17,6 +18,7 @@ for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/
   "../supabase/009a-regras-politica.sql", "../supabase/009b-ferramentas-financeiro.sql",
   // rodar de novo não pode quebrar
   "../supabase/009a-regras-politica.sql", "../supabase/009b-ferramentas-financeiro.sql"]) await db.query(arquivo(f));
+await completar(db, "009b-ferramentas-financeiro.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");

@@ -2,6 +2,7 @@
 // cria a ficha dele (lançamentos financeiros e cadastros da ativação) e os registros antigos ganham a ficha.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node ficha.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -64,6 +65,7 @@ await rpc(sup, "enviar_cadastro", { p_id_app: "CAD00001", p_cpf: null, p_cidade:
 const f009h = "../supabase/009h-entregador-pelo-lancamento.sql";
 await db.query(arquivo(f009h));
 await db.query(arquivo(f009h)); // rodar de novo não pode quebrar
+await completar(db, "009h-entregador-pelo-lancamento.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 await t("registros antigos: lançamento com nome e cadastro pendente ganham a ficha; lançamento sem nome recebe o nome", async () => {
   igual(await ficha("ant00001"), { nome: "Rita Antiga", cidade: "LAGARTO - SE", criado_por_nome: "Eduarda" });

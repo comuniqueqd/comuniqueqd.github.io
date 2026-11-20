@@ -31,3 +31,17 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   await carregarBanco(url);
   console.log("banco carregado:", url.replace(/\/\/[^@]*@/, "//"));
 }
+
+// A7-04 (009y1): os testes de cada migração carregam as migrações dela e, em seguida, TODAS as que vieram depois,
+// para conferir o banco como ele está hoje (e não a versão antiga das funções). `ultimo` = a última migração que o
+// teste já carregou (ex.: "009d2-tarefas-cards.sql").
+// manterRegras: a 009a troca as HORAS das infrações pelas da política (dado, não lógica); os testes do cálculo
+// continuam com os números da semente que eles conhecem, então as horas voltam ao que eram antes de completar.
+export async function completar(db, ultimo, { manterRegras = false } = {}) {
+  const i = MIGRACOES.findIndex((f) => f.endsWith("/" + ultimo));
+  if (i < 0) throw new Error("migração desconhecida: " + ultimo);
+  if (manterRegras) await db.query("drop table if exists _regras_semente; create table _regras_semente as select id, horas_1a, horas_2a, terceira_encerra, fator, janela_dias from public.infracoes");
+  for (const f of MIGRACOES.slice(i + 1)) await db.query(fs.readFileSync(path.join(RAIZ, f), "utf8"));
+  if (manterRegras) await db.query(`update public.infracoes i set horas_1a = s.horas_1a, horas_2a = s.horas_2a, terceira_encerra = s.terceira_encerra,
+      fator = s.fator, janela_dias = s.janela_dias from _regras_semente s where s.id = i.id; drop table _regras_semente`);
+}

@@ -1,6 +1,7 @@
 // Testes da migração 005 (supabase/005-analises-anexos.sql): análises, resumo semanal, aprovados e bloqueios, anexos.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node analises.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -10,6 +11,7 @@ await db.connect();
 const arquivo = (f) => readFileSync(new URL(f, import.meta.url), "utf8");
 for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/002-bloqueios.sql", "../supabase/003-entregadores.sql",
   "../supabase/004-atividades-registros.sql", "../supabase/005-analises-anexos.sql", "../supabase/005-analises-anexos.sql"]) await db.query(arquivo(f));
+await completar(db, "005-analises-anexos.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -164,8 +166,10 @@ await t("tipo, tamanho e limite de 3 por bloqueio", async () => {
 await t("baixar devolve o mesmo arquivo; quem não pode ver não baixa", async () => {
   const d = await rpc(mon, "baixar_anexo", { p_id: an1 });
   igual([d.nome, d.tipo, d.base64], ["print.png", "image/png", b64]);
-  await falha(rpc(sup2, "baixar_anexo", { p_id: an1 }), "não encontrado");
-  igual(await rpc(sup2, "listar_anexos", { p_bloqueio: b1.id }), []);
+  // 009x6: todo o módulo de restrições vê e baixa (o suporte só anexa nas dele); fora do módulo, não
+  igual((await rpc(sup2, "baixar_anexo", { p_id: an1 })).base64, b64);
+  igual((await rpc(sup2, "listar_anexos", { p_bloqueio: b1.id })).length, 3);
+  await falha(rpc(soAtiv, "baixar_anexo", { p_id: an1 }), "");
   igual((await rpc(sup, "listar_anexos", { p_bloqueio: b1.id })).length, 3);
 });
 await t("a tabela de anexos não pode ser lida direto (nem pela equipe)", async () => {

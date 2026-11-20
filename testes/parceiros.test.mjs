@@ -1,6 +1,7 @@
 // Testes da 009e (supabase/009e-parceiros.sql): parceiros e as tarefas/metas de aprovação que contam sozinhas.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node parceiros.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -20,6 +21,7 @@ for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/
   "../supabase/009e-parceiros.sql", "../supabase/009e-parceiros.sql",
   "../supabase/009f-parceiros-completo.sql", "../supabase/009f-parceiros-completo.sql",
   "../supabase/009g-tarefas-compartilhadas.sql", "../supabase/009g-tarefas-compartilhadas.sql"]) await db.query(arquivo(f));
+await completar(db, "009g-tarefas-compartilhadas.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");

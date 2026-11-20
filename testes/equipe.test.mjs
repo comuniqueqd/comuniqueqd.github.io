@@ -1,6 +1,7 @@
 // Testes da migração 006 (supabase/006-equipe-previsao-atencao.sql): regras de equipe, prazo editável, previsão, entregadores de atenção.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node equipe.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -10,6 +11,7 @@ await db.connect();
 const arquivo = (f) => readFileSync(new URL(f, import.meta.url), "utf8");
 for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/002-bloqueios.sql", "../supabase/003-entregadores.sql",
   "../supabase/004-atividades-registros.sql", "../supabase/005-analises-anexos.sql", "../supabase/006-equipe-previsao-atencao.sql", "../supabase/006-equipe-previsao-atencao.sql"]) await db.query(arquivo(f));
+await completar(db, "006-equipe-previsao-atencao.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");

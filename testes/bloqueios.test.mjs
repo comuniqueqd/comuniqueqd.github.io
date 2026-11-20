@@ -1,6 +1,7 @@
 // Testes do módulo de bloqueios (supabase/002-bloqueios.sql) num Postgres local.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node bloqueios.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -9,6 +10,7 @@ const db = new pg.Client({ connectionString: url });
 await db.connect();
 for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/002-bloqueios.sql"])
   await db.query(readFileSync(new URL(f, import.meta.url), "utf8"));
+await completar(db, "002-bloqueios.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -140,10 +142,12 @@ await t("3ª avaria = encerramento (coluna da 3ª era 0); furto encerra na 1ª",
 await t("cidade fora da lista é recusada", () => falha(registrar(sup, "cid00001", REABRIR, "CIDADE INVENTADA - XX"), "cidade da lista"));
 
 // ---------- tratativas ----------
-await t("cada monitorador vê só as tratativas das suas cidades; moderador vê todas", async () => {
-  const m1 = await rpc(mon, "listar_tarefas", { p_status: "pendente" });
-  const m2 = await rpc(mon2, "listar_tarefas", { p_status: "pendente" });
+await t("todos veem as tratativas de todas as cidades (009x6); cada monitorador age só nas das suas cidades; moderador em todas", async () => {
+  const todas = await rpc(mon, "listar_tarefas", { p_status: "pendente" });
+  const m1 = todas.filter((x) => x.minha);
+  const m2 = (await rpc(mon2, "listar_tarefas", { p_status: "pendente" })).filter((x) => x.minha);
   const ad = await rpc(admin, "listar_tarefas", { p_status: "pendente" });
+  igual(todas.length, ad.length, "o monitorador vê a mesma lista do moderador:");
   if (!m1.length || m1.some((x) => x.cidade !== "LAGARTO - SE")) throw new Error("monitor 1: " + m1.map((x) => x.cidade));
   if (!m2.length || m2.some((x) => x.cidade !== "ITABAIANA - SE")) throw new Error("monitor 2: " + m2.map((x) => x.cidade));
   igual(ad.length, m1.length + m2.length + 1, "moderador (inclui RECIFE sem responsável):");
@@ -154,7 +158,7 @@ await t("suporte acompanha as tratativas dos bloqueios que registrou, sem conclu
   await falha(rpc(sup, "concluir_tratativa", { p_tarefa: l[0].id, p_nota: null }), "não permite");
 });
 await t("monitorador não conclui tratativa de outra cidade", async () => {
-  const outra = (await rpc(mon2, "listar_tarefas", { p_status: "pendente" }))[0];
+  const outra = (await rpc(mon2, "listar_tarefas", { p_status: "pendente" })).find((x) => x.minha);
   await falha(rpc(mon, "concluir_tratativa", { p_tarefa: outra.id, p_nota: null }), "outro responsável");
 });
 await t("tratativa concluída: sai das pendentes, bloqueio continua e o suporte é avisado", async () => {
@@ -176,8 +180,8 @@ await t("moderador conclui tratativa de cidade sem responsável", async () => {
 });
 await t("trocar o responsável da cidade passa as tratativas pendentes para ele", async () => {
   await rpc(admin, "salvar_cidade", { p_nome: "ITABAIANA - SE", p_responsavel_email: mon.email, p_ativa: true });
-  igual((await rpc(mon2, "listar_tarefas", { p_status: "pendente" })).length, 0);
-  if (!(await rpc(mon, "listar_tarefas", { p_status: "pendente" })).some((x) => x.cidade === "ITABAIANA - SE")) throw new Error("não passou");
+  igual((await rpc(mon2, "listar_tarefas", { p_status: "pendente" })).filter((x) => x.minha).length, 0);
+  if (!(await rpc(mon, "listar_tarefas", { p_status: "pendente" })).some((x) => x.minha && x.cidade === "ITABAIANA - SE")) throw new Error("não passou");
 });
 
 // ---------- liberar antes, excluir ----------
@@ -197,13 +201,12 @@ await t("só moderador exclui", async () => {
 });
 
 // ---------- leitura e permissões ----------
-await t("suporte só lê os bloqueios que registrou (função e tabela)", async () => {
-  const meus = await rpc(sup, "listar_bloqueios", { p_escopo: "todos" });
-  if (!meus.length || meus.some((b) => b.registrado_por !== sup.sub)) throw new Error("vazou");
-  const direto = await sqlComo(sup, "select count(*)::int n from public.bloqueios where importado");
-  igual(direto[0].n, 0);
+await t("suporte lê todas as restrições (009x6, só leitura), pela função e pela tabela", async () => {
+  const doSup = await rpc(sup, "listar_bloqueios", { p_escopo: "todos" });
   const todos = await rpc(mon, "listar_bloqueios", { p_escopo: "todos" });
-  if (todos.length <= meus.length) throw new Error("monitor deveria ver tudo");
+  igual(doSup.length, todos.length);
+  const direto = await sqlComo(sup, "select count(*)::int n from public.bloqueios where importado");
+  if (!direto[0].n) throw new Error("o suporte deveria ver os importados");
 });
 await t("ninguém grava direto nas tabelas", async () => {
   await falha(sqlComo(admin, "insert into public.bloqueios (id_app, nome_entregador, infracao_id, infracao, ocorrencia, ocorrencia_total, registrado_por_nome) values ('aaaa1111','x',1,'x',1,1,'x')"), "permission denied");
@@ -214,7 +217,7 @@ await t("consulta do entregador junta bloqueios e o cadastro da ativação", asy
   await rpc(sup, "enviar_cadastro", { p_id_app: "mal00001", p_cpf: null, p_cidade: "LAGARTO - SE", p_observacao: null });
   const r = await rpc(sup, "consultar_entregador", { p_busca: "MAL00001" });
   igual([r.bloqueios.length, r.cadastros[0].situacao], [3, "Aguardando análise"]);
-  igual((await rpc(sup, "consultar_entregador", { p_busca: "ciclan" })).bloqueios.length, 2, "busca por nome (os 2 importados com esse nome):");
+  igual((await rpc(sup, "consultar_entregador", { p_busca: "ciclan" })).bloqueios.length, (await rpc(mon, "consultar_entregador", { p_busca: "ciclan" })).bloqueios.length, "busca por nome: o suporte vê o mesmo que o monitorador (009x6):");
   igual((await rpc(sup, "previa_bloqueio", { p_id_app: "mal00001", p_infracao: MAL_USO })).cadastro.situacao, "Aguardando análise");
 });
 
@@ -273,11 +276,11 @@ const leve = (quem, id, inf) => rpc(quem, "registrar_infracao_leve", { p_id_app:
 await t("leve de ID conhecido: 30 min, nome e cidade vêm do histórico, sem tarefa", async () => {
   const pv = await rpc(sup, "previa_bloqueio", { p_id_app: "mal00001", p_infracao: LEVE_REAB });
   igual([pv.leve, pv.horas, pv.gera_tratativa, pv.leves.esta_sera, pv.leves.limite, pv.leves.janela_dias, pv.nome_conhecido, pv.cidade_conhecida],
-        [true, 0.5, false, 1, 3, 50, "Entregador mal00001", "LAGARTO - SE"]);
+        [true, 0.5, false, 1, 3, 50, "Fulano", "LAGARTO - SE"]);   // a ficha (003) nasce do 1º registro, o importado "Fulano"
   const r = await leve(sup, "mal00001", LEVE_REAB);
   igual([r.horas, r.dados_pendentes, r.leves, r.gerado], [0.5, false, 1, null]);
   const b = await bloqueio(r.id);
-  igual([b.leve, b.horas, b.nome_entregador, b.cidade, b.sit, b.t_tipo], [true, 0.5, "Entregador mal00001", "LAGARTO - SE", "bloqueado", null]);
+  igual([b.leve, b.horas, b.nome_entregador, b.cidade, b.sit, b.t_tipo], [true, 0.5, "Fulano", "LAGARTO - SE", "bloqueado", null]);
   if (!(new Date(b.fim) - new Date(b.inicio) === 30 * 60000)) throw new Error("fim errado");
 });
 await t("leve não conta como ocorrência da infração normal (e vice-versa)", async () => {

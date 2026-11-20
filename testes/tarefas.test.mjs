@@ -1,6 +1,7 @@
 // Testes da 009d parte 2 (supabase/009d2-tarefas-cards.sql): tarefas em cards.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node tarefas.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -16,6 +17,7 @@ for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/
   "../supabase/009a-regras-politica.sql", "../supabase/009b-ferramentas-financeiro.sql", "../supabase/009c-mensagens-agravante.sql",
   "../supabase/009c2-mensagens-opcoes.sql", "../supabase/009d-ajuda-aviso-turno.sql",
   "../supabase/009d2-tarefas-cards.sql", "../supabase/009d2-tarefas-cards.sql"]) await db.query(arquivo(f));
+await completar(db, "009d2-tarefas-cards.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");

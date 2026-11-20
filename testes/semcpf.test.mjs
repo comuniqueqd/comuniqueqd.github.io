@@ -2,6 +2,7 @@
 // (inclusive dentro de textos), CPF novo não é gravado, o ID passa a ser obrigatório e as mensagens não citam CPF.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node semcpf.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -54,6 +55,7 @@ igual(Number((await um("select count(*) c from cadastros where cpf is not null")
 
 // a 009s, duas vezes (pode rodar de novo)
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009s-sem-cpf.sql"));
+await completar(db, "009s-sem-cpf.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 await t("os CPFs guardados foram apagados (cadastros)", async () => {
   igual(Number((await um("select count(*) c from cadastros where cpf is not null")).c), 0);

@@ -1,6 +1,7 @@
 // Testes da 008c (supabase/008c-analises.sql): análises simples e complexas.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node analises008c.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -12,6 +13,7 @@ for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/
   "../supabase/004-atividades-registros.sql", "../supabase/005-analises-anexos.sql", "../supabase/006-equipe-previsao-atencao.sql",
   "../supabase/007-pao-quentinho.sql", "../supabase/008-espionagem.sql", "../supabase/008b-cadastrar-entregador.sql",
   "../supabase/008b-notificacoes.sql", "../supabase/008c-analises.sql", "../supabase/008c-analises.sql"]) await db.query(arquivo(f));
+await completar(db, "008c-analises.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");

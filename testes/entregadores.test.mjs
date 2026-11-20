@@ -2,6 +2,7 @@
 // cadastro do entregador, comentários, correção de bloqueios, contagem de leves e segurança.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node entregadores.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -73,6 +74,11 @@ const gerouAntes = await rpc(sup, "registrar_infracao_leve", { p_id_app: "Abc123
 await t("003 roda sobre os dados existentes e pode rodar de novo", async () => {
   await db.query(arquivo("../supabase/003-entregadores.sql"));
   await db.query(arquivo("../supabase/003-entregadores.sql"));
+  // A7-04: e todas as migrações que vieram depois. A 009x5 tira o "revisar" dos importados da planilha (limpeza de
+  // dados do banco real); aqui as marcas voltam, porque os testes abaixo usam esses registros de exemplo.
+  const marcas = (await db.query("select id, revisar from bloqueios where revisar is not null")).rows;
+  await completar(db, "003-entregadores.sql", { manterRegras: true });
+  for (const m of marcas) await db.query("update bloqueios set revisar = $2 where id = $1", [m.id, m.revisar]);
 });
 await t("cadastro do entregador nasce dos bloqueios (o mais recente de cada ID, ID em minúsculas)", async () => {
   const r = (await db.query("select id_app, nome, cidade from entregadores order by id_app")).rows;
@@ -86,8 +92,11 @@ await t("leves que já tinham gerado bloqueio ficam marcadas", async () =>
 
 // ---------- correção ----------
 const [b1, b2, b3] = (await db.query("select id from bloqueios where importado order by inicio")).rows.map((r) => r.id);
-await t("suporte não corrige bloqueio", () =>
-  falha(rpc(sup, "corrigir_bloqueio", { p_bloqueio: b1, p_id_app: "aaaa1111", p_nome: "X", p_cidade: "ITABAIANA - SE", p_motivo: "x" }), "não permite"));
+// 008b: o suporte corrige só o que está marcado "revisar" ou o que ele mesmo registrou
+await t("suporte não corrige restrição sem 'revisar' registrada por outra pessoa", async () => {
+  const outra = await rpc(mon, "registrar_bloqueio", { p_id_app: "outr0001", p_nome: "De Outra Pessoa", p_cidade: "ITABAIANA - SE", p_infracao: MAL_USO });
+  await falha(rpc(sup, "corrigir_bloqueio", { p_bloqueio: outra.id, p_id_app: "aaaa1111", p_nome: "X", p_cidade: "ITABAIANA - SE", p_motivo: "x" }), "O suporte corrige só");
+});
 await t("correção sem motivo é recusada", () =>
   falha(rpc(mon, "corrigir_bloqueio", { p_bloqueio: b1, p_id_app: "6a1b2c3d4e5f", p_nome: "Pessoa Um", p_cidade: "ITABAIANA - SE", p_motivo: " " }), "motivo"));
 await t("monitorador corrige o ID: alerta resolvido, punição e ocorrência mantidas, histórico e comentário gravados", async () => {

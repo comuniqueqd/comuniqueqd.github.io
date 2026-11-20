@@ -2,6 +2,7 @@
 // responsável da cidade, pedidos de cidade, tela de Avisos (listar_avisos) e o suporte revisando.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node avisos.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -13,6 +14,7 @@ for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/
   "../supabase/004-atividades-registros.sql", "../supabase/005-analises-anexos.sql", "../supabase/006-equipe-previsao-atencao.sql",
   "../supabase/007-pao-quentinho.sql", "../supabase/008-espionagem.sql", "../supabase/008b-cadastrar-entregador.sql",
   "../supabase/008b-notificacoes.sql", "../supabase/008b-notificacoes.sql"]) await db.query(arquivo(f));
+await completar(db, "008b-notificacoes.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -54,12 +56,14 @@ await rpc(admin, "salvar_cidade", { p_nome: "ITABAIANA - SE", p_responsavel_emai
 const inf = (await um("select id from infracoes where not leve and ativa and horas_1a is not null order by id limit 1")).id;
 
 await t("bloqueio registrado: moderadores e responsável da cidade recebem; quem registrou e quem não tem bloqueios, não", async () => {
+  // 009x5: moderador recebe o das cidades com responsável só quando liga "receber tudo" (estes dois ligaram)
+  await rpc(admin, "salvar_receber_tudo", { p_receber: true }); await rpc(modBq, "salvar_receber_tudo", { p_receber: true });
   await marca();
   await rpc(sup, "registrar_bloqueio", { p_id_app: "aviso001", p_nome: "Zeferino Teste", p_cidade: "LAGARTO - SE", p_infracao: inf });
   const [a, m, s, j, l] = [await novos(admin), await novos(mon), await novos(sup), await novos(semBq), await novos(modBq)];
   igual([a.length, l.length, s.length, j.length], [1, 1, 0, 0], "admin, moderador dos bloqueios, autor, sem bloqueios:");
   igual([a[0].categoria, a[0].motivo, a[0].link], ["bloqueios", "moderador", "#ficha/aviso001"]);
-  if (!a[0].texto.startsWith("Eduarda registrou um bloqueio: Zeferino Teste (aviso001)")) throw new Error(a[0].texto);
+  if (!a[0].texto.startsWith("Eduarda registrou uma restrição: Zeferino Teste ·")) throw new Error(a[0].texto);   // 009x4 e 009u: "restrição" e sem o código
   // a responsável já recebe a tratativa (aviso pessoal): um aviso só
   igual(m.length, 1, "responsável:");
 });
@@ -75,7 +79,7 @@ await t("comentário sobre o entregador avisa o responsável da cidade da ficha"
   await rpc(sup, "comentar_entregador", { p_id_app: "aviso001", p_texto: "Ligou pedindo para ser liberado." });
   const m = await novos(mon);
   igual([m.length, m[0]?.categoria, m[0]?.motivo, m[0]?.cidade], [1, "comentarios", "cidade", "LAGARTO - SE"]);
-  if (!m[0].texto.includes("comentou sobre Zeferino Teste (aviso001): Ligou pedindo")) throw new Error(m[0].texto);
+  if (!m[0].texto.includes("comentou sobre Zeferino Teste: Ligou pedindo")) throw new Error(m[0].texto);   // 009u: sem o código
 });
 
 let cad;
@@ -178,7 +182,8 @@ await t("tela de Avisos: filtros, busca, só não lidos e páginas", async () =>
   if (tudo.itens.length < 5) throw new Error("poucos avisos: " + tudo.itens.length);
   const bq = await rpc(admin, "listar_avisos", { p_filtro: "bloqueios" });
   igual(bq.itens.every((x) => x.categoria === "bloqueios"), true);
-  igual((await rpc(admin, "listar_avisos", { p_busca: "aviso002" })).itens.every((x) => x.texto.includes("aviso002")), true);
+  const porId = (await rpc(admin, "listar_avisos", { p_busca: "aviso002" })).itens;   // 009u: o código sai do texto, a busca continua pelo id_app
+  igual(porId.length > 0 && porId.every((x) => x.texto.includes("Outro Teste")), true);
   igual((await rpc(admin, "listar_avisos", { p_cidade: "ITABAIANA - SE" })).itens.every((x) => x.cidade === "ITABAIANA - SE"), true);
   igual(tudo.cidades.includes("LAGARTO - SE"), true);
   const p1 = await rpc(admin, "listar_avisos", { p_limite: 2 });
@@ -212,24 +217,10 @@ await t("o suporte também revisa: corrige um registro 'revisar' e confere um ca
   await falha(rpc(semBq, "corrigir_bloqueio", { p_bloqueio: b, p_id_app: "rev00009", p_nome: "X", p_cidade: "LAGARTO - SE", p_motivo: "x" }));
 });
 
-await t("casos guardados: CPF repetido com outro nome volta a ser só a recusa, sem caso nem aviso", async () => {
-  const CPF = "52998224725";
-  await rpc(semBq, "enviar_cadastro", { p_id_app: "cpfx0001", p_cpf: CPF, p_cidade: "LAGARTO - SE", p_nome: "Primeiro Nome" });
-  const antes = (await um("select count(*)::int n from casos")).n;
-  await marca();
-  await falha(rpc(semBq, "enviar_cadastro", { p_id_app: "cpfx0002", p_cpf: CPF, p_cidade: "LAGARTO - SE", p_nome: "Outro Nome" }), "já está cadastrado");
-  igual([(await um("select count(*)::int n from casos")).n, (await novos(admin)).length], [antes, 0]);
-});
-
-await t("casos: religando o interruptor, a 008 volta a abrir o caso", async () => {
-  await db.query("update parametros_casos set ligado = true where unico");
-  const r = await rpc(semBq, "enviar_cadastro", { p_id_app: "cpfx0003", p_cpf: "52998224725", p_cidade: "LAGARTO - SE", p_nome: "Mais Um Nome" });
-  await db.query("update parametros_casos set ligado = false where unico");
-  igual([r.id, typeof r.caso], [null, "string"]);
-});
+// 009s: sem CPF guardado, os testes de casos por CPF repetido saíram (os casos continuam guardados; ver test:espiao, que fica na 008)
 
 await t("internas não ficam expostas; anon não chama nada novo", async () => {
-  const r = await um(`select has_function_privilege('authenticated', 'public.avisar_registro(text,text,text,text,text,boolean)', 'execute') a,
+  const r = await um(`select has_function_privilege('authenticated', 'public.avisar_registro(text,text,text,text,text,boolean,boolean)', 'execute') a,
     has_function_privilege('authenticated', 'public.notificar(uuid,text,text)', 'execute') b,
     has_function_privilege('anon', 'public.listar_avisos(text,text,text,boolean,bigint,integer)', 'execute') c,
     has_function_privilege('authenticated', 'public.pedir_cidade(text)', 'execute') d`);

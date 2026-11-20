@@ -1,6 +1,7 @@
 // Testes da 009u (supabase/009u-sem-cpf-nos-textos.sql): CPF em texto livre sai na gravação; quem_e para o adicional.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node mesa.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -66,6 +67,7 @@ const antes = await rpc(admin, "entregadores_atencao");
 // a 009u, duas vezes (pode rodar de novo)
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009u-sem-cpf-nos-textos.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009v-tarefas-abertas.sql"));
+await completar(db, "009v-tarefas-abertas.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 await t("AT1: entregadores_atencao() nova devolve exatamente o mesmo que a antiga", async () => {
   const depois = await rpc(admin, "entregadores_atencao");
@@ -112,9 +114,10 @@ await t("avisos sem o código do entregador: o nome fica, o código sai, sem nom
     ($1, 'Seu cadastro ID abc99999 foi aprovado por Monitor.'), ($1, 'Suporte enviou um cadastro: xyz12345 · LAGARTO - SE'),
     ($1, '👏 Suporte agradeceu por: Ligar (2 vezes)')`, [para]);
   const l = (await db.query("select texto, id_app from notificacoes where para = $1 order by id desc limit 4", [para])).rows.reverse();
-  igual(l, [{ texto: "Suporte registrou um bloqueio: Fulano de Tal · Atraso · LAGARTO - SE", id_app: "mesa0001" },
-    { texto: "Seu cadastro sem nome foi aprovado por Monitor.", id_app: "abc99999" },
-    { texto: "Suporte enviou um cadastro: sem nome · LAGARTO - SE", id_app: "xyz12345" },
+  igual(l, [{ texto: "Suporte registrou uma restrição: Fulano de Tal · Atraso · LAGARTO - SE", id_app: "mesa0001" },   // 009x4: "restrição"
+    // 009x/009x2 (PB-6): o código só sai quando é de um entregador conhecido (ficha, cadastro ou restrição); estes dois não são
+    { texto: "Seu cadastro ID abc99999 foi aprovado por Monitor.", id_app: null },
+    { texto: "Suporte enviou um cadastro: xyz12345 · LAGARTO - SE", id_app: null },
     { texto: "Suporte agradeceu por: Ligar (2 vezes)", id_app: null }]);
 });
 
@@ -137,7 +140,7 @@ await t("009v: aviso que só trazia o ID mostra o nome do cadastro (e 'sem nome'
     ($1, 'Seu cadastro ID 6aeff32c5ac2 foi aprovado por Monitor.'), ($1, 'Cadastro novo em LAGARTO - SE: ID zz9sem9nome, enviado por Maria.')`, [para]);
   const l = (await db.query("select texto from notificacoes where para = $1 order by id desc limit 3", [para])).rows.map((x) => x.texto).reverse();
   igual(l, ["Cadastro novo em LAGARTO - SE: Paulo Mauricio da Silva, enviado por Maria.", "Seu cadastro Paulo Mauricio da Silva foi aprovado por Monitor.",
-    "Cadastro novo em LAGARTO - SE: sem nome, enviado por Maria."]);
+    "Cadastro novo em LAGARTO - SE: ID zz9sem9nome, enviado por Maria."]   /* 009x2: ID desconhecido fica */);
 });
 await t("009v: os avisos que a 009u deixou com 'sem nome' ganham o nome ao rodar a 009v", async () => {
   const para = (await um("select user_id from membros where email = $1", [admin.email])).user_id;
@@ -145,6 +148,7 @@ await t("009v: os avisos que a 009u deixou com 'sem nome' ganham o nome ao rodar
   await db.query("insert into notificacoes (para, texto, id_app) values ($1, 'Cadastro novo em LAGARTO - SE: sem nome, enviado por Maria.', '6aeff32c5ac2')", [para]);
   await db.query("alter table notificacoes enable trigger aac_aviso_sem_id");
   await db.query(arquivo("../supabase/009v-tarefas-abertas.sql"));
+  await completar(db, "009v-tarefas-abertas.sql", { manterRegras: true });
   igual((await um("select texto from notificacoes where para = $1 order by id desc limit 1", [para])).texto, "Cadastro novo em LAGARTO - SE: Paulo Mauricio da Silva, enviado por Maria.");
 });
 

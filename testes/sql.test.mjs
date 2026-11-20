@@ -2,6 +2,7 @@
 // Cada chamada roda como o Supabase rodaria: papel "authenticated" + JWT da pessoa em request.jwt.claims.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node sql.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -11,6 +12,7 @@ await db.connect();
 await db.query(readFileSync(new URL("./supabase-local.sql", import.meta.url), "utf8"));
 await db.query(readFileSync(new URL("../supabase/schema.sql", import.meta.url), "utf8"));
 await db.query(readFileSync(new URL("../supabase/002-bloqueios.sql", import.meta.url), "utf8"));
+await completar(db, "002-bloqueios.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -100,37 +102,38 @@ await t("leitura direta da tabela membros: suporte só vê a si", async () => {
 
 // ---------- envio ----------
 let c1, c2, c3, c4;
-await t("suporte envia cadastros (normaliza CPF, ID e cidade)", async () => {
-  c1 = await rpc(sup1, "enviar_cadastro", { p_id_app: "1a2b3c4d5e6f", p_cpf: "529.982.247-25", p_cidade: "  lagarto  -  se ", p_observacao: "  ok " });
-  c2 = await rpc(sup1, "enviar_cadastro", { p_id_app: "abc12345", p_cpf: null, p_cidade: "RECIFE - PE" });
-  c3 = await rpc(sup2, "enviar_cadastro", { p_id_app: null, p_cpf: "11144477735", p_cidade: "ITABAIANA - SE" });
-  c4 = await rpc(sup2, "enviar_cadastro", { p_id_app: "zzz99881", p_cpf: null, p_cidade: "RECIFE - PE" });
+// 008: enviar_cadastro devolve {id, ...}; 009s: o ID é obrigatório e o CPF não é guardado
+const enviar = async (quem, a) => (await rpc(quem, "enviar_cadastro", a)).id;
+await t("suporte envia cadastros (normaliza ID e cidade; o CPF não é guardado, 009s)", async () => {
+  c1 = await enviar(sup1, { p_id_app: "1a2b3c4d5e6f", p_cpf: "529.982.247-25", p_cidade: "  lagarto  -  se ", p_observacao: "  ok " });
+  c2 = await enviar(sup1, { p_id_app: "abc12345", p_cpf: null, p_cidade: "RECIFE - PE" });
+  c3 = await enviar(sup2, { p_id_app: "cpf00003", p_cpf: "11144477735", p_cidade: "ITABAIANA - SE" });
+  c4 = await enviar(sup2, { p_id_app: "zzz99881", p_cpf: null, p_cidade: "RECIFE - PE" });
   const [r] = await db.query("select cpf, cidade, observacao from cadastros where id = $1", [c1]).then((x) => x.rows);
-  igual([r.cpf, r.cidade, r.observacao], ["52998224725", "LAGARTO - SE", "ok"]);
-});
-await t("CPF repetido é bloqueado, mesmo para outra pessoa", async () => {
-  const e = await falha(rpc(sup2, "enviar_cadastro", { p_id_app: null, p_cpf: "52998224725", p_cidade: "LAGARTO - SE" }), "Este CPF já está cadastrado");
-  if (!e.message.includes("Aguardando análise")) throw new Error(e.message);
+  igual([r.cpf, r.cidade, r.observacao], [null, "LAGARTO - SE", "ok"]);
 });
 await t("ID repetido é bloqueado (maiúsculas não importam)", () => falha(rpc(sup2, "enviar_cadastro", { p_id_app: "ABC12345", p_cpf: null, p_cidade: "RECIFE - PE" }), "Este ID já está cadastrado"));
 await t("CPF inválido é recusado", () => falha(rpc(sup1, "enviar_cadastro", { p_id_app: null, p_cpf: "123.456.789-00", p_cidade: "RECIFE - PE" }), "CPF inválido"));
-await t("sem ID e sem CPF é recusado", () => falha(rpc(sup1, "enviar_cadastro", { p_id_app: "", p_cpf: "", p_cidade: "RECIFE - PE" }), "Preencha o ID"));
+await t("sem ID é recusado, mesmo com CPF (009s)", async () => {
+  await falha(rpc(sup1, "enviar_cadastro", { p_id_app: "", p_cpf: "", p_cidade: "RECIFE - PE" }), "Preencha o ID");
+  await falha(rpc(sup2, "enviar_cadastro", { p_id_app: null, p_cpf: "52998224725", p_cidade: "LAGARTO - SE" }), "Preencha o ID");
+});
 await t("cidade fora do formato é recusada", () => falha(rpc(sup1, "enviar_cadastro", { p_id_app: "qqq11111", p_cpf: null, p_cidade: "Recife" }), "CIDADE - UF"));
 await t("ninguém grava direto na tabela", () => falha(sqlComo(admin, "insert into public.cadastros (cidade, id_app, enviado_por) values ('X - SE','abcd1234', gen_random_uuid())"), "permission denied"));
 
 // ---------- leitura ----------
-await t("suporte vê só os próprios pendentes", async () => {
-  igual((await rpc(sup1, "listar_cadastros", { p_escopo: "pendentes" })).map((c) => c.id).sort(), [c1, c2].sort());
-  igual((await rpc(sup2, "listar_cadastros", { p_escopo: "todos" })).length, 2, "escopo todos para suporte:");
+await t("suporte vê os cadastros de todos (009x6, só leitura)", async () => {
+  igual((await rpc(sup1, "listar_cadastros", { p_escopo: "pendentes" })).map((c) => c.id).sort(), [c1, c2, c3, c4].sort());
+  igual((await rpc(sup2, "listar_cadastros", { p_escopo: "todos" })).length, 4, "escopo todos para suporte:");
 });
 await t("monitorador vê todos os pendentes, com nome de quem enviou", async () => {
   const l = await rpc(monitor, "listar_cadastros", { p_escopo: "pendentes" });
   igual(l.length, 4);
   igual(l.find((c) => c.id === c3).enviado_por_nome, "Suporte Dois");
 });
-await t("leitura direta: suporte não enxerga cadastros dos outros", async () => {
-  igual((await sqlComo(sup1, "select count(*)::int n from public.cadastros"))[0].n, 2);
-  igual((await sqlComo(sup1, "select count(*)::int n from public.vw_cadastros"))[0].n, 2);
+await t("leitura direta: suporte enxerga os cadastros de todos (009x6)", async () => {
+  igual((await sqlComo(sup1, "select count(*)::int n from public.cadastros"))[0].n, 4);
+  igual((await sqlComo(sup1, "select count(*)::int n from public.vw_cadastros"))[0].n, 4);
   igual((await sqlComo(monitor, "select count(*)::int n from public.vw_cadastros"))[0].n, 4);
 });
 
@@ -149,7 +152,7 @@ await t("monitorador reprova → aguardando novo contato", async () => {
 await t("aguardando contato não pode ser reprovado de novo", () => falha(rpc(monitor, "decidir", { p_cadastro: c1, p_acao: "reprovar", p_motivo: "Outro", p_detalhe: "x" }), "Não é possível reprovar"));
 await t("aguardando contato pode ser aprovado", async () => {
   await rpc(monitor, "decidir", { p_cadastro: c1, p_acao: "aprovar" });
-  igual((await rpc(sup1, "listar_cadastros", { p_escopo: "pendentes" })).map((c) => c.id), [c2], "sai dos pendentes:");
+  igual((await rpc(sup1, "listar_cadastros", { p_escopo: "pendentes" })).map((c) => c.id).sort(), [c2, c3, c4].sort(), "sai dos pendentes:");
 });
 await t("aprovado não pode ser encerrado", () => falha(rpc(admin, "decidir", { p_cadastro: c1, p_acao: "encerrar", p_motivo: "Outro", p_detalhe: "x" }), "Não é possível encerrar"));
 await t("encerrar direto da análise, com motivo de encerramento", async () => {

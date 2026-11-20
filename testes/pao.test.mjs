@@ -2,6 +2,7 @@
 // tarefa opcional, aviso da decisão, histórico do ID, busca rápida e as funções de menos tráfego.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node pao.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -12,6 +13,7 @@ const arquivo = (f) => readFileSync(new URL(f, import.meta.url), "utf8");
 for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/002-bloqueios.sql", "../supabase/003-entregadores.sql",
   "../supabase/004-atividades-registros.sql", "../supabase/005-analises-anexos.sql", "../supabase/006-equipe-previsao-atencao.sql",
   "../supabase/007-pao-quentinho.sql", "../supabase/007-pao-quentinho.sql"]) await db.query(arquivo(f));
+await completar(db, "007-pao-quentinho.sql", { manterRegras: true });   // A7-04: e todas as migrações que vieram depois
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
@@ -51,7 +53,7 @@ const infr = (await um("select id from infracoes where not leve order by id limi
 const meusIds = async (p) => (await db.query("select user_id from membros where email = $1", [p.email])).rows[0].user_id;
 
 await t("cadastro completo: sem marca e sem tarefa", async () => {
-  const id = await rpc(sup, "enviar_cadastro", { p_id_app: "comp0001", p_cpf: null, p_cidade: "lagarto - se", p_nome: "  Ana   Souza " });
+  const id = (await rpc(sup, "enviar_cadastro", { p_id_app: "comp0001", p_cpf: null, p_cidade: "lagarto - se", p_nome: "  Ana   Souza " })).id;   // 008: devolve {id, ...}
   const c = await um("select nome from cadastros where id = $1", [id]);
   igual(c.nome, "Ana Souza");
   const l = (await rpc(sup, "listar_cadastros", { p_escopo: "meus" })).find((x) => x.id === id);
@@ -61,7 +63,7 @@ await t("cadastro completo: sem marca e sem tarefa", async () => {
 
 let incompleto;
 await t("cadastro sem nome: marca revisar e uma tarefa (normal p/ admin, opcional p/ os outros)", async () => {
-  incompleto = await rpc(sup, "enviar_cadastro", { p_id_app: "semn0001", p_cpf: null, p_cidade: "LAGARTO - SE" });
+  incompleto = (await rpc(sup, "enviar_cadastro", { p_id_app: "semn0001", p_cpf: null, p_cidade: "LAGARTO - SE" })).id;   // 008: devolve {id, ...}
   const l = (await rpc(sup, "listar_cadastros", { p_escopo: "meus" })).find((x) => x.id === incompleto);
   igual(l.revisar, "falta o nome do entregador"); igual(l.tarefa_aberta, true);
   const a = await um("select * from atividades where cadastro_id = $1", [incompleto]);
@@ -103,7 +105,7 @@ await t("aprovado com ID e nome: a ficha nasce; quem enviou é avisado (quem dec
   const f = await um("select nome, cidade from entregadores where id_app = 'semn0001'");
   igual([f.nome, f.cidade], ["Bia Lima", "LAGARTO - SE"]);
   const s = await avisos(sup);
-  igual(s.at(-1), { texto: "Seu cadastro Bia Lima (ID semn0001) foi aprovado por Mateus Lopes.", link: "#ativacao/meus" });
+  igual(s.at(-1), { texto: "Seu cadastro Bia Lima foi aprovado por Mateus Lopes.", link: "#ativacao/meus" });
   igual((await avisos(admin)).length, antes);
 });
 
@@ -112,19 +114,18 @@ await t("desfazer ignora edições e avisa quem enviou; reprovação leva o moti
   const l = (await rpc(admin, "listar_cadastros", { p_escopo: "todos" })).find((x) => x.id === incompleto);
   igual(l.pode_desfazer, true);
   await rpc(admin, "desfazer", { p_cadastro: incompleto });
-  igual((await avisos(sup)).at(-1).texto, "Seu cadastro Bia Lima (ID semn0001) teve a decisão desfeita por Mateus Lopes.");
+  igual((await avisos(sup)).at(-1).texto, "Seu cadastro Bia Lima teve a decisão desfeita por Mateus Lopes.");
   const motivo = (await um("select texto from motivos order by ordem limit 1")).texto;
   await rpc(mon, "decidir", { p_cadastro: incompleto, p_acao: "reprovar", p_motivo: motivo, p_detalhe: "foto" });
-  igual((await avisos(sup)).at(-1).texto, `Seu cadastro Bia Lima (ID semn0001) foi reprovado por Jocimara: ${motivo} (foto).`);
+  igual((await avisos(sup)).at(-1).texto, `Seu cadastro Bia Lima foi reprovado por Jocimara: ${motivo} (foto).`);
   igual((await um("select nome from entregadores where id_app = 'semn0001'")).nome, "Bia Lima", "a ficha fica");
 });
 
 await t("ID com ficha de outro nome: revisar; monitorador marca como revisado; suporte não", async () => {
   await rpc(mon, "registrar_bloqueio", { p_id_app: "ficha001", p_nome: "Carlos Dias", p_cidade: "LAGARTO - SE", p_infracao: infr });
-  const id = await rpc(sup, "enviar_cadastro", { p_id_app: "FICHA001", p_cpf: null, p_cidade: "LAGARTO - SE", p_nome: "Carla Dias" });
+  const id = (await rpc(sup, "enviar_cadastro", { p_id_app: "FICHA001", p_cpf: null, p_cidade: "LAGARTO - SE", p_nome: "Carla Dias" })).id;   // 008: devolve {id, ...}
   igual((await rpc(sup, "ver_cadastro", { p_cadastro: id })).revisar, "o ID já tem ficha com outro nome: Carlos Dias");
-  await falha(rpc(sup, "marcar_cadastro_revisado", { p_cadastro: id }));
-  await rpc(mon, "marcar_cadastro_revisado", { p_cadastro: id });
+  await rpc(sup, "marcar_cadastro_revisado", { p_cadastro: id });   // 008b: o suporte também revisa
   const v = await rpc(sup, "ver_cadastro", { p_cadastro: id });
   igual([v.revisar, v.revisado, v.tarefa_aberta], [null, true, false]);
   // aprovar não sobrescreve a ficha
@@ -133,12 +134,13 @@ await t("ID com ficha de outro nome: revisar; monitorador marca como revisado; s
 });
 
 await t("sugerir tarefa: com pessoa = normal só para ela; sem pessoa = admin + opcional", async () => {
-  const id = await db.query("insert into cadastros (cpf, cidade, enviado_por) values ('52998224725', 'LAGARTO - SE', $1) returning id", [await meusIds(sup)]).then((r) => r.rows[0].id);
-  igual((await rpc(sup, "ver_cadastro", { p_cadastro: id })).revisar, "falta o nome do entregador · falta o ID do entregador");
+  // 009s: todo cadastro novo tem ID; o "antigo" aqui é um sem nome
+  const id = await db.query("insert into cadastros (id_app, cidade, enviado_por) values ('antg0001', 'LAGARTO - SE', $1) returning id", [await meusIds(sup)]).then((r) => r.rows[0].id);
+  igual((await rpc(sup, "ver_cadastro", { p_cadastro: id })).revisar, "falta o nome do entregador");
   igual((await um("select count(*)::int n from atividades where cadastro_id = $1", [id])).n, 0, "cadastro antigo não gera tarefa");
   const tid = await rpc(sup, "sugerir_tarefa_cadastro", { p_cadastro: id, p_para: await meusIds(mon) });
   const a = await um("select opcional, titulo from atividades where id = $1", [tid]);
-  igual([a.opcional, a.titulo], [false, "Completar cadastro: CPF 529.982.247-25 · LAGARTO - SE"]);
+  igual([a.opcional, a.titulo.startsWith("Completar cadastro") && a.titulo.includes("LAGARTO - SE")], [false, true], a.titulo);
   await falha(rpc(sup, "sugerir_tarefa_cadastro", { p_cadastro: id }), "Já existe uma tarefa");
   await db.query("delete from atividades where id = $1", [tid]);
   const t2 = await rpc(sup, "sugerir_tarefa_cadastro", { p_cadastro: id });
@@ -155,8 +157,8 @@ await t("histórico do ID: no Novo cadastro e nos Pendentes; quem não tem bloqu
   const s = await rpc(soAtiv, "historico_id", { p_id_app: "hist0001" });
   igual([s.historico, s.tem_bloqueios_modulo], [null, false]);
   igual((await rpc(sup, "historico_id", { p_id_app: "nada9999" })).historico, null);
-  igual((await rpc(soAtiv, "historico_id", { p_cpf: "529.982.247-25" })).cadastro.situacao, "Aguardando análise");
-  const id = await rpc(sup, "enviar_cadastro", { p_id_app: "hist0001", p_cpf: null, p_cidade: "LAGARTO - SE", p_nome: "Zeferino Teste" });
+  igual((await rpc(soAtiv, "historico_id", { p_cpf: "529.982.247-25" })).cadastro, null);   // 009s: o CPF não é guardado
+  const id = (await rpc(sup, "enviar_cadastro", { p_id_app: "hist0001", p_cpf: null, p_cidade: "LAGARTO - SE", p_nome: "Zeferino Teste" })).id;   // 008: devolve {id, ...}
   const p = (await rpc(mon, "listar_cadastros", { p_escopo: "pendentes" })).find((x) => x.id === id);
   igual(p.historico.bloqueios, 1);
   igual((await rpc(soAtiv, "listar_cadastros", { p_escopo: "meus" })).length, 0);
@@ -168,7 +170,7 @@ await t("busca rápida: fichas só com o módulo de bloqueios; cadastros por ID,
   igual(r.entregadores.map((x) => x.id_app), ["hist0001"]);
   igual(r.cadastros.map((x) => x.id_app), ["hist0001"]);
   igual((await rpc(soAtiv, "busca_rapida", { p_q: "zeferino" })).entregadores, []);
-  igual((await rpc(mon, "busca_rapida", { p_q: "529.982" })).cadastros.length, 1);
+  igual((await rpc(mon, "busca_rapida", { p_q: "529.982" })).cadastros.length, 0);   // 009s: sem CPF guardado
   igual((await rpc(mon, "busca_rapida", { p_q: "da" })).cadastros, [], "menos de 3 letras");
   await falha(rpc(estranho, "busca_rapida", { p_q: "zeferino" }));
 });
@@ -184,7 +186,7 @@ await t("ultima_mudanca sobe a cada escrita; resumo_e_avisos junta tudo", async 
   igual(typeof r.resumo.pedidos_acesso, "number");
   igual(r.resumo.bloqueios_revisar, 0);
   const s = await rpc(sup, "resumo_e_avisos");
-  igual([s.resumo.pedidos_acesso, s.resumo.bloqueios_revisar], [null, null]);
+  igual(s.resumo.pedidos_acesso, null);
   await falha(rpc(estranho, "resumo_e_avisos"));
   await falha(db.query("set role authenticated; update versao_dados set n = 0"), "permission");
   await db.query("reset role");
@@ -201,8 +203,9 @@ await t("histórico de bloqueios paginado no banco, com filtros", async () => {
   igual((await rpc(mon, "listar_bloqueios_pagina", { p_busca: "pessoa 3" })).itens.map((x) => x.id_app), ["pag00003"]);
   igual((await rpc(mon, "listar_bloqueios_pagina", { p_quem: "Planilha" })).total, 5);
   igual((await rpc(admin, "resumo_e_avisos")).resumo.bloqueios_revisar, 2);
-  // suporte só os próprios (RLS)
-  igual((await rpc(sup, "listar_bloqueios_pagina", {})).total, 0);
+  // 009x6: o suporte vê todas (só leitura) e filtra as dele
+  igual((await rpc(sup, "listar_bloqueios_pagina", {})).total, (await rpc(mon, "listar_bloqueios_pagina", {})).total);
+  igual((await rpc(sup, "listar_bloqueios_pagina", { p_meus: true })).total, 0);
   await falha(rpc(soAtiv, "listar_bloqueios_pagina", {}));
 });
 

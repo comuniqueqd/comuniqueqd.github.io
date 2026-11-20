@@ -2,6 +2,7 @@
 // veredito, lupa do detetive e placar do detetive.
 // Uso: DATABASE_URL=postgres://postgres@127.0.0.1:54329/teste node espiao.test.mjs
 import pg from "pg";
+import { completar } from "./carregar-banco.mjs";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 
@@ -12,6 +13,7 @@ const arquivo = (f) => readFileSync(new URL(f, import.meta.url), "utf8");
 for (const f of ["./supabase-local.sql", "../supabase/schema.sql", "../supabase/002-bloqueios.sql", "../supabase/003-entregadores.sql",
   "../supabase/004-atividades-registros.sql", "../supabase/005-analises-anexos.sql", "../supabase/006-equipe-previsao-atencao.sql",
   "../supabase/007-pao-quentinho.sql", "../supabase/008-espionagem.sql", "../supabase/008-espionagem.sql"]) await db.query(arquivo(f));
+// A7-04: este fica só até a 008 de propósito (os casos estão guardados; a 008b desliga o interruptor)
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
 const admin = pessoa("mateuslopesmb@gmail.com", "Mateus Lopes");
