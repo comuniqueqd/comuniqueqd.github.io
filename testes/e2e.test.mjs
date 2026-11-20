@@ -521,14 +521,12 @@ try {
   await m.fill(`${cardL} textarea`, "Provou que a entrega foi feita");
   await m.click(`${cardL} >> text=Confirmar reversão`);
   ok(await esperar(m, "#toast:has-text('Encerramento de Ladrão revertido')"), "encerramento revertido com motivo");
-  ok(await esperar(m, `${cardL} >> text=Encerramento revertido`), "cartão mostra 'Encerramento revertido'");
+  // 009x3 (A5-09): reverter fecha a tarefa de encerramento; o cartão sai de "Bloqueados agora"
+  ok(await m.waitForFunction((sel) => !document.querySelector(sel), cardL, { timeout: 8000 }).then(() => true, () => false), "009x3: revertido sai de Bloqueados agora (a tarefa de encerramento fechou)");
   await ir(m, "#atividades");
-  ok(await esperar(m, "#at-lista >> text=Encerramento de parceria: Ladrão"), "Atividades do monitorador: encerramento pendente");
-  ok((await texto(m, "#at-lista")).includes("cadastro(s) aguardando análise") || true, "atividades lista pendências da ativação");
+  await esperar(m, "#at-lista");
+  ok(!(await texto(m, "#at-lista")).includes("Encerramento de parceria: Ladrão"), "009x3: a tarefa de encerramento revertido não fica pendente nas Atividades");
   await m.screenshot({ path: path.join(PRINTS, "b5-atividades.png"), fullPage: true });
-  await m.click("#at-lista li:has-text('Ladrão') >> text=Marcar como resolvida");
-  await m.click("#at-lista li:has-text('Ladrão') >> text=Confirmar");
-  ok(await esperar(m, "#at-lista >> text=Tudo em dia") || await esperar(m, "#at-lista"), "tratativa resolvida pelas Atividades");
 
   // 14. o antigo Painel de bloqueios agora está nas Análises (008c); consulta e histórico
   await ir(s, "#bloqueios/painel");
