@@ -190,13 +190,16 @@
         el("label", {}, "Código do pedido (sem os números)", pedido),
         el("label", { class: "linha" }, lancado, "Já lancei no sistema (o entregador vai receber)"));
       textoBotao = "Registrar ajuste"; foco = inf;
+      let repetidoOk = null;  // 1.3.3: ajuste repetido, mesmo jeito do adicional (2º clique confirma)
       gravar = async (v, form) => {
         const c = calcular();
         if (!selCid.value) throw new Error("Escolha a cidade.");
         if (!c) throw new Error("Escolha os dois bairros da lista.");
         if (c.bi.id === c.br.id) throw new Error("Os dois bairros são iguais: não há ajuste para registrar.");
         const r = await rpc("registrar_ajuste_bairro", { p_cidade: selCid.value, p_informado: c.bi.nome, p_real: c.br.nome, p_id_app: v.id, p_nome: v.nome || null,
-          p_origem: marcado(form, "origem") || "qd", p_lancado: lancado.checked, p_pedido: limpo(pedido.value) || null, p_motivo: null });
+          p_origem: marcado(form, "origem") || "qd", p_lancado: lancado.checked, p_pedido: limpo(pedido.value) || null, p_motivo: null,
+          ...(repetidoOk === [v.id, c.bi.nome, c.br.nome, limpo(pedido.value)].join("|") ? { p_confirmar: true } : {}) });
+        if (r?.precisa_confirmar) { repetidoOk = [v.id, c.bi.nome, c.br.nome, limpo(pedido.value)].join("|"); throw new Error(r.texto + " Para registrar, clique em Registrar ajuste de novo."); }
         return r?.lancado ? `Ajuste de ${brl(r.valor)} registrado.` : `Ajuste de ${brl(r.valor)} registrado. Ficou nos pendentes até ser lançado.`;
       };
     } else if (acao === "parceiro") {

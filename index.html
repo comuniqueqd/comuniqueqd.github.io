@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009z4d">
+<link rel="stylesheet" href="estilo.css?v=009z5">
 </head>
 <body>
 <a class="pular" href="#conteudo">Ir para o conteúdo</a>
@@ -79,10 +79,6 @@
     <section class="noticias-box parceiros-box" id="inicio-parceiros" aria-label="Parceiros ativados" hidden></section>
     <div id="inicio-cidades"></div>
     <div id="inicio-novidades"></div>
-    <div class="inicio-dados">
-      <div class="inicio-dados-topo"><h3>Seus números</h3><a class="btn link" href="#analises/simples">Ver mais nas Análises</a></div>
-      <div class="modulos-grid" id="modulos-grid"></div>
-    </div>
   </section>
 
   <!-- ===================== ATIVAÇÃO ===================== -->
@@ -107,8 +103,8 @@
   <section class="view" id="v-novo" hidden>
     <h2>Novo cadastro</h2>
     <p class="sub">Depois de enviar, você vai para Pendentes e acompanha a análise.</p>
-    <form class="cad" id="form" novalidate>
-      <p class="sub" style="margin:0">Obrigatório: <strong>ID do entregador</strong> e <strong>cidade</strong>. O ID não pode se repetir. O Comunique não guarda CPF. Com <strong>ID e nome</strong>, a ficha do entregador nasce na aprovação.</p>
+    <form data-foco-inicial class="cad" id="form" novalidate>
+      <p class="sub" style="margin:0">Obrigatório: <strong>ID do entregador</strong> e <strong>cidade</strong>. O ID não pode se repetir. O Comunique não guarda CPF. Com <strong>ID e nome</strong>, a ficha do entregador já nasce no envio.</p>
       <div class="grid2">
         <label for="f-idapp">ID do entregador <span class="hint">Letras e números</span>
           <input id="f-idapp" class="mono" autocomplete="off" spellcheck="false" maxlength="40" placeholder="ID no aplicativo de entregas">
@@ -172,7 +168,7 @@
     <h2>Nova restrição</h2>
     <p class="sub">A ocorrência e o tempo de restrição são calculados automaticamente pelas regras. Confira antes de registrar.</p>
     <div class="two" style="align-items:start">
-      <form class="cad" id="bq-form" novalidate>
+      <form data-foco-inicial class="cad" id="bq-form" novalidate>
         <div class="seg" role="group" aria-label="Tipo de registro" style="justify-self:start">
           <button type="button" data-tipo-bq="normal" aria-pressed="true">Restrição</button>
           <button type="button" data-tipo-bq="leve" aria-pressed="false">Infração leve (aviso)</button>
@@ -197,7 +193,7 @@
         <label for="bq-obs">Observação <span class="hint">Opcional: o que aconteceu, código do pedido…</span>
           <textarea id="bq-obs" maxlength="600"></textarea>
         </label>
-        <label for="bq-comentario">Comentários adicionais sobre o entregador <span class="hint">Opcional: fica no cadastro do entregador e aparece para quem consultar ou registrar este ID depois.</span>
+        <label for="bq-comentario">Comentários adicionais sobre o entregador <span class="hint">Opcional: fica na ficha do entregador e aparece para quem consultar ou registrar este ID depois.</span>
           <textarea id="bq-comentario" maxlength="1500" rows="2"></textarea>
         </label>
         <p class="warn-msg" id="bq-erro" role="alert" hidden></p>
@@ -211,7 +207,7 @@
     <h2>Cadastrar entregador</h2>
     <p class="sub">Cria a ficha do entregador sem precisar de ativação nem de restrição. Os próximos registros deste ID (restrições e infrações leves) já vêm com estes dados.</p>
     <div class="two" style="align-items:start">
-      <form class="cad" id="en-form" novalidate>
+      <form data-foco-inicial class="cad" id="en-form" novalidate>
         <div class="grid2">
           <label for="en-id"><span>ID do entregador <span class="req">*</span></span>
             <input id="en-id" class="mono" autocomplete="off" spellcheck="false" maxlength="40" placeholder="ID no aplicativo de entregas">
@@ -243,7 +239,7 @@
     <p class="sub">O cliente informou um bairro e a entrega terminou em outro? A calculadora mostra quanto falta pagar ao entregador. O entregador recebe o valor do bairro menos a taxa do log.</p>
     <div class="fin-atalho" data-fin-atalho></div>
     <div class="two" style="align-items:start">
-      <form class="cad" id="fe-form" novalidate>
+      <form data-foco-inicial class="cad" id="fe-form" novalidate>
         <label for="fe-cidade"><span>Cidade <span class="req">*</span></span><select id="fe-cidade"></select></label>
         <div class="grid2">
           <label for="fe-informado"><span>Bairro informado pelo cliente <span class="req">*</span></span>
@@ -263,6 +259,7 @@
           </div>
           <label for="fe-motivo">Motivo <select id="fe-motivo"><option value="Cliente informou o bairro errado">Cliente informou o bairro errado</option><option value="Endereço desatualizado no app">Endereço desatualizado no app</option><option value="Outro">Outro</option></select></label>
           <label class="check"><input type="checkbox" id="fe-lancado"> Já lancei no sistema (o entregador vai receber)</label>
+          <div class="pergunta-bairro" id="fe-repetido" role="alert" hidden></div>
           <p class="warn-msg" id="fe-erro" role="alert" hidden></p>
           <div class="actions"><button class="btn primary" type="submit" id="fe-enviar">Registrar ajuste</button><button class="btn" type="reset">Limpar</button></div>
         </fieldset>
@@ -294,7 +291,7 @@
 
   <section class="view" id="v-fe-mensagens" hidden>
     <h2>Mensagens prontas</h2>
-    <p class="sub">Escolha o modelo, preencha o que falta e copie. As mensagens de restrição temporária, encerramento, liberação e infração leve saem prontas no próprio restrição (botão "Gerar mensagem").</p>
+    <p class="sub">Escolha o modelo, preencha o que falta e copie. As mensagens de restrição temporária, encerramento, liberação e infração leve saem prontas no próprio registro da restrição (botão "Gerar mensagem").</p>
     <div class="two" style="align-items:start">
       <form class="cad" id="fe-msg-form" novalidate>
         <label for="fe-msg-modelo">Modelo <select id="fe-msg-modelo"></select></label>
@@ -331,7 +328,7 @@
     <h2>Ativar parceiro</h2>
     <p class="sub">Registre o estabelecimento que você ativou. Cada parceiro conta sozinho nas suas tarefas “Aprovar parceiros” da cidade e nas suas metas.</p>
     <div class="two" style="align-items:start">
-      <form class="panel cad" id="pa-form" autocomplete="off" novalidate style="margin:0">
+      <form data-foco-inicial class="panel cad" id="pa-form" autocomplete="off" novalidate style="margin:0">
         <label><span>Estabelecimento <span class="req">*</span></span><input id="pa-estab" maxlength="150" placeholder="Ex.: Padaria Sol" required></label>
         <label><span>Cidade <span class="req">*</span></span><input id="pa-cidade" list="pa-cidades" maxlength="80" placeholder="CIDADE - UF" required></label>
         <datalist id="pa-cidades"></datalist>
@@ -368,7 +365,7 @@
     <p class="sub">O que foi combinado com o entregador além do valor da entrega. O adicional é o valor combinado menos o valor da entrega.</p>
     <div class="fin-atalho" data-fin-atalho></div>
     <div class="two" style="align-items:start">
-      <form class="cad" id="fi-form" novalidate>
+      <form data-foco-inicial class="cad" id="fi-form" novalidate>
         <div class="grid2">
           <label for="fi-id"><span>ID do entregador <span class="req">*</span></span><input id="fi-id" class="mono" autocomplete="off" spellcheck="false" maxlength="40"><span class="hint" id="fi-quem" aria-live="polite"></span></label>
           <label for="fi-nome">Nome do entregador <span class="hint">Em branco: usa o da ficha.</span><input id="fi-nome" autocomplete="off" maxlength="120"></label>
@@ -459,7 +456,7 @@
 
   <section class="view" id="v-bq-ativos" hidden>
     <h2>Com restrição agora</h2>
-    <p class="sub">Quem está com restrição neste momento (do que libera primeiro para o último) e encerramentos com tratativa pendente. A restrição é retirado automaticamente no fim do prazo.</p>
+    <p class="sub">Quem está com restrição neste momento (do que libera primeiro para o último) e encerramentos com tratativa pendente. A restrição termina sozinha no fim do prazo.</p>
     <div class="toolbar">
       <input id="bq-q-ativos" type="search" placeholder="Buscar por nome, ID ou infração" aria-label="Buscar com restrição">
       <select id="bq-ativos-cidade" aria-label="Filtrar por cidade"><option value="">Todas as cidades</option></select>
@@ -509,7 +506,7 @@
 
   <section class="view" id="v-bq-regras" hidden>
     <h2>Regras de restrição</h2>
-    <p class="sub">Horas vazias = <b>encerramento de parceria</b>. A partir da 3ª ocorrência, a punição é a anterior + o aumento (30% por padrão), a não ser que a 3ª encerre a parceria. “Zera a contagem após” (o atraso usa 60 dias): se passar esse tempo sem a infração, a punição volta a ser a da 1ª, sem apagar o histórico. Mudanças valem para os próximas restrições.</p>
+    <p class="sub">Horas vazias = <b>encerramento de parceria</b>. A partir da 3ª ocorrência, a punição é a anterior + o aumento (30% por padrão), a não ser que a 3ª encerre a parceria. “Zera a contagem após” (o atraso usa 60 dias): se passar esse tempo sem a infração, a punição volta a ser a da 1ª, sem apagar o histórico. Mudanças valem para as próximas restrições.</p>
     <div class="panel"><h3>Infrações (restrições)</h3><div class="tablewrap"><table id="bq-t-regras" class="regras protege-foco"></table></div></div>
     <div class="panel">
       <h3>Infrações leves (avisos)</h3>
@@ -584,7 +581,7 @@
   </section>
   <section class="view" id="v-at-avisos" hidden>
     <h2>Avisos</h2>
-    <p class="sub">O que é para você (tarefas e decisões) e o que acontece nas suas cidades. Moderadores recebem tudo.</p>
+    <p class="sub">O que é para você (tarefas e decisões) e o que acontece nas suas cidades.</p>
     <div class="avisos-config"><div id="av-prefs"></div><div id="av-cidades"></div></div>
     <div class="toolbar avisos-filtros protege-foco">
       <input id="av-q" type="search" placeholder="Buscar nos avisos: nome, ID, cidade, palavra…" aria-label="Buscar nos avisos">
@@ -733,23 +730,23 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="js/base.js?v=009z4d"></script>
-<script src="js/icones.js?v=009z4d"></script>
-<script src="js/inicio.js?v=009z4d"></script>
-<script src="js/ativacao.js?v=009z4d"></script>
-<script src="js/bloqueios.js?v=009z4d"></script>
-<script src="js/entregadores.js?v=009z4d"></script>
-<script src="js/atividades.js?v=009z4d"></script>
-<script src="js/painel.js?v=009z4d"></script>
-<script src="js/avisos.js?v=009z4d"></script>
-<script src="js/analises.js?v=009z4d"></script>
-<script src="js/registros.js?v=009z4d"></script>
-<script src="js/equipe.js?v=009z4d"></script>
-<script src="js/ferramentas.js?v=009z4d"></script>
-<script src="js/financeiro.js?v=009z4d"></script>
-<script src="js/parceiros.js?v=009z4d"></script>
-<script src="js/busca.js?v=009z4d"></script>
-<script src="js/sons.js?v=009z4d"></script>
-<script src="js/agora.js?v=009z4d"></script>
+<script src="js/base.js?v=009z5"></script>
+<script src="js/icones.js?v=009z5"></script>
+<script src="js/inicio.js?v=009z5"></script>
+<script src="js/ativacao.js?v=009z5"></script>
+<script src="js/bloqueios.js?v=009z5"></script>
+<script src="js/entregadores.js?v=009z5"></script>
+<script src="js/atividades.js?v=009z5"></script>
+<script src="js/painel.js?v=009z5"></script>
+<script src="js/avisos.js?v=009z5"></script>
+<script src="js/analises.js?v=009z5"></script>
+<script src="js/registros.js?v=009z5"></script>
+<script src="js/equipe.js?v=009z5"></script>
+<script src="js/ferramentas.js?v=009z5"></script>
+<script src="js/financeiro.js?v=009z5"></script>
+<script src="js/parceiros.js?v=009z5"></script>
+<script src="js/busca.js?v=009z5"></script>
+<script src="js/sons.js?v=009z5"></script>
+<script src="js/agora.js?v=009z5"></script>
 </body>
 </html>

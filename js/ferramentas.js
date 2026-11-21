@@ -72,9 +72,14 @@
   ["#fe-informado", "#fe-real"].forEach((s) => $(s).addEventListener("input", () => renderResultado()));
   form.addEventListener("input", () => { erro.hidden = true; });
   form.addEventListener("reset", () => { erro.hidden = true; setTimeout(() => { $("#fe-cidade").value = F.cidade; renderResultado(); $("#fe-informado").focus(); }); });
+  // 009z5 (A5-23): ajuste de bairro repetido pede confirmação, como o adicional
+  let confirmarRepetido = false;
+  form.addEventListener("reset", () => { confirmarRepetido = false; $("#fe-repetido").hidden = true; });
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     erro.hidden = true;
+    const repetido = $("#fe-repetido"), confirmar = confirmarRepetido;
+    confirmarRepetido = false; repetido.hidden = true;
     const { c, bi, br } = calc();
     const falha = (t) => { erro.textContent = t; erro.hidden = false; };
     if (!bi || !br) return falha("Escolha os dois bairros da lista.");
@@ -85,7 +90,14 @@
     try {
       const r = await rpc("registrar_ajuste_bairro", { p_cidade: c, p_informado: bi.nome, p_real: br.nome, p_id_app: $("#fe-id").value.trim(),
         p_nome: $("#fe-nome").value.trim() || null, p_origem: $("#fe-origem").value, p_lancado: $("#fe-lancado").checked,
-        p_pedido: $("#fe-pedido").value.trim() || null, p_motivo: $("#fe-motivo").value || null });
+        p_pedido: $("#fe-pedido").value.trim() || null, p_motivo: $("#fe-motivo").value || null, ...(confirmar ? { p_confirmar: true } : {}) });
+      if (r?.precisa_confirmar) {
+        repetido.hidden = false;
+        return repetido.replaceChildren(el("p", { style: "margin:0", text: r.texto }),
+          el("div", { class: "actions" },
+            el("button", { class: "btn primary small", type: "button", onclick: () => { confirmarRepetido = true; form.requestSubmit(); } }, "Registrar mesmo assim"),
+            el("button", { class: "btn small", type: "button", onclick: () => { repetido.hidden = true; } }, "Não registrar")));
+      }
       toast(r.lancado ? `Ajuste de ${brl(r.valor)} registrado.` : `Ajuste de ${brl(r.valor)} registrado. Ficou nos pendentes (em Lançamentos) até ser lançado.`);
       form.reset();
       App.carregar();

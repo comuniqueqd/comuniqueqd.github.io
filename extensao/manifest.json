@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Comunique",
   "short_name": "Comunique",
-  "version": "1.3.2",
-  "description": "Avisos do Comunique no ícone e, no painel lateral, bloqueio, ativação, adicional, bairro e parceiro com os dados da tela aberta.",
+  "version": "1.3.3",
+  "description": "Avisos do Comunique no ícone e, no painel lateral, restrição, ativação, adicional, bairro e parceiro com os dados da tela aberta.",
   "icons": {
     "16": "icones/icone-16.png",
     "32": "icones/icone-32.png",

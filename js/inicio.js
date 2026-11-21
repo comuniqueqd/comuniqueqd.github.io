@@ -31,11 +31,11 @@
     try {
       let itens = [];
       if (chave === "atrasadas" || chave === "tratativas") {
-        const l = await App.u.rpc("listar_tarefas", { p_status: "pendente" });
+        const l = await App.u.rpc("listar_tarefas", { p_status: "pendente", p_minhas: true });
         itens = l.filter((t) => t.minha && t.tipo !== "completar_dados" && (chave === "tratativas" || t.atrasada))
           .sort((a, b) => (b.atrasada - a.atrasada) || String(a.criada_em).localeCompare(String(b.criada_em)))
           .map((t) => ({ titulo: t.bloqueio?.nome || t.bloqueio?.nome_entregador || (t.bloqueio?.id_app ? "ID " + t.bloqueio.id_app : "Sem nome"),
-            detalhe: [t.bloqueio?.infracao, t.cidade, t.atrasada ? `atrasada há ${tempo(t.criada_em)}` : `há ${tempo(t.criada_em)}`].filter(Boolean).join(" · "),
+            detalhe: [t.bloqueio?.infracao, t.cidade, t.prazo_horas ? App.u.textoPrazo(new Date(t.criada_em).getTime() + t.prazo_horas * 3600000) : `há ${tempo(t.criada_em)}`].filter(Boolean).join(" · "),
             alerta: t.atrasada,
             acoes: [copiarId(t.bloqueio?.id_app), t.bloqueio?.id_app ? el("button", { class: "btn small", type: "button", onclick: () => App.abrirFicha?.(t.bloqueio.id_app) }, "Ver a ficha") : null,
               el("a", { class: "btn small primary", href: "#bloqueios/tratativas" }, "Tratar")].filter(Boolean) }));
@@ -51,6 +51,18 @@
             alerta: !!a.atrasada,
             acoes: chave === "comigo" ? [el("a", { class: "btn small", href: "#atividades/pendencias" }, "Abrir")]
               : [el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoTira("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Tarefa aceita. Ela está com você.", chave) }, "Eu faço")] }));
+      } else if (chave === "pedidas_por_mim") {
+        // 009z5 (pedido do usuário): as tarefas que eu pedi e ainda não foram concluídas, com a situação de cada uma
+        const l = await (App.listarAtividades ? App.listarAtividades(0) : App.u.rpc("listar_atividades"));
+        itens = l.filter((a) => a.criada_por === S.me.id && ["aberta", "aceita"].includes(a.status) && !a.automatica && !a.sou_participante)
+          .sort((a, b) => String(a.prazo || "9").localeCompare(String(b.prazo || "9")) || String(a.criada_em).localeCompare(String(b.criada_em)))
+          .map((a) => {
+            const com = (a.participantes?.length ? a.participantes.map((x) => x.nome || x) : [a.aceita_por_nome]).filter(Boolean).join(", ");
+            return { titulo: a.titulo, alerta: !!a.atrasada,
+              detalhe: [a.status === "aceita" ? `com ${com || "alguém"}` : (a.sugeridas_nomes?.length ? `esperando ${a.sugeridas_nomes.join(", ")} pegar` : "esperando alguém pegar"),
+                a.cidade, a.prazo ? App.u.textoPrazo(a.prazo) : "sem prazo"].filter(Boolean).join(" · "),
+              acoes: [el("a", { class: "btn small", href: "#atividades/sugeridas" }, "Abrir")] };
+          });
       } else if (chave === "cadastros") {
         const r = await App.u.rpc("listar_cadastros_pagina", { p_pagina: 1, p_por: 200, p_status: "aguardando_analise" });
         itens = (r.itens || []).sort((a, b) => String(a.enviado_em).localeCompare(String(b.enviado_em)))
@@ -90,11 +102,6 @@
   };
 
 
-  // número principal + linha "N na equipe" (ou "N seus") embaixo
-  const numero = (v, rotulo, extra = null, alerta = false) =>
-    el("div", { class: alerta && v ? "alerta" : null }, el("b", { text: v ?? "…" }), el("span", { text: rotulo }),
-      extra ? el("span", { class: "equipe", text: extra }) : null);
-  const naEquipe = (v) => (v == null ? null : `${v} na equipe`);
 
   // "Nova tarefa" abre a tela já com o formulário aberto e o cursor no título
   function abrirSugerir() {
@@ -180,6 +187,7 @@
       staffAtiv() && a?.equipe_aguardando_analise ? { n: a.equipe_aguardando_analise, txt: plural(a.equipe_aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"), href: "#ativacao/pendentes", chave: "cadastros" } : null,
       r?.financeiro_pendentes ? { n: r.financeiro_pendentes, txt: plural(r.financeiro_pendentes, "lançamento seu ainda não lançado no sistema", "lançamentos seus ainda não lançados no sistema"), href: "#financeiro/lancamentos/pendentes", chave: "lancamentos" } : null,
       // 009z4b (pedido do usuário): uma linha só para as tarefas abertas; as pedidas para você aparecem primeiro, com outra cor
+      at?.pedidas_por_mim ? { n: at.pedidas_por_mim, txt: plural(at.pedidas_por_mim, "tarefa que você pediu", "tarefas que você pediu"), href: "#atividades/sugeridas", leve: true, chave: "pedidas_por_mim" } : null,  // 009z5 (pedido do usuário)
       (at?.abertas_para_pegar || at?.para_aceitar) ? { n: Math.max(at.abertas_para_pegar || 0, at.para_aceitar || 0), txt: plural(Math.max(at.abertas_para_pegar || 0, at.para_aceitar || 0), "tarefa aberta", "tarefas abertas"), href: "#atividades/sugeridas", chave: "abertas" } : null,
     ].filter(Boolean);
     // 009y1f (pedido do usuário): "Ver" abre uma tira logo abaixo com a prévia do que é preciso fazer (até 5), sem sair da tela
@@ -191,7 +199,8 @@
         el("button", { class: "btn small" + (x.leve || aberta ? "" : " primary"), type: "button", "aria-expanded": aberta ? "true" : "false",
           onclick: () => { tiraAberta = aberta ? null : x.chave; if (!aberta) buscarTira(x.chave); App.render(); } }, aberta ? "Fechar" : "Ver"),
         aberta ? tira(x) : null);
-    }) : [el("li", { class: "nada" }, el("span", { text: "Nada esperando por você agora." }))]));
+    }) : !r ? [el("li", { class: "nada carregando" }, App.u.esqueleto(3))]  // 009z5 (A3-20): enquanto o resumo não chega, esqueleto (não "Nada esperando")
+       : [el("li", { class: "nada" }, el("span", { text: "Nada esperando por você agora." }))]));
     renderPassos();
     $("#inicio-acoes").replaceChildren(...(App.agora?.botoes() || []));
 
@@ -220,34 +229,7 @@
     ].filter(Boolean);
     $("#inicio-funcoes").replaceChildren(...fn);
 
-    // ---------- números (mais discretos) ----------
-    const cards = [];
-    cards.push(el("a", { class: "modulo-card", href: "#ativacao/" + (staffAtiv() ? "pendentes" : "historico"), id: "card-ativacao" },
-      el("h3", { text: "Ativação de entregadores" }),
-      el("div", { class: "numeros" }, staffAtiv()
-        ? [numero(a?.equipe_aguardando_analise, "aguardando análise", a ? `${a.meus_aguardando_analise} enviados por você` : null),
-           numero(a?.equipe_aguardando_contato, "aguardando novo contato")]
-        : [numero(a?.meus_aguardando_analise, "seus aguardando análise", naEquipe(a?.equipe_aguardando_analise)),
-           numero(a?.meus_aguardando_contato, "seus aguardando novo contato", naEquipe(a?.equipe_aguardando_contato))])));
-    if (S.me.papel_bloqueios) {
-      cards.push(el("a", { class: "modulo-card bloq", href: "#bloqueios/" + (staffBloq() ? "tratativas" : "historico"), id: "card-bloqueios" },
-        el("h3", { text: "Restrições" }),
-        el("div", { class: "numeros" }, staffBloq()
-          ? [numero(b?.equipe_bloqueados_agora, "com restrição agora", b ? `${b.meus_bloqueados_agora} registrados por você` : null),
-             numero(b?.tratativas_pendentes, S.me.papel_bloqueios === "moderador" ? "tratativas pendentes" : "tratativas para você", naEquipe(b?.equipe_tratativas_pendentes)),
-             b?.tratativas_atrasadas ? numero(b.tratativas_atrasadas, `atrasadas (mais de ${r.prazo_tratativa_horas ?? 32} h)`, null, true) : null,
-             b?.atencao ? numero(b.atencao, "entregadores de atenção") : null]
-          : [numero(b?.meus_bloqueados_agora, "seus entregadores com restrição agora", naEquipe(b?.equipe_bloqueados_agora)),
-             numero(b?.tratativas_pendentes, "suas tratativas em andamento", naEquipe(b?.equipe_tratativas_pendentes)),
-             b?.atencao ? numero(b.atencao, "entregadores de atenção") : null])));
-    }
-    cards.push(el("a", { class: "modulo-card ativ", href: "#atividades/pendencias", id: "card-atividades" },
-      el("h3", { text: "Atividades" }),
-      el("div", { class: "numeros" },
-        numero(App.modulos.atividades?.totalPendencias?.(), "pendências"),
-        numero(at?.para_aceitar, "sugeridas esperando aceite"),
-        numero(S.notif?.nao_lidas, "avisos novos"))));
-    $("#modulos-grid").replaceChildren(...cards);
+    // 009z5 (pedido do usuário): o bloco "Seus números" saiu (repetia o que está em "Precisa de você" e nas Análises)
 
     // 009w (pedido do usuário): no lugar da faixa, só um botão discreto que abre o histórico ("O que há de novo")
     const nv = App.novidades;

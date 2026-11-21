@@ -1,8 +1,12 @@
 # 009z (A7-11): a cada envio, o GitHub roda os testes do banco, o site inteiro (e2e) e a extensão.
 # Usa um Postgres de mentira só do teste (sem dado real e sem senha de verdade) e o Chromium do Playwright.
+# 009z5 (A13-21/A7-27): roda uma vez por envio (só na main e nos pedidos de mudança, não de novo no ramo de trabalho)
+# e o site só vai ao ar DEPOIS dos testes passarem (job "publicar"). Para isso valer, o Pages precisa estar em
+# Settings → Pages → Source → "GitHub Actions" (troca feita uma vez pelo dono).
 name: Testes
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 jobs:
@@ -46,3 +50,22 @@ jobs:
           name: prints
           path: testes/prints/
           retention-days: 7
+  publicar:
+    needs: testes
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    continue-on-error: true  # enquanto o Pages não estiver em "GitHub Actions", este passo falha sem deixar os testes vermelhos
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploy
+        uses: actions/deploy-pages@v4

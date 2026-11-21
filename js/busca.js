@@ -118,10 +118,17 @@
   campo.placeholder = "Buscar ID ou nome (Ctrl+K)";
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009z4";
+  const VERSAO = "009z5";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009z5", tema: "Casa certa", itens: [
+      ["Veja a tela inicial mais enxuta", "O bloco “Seus números” saiu (os números estão em “Precisa de você” e nas Análises). Entrou a linha “tarefas que você pediu”, com quem está com cada uma.", "#precisa-lista"],
+      ["Comece a digitar direto", "No computador, os formulários (Nova ativação, Nova restrição, Registrar adicional, Calculadora, Ativar parceiro) já abrem com o cursor no primeiro campo."],
+      ["Confira o ajuste de bairro repetido", "Registrar o mesmo ajuste duas vezes (mesmo ID e pedido, ou mesmos bairros no dia) pergunta antes, como no adicional."],
+      ["Leia um tempo só na tratativa", "O cartão mostra só “vence em…” ou “venceu há…”. Tarefa aguardando terceiro não aparece mais como vencida."],
+      ["Veja tudo o que mudou desde a sua visita", "Quem ficou fora em várias atualizações vê todas aqui, abertas, e não só a última.", "#inicio-novidades button"],
+    ] },
     { versao: "009z4", tema: "A mensagem certa na hora certa", itens: [
       ["Mande a mensagem pela tratativa", "O cartão da tratativa tem “Gerar mensagem”. Depois de copiar, um clique em “Contato feito” já conclui a tratativa.", 'nav.modulos a[data-mod="atividades"]'],
       ["Marque quando retornar ao entregador", "Ao comentar na ficha, escolha “Lembrar de retornar”: o lembrete aparece na sua Minha fila e no sino na hora certa."],
@@ -298,7 +305,7 @@
       ["Sons", "Avisos novos tocam um som conforme a urgência (4 níveis; o pedido de ajuda é o mais forte). Em Atividades → Avisos você ouve cada um, desliga o que quiser e liga a notificação do sistema."]] },
     { versao: "009c", tema: "Mensagens prontas e agravante", itens: [
       ["Gerar mensagem", "Depois de registrar uma restrição ou uma leve (e no Histórico), o botão “Gerar mensagem” traz o texto pronto, já com o nome do entregador, o motivo, a regra explicada e o tempo. É só copiar."],
-      ["Restrição temporária", "Nas mensagens ao entregador, o restrição temporária aparece como “restrição temporária”."],
+      ["Restrição temporária", "Nas mensagens ao entregador, a palavra usada é sempre “restrição temporária”."],
       ["Agravante", "Algumas infrações têm agravante na política (ex.: não responder o suporte em 8 horas na retenção). Marque a caixinha no Nova restrição e a punição sobe."],
       ["Avisos rápidos", "Retenção de valores ainda não resolvida? Marque “Não” em “Já foi solucionado?” e ela fica na tela inicial de todos como “Aguardando prestação de contas”, até alguém marcar como resolvido."],
       ["Mensagens prontas", "Em Ferramentas: engajamento de entregadores (3 opções de texto cada) e o primeiro contato com o parceiro, que avisa do PDF e do áudio. Sem o nome do entregador, o “movimento alto” sai para a cidade toda."],
@@ -352,14 +359,21 @@
     let visto = null;
     try { visto = localStorage.getItem("comunique-novidades"); } catch (_) {}
     if (visto === VERSAO) return setTimeout(iniciarTour, 600);  // 009n: janela já vista: o tour pode aparecer
+    // 009z5 (A15-20): todas as versões que a pessoa ainda não viu ficam abertas ("Desde a sua última visita");
+    // quem nunca viu nenhuma (ou tem uma marca desconhecida) vê só a última
+    const ix = VERSOES.findIndex((v) => v.versao === visto);
+    const novas = ix > 0 ? VERSOES.slice(0, ix) : VERSOES.slice(0, 1);
     const [atual, ...antigas] = VERSOES;
+    const outrasNovas = novas.slice(1);
     const bloco = (v, i) => el("div", { class: "bloco-versao" + (i ? " antiga" : "") },
       el("h4", { text: i ? v.tema : `Agora: ${v.tema}` }),   // 009u: sem os códigos internos das versões
       el("ol", { class: "novidades" }, v.itens.map(([t, x, sel]) => el("li", {}, el("b", { text: t + ": " }), x,
         !i && sel ? el("button", { class: "btn link small mostrar-onde", type: "button", onclick: () => { marcarVisto(); d.close(); setTimeout(() => iniciarTour([[sel, t, x]]), 250); } }, "Mostrar onde") : null))));
+    const resto = antigas.slice(outrasNovas.length);
     const d = janela("O que há de novo",
       bloco(atual, 0),
-      antigas.length ? el("details", { class: "versoes-antigas" }, el("summary", { text: `Versões anteriores (${antigas.length})` }), ...antigas.map((v, i) => bloco(v, i + 1))) : null,
+      outrasNovas.length ? el("div", { class: "desde-visita" }, el("h4", { class: "meta", text: "Desde a sua última visita, também mudou:" }), ...outrasNovas.map((v, i) => bloco(v, i + 1))) : null,
+      resto.length ? el("details", { class: "versoes-antigas" }, el("summary", { text: `Versões anteriores (${resto.length})` }), ...resto.map((v, i) => bloco(v, i + 1 + outrasNovas.length))) : null,
       el("div", { class: "actions" }, el("button", { class: "btn primary", type: "button", onclick: () => { marcarVisto(); d.close(); } }, "Entendi")));
     d.addEventListener("close", marcarVisto);  // o e o Esc também contam como visto
     d.addEventListener("close", () => setTimeout(iniciarTour, 300));  // 009n: depois da janela, o tour mostra onde fica o que mudou
@@ -383,7 +397,8 @@
     let visto = null;
     try { visto = localStorage.getItem("comunique-tour"); } catch (_) {}
     if (tourAtivo || (!avulso && visto === TOUR.versao) || document.querySelector("dialog:modal") || !App.u.temPopover) return;
-    const passos = (avulso || TOUR.passos).filter(([sel]) => { const n = document.querySelector(sel); return n && n.offsetParent; });
+    const passos = (avulso || TOUR.passos).map(([sel, t, x]) => [App.alvoVisivel ? App.alvoVisivel(sel) : sel, t, x])
+      .filter(([sel]) => { const n = document.querySelector(sel); return n && n.offsetParent; });
     if (!passos.length) return;
     tourAtivo = true;
     const acabar = () => { if (!avulso) try { localStorage.setItem("comunique-tour", TOUR.versao); } catch (_) {} tourAtivo = false; caixa.remove(); };

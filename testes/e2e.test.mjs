@@ -70,6 +70,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z1-base-firme.sql"),
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z2-funcoes-sem-uso.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z3-mais-rapido.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z4-mensagem-certa.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z5-casa-certa.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -128,7 +129,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009z4"); localStorage.setItem("comunique-tour", "009z4"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009z5"); localStorage.setItem("comunique-tour", "009z5"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -322,8 +323,14 @@ try {
 
   // 10. suporte: tela inicial e registro com prévia da punição
   await ir(s, "#inicio"); await s.reload();
-  ok(await esperar(s, "#card-bloqueios") && await s.isVisible("#card-ativacao") && await s.isVisible("#card-atividades") && await s.isVisible("#card-registros"), "tela inicial com os módulos e Registros");
-  ok(await esperar(s, "#card-ativacao >> text=na equipe"), "tela inicial do suporte: seus números e os da equipe");
+  ok(await esperar(s, "#card-registros") && !(await s.$("#modulos-grid")) && !(await s.$("#card-ativacao")), "009z5: tela inicial sem o bloco \"Seus números\" (Registros continua nos atalhos)");
+  // 009z5 (A1): com mouse/teclado, as telas de formulário abrem com o cursor no 1º campo
+  await s.keyboard.press("Escape").catch(() => {});
+  await s.evaluate(() => document.activeElement?.blur());
+  await ir(s, "#bloqueios/novo");
+  ok(await s.waitForFunction(() => document.activeElement?.closest("#bq-form") != null, null, { timeout: 4000 }).then(() => true, () => false), "009z5: Nova restrição abre com o cursor no 1º campo");
+  ok(!(await texto(s, "body")).match(/recebem tudo|nasce na aprovação|próprio restrição|é retirado automaticamente|os próximas/), "009z5: sem os textos que contradiziam o app");
+  await ir(s, "#inicio");
   ok(!(await s.isVisible("#card-casos")) && await s.isVisible("#card-entregadores"), "tela inicial mostra o cartão de Entregadores (Casos guardados)");
   { const bt = await s.$eval("#inicio-novidades button", (b) => ({ txt: b.textContent.trim(), h: Math.round(b.getBoundingClientRect().height), n: b.parentElement.children.length }));
     ok(bt.txt === "Histórico de atualizações" && bt.n === 1 && bt.h < 50, "009w: no lugar da faixa, só o botão Histórico de atualizações: " + JSON.stringify(bt)); }
@@ -419,6 +426,11 @@ try {
   await s.evaluate(() => App.conferirVersao(true));
   ok(await esperar(s, "#aviso-versao >> text=Saiu uma versão nova do Comunique"), "versão nova publicada: aparece o aviso com Atualizar agora");
   await s.click("#aviso-versao >> text=Depois"); await s.unroute("**/versao.txt*");
+  // 009z5: correção urgente ("silenciosa" na 2ª linha do versao.txt) não mostra o aviso
+  await s.route("**/versao.txt*", (r) => r.fulfill({ contentType: "text/plain", body: "999-urgente\nsilenciosa\n" }));
+  await s.evaluate(() => App.conferirVersao(true)); await s.waitForTimeout(600);
+  ok(!(await s.isVisible("#aviso-versao")), "009z5: correção urgente (silenciosa) não mostra o aviso de versão nova");
+  await s.unroute("**/versao.txt*");
   // 008c: funções em destaque na tela inicial
   { const fns = await s.$$eval("#inicio-funcoes a.funcao", (l) => l.map((x) => x.querySelector("b").textContent));
     ok(JSON.stringify(fns) === JSON.stringify(["Nova ativação", "Nova restrição", "Cadastrar entregador", "Ativar parceiro", "Calculadora de bairro", "Registrar adicional", "Nova tarefa", "Registros"]), "tela inicial: as 8 funções em destaque: " + fns); }
@@ -730,7 +742,7 @@ try {
   await db2.end();
   const a2 = await abrir(admin, "#bloqueios/tratativas");
   const cardAt = "#bq-trat-lista .card.atrasada:has-text('Atrasildo')";
-  ok(await esperar(a2, cardAt) && (await texto(a2, cardAt)).includes("Tratativa atrasada há"), "tratativa com mais de 32 h fica vermelha");
+  ok(await esperar(a2, cardAt) && /Tratativa atrasada[\s\S]*venceu há/.test(await texto(a2, cardAt)) && !(await texto(a2, cardAt)).includes("atrasada há"), "tratativa com mais de 32 h fica vermelha, com um tempo só (009z5: \"venceu há\")");
   await a2.screenshot({ path: path.join(PRINTS, "c1-atrasada.png"), fullPage: true });
   await a2.click(`${cardAt} >> text=Realocar…`);
   await a2.selectOption("dialog.janela select", "mateuslopesmb@gmail.com");
@@ -752,6 +764,13 @@ try {
   await s.check("#at-para label:has-text('Monitor Um') input");
   await s.click("#at-enviar");
   ok(await esperar(s, "#at-sug-lista >> text=Ligar para o restaurante Sabor") && await s.isVisible("#at-sug-lista >> text=abre para todos em"), "atividade sugerida aparece esperando aceite");
+  // 009z5 (pedido do usuário): quem pediu vê, na tela inicial, a linha das tarefas que pediu, com a situação
+  await ir(s, "#inicio"); await s.evaluate(() => App.carregar());
+  ok(await esperar(s, "#precisa-lista li[data-chave=pedidas_por_mim]"), "009z5: tela inicial mostra \"tarefas que você pediu\"");
+  await s.click("#precisa-lista li[data-chave=pedidas_por_mim] button");
+  ok(await esperar(s, "#precisa-lista li[data-chave=pedidas_por_mim] .tira-card:has-text('Ligar para o restaurante Sabor') >> text=esperando"), "009z5: a prévia mostra a tarefa pedida e a situação dela");
+  await s.click("#precisa-lista li[data-chave=pedidas_por_mim] button");
+  await ir(s, "#atividades/sugeridas");
   ok(await s.isVisible("#at-sug-lista .card:has-text('Sabor') >> text=esperando há"), "cartão mostra há quanto tempo espera");
   await s.screenshot({ path: path.join(PRINTS, "c2-sugeridas.png"), fullPage: true });
   await ir(m, "#atividades/pendencias"); await m.reload();
@@ -911,22 +930,22 @@ try {
     await d7.query("select importar_bloqueio('rev00002', 'Nome Velho', 'ITABAIANA - SE', 'Avaria de Produto', now() - interval '120 days', 'Planilha', 'Nome diferente na planilha', '24')");
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
-  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Mande a mensagem pela tratativa"), "janela O que há de novo aparece na primeira vez");
+  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Veja a tela inicial mais enxuta"), "janela O que há de novo aparece na primeira vez");
   // 009y1 (A15-06): só a versão nova aberta; as anteriores recolhidas
   ok(!(await n7.isVisible("dialog.janela >> text=Sino com tira")) && await n7.isVisible("dialog.janela details.versoes-antigas > summary")
       && await n7.isVisible("dialog.janela .mostrar-onde"), "009y1: a janela mostra só a versão nova, com Mostrar onde; as anteriores ficam recolhidas");
   { const hs = await n7.$$eval("dialog.janela .bloco-versao h4", (l) => l.map((x) => x.textContent));
-    ok(hs.length === 35 && hs[0] === "Agora: A mensagem certa na hora certa" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
+    ok(hs.length === 36 && hs[0] === "Agora: Casa certa" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
-  ok(await esperar(n7, "#tour-passo:popover-open >> text=Mande a mensagem pela tratativa") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
+  ok(await esperar(n7, "#tour-passo:popover-open >> text=Veja a tela inicial mais enxuta") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
       && (await n7.getAttribute("#tour-passo", "role")) === "dialog", "009n: tour das novidades abre no 1º passo, com o foco dentro do balão");
   await n7.screenshot({ path: path.join(PRINTS, "f1b-tour.png") });
   await n7.click("#tour-passo >> text=Próximo");
-  ok(await esperar(n7, "#tour-passo >> text=Escreva o aviso geral com um toque"), "009n: o tour passa pelos passos (009y1: saem dos itens da versão)");
+  ok(await esperar(n7, "#tour-passo >> text=Veja tudo o que mudou desde a sua visita"), "009n: o tour passa pelos passos (009y1: saem dos itens da versão)");
   await n7.click("#tour-passo >> text=Entendi");
-  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z4"), "009n: “Entendi” fecha o tour e ele não volta");
+  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z5"), "009n: “Entendi” fecha o tour e ele não volta");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
   ok(!(await n7.isVisible("dialog.janela")), "e não aparece de novo" + ((await n7.isVisible("dialog.janela")) ? ": " + (await n7.textContent("dialog.janela[open]").catch(() => "?")) : ""));
   // suporte envia sem nome: marca revisar e tarefa para o admin (opcional para os outros)

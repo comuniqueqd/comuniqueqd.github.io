@@ -360,7 +360,7 @@
   });
 
   // 009z4 (A16-07): uso das telas e botões, sem saber quem (só o administrador final)
-  const USO_TXT = { aba: "Tela", mensagem: "Mensagem copiada", frase: "Frase pronta", busca: "Busca do topo", paleta: "Busca rápida (Ctrl+K)" };
+  const USO_TXT = { aba: "Tela", mensagem: "Mensagem copiada", frase: "Frase pronta", busca: "Busca do topo", paleta: "Busca rápida (Ctrl+K)", envio: "Registrado", erro: "Erro ao registrar", botao: "Botão" };
   function renderUso() {
     const box = $("#as-uso");
     box.hidden = !S.me?.admin_final;

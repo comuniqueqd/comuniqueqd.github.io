@@ -16,7 +16,7 @@ Tudo o que o painel do desenvolvedor da Chrome Web Store pede, pronto para copia
 ## Ficha da loja
 
 - **Nome:** Comunique
-- **Resumo (até 132 caracteres):** Avisos do Comunique no ícone e, no painel lateral, bloqueio, ativação, adicional e ajuste de bairro com os dados da tela aberta.
+- **Resumo (até 132 caracteres):** Avisos do Comunique no ícone e, no painel lateral, restrição, ativação, adicional e ajuste de bairro com os dados da tela aberta.
 - **Categoria:** Ferramentas de trabalho (Workflow & Planning)
 - **Idioma:** Português (Brasil)
 
@@ -24,7 +24,7 @@ Tudo o que o painel do desenvolvedor da Chrome Web Store pede, pronto para copia
 
 > Extensão de uso interno da equipe de operação que usa o Comunique.
 >
-> • Registrar sem trocar de tela: com a tela de um entregador aberta no painel Quero Log ou no Crisp, o painel lateral da extensão lê o ID, o nome e a cidade e preenche o formulário ali mesmo. Novo bloqueio (escolha o motivo e veja a punição antes de confirmar), Nova ativação, Registrar adicional, Cadastrar entregador e Calculadora de bairro (mostra o ajuste e registra; falta só o código do pedido). Na tela de um estabelecimento no Quero Log, Ativar parceiro com o nome e a cidade. Você confere, muda o que precisar e registra.
+> • Registrar sem trocar de tela: com a tela de um entregador aberta no painel Quero Log ou no Crisp, o painel lateral da extensão lê o ID, o nome e a cidade e preenche o formulário ali mesmo. Nova restrição (escolha o motivo e veja a punição antes de confirmar), Nova ativação, Registrar adicional, Cadastrar entregador e Calculadora de bairro (mostra o ajuste e registra; falta só o código do pedido). Na tela de um estabelecimento no Quero Log, Ativar parceiro com o nome e a cidade. Você confere, muda o que precisar e registra.
 > • Pedir ajuda e ajudar: peça ajuda à equipe pelo painel e aceite os pedidos dos colegas com "Eu ajudo".
 > • Avisos no ícone: mostra quantos avisos novos você tem e manda notificação quando chega algo para você ou quando alguém pede ajuda.
 > • Busca de entregadores por ID ou nome e "Ver no Comunique" ao selecionar um ID em qualquer página (botão direito).
@@ -37,7 +37,7 @@ Tudo o que o painel do desenvolvedor da Chrome Web Store pede, pronto para copia
 | Arquivo | Uso |
 |---|---|
 | `icones/icone-128.png` | Ícone da loja (128×128) |
-| `loja/print-1-bloqueio-no-painel.png` | Captura de tela 1 (1280×800): o Novo bloqueio no painel lateral, preenchido com os dados da tela ao lado (dados fictícios) |
+| `loja/print-1-bloqueio-no-painel.png` | Captura de tela 1 (1280×800): a Nova restrição no painel lateral, preenchido com os dados da tela ao lado (dados fictícios) |
 | `loja/print-2-painel-lateral.png` | Captura de tela 2 (1280×800): o painel lateral com avisos e pedido de ajuda (dados fictícios) |
 | `loja/bloco-promocional-440x280.png` | Bloco promocional pequeno (440×280) |
 
@@ -87,6 +87,7 @@ As imagens são geradas por `testes/prints-extensao.mjs`, só com dados fictíci
 
 | Versão | Data | O que mudou |
 |---|---|---|
+| 1.3.3 | 21/11/2026 | Ajuste de bairro repetido (mesmo ID e pedido, ou mesmos bairros no dia) pede um 2º clique para confirmar, como o adicional; textos da loja e do manifesto dizem "restrição". |
 | 1.2.1 | 14/11/2026 | Abas abertas antes da atualização: o leitor novo entra sozinho (sem recarregar a página) e tira o cartão antigo; botão "↻ Ler a tela de novo" no formulário. |
 | 1.2.2 | 17/11/2026 | Crisp: o nome não aparecia. O leitor procura primeiro "nome"/"nome_entregador" nos dados personalizados e aceita variações do botão de perfil ("Ver perfil", "View profile", elemento que não é botão); sem nome na tela, o painel usa o nome da ficha do Comunique e avisa a origem. |
 | 1.2.0 | 14/11/2026 | Tudo no painel lateral: os botões leem a tela aberta e registram ali mesmo (bloqueio com motivo e prévia, ativação, adicional, cadastrar, calculadora de bairro com registro do ajuste, pedir ajuda); "Eu ajudo" aceita pedidos da equipe; o cartão na página saiu; nome lido do caminho "Lista / Nome" mesmo com outros "Lista" na tela. |

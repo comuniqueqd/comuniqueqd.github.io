@@ -92,14 +92,14 @@
         continue;
       }
       const punicao = App.bloqueios.horasTxt(b.horas);
-      const atraso = t.atrasada ? `Atrasada há ${duracao(t.criada_em).txt} (prazo ${t.prazo_horas} h) · ` : "";
       const fimTrat = t.prazo_horas ? new Date(new Date(t.criada_em).getTime() + t.prazo_horas * 3600000) : null;
+      const atraso = fimTrat ? `${App.u.textoPrazo(fimTrat).replace(/^./, (c) => c.toUpperCase())} · ` : "";  // 009z5 (A5-4): um tempo só
       if (staffBloq() && t.minha) {
         const cx = A.caixa[t.id];
         const nota = cx ? el("textarea", { rows: "2", maxlength: "600", placeholder: "O que foi feito? (opcional)", "aria-label": "Nota da tratativa", oninput: (e) => (cx.texto = e.target.value) }) : null;
         if (nota) nota.value = cx.texto;
         itens.push(item({ modulo: "RESTRIÇÕES", titulo: `${tipo}: ${b.nome}`, estado: t.atrasada ? "atrasada" : "pendente", atrasada: t.atrasada,
-          detalhe: `${atraso}${b.infracao} · ${App.bloqueios.ord(b.ocorrencia)} ocorrência · ${punicao} · ${b.cidade || "sem cidade"} · com ${t.responsavel_nome} · registrado por ${b.registrado_por_nome} há ${duracao(t.criada_em).txt}`,
+          detalhe: `${atraso}${b.infracao} · ${App.bloqueios.ord(b.ocorrencia)} ocorrência · ${punicao} · ${b.cidade || "sem cidade"} · com ${t.responsavel_nome} · registrado por ${b.registrado_por_nome}`,
           acoes: [cx
             ? el("button", { class: "btn approve small", type: "button", onclick: (e) => App.bloqueios.concluir(t.id, cx.texto, e.currentTarget).then(() => { delete A.caixa[t.id]; }) }, "Confirmar")
             : el("button", { class: "btn approve small", type: "button", onclick: () => { A.caixa[t.id] = { texto: "" }; render(); } }, "Marcar como resolvida"),
@@ -136,7 +136,7 @@
       el("p", { class: "meta", style: "margin:0 0 6px", text: "Criadas pelo sistema. Todos participam: cada aprovação na cidade conta, e ela fecha sozinha quando bate a meta. Se não precisar mais, qualquer pessoa conclui antes, com o motivo." }),
       el("div", { class: "queue" }, daEquipe.map(cartaoAtividade))) : null;
     // 009z (M2): "Vence hoje" mostra só o que é seu e vence até o fim do dia (ou já venceu), do mais urgente ao resto
-    const minhasHoje = minhas.filter((a) => a.prazo && venceHoje(a.prazo));
+    const minhasHoje = minhas.filter((a) => a.prazo && !a.aguardando_desde && venceHoje(a.prazo));  // 009z5 (A5-20): pausada não vence
     const tratHoje = itens.filter((x) => x.dataset.hoje);
     const nHoje = minhasHoje.length + tratHoje.length;
     const chave = el("div", { class: "fila-filtro" },
@@ -371,7 +371,7 @@
       // 009j (cartão enxuto): quem criou, quando, cidade, para quem e prazo numa linha só
       el("div", { class: "meta linha-tarefa" },
         `Por ${a.criada_por === S.me.id ? "você" : a.criada_por_nome} · ${dt(a.criada_em)}${a.cidade ? " · " + a.cidade : ""}${a.modo === "registro" ? " · Registro do que já foi feito" : " · " + para}`,
-        a.prazo && a.status !== "concluida" ? el("span", {}, " · Prazo: ", App.u.prazo(a.prazo, a.criada_em)) : null),  // 009z (M2)
+        a.prazo && a.status !== "concluida" ? el("span", {}, " · Prazo: ", a.aguardando_desde ? "parado enquanto aguarda terceiro" : App.u.prazo(a.prazo, a.criada_em)) : null),  // 009z5 (A5-20)  // 009z (M2)
       a.aguardando_desde ? el("div", { class: "bullet aguardando" }, el("span", {}, el("b", { icone: "aguardando" }, "Aguardando terceiro"), ` desde ${dt(a.aguardando_desde)}: ${a.aguardando_motivo}`)) : null,
       a.status === "aceita" && !a.aguardando_desde ? el("div", { class: "bullet pendente" }, el("span", {}, el("b", { text: "Em andamento" }), ` com ${quemEsta} desde ${dt(a.aceita_em)}`, tempos ? el("span", { class: "meta tempos", icone: "tempo" }, tempos) : null)) : null,
       a.pode_entrar ? el("div", { class: "bullet juntos" }, el("span", {}, el("b", { icone: "juntos" }, "Já tem gente trabalhando nela"), ` (${quemEsta}). Dá para entrar junto: as suas aprovações também contam.`)) : null,
@@ -468,7 +468,7 @@
     async carregar(aba) {
       await Promise.all([
         aba === "sugeridas" ? App.painel.carregarRecorrentes() : null,
-        aba === "pendencias" && S.me.papel_bloqueios ? rpc("listar_tarefas", { p_status: "pendente" }).then((d) => (A.tarefas = d)) : null,
+        aba === "pendencias" && S.me.papel_bloqueios ? rpc("listar_tarefas", { p_status: "pendente", p_minhas: staffBloq() }).then((d) => (A.tarefas = d)) : null,  // 009z5 (A2-20): p_minhas só para quem trata; o suporte acompanha as que registrou
         aba === "pendencias" && S.me.papel_bloqueios ? rpc("meus_lembretes").then((d) => (A.lembretes = d)).catch(() => (A.lembretes = [])) : null,  // 009z4 (NF-9)
         listarAtividades(aba === "sugeridas" ? (A.concLimite || 50) + 1 : 0).then((d) => (A.atividades = d)),
         aba === "sugeridas" && !A.tipos ? rpc("tipos_tarefa").then((d) => (A.tipos = d)) : null,

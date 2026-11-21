@@ -1129,3 +1129,17 @@ label.lembrar-sel select { inline-size: auto; }
 .frases-aviso .chip { text-align: start; }
 #as-uso { margin-top: 16px; }
 #as-uso summary { cursor: pointer; font-weight: 600; }
+
+/* ===================== 009z5 "Mesa limpa", passo 1 (base visual; nada muda de lugar) =====================
+   Escala de espaço e de canto, títulos acima do corpo do texto e botões em 3 papéis:
+   principal (verde cheio, um por bloco), secundário (contorno) e terciário (texto). Aprovar = principal. */
+:root { --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --r-pilula: 6px; --r-controle: 10px; --r-lista: 14px; }
+h3 { font-size: 17px; }
+h4 { font-size: 15px; font-weight: 700; }
+.btn, .btn.small { border-radius: var(--r-controle); }
+.btn.primary, .btn.approve { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover, .btn.approve:hover { filter: brightness(1.08); background: var(--accent); border-color: var(--accent); }
+@media (pointer: fine) { .btn { min-height: 36px; } .btn.small { min-height: 32px; } .btn.link, .btn.quiet { min-height: 0; } }
+.btn.small { padding: 5px 12px; }
+input, select, textarea { border-radius: var(--r-controle); }
+a.btn { display: inline-flex; align-items: center; justify-content: center; gap: .35em; }

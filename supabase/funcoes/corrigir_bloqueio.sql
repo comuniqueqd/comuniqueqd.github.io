@@ -1,4 +1,4 @@
--- corrigir_bloqueio(uuid,text,text,text,text): versão atual (todas as migrações até a 009x rodadas), tirada do banco com pg_get_functiondef.
+-- corrigir_bloqueio(uuid,text,text,text,text): versão atual (todas as migrações até a 009z5 rodadas), tirada do banco com pg_get_functiondef.
 -- Esta função foi mudada por "remendo" (troca de texto via pg_get_functiondef) em alguma migração, então o corpo
 -- inteiro não existia escrito em nenhum arquivo. A partir daqui, mudar esta função = criar uma migração nova com
 -- o corpo inteiro (create or replace) e atualizar este arquivo. O teste test:casa confere que o arquivo e o banco
@@ -53,10 +53,10 @@ begin
   end if;
   if mudou then
     perform public.anotar_entregador(v_id, 'alteracao',
-      format('Bloqueio de %s (%s) corrigido. %s', to_char(b.inicio at time zone 'America/Sao_Paulo', 'DD/MM/YYYY'), b.infracao, detalhe), b.id);
+      format('Restrição de %s (%s) corrigida. %s', to_char(b.inicio at time zone 'America/Sao_Paulo', 'DD/MM/YYYY'), b.infracao, detalhe), b.id);
     if lower(v_id) <> lower(b.id_app) then
       perform public.anotar_entregador(b.id_app, 'alteracao',
-        format('Bloqueio de %s (%s) passou para o ID %s. %s', to_char(b.inicio at time zone 'America/Sao_Paulo', 'DD/MM/YYYY'), b.infracao, v_id, detalhe), b.id);
+        format('Restrição de %s (%s) passou para o ID %s. %s', to_char(b.inicio at time zone 'America/Sao_Paulo', 'DD/MM/YYYY'), b.infracao, v_id, detalhe), b.id);
     end if;
   end if;
   return public.json_bloqueio((select x from public.bloqueios x where x.id = b.id));

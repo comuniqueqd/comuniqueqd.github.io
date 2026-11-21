@@ -10,6 +10,7 @@ import os from "node:os";
 import fs from "node:fs";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { completar } from "./carregar-banco.mjs";
 import { iniciarSupabaseFalso } from "./supabase-falso.mjs";
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -17,7 +18,7 @@ const DB = process.env.DATABASE_URL || "postgres://postgres@127.0.0.1:54329/test
 let falhas = 0;
 const ok = (c, msg) => { console.log((c ? "ok     " : "FALHOU ") + msg); if (!c) falhas++; };
 
-// banco: todas as migrações até a 009s
+// banco: todas as migrações (até a 009s aqui, e o resto pelo completar)
 const db = new pg.Client({ connectionString: DB });
 await db.connect();
 await db.query("set client_min_messages = warning");
@@ -29,6 +30,7 @@ for (const f of ["testes/supabase-local.sql", "supabase/schema.sql", "supabase/0
   "supabase/009d3-painel-metas-recorrentes.sql", "supabase/009e-parceiros.sql", "supabase/009f-parceiros-completo.sql",
   "supabase/009g-tarefas-compartilhadas.sql", "supabase/009h-entregador-pelo-lancamento.sql", "supabase/009p-bairros-parecidos.sql",
   "supabase/009s-sem-cpf.sql"]) await db.query(fs.readFileSync(path.join(RAIZ, f), "utf8"));
+await completar(db, "009s-sem-cpf.sql");  // 009z5 (A11-23): e todas as migrações depois dela (o banco de hoje)
 await db.query("insert into cidades (nome) values ('LAGARTO - SE') on conflict do nothing");
 await db.query("update cidades set ativa = true where nome = 'LAGARTO - SE'");
 const um = async (sql, p = []) => (await db.query(sql, p)).rows[0];

@@ -93,9 +93,10 @@
     if (!t) return el("div", { class: "bullet sem", text: b.leve ? "Infração leve: sem tratativa (conta para o limite de leves)." : "Sem tratativa: restrição de menos de 10 h." });
     const tipo = TAREFA[t.tipo] || "Tratativa";
     if (t.status === "pendente") return el("div", { class: "bullet " + (t.atrasada ? "atrasada" : "pendente") }, el("span", {},
-      el("b", { text: t.atrasada ? `${tipo} atrasada há ${duracao(t.criada_em).txt}` : `${tipo} pendente` }),
-      ` com ${t.tipo === "completar_dados" ? "o monitoramento" : t.responsavel_nome} · há ${duracao(t.criada_em).txt}`,
-      t.prazo_horas && t.tipo !== "completar_dados" ? [" · ", App.u.prazo(new Date(new Date(t.criada_em).getTime() + t.prazo_horas * 3600000), t.criada_em)] : null,  // 009z (M2)
+      // 009z5 (A5-4): um tempo só: a contagem do prazo ("vence em…"/"venceu há…"); sem prazo, "há N"
+      el("b", { text: t.atrasada ? `${tipo} atrasada` : `${tipo} pendente` }),
+      ` com ${t.tipo === "completar_dados" ? "o monitoramento" : t.responsavel_nome} · `,
+      t.prazo_horas && t.tipo !== "completar_dados" ? App.u.prazo(new Date(new Date(t.criada_em).getTime() + t.prazo_horas * 3600000), t.criada_em) : `há ${duracao(t.criada_em).txt}`,
       t.realocada_em ? ` · realocada por ${t.realocada_por_nome} em ${dt(t.realocada_em)}` : ""));
     return el("div", { class: "bullet concluida" }, el("span", {},
       el("b", { text: `${tipo} realizada` }),
@@ -203,7 +204,7 @@
         el("label", {}, "Nome do entregador", nome)),
       el("label", {}, "Cidade", cid),
       el("label", {}, "Motivo da correção (obrigatório se alterar algo)", mot),
-      el("p", { class: "meta", style: "margin:0", text: "A punição aplicada e a ocorrência gravada não mudam. A correção fica no histórico da restrição e no cadastro do entregador." }),
+      el("p", { class: "meta", style: "margin:0", text: "A punição aplicada e a ocorrência gravada não mudam. A correção fica no histórico da restrição e na ficha do entregador." }),
       erro,
       el("div", { class: "actions" },
         el("button", { class: "btn primary", type: "button", onclick: (e) => enviar(e.currentTarget, false) }, "Salvar correção"),
@@ -589,7 +590,7 @@
     const erro = v.id.length < 4 ? "Preencha o ID do entregador." : leve ? (!v.inf ? "Escolha o motivo." : "")
       : !v.nome ? "Preencha o nome do entregador." : !v.cidade ? "Escolha a cidade." : !v.inf ? "Escolha a infração."
       : B.previa?.pendencia && B.solucionado == null ? `Diga se já foi solucionado (${B.previa.pendencia.toLowerCase()}).` : "";
-    if (erro) { $("#bq-erro").textContent = erro; $("#bq-erro").hidden = false; return; }
+    if (erro) { $("#bq-erro").textContent = erro; $("#bq-erro").hidden = false; App.uso?.("erro:restricao_campo"); return; }  // 009z5 (A16-20): contagem sem quem
     const btn = $("#bq-enviar"); btn.disabled = true;
     if (leve) {
       try {
@@ -597,8 +598,9 @@
         B.resultado = { ...r, leve: true, id_app: v.id, infracao_id: Number(v.inf), infracao: todasInfracoes().find((i) => String(i.id) === v.inf)?.nome };
         $("#bq-form").reset(); B.previa = null;
         toast(r.gerado ? "Infração leve registrada e restrição normal gerada." : `Infração leve registrada: aplique ${horasTxt(r.horas)}.`);
+        App.uso?.("envio:leve");
         renderNovo(); carregar();
-      } catch (e) { $("#bq-erro").textContent = msgErro(e); $("#bq-erro").hidden = false; }
+      } catch (e) { $("#bq-erro").textContent = msgErro(e); $("#bq-erro").hidden = false; App.uso?.("erro:leve"); }
       finally { btn.disabled = false; }
       return;
     }
@@ -611,9 +613,10 @@
       $("#bq-form").reset(); $("#bq-cidade").value = cidade;
       B.previa = null;
       toast(r.horas == null ? "Encerramento de parceria registrado." : `Restrição registrada: aplique ${horasTxt(r.horas)}.`);
+      App.uso?.("envio:restricao");
       renderNovo();
       carregar();
-    } catch (e) { $("#bq-erro").textContent = msgErro(e); $("#bq-erro").hidden = false; }
+    } catch (e) { $("#bq-erro").textContent = msgErro(e); $("#bq-erro").hidden = false; App.uso?.("erro:restricao"); }
     finally { btn.disabled = false; }
   });
 
@@ -967,7 +970,7 @@
     try {
       await rpc("salvar_infracao", { p_id: id, p_nome: v.nome, p_horas_1a: v.h1 ? Number(v.h1) : null, p_horas_2a: v.h2 ? Number(v.h2) : null,
         p_terceira_encerra: v.t3, p_fator: v.fator, p_janela_dias: v.jan ? Number(v.jan) : null, p_ativa: v.ativa });
-      toast(id ? "Regra atualizada. Vale para os próximas restrições." : "Infração adicionada.");
+      toast(id ? "Regra atualizada. Vale para as próximas restrições." : "Infração adicionada.");
       B.regras = await rpc("regras_bloqueio"); render();
     } catch (e) { toast(msgErro(e)); }
     finally { btn.disabled = false; }

@@ -47,6 +47,7 @@ for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z1-base-firme
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z2-funcoes-sem-uso.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z3-mais-rapido.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z4-mensagem-certa.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z5-casa-certa.sql"));
 // 009z2: confere o acesso como ficou no Supabase antes de devolver, só no teste, as que os testes usam para montar dados
 const semUso = (await db.query(`select p.proname, has_function_privilege('authenticated', p.oid, 'execute') pode from pg_proc p join pg_namespace n on n.oid = p.pronamespace
   where n.nspname = 'public' and p.proname = any($1)`, [["aprovados_e_bloqueios", "salvar_cidade", "salvar_telefone", "sugerir_atividade", "registrar_bloqueio", "assumir_caso", "comentar_caso",
@@ -524,6 +525,62 @@ await t("009z4 (A16-07): uso por dia sem quem usou; resumo só para o administra
   await db.query("begin"); await db.query("set local role authenticated");
   let linhas = -1; try { linhas = (await db.query("select * from uso_dia")).rows.length; } catch (_) { linhas = 0; } finally { await db.query("rollback"); }
   igual(linhas, 0, "sem leitura direta da tabela (RLS sem políticas)");
+});
+
+// ---------- 009z5 "Casa certa" ----------
+await t("009z5 (A5-23): ajuste de bairro repetido pede confirmação; com p_confirmar entra", async () => {
+  await db.query("insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO Z', 5.49, 0.99, '{}'), ('LAGARTO - SE', 'BREJO Z', 8.49, 0.99, '{}') on conflict do nothing");
+  const a = { p_cidade: "LAGARTO - SE", p_informado: "CENTRO Z", p_real: "BREJO Z", p_id_app: "ajz00001", p_nome: "Ajuste Repetido", p_origem: "qd" };
+  const r1 = await rpc(sup, "registrar_ajuste_bairro", a);
+  verdade(!r1.precisa_confirmar && r1.valor > 0, "o 1º entra");
+  const r2 = await rpc(sup, "registrar_ajuste_bairro", a);
+  verdade(r2.precisa_confirmar && /Já existe um ajuste/.test(r2.texto), "o 2º igual no mesmo dia pergunta: " + JSON.stringify(r2).slice(0, 120));
+  const r3 = await rpc(sup, "registrar_ajuste_bairro", { ...a, p_confirmar: true });
+  verdade(!r3.precisa_confirmar && r3.id, "confirmado, entra");
+  igual(Number((await um("select count(*) n from lancamentos_financeiros where id_app = 'ajz00001'")).n), 2, "2 lançamentos");
+});
+
+await t("009z5 (A6-20, A6-21): regras_equipe sem telefone; casos sem leitura pela API", async () => {
+  const r = await rpc(sup, "regras_equipe");
+  verdade(!JSON.stringify(r).includes("telefone"), "nenhum telefone na resposta");
+  const pol = Number((await um("select count(*) n from pg_policy where polrelid::regclass::text in ('casos','casos_comentarios','checklist_casos')")).n);
+  igual(pol, 0, "sem políticas de leitura nos casos");
+  igual((await um("select has_function_privilege('authenticated', 'public.casos_abertos_de(text, text)', 'execute') p")).p, false, "casos_abertos_de fechada");
+});
+
+await t("009z5 (A2-20): listar_tarefas com p_minhas só traz as que a pessoa trata", async () => {
+  for (const quem of [sup, admin]) {
+    const todas = await rpc(quem, "listar_tarefas", { p_status: "pendente" });
+    const minhas = await rpc(quem, "listar_tarefas", { p_status: "pendente", p_minhas: true });
+    verdade(minhas.every((x) => x.minha), "todas as de p_minhas são 'minha'");
+    igual(minhas.length, todas.filter((x) => x.minha).length, "mesma conta que filtrar no front");
+  }
+  igual((await rpc(sup, "listar_tarefas", { p_status: "pendente", p_minhas: true })).length, 0, "o suporte não trata nenhuma");
+});
+
+await t("009z5 (A12-21): correção de restrição anota no feminino", async () => {
+  const ok = (await um("select pg_get_functiondef('public.corrigir_bloqueio(uuid, text, text, text, text)'::regprocedure) d")).d;
+  verdade(/Restrição de %s \(%s\) corrigida/.test(ok) && !/Bloqueio de %s/.test(ok), "texto novo na função");
+});
+
+await t("009z5 (pedido do usuário): resumo conta as tarefas que eu pedi e ainda estão abertas ou com alguém", async () => {
+  const antes = (await rpc(sup, "resumo_inicio")).atividades.pedidas_por_mim;
+  await rpc(sup, "criar_tarefa", { p_tipo: null, p_campos: null, p_titulo: "Conferir a escala de sábado", p_descricao: null });
+  const depois = (await rpc(sup, "resumo_inicio")).atividades.pedidas_por_mim;
+  igual(depois, antes + 1, "uma a mais");
+});
+
+// 009z5 (A13-22): as marcas da versão andam juntas (?v= de todas as tags, versao.txt e VERSAO_APP); e a janela de
+// novidades aponta para o 1º bloco de VERSOES
+await t("009z5 (A13-22): ?v=, versao.txt e VERSAO_APP iguais; VERSAO = 1º bloco das novidades", async () => {
+  const html = arquivo("../index.html"), base = arquivo("../js/base.js"), busca = arquivo("../js/busca.js");
+  const vs = [...new Set([...html.matchAll(/\?v=([\w.-]+)"/g)].map((m) => m[1]))];
+  const txt = arquivo("../versao.txt").trim().split(/\s*\n\s*/)[0];
+  const app = base.match(/const VERSAO_APP = "([^"]+)"/)[1];
+  igual(vs, [txt], "um só ?v= no index.html e igual ao versao.txt");
+  igual(app, txt, "VERSAO_APP = versao.txt");
+  const versao = busca.match(/const VERSAO = "([^"]+)"/)[1], primeiro = busca.match(/const VERSOES = \[\s*\{ versao: "([^"]+)"/)[1];
+  igual(versao, primeiro, "VERSAO = primeiro bloco de VERSOES");
 });
 
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco

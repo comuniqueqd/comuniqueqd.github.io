@@ -90,12 +90,12 @@ await t("operador logístico cadastrado uma vez e usado em várias cidades", asy
   igual(r.operadores.find((o) => o.id === kleber).cidades, 2);
   await falha(rpc(admin, "salvar_operador", { p_id: null, p_nome: "Kleber", p_contato: null }), "Já existe");
 });
-await t("cidade da Quero Delivery tem o próprio responsável; telefone vem do membro", async () => {
+await t("cidade da Quero Delivery tem o próprio responsável; telefone não sai mais para a equipe (009z5)", async () => {
   await rpc(admin, "salvar_telefone", { p_email: mon.email, p_telefone: "79 99999-0000" });
   await rpc(admin, "salvar_cidade_equipe", { p_nome: "lagarto - se", p_gestao: "quero", p_responsavel_email: mon.email, p_operador_id: kleber,
     p_tarifa_inicial: 5.49, p_tarifa_tipo: "km", p_adicional_km: 0.99, p_ativa: true });
   const l = (await rpc(sup, "regras_equipe")).cidades.find((c) => c.nome === "LAGARTO - SE");
-  igual([l.responsavel_nome, l.responsavel_telefone, l.operador_id, Number(l.adicional_km)], ["Jocimara", "79 99999-0000", null, 0.99]);
+  igual([l.responsavel_nome, l.responsavel_telefone, l.operador_id, Number(l.adicional_km)], ["Jocimara", undefined, null, 0.99]);
   await falha(rpc(admin, "salvar_cidade_equipe", { p_nome: "Lagarto", p_gestao: "quero", p_responsavel_email: null, p_operador_id: null, p_tarifa_inicial: null, p_tarifa_tipo: null, p_adicional_km: null, p_ativa: true }), "CIDADE - UF");
 });
 await t("tratativa de cidade de operador vai para o responsável dos operadores; trocar ele leva as pendentes", async () => {

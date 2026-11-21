@@ -297,6 +297,8 @@
     if (m < 1440) { const h = Math.floor(m / 60), r = m % 60; return r ? `${h} h ${r} min` : `${h} h`; }
     const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60); return h ? `${d} d ${h} h` : `${d} d`;
   }
+  // 009z5 (A5-4): o mesmo texto da contagem, para frases montadas como texto ("vence em 2 h"/"venceu há 1 d 4 h")
+  const textoPrazo = (fim) => { const falta = new Date(fim).getTime() - Date.now(); return falta >= 0 ? `vence em ${tempoCurto(falta)}` : `venceu há ${tempoCurto(-falta)}`; };
   function pintarPrazo(span) {
     const fim = new Date(span.dataset.fim).getTime(), ini = span.dataset.inicio ? new Date(span.dataset.inicio).getTime() : null, falta = fim - Date.now();
     const perto = falta >= 0 && (falta < 2 * 3600000 || (ini && falta < 0.25 * (fim - ini)));
@@ -346,7 +348,7 @@
 
   // 009y2 (A12-08): "1 aviso novo" / "3 avisos novos", no lugar de "aviso(s) novo(s)"
   const plural = (n, um, varios) => `${n} ${Number(n) === 1 ? um : varios}`;
-  App.u = { plural, traduzirErro, prazo, atualizarPrazos, restricao, REGRAS_RESTRICAO, semEmoji, progresso, ordenavel, grifar, FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
+  App.u = { plural, traduzirErro, prazo, textoPrazo, atualizarPrazos, restricao, REGRAS_RESTRICAO, semEmoji, progresso, ordenavel, grifar, FUSO, diaChave, copiavel, esqueleto, linhasEsqueleto, $, el, janela, flutuar, flutuarLivre, rolar, temPopover, previsao, onlyDigits, norm, dt, dia, duracao, num, horas, toast, notice, CIDADES, ST, PAPEL, EVENTO, pill, titulo,
             vazio, carregandoEl, rpc, msgErro, tabela, barras, grafico, baixarCSV, papelAtiv, papelBloq };
 
   // ---------- módulos e rotas ----------
@@ -464,8 +466,10 @@
       App.render();
       // o link clicado é recriado na troca e o foco se perderia: leva o foco para o título da tela nova
       if (antes !== nova && (document.activeElement === document.body || !document.activeElement?.isConnected)) {
-        const t = nova?.querySelector("h2");
-        if (t) { t.tabIndex = -1; t.focus({ preventScroll: true }); }
+        // 009z5 (A1): nas telas de formulário, o cursor já vai para o 1º campo (só com mouse/teclado: no celular abriria o teclado sozinho)
+        const campo = matchMedia("(pointer: fine)").matches && primeiroCampo(nova?.querySelector("form[data-foco-inicial]"));
+        if (campo) campo.focus({ preventScroll: true });
+        else { const t = nova?.querySelector("h2"); if (t) { t.tabIndex = -1; t.focus({ preventScroll: true }); } }
       }
     };
     // parte da tela pedida por um link antigo: abre (details) e rola até ela, depois de desenhar
@@ -502,6 +506,13 @@
     // contadores voltam a aparecer na hora (os spans das abas foram recriados)
     for (const [id, n] of Object.entries(App.valores)) App.contador(id, n);
   }
+  // primeiro campo visível e editável de um formulário (009z5)
+  function primeiroCampo(f) {
+    if (!f) return null;
+    return [...f.querySelectorAll("input:not([type=hidden]):not([type=checkbox]):not([type=radio]), select, textarea")]
+      .find((x) => !x.disabled && !x.readOnly && x.offsetParent !== null) || null;
+  }
+  App.u.primeiroCampo = primeiroCampo;
   App.route = route;
   addEventListener("hashchange", route);
 
@@ -574,15 +585,17 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009z4d";
+  const VERSAO_APP = "009z5";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;
     versaoConferida = Date.now();
     try {
       const r = await fetch("versao.txt?t=" + Date.now(), { cache: "no-store" });
-      const v = r.ok ? (await r.text()).trim() : "";
-      if (v && v !== VERSAO_APP && !document.getElementById("aviso-versao")) {
+      // 009z5 (decisão do usuário): correção urgente sai "silenciosa" (2ª linha do versao.txt): sem o aviso; ela entra
+      // quando a pessoa abrir o app de novo. O aviso fica para a versão de terça.
+      const [v, modo] = r.ok ? (await r.text()).trim().split(/\s*\n\s*/) : [""];
+      if (v && v !== VERSAO_APP && modo !== "silenciosa" && !document.getElementById("aviso-versao")) {
         const aviso = el("div", { class: "aviso-versao", id: "aviso-versao", role: "status" },
           el("span", { text: "Saiu uma versão nova do Comunique." }),
           el("button", { class: "btn primary small", type: "button", onclick: () => location.reload() }, "Atualizar agora"),
@@ -644,6 +657,15 @@
   };
   // 009y1 parte 2 (AP-01): no celular, Início · Entregadores · Atividades · Avisos numa barra embaixo e o resto em
   // "Mais" (copiados do menu de cima: mesmo endereço, mesmo número, mesma tela atual). No computador a barra some.
+  // 009z5 (A15-21): no celular o menu de cima some; um seletor dele aponta para o item da barra de baixo (ou para "Mais")
+  App.alvoVisivel = (sel) => {
+    const n = document.querySelector(sel);
+    if (n && n.offsetParent) return sel;
+    if (!sel.startsWith("nav.modulos ")) return sel;
+    const resto = sel.slice("nav.modulos ".length);
+    const k = Object.keys(NA_BARRA).find((x) => NA_BARRA[x] === resto);
+    return `#barra-baixo [data-bb="${k || "mais"}"]`;
+  };
   const NA_BARRA = { inicio: 'a[data-mod="inicio"]', entregadores: 'a[data-grupo="entregadores"]', atividades: 'a[data-mod="atividades"]', avisos: 'a[data-mod="avisos"]' };
   // 009y2 (A12-06): "Ir para o conteúdo" pula o menu sem trocar o endereço (o # é das rotas)
   document.querySelector(".pular")?.addEventListener("click", (e) => {
