@@ -46,6 +46,7 @@ for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009y1e-equipe-se
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z1-base-firme.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z2-funcoes-sem-uso.sql"));
 for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z3-mais-rapido.sql"));
+for (let i = 0; i < 2; i++) await db.query(arquivo("../supabase/009z4-mensagem-certa.sql"));
 // 009z2: confere o acesso como ficou no Supabase antes de devolver, só no teste, as que os testes usam para montar dados
 const semUso = (await db.query(`select p.proname, has_function_privilege('authenticated', p.oid, 'execute') pode from pg_proc p join pg_namespace n on n.oid = p.pronamespace
   where n.nspname = 'public' and p.proname = any($1)`, [["aprovados_e_bloqueios", "salvar_cidade", "salvar_telefone", "sugerir_atividade", "registrar_bloqueio", "assumir_caso", "comentar_caso",
@@ -456,6 +457,73 @@ await t("009z3 (AT8): limpar avisos lidos com mais de 120 dias (conta, apaga, s�
   await rpc(admin, "limpar_avisos_antigos", { p_apagar: true });
   const rest = (await db.query("select texto from notificacoes where para = $1 and texto in ('velho lido', 'velho sem ler', 'novo lido') order by texto", [uSup])).rows.map((x) => x.texto);
   igual(rest, ["novo lido"], "os antigos saíram (desde a 009x5, aviso com mais de 7 dias já conta como lido); o recente fica");
+});
+
+// ---------- 009z4 "A mensagem certa na hora certa" ----------
+await t("009z4 (A16-05): modelos novos existem, sem a palavra bloqueio, e as frases do aviso geral no grupo equipe", async () => {
+  const m = await rpc(sup, "mensagens");
+  for (const c of ["adicional_lancado", "ajuste_bairro", "retencao_prazo", "acordo_confirmacao"]) {
+    const x = m.modelos.find((y) => y.chave === c);
+    verdade(x, "falta " + c);
+    verdade(!/bloquei/i.test(x.texto) && !/cpf/i.test(x.texto), c + " sem bloqueio/CPF");
+  }
+  igual(m.modelos.filter((x) => x.grupo === "equipe").length, 4, "4 frases do aviso geral");
+});
+
+await t("009z4 (NF-9): lembrete no comentário: aparece em meus_lembretes, avisa uma vez quando vence, Feito tira da lista", async () => {
+  await db.query("insert into entregadores (id_app, nome, cidade) values ('lemb1234', 'Joana Lembrete', null) on conflict do nothing");
+  const daqui = new Date(Date.now() + 3600000).toISOString();
+  await rpc(sup, "comentar_entregador", { p_id_app: "LEMB1234", p_texto: "Ligar de novo sobre o repasse", p_lembrar_em: daqui });
+  let erro = ""; try { await rpc(sup, "comentar_entregador", { p_id_app: "lemb1234", p_texto: "x", p_lembrar_em: new Date(Date.now() + 90 * 86400000).toISOString() }); } catch (e) { erro = e.message; }
+  verdade(/60 dias/.test(erro), "recusa lembrete longe demais: " + erro);
+  await rpc(sup, "comentar_entregador", { p_id_app: "lemb1234", p_texto: "Sem lembrete" });   // continua funcionando sem o 3º argumento
+  let l = await rpc(sup, "meus_lembretes");
+  igual(l.length, 1, "um lembrete"); igual(l[0].nome, "Joana Lembrete"); igual(l[0].vencido, false);
+  igual(await rpc(sup, "verificar_lembretes"), 0, "não avisa antes da hora");
+  await db.query("update comentarios_entregador set lembrar_em = now() - interval '1 minute' where id = $1", [l[0].id]);
+  igual(await rpc(sup, "verificar_lembretes"), 1, "avisa quando vence");
+  igual(await rpc(sup, "verificar_lembretes"), 0, "só uma vez");
+  const uSup = (await um("select user_id from membros where email = $1", [sup.email])).user_id;
+  const av = await um("select texto, link from notificacoes where para = $1 and texto like 'Hora de retornar%' order by id desc limit 1", [uSup]);
+  verdade(av && /Joana Lembrete/.test(av.texto) && av.link === "#ficha/lemb1234", "aviso com nome e link: " + JSON.stringify(av));
+  erro = ""; try { await rpc(admin, "concluir_lembrete", { p_id: l[0].id }); } catch (e) { erro = e.message; }
+  verdade(/não encontrado/.test(erro), "outra pessoa não conclui o meu lembrete");
+  await rpc(sup, "concluir_lembrete", { p_id: l[0].id });
+  l = await rpc(sup, "meus_lembretes");
+  igual(l.length, 0, "saiu da lista");
+});
+
+await t("009z4 (AN-6): renovar o pedido de ajuda mantém a hora do pedido e conta as renovações", async () => {
+  await db.query("update avisos_rapidos set resolvido_em = now() where tipo = 'ajuda' and resolvido_em is null");
+  await rpc(sup, "pedir_ajuda", { p_categoria: "monitoramento", p_texto: "teste 009z4" });
+  const a = await um("select id, criado_em from avisos_rapidos where tipo = 'ajuda' and resolvido_em is null order by id desc limit 1");
+  await db.query("update avisos_rapidos set expira_em = now() - interval '1 minute', criado_em = criado_em - interval '15 minutes' where id = $1", [a.id]);
+  const antes = (await um("select criado_em from avisos_rapidos where id = $1", [a.id])).criado_em;
+  await rpc(sup, "renovar_ajuda", { p_id: a.id, p_moderadores: false });
+  const d = await um("select criado_em, renovado_em, renovacoes, expira_em > now() aberto from avisos_rapidos where id = $1", [a.id]);
+  igual(d.criado_em.toISOString(), antes.toISOString(), "hora do pedido não muda");
+  verdade(d.renovado_em && d.renovacoes === 1 && d.aberto, "renovado: " + JSON.stringify(d));
+  const r = await rpc(sup, "resumo_e_avisos");
+  const visto = r.resumo.avisos_rapidos.find((x) => String(x.id) === String(a.id));
+  verdade(visto && visto.renovacoes === 1 && visto.renovado_em, "a tela recebe as renovações");
+  await rpc(sup, "encerrar_aviso_rapido", { p_id: a.id });
+});
+
+await t("009z4 (A16-07): uso por dia sem quem usou; resumo só para o administrador final", async () => {
+  await db.query("delete from uso_dia where dia >= current_date - 1");
+  await rpc(sup, "contar_uso", { p_itens: { "aba:bloqueios/novo": 3, "mensagem:restricao": 1, "NÃO VALE; drop": 5, "busca": "x" } });
+  await rpc(admin, "contar_uso", { p_itens: { "aba:bloqueios/novo": 2, "paleta": 9999 } });
+  const cols = (await db.query("select column_name from information_schema.columns where table_name = 'uso_dia'")).rows.map((x) => x.column_name).sort();
+  igual(cols, ["dia", "qtd", "recurso"], "a tabela não tem coluna de pessoa");
+  let erro = ""; try { await rpc(sup, "uso_resumo"); } catch (e) { erro = e.message; }
+  verdade(/administrador/.test(erro), "suporte não vê: " + erro);
+  const u = await rpc(admin, "uso_resumo", { p_dias: 7 });
+  const q = (k) => u.itens.find((x) => x.recurso === k)?.qtd;
+  igual(q("aba:bloqueios/novo"), 5, "soma das duas pessoas"); igual(q("mensagem:restricao"), 1); igual(q("paleta"), 500, "teto de 500 por envio");
+  verdade(!u.itens.some((x) => /drop|busca/.test(x.recurso)), "chave inválida e valor que não é número ficam de fora");
+  await db.query("begin"); await db.query("set local role authenticated");
+  let linhas = -1; try { linhas = (await db.query("select * from uso_dia")).rows.length; } catch (_) { linhas = 0; } finally { await db.query("rollback"); }
+  igual(linhas, 0, "sem leitura direta da tabela (RLS sem políticas)");
 });
 
 // A7-01: as funções remendadas têm a versão atual escrita em supabase/funcoes/ e ela é igual à do banco

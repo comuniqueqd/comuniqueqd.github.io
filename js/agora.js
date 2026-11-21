@@ -52,8 +52,18 @@
     const chips = el("div", { class: "chips-linha" }, DURACOES.map(([h, t]) => el("button", { class: "chip", type: "button", "data-horas": h, "aria-pressed": String(h === horas),
       onclick: (e) => { horas = h; chips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === e.currentTarget))); } }, t)));
     const erro = erroEl();
+    // 009z4 (A16-05): frases prontas (modelos do grupo "equipe", editáveis em Mensagens prontas)
+    const frases = el("div", { class: "chips-linha frases-aviso", hidden: true });
+    App.mensagens?.carregar().then((m) => {
+      const l = (m?.modelos || []).filter((x) => x.grupo === "equipe");
+      if (!l.length) return;
+      frases.replaceChildren(el("span", { class: "meta", text: "Frases prontas:" }), ...l.map((x) => el("button", { class: "chip", type: "button",
+        onclick: () => { texto.value = x.texto; texto.focus(); App.uso?.("frase:aviso_geral"); } }, x.texto.length > 48 ? x.texto.slice(0, 46) + "…" : x.texto)));
+      frases.hidden = false;
+    }).catch(() => {});
     const d = janela("Aviso geral",
       el("p", { class: "meta", style: "margin-top:0", text: "Fica na tela inicial de todos pelo tempo que você escolher (até 12 h). Você pode encerrar antes." }),
+      frases,
       el("label", {}, "Aviso", texto),
       el("div", {}, el("span", { class: "meta", text: "Fica na tela por" }), chips), erro,
       el("div", { class: "actions" },
@@ -143,7 +153,7 @@
       el("div", { class: "rapido-quem", text: situacao }),
       a.texto ? el("div", { class: "rapido-texto", text: a.texto }) : null,
       a.link ? el("div", { class: "meta" }, "Link/protocolo: ", linkOuProtocolo(a.link)) : null,
-      el("div", { class: "meta", text: `pedido às ${hora(a.criado_em)}` }),
+      el("div", { class: "meta", text: `pedido às ${hora(a.criado_em)}` + (a.renovacoes ? ` · pedido de novo ${a.renovacoes === 1 ? "1 vez" : a.renovacoes + " vezes"}, a última às ${hora(a.renovado_em)}` : "") }),
       botoes.length ? el("div", { class: "actions" }, botoes) : null, erro);
   }
 

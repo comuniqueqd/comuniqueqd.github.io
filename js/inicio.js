@@ -138,7 +138,10 @@
         el("div", { class: "rapido-quem" }, App.abrirFicha ? el("button", { class: "link-ficha", type: "button", onclick: () => App.abrirFicha(a.id_app) }, a.nome || "ID " + a.id_app) : (a.nome || "ID " + a.id_app),
           a.nome ? el("span", { class: "mono meta", text: " " + a.id_app }) : null),
         el("div", { class: "meta", text: `${a.cidade ? a.cidade + " · " : ""}há ${App.u.duracao(a.criado_em).txt} · por ${a.criado_por_nome || "—"}` }),
-        el("button", { class: "btn small", type: "button", onclick: () => resolverRapido(a) }, "Marcar como resolvido"));
+        el("div", { class: "actions" },
+          App.mensagens ? el("button", { class: "btn small", type: "button", onclick: () => App.mensagens.abrir("retencao_prazo",
+            { nome: App.mensagens.primeiroNome(a.nome) || "[nome]", cidade: a.cidade || "" }) }, "Gerar mensagem") : null,
+          el("button", { class: "btn small", type: "button", onclick: () => resolverRapido(a) }, "Marcar como resolvido")));
   }
 
   // 009d: acordos com parceiros que venceram: bem chamativo, no topo, até alguém fazer o ajuste

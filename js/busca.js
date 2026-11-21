@@ -17,6 +17,7 @@
     ultima = q;
     if (q.length < 3) return fechar();
     let r;
+    App.uso?.("busca");
     try { r = await rpc("busca_rapida", { p_q: q }); } catch (e) { res.replaceChildren(el("p", { class: "meta", style: "margin:6px 8px", text: msgErro(e) })); res.hidden = false; return; }
     if (q !== campo.value.trim()) return;
     const bloq = !!S.me?.papel_bloqueios;
@@ -70,6 +71,7 @@
   let paleta = null;
   function abrirPaleta() {
     if (!S.me || paleta?.open) return;
+    App.uso?.("paleta");
     const entrada = el("input", { type: "search", placeholder: "O que você quer fazer? Ou digite um ID ou nome", "aria-label": "Buscar ações, entregadores e cadastros",
       autocomplete: "off", role: "combobox", "aria-expanded": "true", "aria-controls": "paleta-lista" });
     const lista = el("ul", { id: "paleta-lista", class: "paleta-lista", role: "listbox" });
@@ -116,10 +118,17 @@
   campo.placeholder = "Buscar ID ou nome (Ctrl+K)";
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009z3";
+  const VERSAO = "009z4";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009z4", tema: "A mensagem certa na hora certa", itens: [
+      ["Mande a mensagem pela tratativa", "O cartão da tratativa tem “Gerar mensagem”. Depois de copiar, um clique em “Contato feito” já conclui a tratativa.", 'nav.modulos a[data-mod="atividades"]'],
+      ["Marque quando retornar ao entregador", "Ao comentar na ficha, escolha “Lembrar de retornar”: o lembrete aparece na sua Minha fila e no sino na hora certa."],
+      ["Use as mensagens novas", "Adicional lançado e ajuste de bairro (em Lançamentos), prestação de contas pendente (na tela inicial) e confirmação de acordo (em Acordos)."],
+      ["Escreva o aviso geral com um toque", "A janela do Aviso geral traz frases prontas, que um moderador ajusta em Mensagens prontas.", "#b-aviso-geral"],
+      ["Veja quando o pedido de ajuda foi feito", "Pedir de novo não muda mais a hora do pedido: o cartão mostra quantas vezes ele foi repetido."],
+    ] },
     { versao: "009z3", tema: "Mais rápido de achar", itens: [
       ["Aperte Ctrl+K em qualquer tela", "Abre uma busca que leva direto para o que você quer fazer (Nova restrição, Registrar adicional, Pendentes…) e acha entregadores e cadastros pelo nome ou ID.", "#q-topo"],
       ["Veja só o que vence hoje", "Na Minha fila, o botão “Vence hoje” mostra só as suas tarefas e tratativas que vencem até o fim do dia ou já venceram.", 'nav.modulos a[data-mod="atividades"]'],

@@ -1120,3 +1120,10 @@ dialog.janela.paleta { width: min(560px, 94vw); }
 .chip.ativo { background: var(--accent-soft); outline: 2px solid var(--accent); outline-offset: -2px; }
 .fila-filtro .chip { font-size: 14px; padding: 6px 12px; min-height: 36px; }
 .linha-cad-obs { margin: 0; padding: 6px 10px; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* 009z4: lembrete no comentário da ficha e frases prontas do aviso geral */
+label.lembrar-sel { display: inline-flex; flex-direction: row; align-items: center; gap: 8px; font-weight: 400; font-size: 13px; }
+label.lembrar-sel select { inline-size: auto; }
+.frases-aviso .chip { text-align: start; }
+#as-uso { margin-top: 16px; }
+#as-uso summary { cursor: pointer; font-weight: 600; }

@@ -453,6 +453,7 @@
     const abas = abasPermitidas(mod);
     let aba = abas.find((x) => x.id === a) || abas.find((x) => x.id === mod.padrao?.()) || abas[0];
     const antes = App.atual.aba && $("#" + (App.modulos[App.atual.mod]?.abas.find((x) => x.id === App.atual.aba)?.secao));
+    if (App.atual.mod !== mod.id || App.atual.aba !== aba.id) App.uso?.(`aba:${mod.id}/${aba.id}`);  // 009z4 (A16-07)
     App.atual = { mod: mod.id, aba: aba.id };
     const nova = $("#" + aba.secao);
     // 009j (same-document-transitions): troca de tela com um fade curto e o destaque do menu/aba deslizando.
@@ -504,6 +505,20 @@
   App.route = route;
   addEventListener("hashchange", route);
 
+  // ---------- 009z4 (A16-07): uso sem saber quem (só somas por dia; enviadas com a rotina de 5 min) ----------
+  const usoFila = {};
+  App.uso = (recurso) => {
+    const k = String(recurso || "").toLowerCase().replace(/[^a-z0-9_:/-]/g, "_").slice(0, 80);
+    if (k) usoFila[k] = (usoFila[k] || 0) + 1;
+  };
+  function enviarUso() {
+    const itens = { ...usoFila };
+    if (!Object.keys(itens).length) return;
+    for (const k of Object.keys(itens)) delete usoFila[k];
+    rpc("contar_uso", { p_itens: itens }).catch(() => {});
+  }
+  App.enviarUso = enviarUso;
+
   // ---------- carregar e desenhar ----------
   let carregando = null, deNovo = false;
   App.carregar = async function carregar() {
@@ -515,6 +530,8 @@
         ultimaRotina = Date.now();
         if (papelBloq()) rpc("verificar_atrasos").catch((e) => console.error("verificar_atrasos", e));
         rpc("verificar_previsoes").catch((e) => console.error("verificar_previsoes", e));
+        rpc("verificar_lembretes").catch((e) => console.error("verificar_lembretes", e));  // 009z4 (NF-9)
+        enviarUso();
         rpc("verificar_tarefas").catch((e) => console.error("verificar_tarefas", e));
         rpc("gerar_recorrentes").catch((e) => console.error("gerar_recorrentes", e));  // 009d3: tarefas que se repetem  // 009d2: sem dono na metade do prazo / atrasadas  // 008d: só olha as previsões de quem chamou
         rpc("pessoas").then((d) => (S.pessoas = d)).catch(() => {});
@@ -557,7 +574,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009z3b";
+  const VERSAO_APP = "009z4";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;

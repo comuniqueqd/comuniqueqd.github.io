@@ -99,6 +99,13 @@
       catch (err) { bt.disabled = false; toast(msgErro(err)); }
     } }, l.lancado ? "Desfazer lançado" : "Marcar como lançado");
   }
+  // 009z4 (A16-05): mensagem ao entregador quando o lançamento já foi feito
+  function botaoMensagem(l) {
+    if (!l.lancado || !App.mensagens) return null;
+    return el("button", { class: "btn small", type: "button", onclick: () => App.mensagens.abrir(l.tipo === "ajuste_bairro" ? "ajuste_bairro" : "adicional_lancado", {
+      nome: App.mensagens.primeiroNome(l.nome_entregador) || "[nome]", valor: brl(l.valor), pedido: l.pedido || "[código do pedido]",
+      bairro_informado: l.bairro_informado || "", bairro_real: l.bairro_real || "", cidade: l.cidade || "" }) }, "Mensagem");
+  }
   function botaoApagar(l) {
     if (!(l.meu || S.me?.papel === "moderador" || S.me?.papel_bloqueios === "moderador")) return null;
     if (!G.confirmar[l.id]) return el("button", { class: "btn quiet small", type: "button", onclick: () => { G.confirmar[l.id] = true; App.render(); } }, "Apagar");
@@ -117,7 +124,7 @@
       " ", el("span", { class: "mono meta", text: l.id_app }), el("span", { class: "meta", text: ` · ${l.cidade || "sem cidade"} · ${ORIGEM[l.origem]}` })),
     el("div", { class: "meta", text: descricao(l) + (l.pedido ? ` · código do pedido ${l.pedido}` : "") + (l.observacao ? ` · ${l.observacao}` : "") }),
     l.lancado ? el("div", { class: "meta", text: `Lançado por ${l.lancado_por_nome || "—"} em ${dt(l.lancado_em)}` }) : null,
-    acoes ? el("div", { class: "actions" }, botaoLancar(l), botaoApagar(l)) : null);
+    acoes || l.lancado ? el("div", { class: "actions" }, acoes ? botaoLancar(l) : null, botaoMensagem(l), acoes ? botaoApagar(l) : null) : null);
 
   function renderAdicional() {
     App.atalhoPendentes?.();
@@ -186,7 +193,7 @@
         el("td", {}, descricao(l), el("div", { class: "meta", text: `${ORIGEM[l.origem]} · por ${l.registrado_por_nome || "—"}` })),
         el("td", { class: "num" }, el("strong", { text: brl(l.valor) })),
         el("td", { text: l.lancado ? `Sim, ${l.lancado_por_nome || ""}` : "Não" }),
-        el("td", { style: "white-space:nowrap" }, botaoLancar(l), botaoApagar(l)))),
+        el("td", { style: "white-space:nowrap" }, botaoLancar(l), botaoMensagem(l), botaoApagar(l)))),
       "Nenhum registro com esse filtro."));
   }
 
@@ -238,6 +245,8 @@
         (a.ajustado_em ? ` · ajuste em ${dt(a.ajustado_em)}${a.nota ? ": " + a.nota : ""}` : "") }),
       el("div", { class: "actions" },
         a.situacao !== "ajustado" ? el("button", { class: "btn small" + (a.situacao === "vencido" ? " primary" : ""), type: "button", onclick: () => App.ajustarAcordo(a) }, "Ajuste feito") : null,
+        App.mensagens ? el("button", { class: "btn small", type: "button", onclick: () => App.mensagens.abrir("acordo_confirmacao",
+          { estabelecimento: a.estabelecimento, acordo: String(a.acordo || "").replace(/[.\s]+$/, ""), vence: diaBR(a.vence_em), cidade: a.cidade }) }, "Mensagem de confirmação") : null,
         a.meu || souMod ? el("button", { class: "btn small link", type: "button", onclick: async (e) => {
           if (!G.confirmar["ac" + a.id]) { G.confirmar["ac" + a.id] = true; e.currentTarget.textContent = "Confirmar exclusão"; return; }
           try { await rpc("excluir_acordo", { p_id: a.id }); toast("Acordo excluído."); App.carregar(); } catch (err) { toast(msgErro(err)); }

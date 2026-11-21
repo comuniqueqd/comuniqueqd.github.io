@@ -359,6 +359,29 @@
     print();
   });
 
+  // 009z4 (A16-07): uso das telas e botões, sem saber quem (só o administrador final)
+  const USO_TXT = { aba: "Tela", mensagem: "Mensagem copiada", frase: "Frase pronta", busca: "Busca do topo", paleta: "Busca rápida (Ctrl+K)" };
+  function renderUso() {
+    const box = $("#as-uso");
+    box.hidden = !S.me?.admin_final;
+    if (box.hidden || !box.open) return;
+    const l = $("#as-uso-lista");
+    if (!D.uso) return l.replaceChildren(carregandoEl());
+    if (D.uso.erro) return l.replaceChildren(el("p", { class: "err", text: D.uso.erro }));
+    if (!D.uso.itens.length) return l.replaceChildren(el("p", { class: "meta", text: "Ainda sem números: eles começam a aparecer conforme a equipe usa o app." }));
+    l.replaceChildren(el("ol", { class: "lista-num" }, D.uso.itens.map((x) => {
+      const [tipo, resto] = String(x.recurso).split(/:(.*)/s);
+      return el("li", {}, `${USO_TXT[tipo] || tipo}${resto ? ": " + resto : ""}`, el("span", { class: "meta", text: ` · ${x.qtd} ${x.qtd === 1 ? "vez" : "vezes"} em ${x.dias} ${x.dias === 1 ? "dia" : "dias"}` }));
+    })));
+  }
+  $("#as-uso").addEventListener("toggle", async (e) => {
+    if (!e.target.open) return;
+    D.uso = null; renderUso();
+    App.enviarUso?.();
+    try { D.uso = await rpc("uso_resumo", { p_dias: 28 }); } catch (err) { D.uso = { erro: msgErro(err) }; }
+    renderUso();
+  });
+
   App.modulo({
     id: "analises", nome: "Análises",
     abas: [
@@ -369,6 +392,6 @@
     ],
     padrao: () => "simples",
     carregar: (aba) => (aba === "tarefas" ? App.painel.carregar() : aba === "resumo" ? carregarResumo() : carregarAnalises(aba === "complexas" ? "complexas" : "simples")),
-    render: (aba) => (aba === "tarefas" ? App.painel.render() : aba === "resumo" ? renderResumo() : aba === "complexas" ? renderComplexas() : renderSimples()),
+    render: (aba) => (aba === "tarefas" ? App.painel.render() : aba === "resumo" ? renderResumo() : aba === "complexas" ? renderComplexas() : (renderSimples(), renderUso())),
   });
 })();

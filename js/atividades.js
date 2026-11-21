@@ -54,6 +54,17 @@
       .sort((x, y) => String(x.prazo || "9").localeCompare(String(y.prazo || "9")));
     // Pedidos para ser responsável de cidade (moderadores, 008b)
     itens.push(...App.avisos.cartoesPedidos(item));
+    // 009z4 (NF-9): retornos combinados com o entregador (lembrete no comentário da ficha)
+    for (const l of A.lembretes || []) {
+      const quem = l.nome || "ID " + l.id_app;
+      const li = item({ modulo: "RETORNO", titulo: `Retornar a ${quem}`, estado: l.vencido ? "atrasada" : "pendente", atrasada: l.vencido,
+        detalhe: `${l.vencido ? "Era para " : "Lembrete para "}${dt(l.lembrar_em)} · ${l.texto}`,
+        acoes: [el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoAtividade("concluir_lembrete", { p_id: l.id }, e.currentTarget, "Retorno feito.") }, "Feito"),
+          el("button", { class: "btn link", type: "button", onclick: () => App.abrirFicha?.(l.id_app) }, "Ver a ficha")] });
+      li.dataset.lembrete = l.id;
+      if (venceHoje(l.lembrar_em)) li.dataset.hoje = "1";
+      itens.push(li);
+    }
     // 009y2 (pedido do usuário): "porta-cartões": o botão abre logo abaixo os cartões curtos (os mesmos da tela inicial),
     // com Aprovar/Reprovar ali mesmo; "Abrir a tela completa" continua no fim
     const porta = (chave, txt, href, rotulo) => {
@@ -92,7 +103,8 @@
           acoes: [cx
             ? el("button", { class: "btn approve small", type: "button", onclick: (e) => App.bloqueios.concluir(t.id, cx.texto, e.currentTarget).then(() => { delete A.caixa[t.id]; }) }, "Confirmar")
             : el("button", { class: "btn approve small", type: "button", onclick: () => { A.caixa[t.id] = { texto: "" }; render(); } }, "Marcar como resolvida"),
-            cx ? el("button", { class: "btn link", type: "button", onclick: () => { delete A.caixa[t.id]; render(); } }, "Cancelar") : null,
+            cx ? el("button", { class: "btn link", type: "button", onclick: () => { delete A.caixa[t.id]; render(); } }, "Cancelar")
+              : el("button", { class: "btn small", type: "button", onclick: () => App.bloqueios.mensagemTratativa(b, t) }, "Gerar mensagem"),
             S.me.papel_bloqueios === "moderador" ? el("button", { class: "btn link", type: "button", onclick: () => App.bloqueios.realocar(t, b) }, "Realocar…") : null,
             el("a", { class: "btn link", href: "#bloqueios/tratativas" }, "Ver na tela de tratativas")].filter(Boolean),
           extra: el("div", {}, App.u.previsao(t, "tarefa", t.id, true),
@@ -457,6 +469,7 @@
       await Promise.all([
         aba === "sugeridas" ? App.painel.carregarRecorrentes() : null,
         aba === "pendencias" && S.me.papel_bloqueios ? rpc("listar_tarefas", { p_status: "pendente" }).then((d) => (A.tarefas = d)) : null,
+        aba === "pendencias" && S.me.papel_bloqueios ? rpc("meus_lembretes").then((d) => (A.lembretes = d)).catch(() => (A.lembretes = [])) : null,  // 009z4 (NF-9)
         listarAtividades(aba === "sugeridas" ? (A.concLimite || 50) + 1 : 0).then((d) => (A.atividades = d)),
         aba === "sugeridas" && !A.tipos ? rpc("tipos_tarefa").then((d) => (A.tipos = d)) : null,
       ]);

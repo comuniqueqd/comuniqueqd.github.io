@@ -56,6 +56,13 @@
     const { chave, v } = varsMensagem(b, extra);
     App.mensagens.abrir(chave, v);
   }
+  // 009z4 (LG-3): mensagem a partir da tratativa; depois de copiar, "Contato feito: concluir a tratativa"
+  async function mensagemTratativa(b, tarefa) {
+    try { await App.mensagens.carregar(); } catch (e) { return toast(msgErro(e)); }
+    const { chave, v } = varsMensagem(b);
+    App.mensagens.abrir(tarefa.tipo === "leves_acumuladas" ? "leve" : chave, v, null, { depois: { rotulo: "Contato feito: concluir a tratativa",
+      fn: (btn) => concluir(tarefa.id, "Contato feito com a mensagem pronta.", btn, b.id) } });
+  }
   const botaoMensagem = (b, extra) => el("button", { class: "btn", type: "button", onclick: (e) => { e.stopPropagation(); gerarMensagem(b, extra); } }, "Gerar mensagem");
 
   function falta(iso) {
@@ -140,6 +147,7 @@
       acoes ? el("div", { class: "actions" },
         tarefaMinha ? el("button", { class: "btn approve", type: "button", onclick: () => abrir(b.id, completar ? "completar" : "tratar") },
           completar ? "Completar dados" : b.tarefa.tipo === "encerramento_parceria" ? "Marcar encerramento como tratado" : "Marcar tratativa como resolvida") : null,
+        tarefaMinha && !completar ? el("button", { class: "btn", type: "button", onclick: () => mensagemTratativa(b, b.tarefa) }, "Gerar mensagem") : null,
         mod() && b.tarefa?.status === "pendente" && b.tarefa.tipo !== "completar_dados" ? el("button", { class: "btn link", type: "button", onclick: () => realocar(b.tarefa, b) }, "Realocar…") : null,
         el("button", { class: "btn link", type: "button", onclick: () => abrirFicha(b.id_app) }, "Consultar entregador"),
         botaoAnexos(b),
@@ -249,7 +257,8 @@
       if (bloqueioId) delete B.caixa[bloqueioId];
       toast("Tratativa registrada. A restrição continua até o fim do prazo.");
       await carregar();
-    } catch (e) { btn.disabled = false; toast(msgErro(e)); }
+      return true;
+    } catch (e) { btn.disabled = false; toast(msgErro(e)); return false; }
   }
   async function completarDados(b, cx, btn) {
     if (!String(cx.nome || "").trim() || !cx.cidade) return toast("Preencha o nome e a cidade.");
@@ -644,8 +653,21 @@
     const txt = String(B.rascunho[idApp] || "").trim();
     if (!txt) return toast("Escreva o comentário.");
     btn.disabled = true;
-    try { await rpc("comentar_entregador", { p_id_app: idApp, p_texto: txt }); delete B.rascunho[idApp]; document.activeElement?.blur(); toast("Comentário adicionado."); await reconsultar(); }
+    const quando = lembrarEm(B.lembrar?.[idApp]);
+    try {
+      await rpc("comentar_entregador", { p_id_app: idApp, p_texto: txt, p_lembrar_em: quando });
+      delete B.rascunho[idApp]; if (B.lembrar) delete B.lembrar[idApp]; document.activeElement?.blur();
+      toast(quando ? `Comentário adicionado. Lembrete em ${dt(quando)}, na sua Minha fila.` : "Comentário adicionado."); await reconsultar();
+    }
     catch (e) { btn.disabled = false; toast(msgErro(e)); }
+  }
+  // 009z4 (NF-9): "Lembrar de retornar" no comentário da ficha (horário de Brasília, sem horário de verão)
+  const LEMBRAR = [["", "Sem lembrete"], ["1h", "Em 1 hora"], ["3h", "Em 3 horas"], ["amanha", "Amanhã às 9h"], ["2d", "Em 2 dias, às 9h"], ["7d", "Em 1 semana, às 9h"]];
+  function lembrarEm(op) {
+    if (!op) return null;
+    if (op.endsWith("h")) return new Date(Date.now() + Number(op.slice(0, -1)) * 3600000).toISOString();
+    const dias = op === "amanha" ? 1 : Number(op.slice(0, -1));
+    return new Date(`${App.u.diaChave(Date.now() + dias * 86400000)}T09:00:00-03:00`).toISOString();
   }
   function abrirEdicao(f, qtdBloqueios) {
     const nome = el("input", { maxlength: "120", autocomplete: "off" }); nome.value = f.nome || "";
@@ -728,7 +750,10 @@
           el("h4", { style: "margin:12px 0 6px", text: f.comentarios.length ? `Comentários (${f.comentarios.length})` : "Comentários" }),
           f.comentarios.length ? listaComentarios(f.comentarios, apagarComentario) : el("p", { class: "meta", text: "Nenhum comentário ainda." }),
           el("div", { style: "display:grid;gap:6px" }, txt,
-            el("div", { class: "actions" }, el("button", { class: "btn small", type: "button", onclick: (e) => comentar(f.id_app, e.currentTarget) }, "Adicionar comentário"))),
+            el("div", { class: "actions" },
+              el("label", { class: "lembrar-sel" }, "Lembrar de retornar",
+                (() => { const sl = el("select", { "data-lembrar": f.id_app, onchange: (e) => { B.lembrar = { ...(B.lembrar || {}), [f.id_app]: e.target.value }; } }, LEMBRAR.map(([v, t]) => el("option", { value: v, text: t }))); sl.value = B.lembrar?.[f.id_app] || ""; return sl; })()),
+              el("button", { class: "btn small", type: "button", onclick: (e) => comentar(f.id_app, e.currentTarget) }, "Adicionar comentário"))),
           tempo.length ? el("details", { style: "margin-top:14px", open: B.tempoAberto?.[f.id_app] ? true : null, ontoggle: (e) => { B.tempoAberto = { ...(B.tempoAberto || {}), [f.id_app]: e.target.open }; } },
             el("summary", { style: "cursor:pointer;font-weight:600", text: `Linha do tempo (${tempo.length})` }),
             el("ol", { class: "timeline", style: "margin-top:8px" }, tempo.map((x) => el("li", {},
@@ -997,7 +1022,7 @@
   ].forEach((s) => $(s).addEventListener("input", render));
   ["#bq-q-hist", "#bq-hist-sit", "#bq-hist-cidade", "#bq-hist-inf", "#bq-hist-quem", "#bq-hist-tipo", "#bq-hist-meus"].forEach((s) => $(s).addEventListener("input", filtrarHist));
 
-  App.bloqueios = { cardBloqueio, concluir, horasTxt, ord, termino, varsMensagem, B, TAREFA, realocar, abrirFicha, abrirRevisar };
+  App.bloqueios = { cardBloqueio, concluir, mensagemTratativa, horasTxt, ord, termino, varsMensagem, B, TAREFA, realocar, abrirFicha, abrirRevisar };
   App.modulo({
     id: "bloqueios", nome: "Restrições",
     acesso: () => !!papel(),

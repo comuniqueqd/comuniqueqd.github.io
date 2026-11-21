@@ -238,19 +238,26 @@
     catch (_) { onde?.select?.(); toast("Selecione o texto e copie (Ctrl+C)."); }
   }
   // janela com a mensagem pronta, editável, e o botão Copiar
-  async function abrirMensagem(chave, vars, titulo) {
+  // 009z4: opcoes.depois = { rotulo, fn(botao, texto) } aparece depois de copiar (ex.: "Contato feito: concluir a tratativa")
+  async function abrirMensagem(chave, vars, titulo, opcoes = {}) {
     let d;
     try { await carregarMensagens(); } catch (e) { return toast(msgErro(e)); }
     const mod = M.dados.modelos.find((m) => m.chave === chave);
     if (!mod) return toast("Modelo de mensagem não encontrado.");
     const v = { meu_nome: primeiroNome(S.me?.nome), leves_limite: M.dados.leves?.limite, leves_janela: M.dados.leves?.janela_dias, ...vars };
     const area = el("textarea", { rows: 12, class: "msg-texto" });
+    const depois = opcoes.depois ? el("button", { class: "btn approve", type: "button", hidden: true, "data-depois": "1",
+      onclick: async (e) => { const ok = await opcoes.depois.fn(e.currentTarget, area.value); if (ok !== false) d.close(); } }, opcoes.depois.rotulo) : null;
     area.value = preencher(mod.texto, v);
     d = App.u.janela(titulo || mod.titulo,
       el("p", { class: "meta", style: "margin:0", text: "Confira e ajuste se precisar. A mensagem não é enviada pelo app: copie e mande pelo canal de sempre." }),
       area,
       el("div", { class: "actions" },
-        el("button", { class: "btn primary", type: "button", onclick: () => copiar(area.value, area) }, "Copiar mensagem"),
+        el("button", { class: "btn primary", type: "button", onclick: async () => {
+          await copiar(area.value, area); App.uso?.("mensagem:" + mod.tipo);
+          if (depois) depois.hidden = false;
+        } }, "Copiar mensagem"),
+        depois,
         el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Fechar")));
   }
   // dados de cada infração (explicação), para quem monta a mensagem
@@ -272,7 +279,7 @@
   }
   ["#fe-msg-nome", "#fe-msg-estab", "#fe-msg-cidade", "#fe-msg-infracao", "#fe-msg-ocorrencia", "#fe-msg-horas", "#fe-msg-agravante"].forEach((s) => $(s).addEventListener("input", () => renderMensagens(true)));
   $("#fe-msg-form").addEventListener("submit", (e) => e.preventDefault());
-  $("#fe-msg-copiar").addEventListener("click", () => copiar($("#fe-msg-texto").value, $("#fe-msg-texto")));
+  $("#fe-msg-copiar").addEventListener("click", () => { copiar($("#fe-msg-texto").value, $("#fe-msg-texto")); App.uso?.("mensagem:" + (M.tipo || "outra")); });
   function renderMensagens(refazer = false) {
     const D = M.dados;
     if (!D) { $("#fe-msg-modelos").replaceChildren(carregandoEl()); return; }
@@ -282,8 +289,9 @@
     const tipos = [...new Map(livres.filter((m) => m.grupo !== "cidade").map((m) => [tipoDe(m), m])).values()];
     const sel = $("#fe-msg-modelo");
     if (sel.options.length !== tipos.length) {
-      const grupo = (g, rot) => { const l = tipos.filter((m) => (g === "bloqueio") === (m.grupo === "bloqueio")); return l.length ? el("optgroup", { label: rot }, l.map((m) => el("option", { value: tipoDe(m), text: m.titulo.replace(/\s*\(.*\)$/, "") }))) : null; };
-      sel.replaceChildren(...[grupo("outros", "Entregadores e parceiros"), grupo("bloqueio", "Restrição, encerramento e avisos")].filter(Boolean));
+      const daqui = (g, m) => g === "outros" ? !["bloqueio", "equipe"].includes(m.grupo) : m.grupo === g;
+      const grupo = (g, rot) => { const l = tipos.filter((m) => daqui(g, m)); return l.length ? el("optgroup", { label: rot }, l.map((m) => el("option", { value: tipoDe(m), text: m.titulo.replace(/\s*\(.*\)$/, "") }))) : null; };
+      sel.replaceChildren(...[grupo("outros", "Entregadores e parceiros"), grupo("bloqueio", "Restrição, encerramento e avisos"), grupo("equipe", "Para a equipe (aviso geral)")].filter(Boolean));
     }
     if (!M.tipo || !tipos.some((m) => tipoDe(m) === M.tipo)) { M.tipo = tipos[0] ? tipoDe(tipos[0]) : ""; M.opcao = 1; refazer = true; }
     sel.value = M.tipo;
@@ -343,7 +351,10 @@
         termino: horas && Bq.termino ? Bq.termino(new Date(Date.now() + horas * 3600000).toISOString()) : "[término]",
         agravante: agr ? `Foi considerado também: ${agr.charAt(0).toLowerCase() + agr.slice(1)}.\n` : "",
         reincidencia: M.tipo === "encerramento" && oc > 1 ? `Esta foi a sua ${oc}ª ocorrência desse tipo, e a política prevê o encerramento a partir dela.\n` : "",
-        leves_limite: D.leves?.limite, leves_janela: D.leves?.janela_dias, leves_situacao: "" });
+        leves_limite: D.leves?.limite, leves_janela: D.leves?.janela_dias, leves_situacao: "",
+        // 009z4: marcadores dos modelos novos, para completar à mão
+        valor: "[valor]", pedido: "[código do pedido]", bairro_informado: "[bairro informado]", bairro_real: "[bairro certo]",
+        acordo: "[o que foi combinado]", vence: "[data]", motivo: "[motivo]", reenviar: "" });
     }
     renderListas(D);
   }
