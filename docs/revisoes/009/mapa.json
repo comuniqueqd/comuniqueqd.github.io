@@ -35,7 +35,7 @@
   "junto": "M3",
   "versao": "009z",
   "feito": "009z3",
-  "situacao": "Feito na 009z parte 2 (falta rodar o SQL): paleta Ctrl+K com ações e busca."
+  "situacao": "Feito na 009z parte 2 (publicada em 21/11/2026): paleta Ctrl+K com ações e busca."
  },
  {
   "ag": "a1",
@@ -317,7 +317,7 @@
   "junto": "",
   "versao": "009z",
   "feito": "009z3",
-  "situacao": "Feito na 009z parte 2 (falta rodar o SQL): listar_registros corta cada parte antes de juntar."
+  "situacao": "Feito na 009z parte 2 (publicada em 21/11/2026): listar_registros corta cada parte antes de juntar."
  },
  {
   "ag": "a2",
@@ -375,7 +375,7 @@
   "junto": "",
   "versao": "009z",
   "feito": "009z3",
-  "situacao": "Feito na 009z parte 2 (falta rodar o SQL): limpeza de avisos lidos com mais de 120 dias, pelo moderador."
+  "situacao": "Feito na 009z parte 2 (publicada em 21/11/2026): limpeza de avisos lidos com mais de 120 dias, pelo moderador."
  },
  {
   "ag": "a2",
@@ -4533,7 +4533,7 @@
   "nota": "O e2e confere contraste, rolagem e textos, mas não regras de acessibilidade em geral (rótulos, nomes de botões, ARIA, ordem de foco), que hoje dependem da leitura do a12. | Revisor: Conferido pela evidência e pelo código citado; prioridade e versão mantidas. | Varredura 20/11 (a12): Prova feita: axe-core 4.10.2 local (npm, nada sai da máquina) rodou nas 37 telas/estados em ~3 min dentro de uma cópia do e2e (a12/auditoria.mjs). Resultado: 3 regras, 5 nós serious, 9 minor (ver A12-07). Pronto para virar parte do e2e.",
   "junto": "",
   "versao": "009z",
-  "situacao": "Feito na 009z parte 2 (falta rodar o SQL): axe-core no e2e em 10 telas.",
+  "situacao": "Feito na 009z parte 2 (publicada em 21/11/2026): axe-core no e2e em 10 telas.",
   "feito": "009z3"
  },
  {
