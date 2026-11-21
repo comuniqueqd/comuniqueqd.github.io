@@ -1119,3 +1119,4 @@ dialog.janela.paleta { width: min(560px, 94vw); }
 .fila-filtro { display: flex; gap: 8px; margin: 0 0 12px; }
 .chip.ativo { background: var(--accent-soft); outline: 2px solid var(--accent); outline-offset: -2px; }
 .fila-filtro .chip { font-size: 14px; padding: 6px 12px; min-height: 36px; }
+.linha-cad-obs { margin: 0; padding: 6px 10px; font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

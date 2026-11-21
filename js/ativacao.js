@@ -76,6 +76,7 @@
       el("div", { class: "meta linha-cad-info", text: [c.cidade, staff() ? (c.enviado_por === S.me.id ? "enviado por você" : c.enviado_por_nome ? "enviado por " + c.enviado_por_nome : null) : null,
         c.previsao ? `Previsão: até ${dt(c.previsao)}` : null].filter(Boolean).join(" · ") }),
       contato ? el("div", { class: "motivo" }, el("b", { text: `Reprovado por ${c.decidido_por_nome} em ${dt(c.decidido_em)}: ` }), c.motivo, c.detalhe ? " — " + c.detalhe : "") : null,
+      c.observacao ? el("div", { class: "obs linha-cad-obs", title: c.observacao, text: c.observacao }) : null,  // 009z (pedido do usuário): o comentário aparece sem abrir
       el("div", { class: "actions" },
         staff() ? el("button", { class: "btn approve small", type: "button", onclick: (e) => decidir(c, "aprovar", e.currentTarget) }, "Aprovar") : null,
         staff() && !contato ? el("button", { class: "btn reject small", type: "button", onclick: () => abrir(c.id, "reprovar") }, "Reprovar") : null,

@@ -225,6 +225,7 @@ try {
   ok((await texto(m, "#c-pend")) === "3", "contador de pendentes: 3");
   ok((await texto(m, "nav.grupo [data-espelho=c-pend]")) === "3", "o contador de pendentes aparece também na barra de Entregadores");
   const cardLagarto = "#queue .card:has-text('1a2b3c4d5e6f')";
+  ok(await m.isVisible(`${cardLagarto} .linha-cad-obs >> text=Documentos pelo WhatsApp`), "009z: o comentário do cadastro aparece na linha, sem abrir os detalhes");
   await m.click(`${cardLagarto} >> text=Reprovar`);
   await m.click(`${cardLagarto} >> text=Confirmar reprovação`);
   ok(await esperar(m, "#toast:has-text('Escolha o motivo')"), "reprovar sem motivo pede o motivo");
