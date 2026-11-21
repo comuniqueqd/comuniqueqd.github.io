@@ -1023,6 +1023,7 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
 .linhas-precisa .precisa-n { font-family: var(--font-titulo); font-size: 22px; font-variant-numeric: tabular-nums; text-align: right; color: var(--ink); }
 .linhas-precisa > li.urgente > .precisa-n, .linhas-precisa > li.urgente > span { color: var(--bad); font-weight: 600; }
 .linhas-precisa > li.leve > .precisa-n { color: var(--muted); }
+.linhas-precisa .precisa-atrasadas { color: var(--bad); font-weight: 600; }
 .linhas-precisa > li.nada { grid-template-columns: 1fr; color: var(--muted); }
 /* 009y1f: tira de prévia abaixo da linha */
 .linhas-precisa > li.aberta { background: var(--gray-soft); }

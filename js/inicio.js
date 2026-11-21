@@ -166,10 +166,9 @@
     // ---------- 009y1 parte 2 (AP-10): o que precisa de você agora, em linhas, do mais urgente ao resto ----------
     const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
     const precisa = [
-      b?.tratativas_atrasadas && staffBloq() ? { n: b.tratativas_atrasadas, txt: plural(b.tratativas_atrasadas, "tratativa atrasada", "tratativas atrasadas"), href: "#bloqueios/tratativas", urgente: true, chave: "atrasadas" } : null,
       at?.para_aceitar ? { n: at.para_aceitar, txt: plural(at.para_aceitar, "tarefa pedida para você", "tarefas pedidas para você"), href: "#atividades/pendencias", chave: "pedidas" } : null,
       at?.minhas_em_andamento ? { n: at.minhas_em_andamento, txt: plural(at.minhas_em_andamento, "tarefa com você em andamento", "tarefas com você em andamento"), href: "#atividades/pendencias", chave: "comigo" } : null,
-      staffBloq() && b?.tratativas_pendentes ? { n: b.tratativas_pendentes, txt: plural(b.tratativas_pendentes, S.me.papel_bloqueios === "moderador" ? "tratativa pendente" : "tratativa com você", S.me.papel_bloqueios === "moderador" ? "tratativas pendentes" : "tratativas com você"), href: "#bloqueios/tratativas", chave: "tratativas" } : null,
+      staffBloq() && b?.tratativas_pendentes ? { n: b.tratativas_pendentes, txt: plural(b.tratativas_pendentes, S.me.papel_bloqueios === "moderador" ? "tratativa pendente" : "tratativa com você", S.me.papel_bloqueios === "moderador" ? "tratativas pendentes" : "tratativas com você"), href: "#bloqueios/tratativas", chave: "tratativas", atrasadas: b.tratativas_atrasadas || 0 } : null,  // 009z5 (pedido do usuário): as atrasadas entram aqui, em vermelho
       staffAtiv() && a?.equipe_aguardando_analise ? { n: a.equipe_aguardando_analise, txt: plural(a.equipe_aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"), href: "#ativacao/pendentes", chave: "cadastros" } : null,
       r?.financeiro_pendentes ? { n: r.financeiro_pendentes, txt: plural(r.financeiro_pendentes, "lançamento seu ainda não lançado no sistema", "lançamentos seus ainda não lançados no sistema"), href: "#financeiro/lancamentos/pendentes", chave: "lancamentos" } : null,
       at?.abertas_para_pegar ? { n: at.abertas_para_pegar, txt: plural(at.abertas_para_pegar, "tarefa aberta para a equipe", "tarefas abertas para a equipe"), href: "#atividades/sugeridas", leve: true, chave: "abertas" } : null,
@@ -178,7 +177,8 @@
     $("#precisa-lista").replaceChildren(...(precisa.length ? precisa.map((x) => {
       const aberta = tiraAberta === x.chave;
       return el("li", { class: [x.urgente ? "urgente" : x.leve ? "leve" : null, aberta ? "aberta" : null].filter(Boolean).join(" ") || null, "data-chave": x.chave },
-        el("b", { class: "precisa-n", text: String(x.n) }), el("span", { text: x.txt.replace(/^\d+ /, "") }),
+        el("b", { class: "precisa-n", text: String(x.n) }),
+        el("span", {}, x.txt.replace(/^\d+ /, ""), x.atrasadas ? el("span", { class: "precisa-atrasadas", text: ` · ${plural(x.atrasadas, "atrasada", "atrasadas")}` }) : null),
         el("button", { class: "btn small" + (x.leve || aberta ? "" : " primary"), type: "button", "aria-expanded": aberta ? "true" : "false",
           onclick: () => { tiraAberta = aberta ? null : x.chave; if (!aberta) buscarTira(x.chave); App.render(); } }, aberta ? "Fechar" : "Ver"),
         aberta ? tira(x) : null);
