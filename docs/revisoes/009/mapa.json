@@ -3415,7 +3415,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "No atendimento é comum prometer 'te dou retorno amanhã'; hoje isso fica na memória ou no Crisp. É a forma mais leve de transformar a promessa em tarefa sem preencher formulário (pilar 1). Diferente de MK-6 (adiar algo que já existe): aqui nasce o lembrete a partir da conversa. | Revisor: comentar_entregador não tem data, e o caso 'te dou retorno amanhã' é real. Mas é quase o MK-6 (adiar/lembrar) aplicado à ficha; propor como a primeira entrega do MK-6, e baixar para média (coluna nova + rotina + item novo na Minha fila não é pequeno).",
   "junto": "MK-6, MK-1",
-  "situacao": "Feito na 009z4: \"Lembrar de retornar\" no comentário da ficha, Minha fila e sino. (aguarda publicação)",
+  "situacao": "Feito na 009z4: \"Lembrar de retornar\" no comentário da ficha, Minha fila e sino. (publicada em 21/11/2026)",
   "versao": "009z",
   "feito": "009z4"
  },
@@ -3590,7 +3590,7 @@
   "veredito": "CONFIRMADO",
   "nota": "Sem isso, a AN-7 sai errada justo nos casos que importam (ninguém pegou). Encontrado lendo o código; o teste test:ajuda deve ganhar o caso 'renovar não muda criado_em'. | Revisor: Reproduzido: um pedido de 20 min renovado volta a ter 0 min (renovar_ajuda grava criado_em = now(), 009d:129). É dado perdido que não se recupera depois; o conserto é pequeno.",
   "junto": "AN-7",
-  "situacao": "Feito na 009z4: renovar mantém a hora do pedido e conta as renovações. (aguarda publicação)",
+  "situacao": "Feito na 009z4: renovar mantém a hora do pedido e conta as renovações. (publicada em 21/11/2026)",
   "versao": "009z",
   "feito": "009z4"
  },
@@ -3821,7 +3821,7 @@
   "veredito": "CONFIRMADO COM AJUSTE",
   "nota": "Hoje a pessoa precisa abrir o Histórico, achar o registro e gerar a mensagem lá, depois voltar a Tratativas para concluir. É o caso 'macro' descrito no MK-2 aplicado ao lugar onde ele mais rende. | Revisor: Conferido: botaoMensagem só aparece no resultado e no Histórico (bloqueios.js:552, 564, 871), não na tratativa. Ajuste: a mensagem de restrição normalmente já foi mandada por quem registrou; na tratativa o útil é uma mensagem de orientação/contato, não a mesma. Pequeno; fazer junto de NF-4.",
   "junto": "MK-2, OP-2",
-  "situacao": "Feito na 009z4: Gerar mensagem no cartão da tratativa, com \"Contato feito\" depois de copiar. (aguarda publicação)",
+  "situacao": "Feito na 009z4: Gerar mensagem no cartão da tratativa, com \"Contato feito\" depois de copiar. (publicada em 21/11/2026)",
   "versao": "009z",
   "feito": "009z4"
  },
@@ -5944,7 +5944,7 @@
   "nota": "3 momentos oferecem mensagem (bloqueios.js:554, 566, 873); 8 não: aprovar, reprovar, liberar, concluir tratativa, ativar parceiro, adicional lançado, ajuste de bairro, tarefa de contato. | Teste: e2e: depois de cada uma das 8 ações há [data-mensagem] sem '{', sem 'bloque' e com o nome certo.",
   "junto": "NF-1",
   "versao": "009z",
-  "situacao": "Feito na 009z4, só com Copiar (decisão do usuário). (aguarda publicação)",
+  "situacao": "Feito na 009z4, só com Copiar (decisão do usuário). (publicada em 21/11/2026)",
   "feito": "009z4"
  },
  {
@@ -5964,7 +5964,7 @@
   "nota": "Nenhum modelo para financeiro, acordo ou pendência de retenção; avisos gerais repetidos são digitados do zero. | Teste: mensagens() devolve os novos; cada um montado sem sobrar '{'.",
   "junto": "A16-04",
   "versao": "009z",
-  "situacao": "Feito na 009z4: adicional lançado, ajuste de bairro, prestação de contas, confirmação de acordo e frases do aviso geral. (aguarda publicação)",
+  "situacao": "Feito na 009z4: adicional lançado, ajuste de bairro, prestação de contas, confirmação de acordo e frases do aviso geral. (publicada em 21/11/2026)",
   "feito": "009z4"
  },
  {
@@ -5984,7 +5984,7 @@
   "nota": "Copiar → trocar de app → achar contato → colar; o link sem número abre o WhatsApp com o texto e não exige guardar telefone. | Teste: href começa com https://wa.me/?text= e não tem número.",
   "junto": "A16-04",
   "versao": "009z",
-  "situacao": "Decidido em 21/11/2026: sem \"Abrir no WhatsApp\" (a equipe não fala com o entregador por ali). (aguarda publicação)",
+  "situacao": "Decidido em 21/11/2026: sem \"Abrir no WhatsApp\" (a equipe não fala com o entregador por ali). (publicada em 21/11/2026)",
   "feito": "009z4"
  },
  {
@@ -6004,7 +6004,7 @@
   "nota": "Mensagem copiada, aba aberta, busca, tour e painel da extensão não deixam registro: cortar ou juntar telas fica no palpite. | Teste: 3 aberturas da aba geram qtd = 3, sem identificar pessoa; sem login é recusado.",
   "junto": "A10-01",
   "versao": "009z",
-  "situacao": "Feito na 009z4: uso_dia sem quem usou; quadro só para o administrador nas Análises. (aguarda publicação)",
+  "situacao": "Feito na 009z4: uso_dia sem quem usou; quadro só para o administrador nas Análises. (publicada em 21/11/2026)",
   "feito": "009z4"
  },
  {
