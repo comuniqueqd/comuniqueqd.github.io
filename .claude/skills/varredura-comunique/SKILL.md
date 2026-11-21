@@ -13,7 +13,7 @@ Combinado com o usuário em 15/11/2026 a partir da varredura da 009 (`docs/revis
 - **Leve (a cada versão publicada):** suíte de testes verde, detectores (Impeccable `detect`, Modern Web Guidance `legacy-scan`, varredura do e2e), placar comparado e o **a12 Textos e acessibilidade**. Sem os outros agentes. ~1 lote.
 - **Completa (no fim de cada família de versões, ex.: fim da 009):** os 12 especialistas em 3 lotes + revisor + retrospectiva.
 
-## O time (lotes de 3 a 4 agentes por vez, por causa do limite de uso)
+## O time (lotes de 3 agentes por vez no modo completo, por causa do limite de uso)
 | Lote | Id | Especialista | Skills principais |
 |---|---|---|---|
 | 1 base e números | a2 | Banco e servidor (massa fictícia, explain, bytes, tráfego) | performance-optimization, graphify, ponytail-audit |
@@ -69,3 +69,4 @@ Cada linha do registro já vem no formato do mapa do projeto (`docs/revisoes/009
 - **v1 (15/11/2026, depois da varredura da 009):** 9 agentes viraram 12 (a10 Dados reais, a11 Extensão, a12 Textos e acessibilidade); lotes de até 5; régua de prioridade comum (o revisor ajustou 19 de 29 altos na 009); registro comum com `alerta` (o problema do schema.sql teve de ser avisado à mão); objetivo e tela marcados na origem (na 009 o orquestrador classificou por palpite); placar comparado; retrospectiva obrigatória (pedido do usuário).
 - **v1.1 (15/11/2026):** a retrospectiva também pergunta se algum agente pode ser incluído no projeto como um todo (agentes do dia a dia, agendados, skills e plugins), não só na varredura (pedido do usuário).
 - **v1.2 (20/11/2026, retrospectiva da varredura de 20/11):** lotes de 3 a 4 (o limite de uso parou 5 agentes de uma vez duas vezes); `preparar.sh` antes de cada lote (o Postgres desliga nas pausas); campo `versao` em cada item e leitura do mapa do projeto antes de começar; a13 Explorador de agentes vira membro fixo; entram a14 Custos e limites do Supabase, a15 Treinamento e materiais da equipe e a16 Produto e adoção (pedido do usuário); o revisor a9 é sempre o último.
+- **v1.3 (21/11/2026, retrospectiva da varredura de 21/11, aprovada pelo dono):** lotes de 3 no modo completo (o limite de uso parou 4 agentes de uma vez); cada agente grava o relatório aos poucos (seção por seção), para o trabalho não se perder numa parada; o briefing aponta o CLAUDE.md enxuto (meta ~30 KB, história das versões em `docs/versoes/`) para cada agente gastar menos; o revisor sempre confere a massa contra os números reais do a10 antes de manter um "alto" (8 de 9 altos caíram por massa inflada ou dado de antes da correção); a consulta do a10 sai no começo e o painel Usage do Supabase é pedido junto.
