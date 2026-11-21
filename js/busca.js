@@ -123,7 +123,7 @@
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
     { versao: "009z5", tema: "Casa certa", itens: [
-      ["Veja a tela inicial mais enxuta", "O bloco “Seus números” saiu (os números estão em “Precisa de você” e nas Análises). Entrou a linha “tarefas que você pediu”, com quem está com cada uma.", "#precisa-lista"],
+      ["Veja a tela inicial mais enxuta", "O bloco “Seus números” saiu (os números estão em “Precisa de você” e nas Análises). As tarefas ganharam a faixa “Atividades em espera”, com as que você pediu e com quem está cada uma; o moderador vê também as de toda a equipe.", "#precisa-lista"],
       ["Comece a digitar direto", "No computador, os formulários (Nova ativação, Nova restrição, Registrar adicional, Calculadora, Ativar parceiro) já abrem com o cursor no primeiro campo."],
       ["Confira o ajuste de bairro repetido", "Registrar o mesmo ajuste duas vezes (mesmo ID e pedido, ou mesmos bairros no dia) pergunta antes, como no adicional."],
       ["Leia um tempo só na tratativa", "O cartão mostra só “vence em…” ou “venceu há…”. Tarefa aguardando terceiro não aparece mais como vencida."],
@@ -415,9 +415,13 @@
       proximo.textContent = i < passos.length - 1 ? "Próximo" : "Entendi";
       proximo.onclick = () => { if (++i < passos.length) mostrar(); else acabar(); };
       if (!caixa.matches(":popover-open")) caixa.showPopover();
+      // 009z5: o alvo fora da tela levava o balão junto; rola até ele e, sem espaço embaixo, põe o balão em cima
+      alvo.scrollIntoView({ block: "center", behavior: "instant" });
       const r = alvo.getBoundingClientRect(), w = Math.min(320, innerWidth - 24);
       const left = Math.max(12, Math.min(innerWidth - w - 12, r.left + r.width / 2 - w / 2));
       Object.assign(caixa.style, { top: `${r.bottom + 12}px`, left: `${left}px`, width: `${w}px` });
+      const h = caixa.offsetHeight;
+      if (r.bottom + 12 + h > innerHeight - 8) caixa.style.top = `${Math.max(8, r.top - h - 12)}px`;
       caixa.style.setProperty("--seta-x", `${r.left + r.width / 2 - left}px`);
       proximo.focus();  // o foco vai para dentro do balão (teclado e leitor de tela percebem o passo novo)
     };

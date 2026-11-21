@@ -26,6 +26,7 @@
     catch (_) { bt.textContent = "Não deu para copiar"; }
     setTimeout(() => { if (bt.isConnected) bt.textContent = "Copiar ID"; }, 1600);
   } }, "Copiar ID");
+  const souModerador = () => S.me?.papel === "moderador" || S.me?.papel_bloqueios === "moderador";
   async function buscarTira(chave) {
     tiras[chave] = { ...(tiras[chave] || {}), carregando: true, erro: null };
     try {
@@ -51,6 +52,19 @@
             alerta: !!a.atrasada,
             acoes: chave === "comigo" ? [el("a", { class: "btn small", href: "#atividades/pendencias" }, "Abrir")]
               : [el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoTira("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Tarefa aceita. Ela está com você.", chave) }, "Eu faço")] }));
+      } else if (chave === "equipe_agora") {
+        // 009z5 (pedido do usuário): o moderador vê as tarefas da equipe agora; as que estão com ele vêm primeiro, com cor
+        const l = await (App.listarAtividades ? App.listarAtividades(0) : App.u.rpc("listar_atividades"));
+        const comigo = (a) => !!a.sou_participante;
+        itens = l.filter((a) => ["aberta", "aceita"].includes(a.status))
+          .sort((a, b) => (comigo(b) - comigo(a)) || (!!b.atrasada - !!a.atrasada) || String(a.prazo || "9").localeCompare(String(b.prazo || "9")) || String(a.criada_em).localeCompare(String(b.criada_em)))
+          .map((a) => {
+            const com = (a.participantes?.length ? a.participantes.map((x) => x.nome || x) : [a.aceita_por_nome]).filter(Boolean).join(", ");
+            return { titulo: (comigo(a) ? "Com você: " : "") + a.titulo, paraMim: comigo(a), alerta: !!a.atrasada,
+              detalhe: [a.automatica ? "atividade da equipe" : a.status === "aceita" ? `com ${com || "alguém"}` : (a.sugeridas_nomes?.length ? `esperando ${a.sugeridas_nomes.join(", ")} pegar` : "esperando alguém pegar"),
+                a.cidade, a.prazo ? App.u.textoPrazo(a.prazo) : null].filter(Boolean).join(" · "),
+              acoes: [el("a", { class: "btn small", href: comigo(a) ? "#atividades/pendencias" : "#atividades/sugeridas" }, "Abrir")] };
+          });
       } else if (chave === "pedidas_por_mim") {
         // 009z5 (pedido do usuário): as tarefas que eu pedi e ainda não foram concluídas, com a situação de cada uma
         const l = await (App.listarAtividades ? App.listarAtividades(0) : App.u.rpc("listar_atividades"));
@@ -182,16 +196,20 @@
     // ---------- 009y1 parte 2 (AP-10): o que precisa de você agora, em linhas, do mais urgente ao resto ----------
     const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
     const precisa = [
-      at?.minhas_em_andamento ? { n: at.minhas_em_andamento, txt: plural(at.minhas_em_andamento, "tarefa com você em andamento", "tarefas com você em andamento"), href: "#atividades/pendencias", chave: "comigo" } : null,
       staffBloq() && b?.tratativas_pendentes ? { n: b.tratativas_pendentes, txt: plural(b.tratativas_pendentes, S.me.papel_bloqueios === "moderador" ? "tratativa pendente" : "tratativa com você", S.me.papel_bloqueios === "moderador" ? "tratativas pendentes" : "tratativas com você"), href: "#bloqueios/tratativas", chave: "tratativas", atrasadas: b.tratativas_atrasadas || 0 } : null,  // 009z5 (pedido do usuário): as atrasadas entram aqui, em vermelho
       staffAtiv() && a?.equipe_aguardando_analise ? { n: a.equipe_aguardando_analise, txt: plural(a.equipe_aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"), href: "#ativacao/pendentes", chave: "cadastros" } : null,
       r?.financeiro_pendentes ? { n: r.financeiro_pendentes, txt: plural(r.financeiro_pendentes, "lançamento seu ainda não lançado no sistema", "lançamentos seus ainda não lançados no sistema"), href: "#financeiro/lancamentos/pendentes", chave: "lancamentos" } : null,
+    ].filter(Boolean);
+    // 009z5 (pedido do usuário): as tarefas têm faixa própria, "Atividades em espera"; o moderador vê também as de toda a equipe
+    const atividadesEspera = [
+      at?.minhas_em_andamento ? { n: at.minhas_em_andamento, txt: plural(at.minhas_em_andamento, "tarefa com você em andamento", "tarefas com você em andamento"), href: "#atividades/pendencias", chave: "comigo" } : null,
       // 009z4b (pedido do usuário): uma linha só para as tarefas abertas; as pedidas para você aparecem primeiro, com outra cor
+      souModerador() && at?.equipe_abertas ? { n: at.equipe_abertas, txt: plural(at.equipe_abertas, "tarefa da equipe agora", "tarefas da equipe agora"), href: "#atividades/sugeridas", leve: true, chave: "equipe_agora" } : null,  // 009z5 (pedido do usuário)
       at?.pedidas_por_mim ? { n: at.pedidas_por_mim, txt: plural(at.pedidas_por_mim, "tarefa que você pediu", "tarefas que você pediu"), href: "#atividades/sugeridas", leve: true, chave: "pedidas_por_mim" } : null,  // 009z5 (pedido do usuário)
       (at?.abertas_para_pegar || at?.para_aceitar) ? { n: Math.max(at.abertas_para_pegar || 0, at.para_aceitar || 0), txt: plural(Math.max(at.abertas_para_pegar || 0, at.para_aceitar || 0), "tarefa aberta", "tarefas abertas"), href: "#atividades/sugeridas", chave: "abertas" } : null,
     ].filter(Boolean);
     // 009y1f (pedido do usuário): "Ver" abre uma tira logo abaixo com a prévia do que é preciso fazer (até 5), sem sair da tela
-    $("#precisa-lista").replaceChildren(...(precisa.length ? precisa.map((x) => {
+    const linha = (x) => {
       const aberta = tiraAberta === x.chave;
       return el("li", { class: [x.urgente ? "urgente" : x.leve ? "leve" : null, aberta ? "aberta" : null].filter(Boolean).join(" ") || null, "data-chave": x.chave },
         el("b", { class: "precisa-n", text: String(x.n) }),
@@ -199,8 +217,14 @@
         el("button", { class: "btn small" + (x.leve || aberta ? "" : " primary"), type: "button", "aria-expanded": aberta ? "true" : "false",
           onclick: () => { tiraAberta = aberta ? null : x.chave; if (!aberta) buscarTira(x.chave); App.render(); } }, aberta ? "Fechar" : "Ver"),
         aberta ? tira(x) : null);
-    }) : !r ? [el("li", { class: "nada carregando" }, App.u.esqueleto(3))]  // 009z5 (A3-20): enquanto o resumo não chega, esqueleto (não "Nada esperando")
+    };
+    // 009y1f (pedido do usuário): "Ver" abre uma tira logo abaixo com a prévia do que é preciso fazer (até 5), sem sair da tela
+    $("#precisa-lista").replaceChildren(...(precisa.length ? precisa.map(linha)
+       : !r ? [el("li", { class: "nada carregando" }, App.u.esqueleto(3))]  // 009z5 (A3-20): enquanto o resumo não chega, esqueleto (não "Nada esperando")
        : [el("li", { class: "nada" }, el("span", { text: "Nada esperando por você agora." }))]));
+    // sem nenhuma atividade, a faixa some (o moderador com a equipe parada também não a vê)
+    $("#inicio-atividades").hidden = !atividadesEspera.length;
+    $("#atividades-lista").replaceChildren(...atividadesEspera.map(linha));
     renderPassos();
     $("#inicio-acoes").replaceChildren(...(App.agora?.botoes() || []));
 

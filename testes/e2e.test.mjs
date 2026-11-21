@@ -766,10 +766,17 @@ try {
   ok(await esperar(s, "#at-sug-lista >> text=Ligar para o restaurante Sabor") && await s.isVisible("#at-sug-lista >> text=abre para todos em"), "atividade sugerida aparece esperando aceite");
   // 009z5 (pedido do usuário): quem pediu vê, na tela inicial, a linha das tarefas que pediu, com a situação
   await ir(s, "#inicio"); await s.evaluate(() => App.carregar());
-  ok(await esperar(s, "#precisa-lista li[data-chave=pedidas_por_mim]"), "009z5: tela inicial mostra \"tarefas que você pediu\"");
-  await s.click("#precisa-lista li[data-chave=pedidas_por_mim] button");
-  ok(await esperar(s, "#precisa-lista li[data-chave=pedidas_por_mim] .tira-card:has-text('Ligar para o restaurante Sabor') >> text=esperando"), "009z5: a prévia mostra a tarefa pedida e a situação dela");
-  await s.click("#precisa-lista li[data-chave=pedidas_por_mim] button");
+  ok(await esperar(s, "#atividades-lista li[data-chave=pedidas_por_mim]"), "009z5: tela inicial mostra \"tarefas que você pediu\"");
+  await s.click("#atividades-lista li[data-chave=pedidas_por_mim] button");
+  ok(await esperar(s, "#atividades-lista li[data-chave=pedidas_por_mim] .tira-card:has-text('Ligar para o restaurante Sabor') >> text=esperando"), "009z5: a prévia mostra a tarefa pedida e a situação dela");
+  await s.click("#atividades-lista li[data-chave=pedidas_por_mim] button");
+  ok(!(await s.isVisible("#atividades-lista li[data-chave=equipe_agora]")), "009z5: quem não é moderador não vê \"tarefas da equipe agora\"");
+  // 009z5 (pedido do usuário): o moderador vê as tarefas da equipe agora, mesmo as que não estão com ele
+  await ir(a2, "#inicio"); await a2.evaluate(() => App.carregar());
+  ok(await esperar(a2, "#atividades-lista li[data-chave=equipe_agora]"), "009z5: moderador vê \"tarefas da equipe agora\"");
+  await a2.click("#atividades-lista li[data-chave=equipe_agora] button");
+  ok(await esperar(a2, "#atividades-lista li[data-chave=equipe_agora] .tira-card:has-text('Ligar para o restaurante Sabor') >> text=esperando"), "009z5: a prévia da equipe mostra a tarefa de outra pessoa e com quem está");
+  await a2.click("#atividades-lista li[data-chave=equipe_agora] button");
   await ir(s, "#atividades/sugeridas");
   ok(await s.isVisible("#at-sug-lista .card:has-text('Sabor') >> text=esperando há"), "cartão mostra há quanto tempo espera");
   await s.screenshot({ path: path.join(PRINTS, "c2-sugeridas.png"), fullPage: true });
@@ -1777,12 +1784,12 @@ try {
     ok(!(await v.$("#precisa-lista li[data-chave=pedidas]")), "009z4b: \"pedidas para você\" não tem linha própria (entra em \"tarefas abertas\", com cor)");
     ok(!(await v.$("#precisa-lista li[data-chave=atrasadas]")), "009z4b: as tratativas atrasadas não têm linha própria (ficam dentro de \"tratativas pendentes\", em vermelho)");
     { const linha = (await v.$("#precisa-lista li[data-chave=cadastros]")) ? "cadastros" : (await v.$eval("#precisa-lista li[data-chave]", (x) => x.dataset.chave));
-      await v.click(`#precisa-lista li[data-chave=${linha}] button`);
-      ok(await esperar(v, `#precisa-lista li[data-chave=${linha}] .precisa-tira .tira-card, #precisa-lista li[data-chave=${linha}] .precisa-tira p`) && await v.evaluate(() => location.hash) === "#inicio",
+      await v.click(`.linhas-precisa li[data-chave=${linha}] button`);
+      ok(await esperar(v, `.linhas-precisa li[data-chave=${linha}] .precisa-tira .tira-card, .linhas-precisa li[data-chave=${linha}] .precisa-tira p`) && await v.evaluate(() => location.hash) === "#inicio",
         "009y1f: 'Ver' abre a prévia logo abaixo da linha (" + linha + "), sem sair da tela inicial");
-      ok(await v.$eval(`#precisa-lista li[data-chave=${linha}] .precisa-tira`, (t) => t.querySelectorAll(".tira-card").length <= 5), "009y1f: a prévia mostra no máximo 5");
+      ok(await v.$eval(`.linhas-precisa li[data-chave=${linha}] .precisa-tira`, (t) => t.querySelectorAll(".tira-card").length <= 5), "009y1f: a prévia mostra no máximo 5");
       if (linha === "cadastros") ok(await v.$(`#precisa-lista li[data-chave=cadastros] .tira-card [data-copiar-id]`), "009z4b: o cartão do cadastro tem \"Copiar ID\"");
-      ok(await v.$eval(`#precisa-lista li[data-chave=${linha}] .precisa-tira`, (t) => [...t.querySelectorAll(".tira-txt")].every((x) => x.getBoundingClientRect().width > 160)),
+      ok(await v.$eval(`.linhas-precisa li[data-chave=${linha}] .precisa-tira`, (t) => [...t.querySelectorAll(".tira-txt")].every((x) => x.getBoundingClientRect().width > 160)),
         "009y2: os cartões da prévia não ficam espremidos");
       if (linha === "cadastros") ok(await v.isVisible(`#precisa-lista li[data-chave=cadastros] .tira-card >> text=Aprovar`) && await v.isVisible(`#precisa-lista li[data-chave=cadastros] .tira-card >> text=Reprovar`),
         "009y2: na prévia dos cadastros dá para aprovar e reprovar ali mesmo");
@@ -1793,10 +1800,10 @@ try {
         ok(await esperar(v, "#v-at-pendencias .precisa-tira .tira-card >> text=Aprovar") && await v.evaluate(() => location.hash) === "#atividades/pendencias",
           "009y2: na Minha fila, 'Ver os cadastros' abre os cartões ali mesmo, com Aprovar");
         await v.click("#v-at-pendencias >> button:text-is('Fechar')");
-        await v.evaluate(() => { location.hash = "#inicio"; }); await esperar(v, `#precisa-lista li[data-chave=${linha}] .precisa-tira`);
+        await v.evaluate(() => { location.hash = "#inicio"; }); await esperar(v, `.linhas-precisa li[data-chave=${linha}] .precisa-tira`);
       }
-      await v.click(`#precisa-lista li[data-chave=${linha}] > button`);
-      ok(await v.waitForFunction((l) => !document.querySelector(`#precisa-lista li[data-chave=${l}] .precisa-tira`), linha, { timeout: 4000 }).then(() => true, () => false), "009y1f: 'Fechar' recolhe a prévia"); }
+      await v.click(`.linhas-precisa li[data-chave=${linha}] > button`);
+      ok(await v.waitForFunction((l) => !document.querySelector(`.linhas-precisa li[data-chave=${l}] .precisa-tira`), linha, { timeout: 4000 }).then(() => true, () => false), "009y1f: 'Fechar' recolhe a prévia"); }
     await v.setViewportSize({ width: 390, height: 800 });
     ok(await v.isVisible("#barra-baixo [data-bb='atividades']") && await v.isHidden("nav.modulos"), "009y1: no celular, a barra de baixo aparece e o menu de cima some");
     const alt = await v.evaluate(() => document.querySelector("header.top").getBoundingClientRect().height);
