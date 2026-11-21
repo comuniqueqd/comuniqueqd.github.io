@@ -1,0 +1,1042 @@
+[
+ {
+  "id": "A5-20",
+  "titulo": "Tarefa em 'aguardando terceiro': a contagem regressiva diz 'venceu há X' em vermelho e entra no 'Vence hoje', mas o banco diz que não está atrasada; concluir na pausa sai 'fora do prazo'",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "baixa",
+  "motivo": "Defeito real, mas \"aguardando terceiro\" tem uso 0 no banco real. Corrigir só se a função continuar visível depois da 009z5.",
+  "junto": "A5-2",
+  "versao": "009z"
+ },
+ {
+  "id": "A5-21",
+  "titulo": "'Precisa de você' diz 'N tarefas pedidas para você' para tarefas abertas para a equipe (ninguém pediu) e conta a mesma tarefa de novo em 'tarefas abertas para a equipe'",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Confirmado: para_aceitar conta atividade_aberta_para_mim (inclui as sem sugestão) e o texto diz \"pedidas para você\"; hoje o banco real tem 2 abertas sem dono, que aparecem duas vezes na tela inicial. Erro de informação na porta de entrada, todo dia.",
+  "junto": "A7-21, A5-30, A1-20",
+  "versao": "009z"
+ },
+ {
+  "id": "A5-22",
+  "titulo": "Parceiros: 'esta semana × semana passada' compara a semana em andamento com a passada inteira (no começo da semana o número é sempre negativo)",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "2 parceiros em 3 semanas: a comparação é ruído hoje. Comparar com o mesmo pedaço da semana passada quando mexer na tela.",
+  "junto": "A2-24",
+  "versao": "009z"
+ },
+ {
+  "id": "A5-23",
+  "titulo": "Ajuste de bairro não confere repetido: mesmo ID + mesmo código do pedido entra duas vezes (a conferência da A8-04 só vale para o adicional)",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Dinheiro: mesmo ID + mesmo pedido gera dois pagamentos sem pergunta. O padrão do adicional (p_confirmar + #fi-repetido) já existe. Antecipar de 011 para 009z5.",
+  "junto": "A8-04",
+  "versao": "011"
+ },
+ {
+  "id": "A5-24",
+  "titulo": "Lembrete de retorno vencido não aparece em nenhum número (tela inicial, menu, 'Precisa de você') e no 'Vence hoje' fica sob o título 'Tratativas'",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "baixa",
+  "motivo": "O lembrete vencido já gera aviso no sino (verificar_lembretes); falta só o número. Função nova, 0 lembretes no banco real.",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A5-25",
+  "titulo": "Atividade da equipe fechada continua recalculando: o progresso cai abaixo da meta depois de concluída (10/10 → 9/10)",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A5-26",
+  "titulo": "Retorno combinado com o entregador some sem aviso: moderador apaga o comentário, ou quem comentou sai da equipe",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A5-27",
+  "titulo": "renovar_ajuda aceita renovar antes de vencer: 5 cliques = 25 avisos de nível 4 (som de ajuda) para a equipe",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A5-28",
+  "titulo": "contar_uso: um número grande derruba o envio inteiro e qualquer membro pode inflar os números de uso",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A5-29",
+  "titulo": "Qualquer pessoa desmarca 'lançado' de lançamento de outra; volta como pendente para quem registrou, sem aviso",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Decisão de produto não tomada (desmarcar). Perguntar ao dono; avisar quem registrou é barato.",
+  "junto": "",
+  "versao": "011"
+ },
+ {
+  "id": "A5-30",
+  "titulo": "'Precisa de você' lista 'tratativas atrasadas' e 'tratativas com você' em linhas separadas, e a atrasada conta nas duas",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Contagem dupla da tratativa atrasada; mesma correção do A5-21.",
+  "junto": "A5-21",
+  "versao": "009z"
+ },
+ {
+  "id": "A10-20",
+  "titulo": "Restrições registradas pelo app caíram semana a semana: 30 → 14 → 3",
+  "prio_original": "alta",
+  "veredito": "CONFIRMADO",
+  "prio_final": "alta",
+  "motivo": "Pergunta real e barata: se o registro está indo para fora do app, a escada de punição sai errada. Não é defeito de código comprovado (e2e da Nova restrição passa; s0 tem 5 dias). Ação = diagnóstico, não tela.",
+  "junto": "A16-20",
+  "versao": "009z"
+ },
+ {
+  "id": "A10-21",
+  "titulo": "Avisos ainda demais: 10,2 por pessoa por dia útil; os de ativação (968) são lidos em 1 h só 10% das vezes",
+  "prio_original": "alta",
+  "veredito": "AJUSTADO",
+  "prio_final": "média",
+  "motivo": "A 009x5 (moderador só recebe de cidade sem responsável) só vale desde 20/11: quase todo o número é de antes da correção. Medir em 28/11 antes de mexer. Ação sem código já: dar responsável às 17 cidades.",
+  "junto": "A8-24, A10-23, AV-1",
+  "versao": "010"
+ },
+ {
+  "id": "A10-22",
+  "titulo": "Ferramentas das tarefas com uso zero em 3 semanas: metas, recorrentes, checklist, aguardando terceiro, @menção, comentários, agradecimentos, 'registrar o que já fiz' e 7 dos 10 tipos",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Dado real; vira insumo do A16-21 e da decisão de 16/01/2027.",
+  "junto": "A16-21",
+  "versao": "010"
+ },
+ {
+  "id": "A10-23",
+  "titulo": "Preferências de avisos sem uso: seguir cidade 0, silenciar 0, receber tudo 0 (de olho em entregador 3)",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Insumo do A10-21/A8-24.",
+  "junto": "A10-21",
+  "versao": "010"
+ },
+ {
+  "id": "A10-24",
+  "titulo": "Anexos e agravante nunca usados em 47 restrições",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Insumo do A16-21.",
+  "junto": "A16-21",
+  "versao": "010"
+ },
+ {
+  "id": "A10-25",
+  "titulo": "'Acontecendo agora' com pouco uso fora do aviso geral: ajuda 1, passagem de turno 2, lembrete 0, previsões 2",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "baixa",
+  "motivo": "Insumo do A16-21; ajuda é emergência e não se mede por volume.",
+  "junto": "A16-21",
+  "versao": "010"
+ },
+ {
+  "id": "A10-26",
+  "titulo": "Reprovação alta na ativação: 51 reprovações para 73 aprovações (41%), 50% nesta semana",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Achado de operação, não de código: vale levar ao dono (motivos de reprovação) antes de mexer em tela.",
+  "junto": "",
+  "versao": "010"
+ },
+ {
+  "id": "A7-20",
+  "titulo": "A trava 'nenhum update/delete sem where' não olha 17 das 41 migrações",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "baixa",
+  "motivo": "Um update sem where numa migração falha alto no SQL Editor (a API recusa); não estraga dado. Estender a trava é bom, não urgente.",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A7-21",
+  "titulo": "Mesma regra 'tarefas pedidas para você' escrita em 3 lugares, com diferença",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Mesma raiz do A5-21: corrigir a regra num lugar só (banco) e o front só lê.",
+  "junto": "A5-21",
+  "versao": "009z"
+ },
+ {
+  "id": "A7-22",
+  "titulo": "Sete formatadores de tempo e quatro de dinheiro, com saídas diferentes",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A12-08",
+  "versao": "009z"
+ },
+ {
+  "id": "A7-23",
+  "titulo": "Histórico de versões ocupa 2/3 do busca.js e vai em todo carregamento",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Junto do A15-20 (mexer no histórico de versões).",
+  "junto": "A15-20",
+  "versao": "009z"
+ },
+ {
+  "id": "A7-24",
+  "titulo": "O banco ainda grava avisos com rotas antigas, então os apelidos não podem sair",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A7-25",
+  "titulo": "Restos do CPF no banco e no front depois da 009s",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A7-06",
+  "versao": "010"
+ },
+ {
+  "id": "A7-26",
+  "titulo": "Regras escritas no CLAUDE.md que nenhum teste confere",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A7-12",
+  "versao": "009z"
+ },
+ {
+  "id": "A7-27",
+  "titulo": "CI roda duas vezes cada commit e o site publica antes dos testes",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Junto do A13-21: a main já foi ao ar vermelha 2 vezes em 20/11. on.push sem filtro de ramo confirmado no testes.yml.",
+  "junto": "A13-21",
+  "versao": "009z"
+ },
+ {
+  "id": "A7-28",
+  "titulo": "Os mesmos 7 ajudantes copiados em 25 arquivos de teste",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A7-29",
+  "titulo": "Sete pontos de quebra no CSS e seis blocos de 600 px espalhados",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A7-30",
+  "titulo": "O GitHub Pages publica o repositório inteiro (docs, testes, CLAUDE.md)",
+  "prio_original": "baixa",
+  "veredito": "DERRUBADO",
+  "prio_final": "baixa",
+  "motivo": "O repositório já é público: o Pages não expõe nada que o GitHub não mostre. Só higiene.",
+  "junto": "",
+  "versao": "012"
+ },
+ {
+  "id": "A2-20",
+  "titulo": "Desde a 009x6 a Minha fila e a aba Tratativas baixam as tratativas pendentes de TODAS as cidades para todo mundo (2,3 MB na massa; antes 469 KB para o monitorador), a cada recarga",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "baixa",
+  "motivo": "Real: 2 pendentes, ~3,4 KB. O argumento p_minhas é bom e barato, mas não é média hoje.",
+  "junto": "A3-21, A3-23",
+  "versao": "009z"
+ },
+ {
+  "id": "A2-21",
+  "titulo": "Gatilho aad_restricao (009x4) deixou cada aviso com 'bloque' 6x mais caro: 138 regex por texto, acima do cache de 32 regex do Postgres",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "baixa",
+  "motivo": "Real: ~90 avisos/dia; 4,5 ms por aviso = 0,4 s/dia. Só pesa na massa.",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A2-22",
+  "titulo": "resumo_e_avisos reenvia os 20 avisos do sino em toda recarga (5,5 de 6,4 KB), mesmo sem aviso novo; com a tela de Avisos aberta, vêm de novo em listar_avisos",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "AT7",
+  "versao": "010"
+ },
+ {
+  "id": "A2-23",
+  "titulo": "Funções caras que o front não usa mais continuam abertas a qualquer membro: listar_tarefas('concluida') 11 s / 45 MB e listar_cadastros('todos') 3 s / 13,7 MB",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "baixa",
+  "motivo": "Abuso só por membro de dentro, e o banco real tem 170 tarefas e 99 cadastros. Fechar junto na migração \"portas\" (custo mínimo).",
+  "junto": "A6-20, A6-21",
+  "versao": "009z"
+ },
+ {
+  "id": "A2-24",
+  "titulo": "Parceiros: 'Ativar parceiro' baixa todas as tarefas abertas da equipe e 'Ativações' baixa 2.000 parceiros a cada recarga",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "2.000 linhas para 2 parceiros reais: só pesa na massa.",
+  "junto": "A16-24",
+  "versao": "010"
+ },
+ {
+  "id": "A12-20",
+  "titulo": "Textos de ajuda que contradizem o app de hoje: 'Moderadores recebem tudo' (Avisos), 'a ficha nasce na aprovação' (Novo cadastro), 'fica no cadastro do entregador' (Nova restrição)",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Confirmado (index.html:587 \"Moderadores recebem tudo\"), contradiz a 009x5: o moderador acha que recebe tudo e não recebe.",
+  "junto": "A12-21",
+  "versao": "009z"
+ },
+ {
+  "id": "A12-21",
+  "titulo": "Concordância quebrada pela troca bloqueio → restrição: 'no próprio restrição', 'A restrição é retirado', 'os próximas restrições', 'Restrição de 13/08 (…) corrigido'",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Confirmado: index.html:297, :462, :512, js/bloqueios.js:970, js/busca.js:301. Texto pequeno, erro visível.",
+  "junto": "A12-20",
+  "versao": "009z"
+ },
+ {
+  "id": "A12-22",
+  "titulo": "Tela cheia de texto: 1.995 palavras de ajuda nas 30 abas; Análises simples+complexas = 549, Regras de restrição 167 só em .sub, Avisos 158",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "média",
+  "motivo": "Cortar subtítulos sim, mas o A15-24 mostrou 9 regras que só existem neles: mover antes de cortar.",
+  "junto": "A15-24",
+  "versao": "010"
+ },
+ {
+  "id": "A12-23",
+  "titulo": "Títulos de tarefa com '(es)'/'(s)' vindos do banco aparecem em todo cartão e aviso: 'Aprovar 5 entregador(es) · LAGARTO - SE'",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A12-08",
+  "versao": "009z"
+ },
+ {
+  "id": "A12-24",
+  "titulo": "DESIGN.md e app discordam no verbo de assumir tarefa: glossário diz 'Pegar', botões dizem 'Eu faço', 'Pegar a próxima' e 'até alguém pegar' convivem",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Glossário: decidir \"Eu faço\" e atualizar o DESIGN.md.",
+  "junto": "A4-26, A15-26",
+  "versao": "009z"
+ },
+ {
+  "id": "A12-25",
+  "titulo": "Botões repetidos que pesam a tela: 27 'Pedir para ser responsável' numa lista, 74 'Editar' e 38 'Excluir' em linhas",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "010"
+ },
+ {
+  "id": "A1-20",
+  "titulo": "Tela inicial repete os mesmos números 2 a 3 vezes: 'Precisa de você', 'Seus números', menu e sino",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Confirmado (Seus números repete Precisa de você; js/inicio.js:239).",
+  "junto": "A5-21, A16-21",
+  "versao": "009z"
+ },
+ {
+  "id": "A1-21",
+  "titulo": "Tratativa tem 4 portas com 3 controles diferentes, e a da tela inicial ('Tratar') só leva para a lista inteira",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Vai junto da reforma de Restrições (010d).",
+  "junto": "A8-22",
+  "versao": "010"
+ },
+ {
+  "id": "A1-22",
+  "titulo": "Três buscas que levam à mesma ficha, duas na mesma tela; Enter na busca do topo ainda não abre",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A2",
+  "versao": "009z"
+ },
+ {
+  "id": "A1-23",
+  "titulo": "Tela inicial com 12 blocos: atalhos em 2-3 linhas repetem o menu e incluem o que quase não se usa",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Atalhos repetem o menu; junto do A8-23.",
+  "junto": "A8-23, A4-23",
+  "versao": "010"
+ },
+ {
+  "id": "A1-24",
+  "titulo": "Registrar adicional em sequência pede tudo de novo (origem, mercado, motivo): 10 e 9 cliques",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "FN-1",
+  "versao": "011"
+ },
+ {
+  "id": "A4-20",
+  "titulo": "Hierarquia de títulos invertida: subtítulo de grupo (h3 14 px) menor que o texto (15 px) e título de tela (h2 18 px) a um passo do corpo; o DESIGN.md pede 17/22",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A4-21",
+  "titulo": "Navegação em três andares no computador: barra lateral + pílulas do grupo (Ativação/Restrições) + abas numa faixa floresta de 170 px antes do título; a faixa muda de altura entre telas (64, 107, 170 px)",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Ressalva: o topo floresta é parte da identidade Dino aprovada (009q) e a revisão de identidade disse \"ajustar, não recomeçar\". Topo claro só com o ok do dono.",
+  "junto": "A15-21, A16-23",
+  "versao": "010"
+ },
+ {
+  "id": "A4-22",
+  "titulo": "Minha fila: cada item é um cartão de 300-350 px com 5 a 7 ações, data completa, descrição em caixa dentro da caixa e duas medidas de tempo que se contradizem",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Cartão de 300-350 px é o maior peso visual; a linha única é o passo de maior ganho.",
+  "junto": "A8-20",
+  "versao": "010"
+ },
+ {
+  "id": "A4-23",
+  "titulo": "Notícias rápidas e Parceiros da semana: cada frase num cartão verde com degradê (7 cartões seguidos), e o diário do Caderno de Campo do DESIGN.md não foi aplicado",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Junto da tela inicial.",
+  "junto": "A1-23",
+  "versao": "009z"
+ },
+ {
+  "id": "A4-24",
+  "titulo": "Duas cores de botão principal (floresta escura e verde) e coluna de cinco 'Ver' cheios na tela inicial: o olho não sabe qual é a ação",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A4-25",
+  "titulo": "'Com restrição agora' e 'Tratativas' desenhadas como formulário: grade de 8 rótulos por item (Infração, Ocorrência, Punição, Início, Fim, Cidade, Registrado por)",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Junto da reforma de Restrições.",
+  "junto": "A8-22",
+  "versao": "010"
+ },
+ {
+  "id": "A4-26",
+  "titulo": "Glossário não seguido nos títulos: menu 'Atividades', grupo 'Atividades da equipe', avisos 'aceitou a atividade'; o DESIGN.md diz 'Tarefa, nunca atividade'",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Mesmo tema do A12-24.",
+  "junto": "A12-24",
+  "versao": "009z"
+ },
+ {
+  "id": "A4-27",
+  "titulo": "Quatro estilos de etiqueta (tag verde 11 px, 'Opcional' tracejado, 'revisar' âmbar, pílula de situação) e texto de 10-11 px fora do gráfico",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A4-28",
+  "titulo": "Painéis de número dentro de painel e borda de cima colorida (Painel das tarefas, Lançamentos, Seus números)",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "010"
+ },
+ {
+  "id": "A11-20",
+  "titulo": "Painel lateral comprido e repetido: 1.574 px a 360 px, avisos só depois de 775 px, pedido de ajuda aparece duas vezes, faixa âmbar em todo aviso; proposta de painel enxuto em 3 blocos",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Painel da extensão longo; junto do lançamento da extensão.",
+  "junto": "A11-21",
+  "versao": "ext"
+ },
+ {
+  "id": "A11-21",
+  "titulo": "Extensão fora do DESIGN.md: bordas de campo 1,3:1 (o site usa line-forte ≥3:1), botão principal no escuro 1,18:1 contra o cartão, alerta com cores fixas sem versão escura",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Botão principal no escuro 1,18:1 é falha de acessibilidade; antes do próximo envio.",
+  "junto": "A11-20",
+  "versao": "ext"
+ },
+ {
+  "id": "A11-22",
+  "titulo": "Manifesto 1.3.2 e textos da loja ainda dizem 'bloqueio' (descrição do chrome://extensions, resumo e descrição da loja, print 1)",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "A regra \"restrição\" (009x4) vale para o que a equipe e a loja leem; manifesto e textos da loja ainda dizem bloqueio. Antes do próximo envio à loja.",
+  "junto": "A11-23",
+  "versao": "ext"
+ },
+ {
+  "id": "A11-23",
+  "titulo": "test:extensao (e o CI) testa a extensão num banco parado na 009s: o adicional repetido da 1.3.1 e o banco de hoje não são testados",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Confirmado: extensao.test.mjs carrega lista fixa até 009s, sem completar(). O CLAUDE.md diz A7-04 feito; este arquivo ficou de fora. Pré-requisito de qualquer nova versão da extensão.",
+  "junto": "A11-22, A7-04",
+  "versao": "009z"
+ },
+ {
+  "id": "A11-24",
+  "titulo": "Adicional repetido na extensão aparece como erro vermelho e a confirmação é clicar de novo no mesmo botão (o site tem 'Registrar mesmo assim' / 'Não registrar')",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "ext"
+ },
+ {
+  "id": "A6-20",
+  "titulo": "regras_equipe() entrega o telefone dos responsáveis de cidade a todos os membros, mas nenhuma tela mostra e não há como apagar",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "baixa",
+  "motivo": "Telefone de colega de equipe (não de entregador), visto só por membros que já estão no grupo de WhatsApp. Ainda assim tirar do JSON (necessidade, LGPD) na migração \"portas\".",
+  "junto": "A6-21, A2-23",
+  "versao": "009z"
+ },
+ {
+  "id": "A6-21",
+  "titulo": "Casos suspeitos guardados continuam legíveis por qualquer membro pela API (tabelas e casos_abertos_de), sem tela e sem finalidade ativa",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "baixa",
+  "motivo": "Banco real: casos = 0. Nada exposto hoje. Fechar as 3 políticas e casos_abertos_de na migração \"portas\" para não vazar quando os casos voltarem.",
+  "junto": "A6-20, A2-23, A7-06",
+  "versao": "009z"
+ },
+ {
+  "id": "A13-20",
+  "titulo": "CLAUDE.md com 123 KB entra inteiro em toda sessão e em cada agente: maior custo da varredura e do dia a dia",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Custo real (a rodada parou por limite de uso). Mas mover a história do CLAUDE.md precisa do ok do dono: é a memória entre conversas. Fazer como mudança de lugar, sem apagar.",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A13-21",
+  "titulo": "O site vai ao ar antes de os testes terminarem: o GitHub Pages publica a main em ~1 min e o CI leva 7 min",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Confirmado: Pages publica da main em ~1 min, testes levam 7 min. Exige o dono trocar a fonte do Pages para \"GitHub Actions\" (uma vez).",
+  "junto": "A7-27",
+  "versao": "009z"
+ },
+ {
+  "id": "A13-22",
+  "titulo": "Lançador de versão continua manual: 8 publicações em 24 h, 22 lugares com o número da versão e nenhum teste que confira",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "22 lugares com a versão e nenhum teste: o teste estático que compara os 4 números é o pedaço mais valioso e pequeno.",
+  "junto": "A15-28",
+  "versao": "009z"
+ },
+ {
+  "id": "A13-23",
+  "titulo": "Designer de plantão: aplicar a proposta visual tela a tela com álbum antes × depois",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Processo útil para a Mesa limpa.",
+  "junto": "A15-23",
+  "versao": "010"
+ },
+ {
+  "id": "A13-24",
+  "titulo": "Quatro skills de design se sobrepõem; a Taste é feita para sites de marketing e puxa para o lado oposto da Mesa de Operação",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A13-23",
+  "versao": "009z"
+ },
+ {
+  "id": "A13-25",
+  "titulo": "Varredura: escrever o relatório aos poucos e lotes menores no modo completo",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A13-20",
+  "versao": "009z"
+ },
+ {
+  "id": "A8-20",
+  "titulo": "Início ('Precisa de você') e Minha fila mostram as mesmas pendências em duas telas: juntar numa tela só 'Hoje' (Things/Todoist Today, Linear My issues)",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Duplicação real (Precisa de você × Minha fila). É a maior mudança de lugar da 010: entra depois da base visual e com tour.",
+  "junto": "A16-23, A4-22, A1-20",
+  "versao": "010"
+ },
+ {
+  "id": "A8-21",
+  "titulo": "Lista + painel de detalhe no computador (Airtable 'Record review', Linear Peek, Zendesk context panel) no lugar de 'Detalhes' que expande a linha e da ficha em janela",
+  "prio_original": "média",
+  "veredito": "DERRUBADO",
+  "prio_final": "baixa",
+  "motivo": "Esforço grande para 10 pessoas e conflita com a tendência \"menos telas/menos jeitos\": a linha que abre (\"Detalhes\") já existe. Fica para depois.",
+  "junto": "",
+  "versao": "010"
+ },
+ {
+  "id": "A8-22",
+  "titulo": "Restrições tem 7 abas e 4 delas são a mesma lista com filtro diferente (Tratativas, Com restrição agora, Atenção, Histórico): virar uma lista com vistas",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "4 listas da mesma tabela. Ressalva: a 009k manteve \"Com restrição agora\" porque é onde fica Liberar antes/Reverter; a vista precisa manter essas ações. E só depois do diagnóstico da queda das restrições.",
+  "junto": "A4-25, A1-21",
+  "versao": "010"
+ },
+ {
+  "id": "A8-23",
+  "titulo": "Formulários de criação como abas (Novo cadastro, Nova restrição, Registrar adicional, Ativar parceiro) + bloco de 8 atalhos: trocar por um botão 'Novo' no topo que abre o formulário numa gaveta (Linear 'C', Airtable '+')",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Botão \"Novo\" é bom, mas não tirar o Nova restrição do lugar enquanto a queda não estiver explicada.",
+  "junto": "A1-23",
+  "versao": "010"
+ },
+ {
+  "id": "A8-24",
+  "titulo": "Avisos com 'Prioridade' e 'Outros' (Linear Priority inbox, set/2026): o número do sino conta só o que é para a pessoa",
+  "prio_original": "alta",
+  "veredito": "AJUSTADO",
+  "prio_final": "média",
+  "motivo": "Boa solução, mas depende da medição de 28/11 (A10-21). Só entra na 010 se os avisos seguirem acima de 4/pessoa/dia.",
+  "junto": "A10-21",
+  "versao": "010"
+ },
+ {
+  "id": "A8-25",
+  "titulo": "Distribuição equilibrada para cidades sem responsável (Intercom 'balanced assignment'): a tratativa vai a quem tem menos coisa aberta, não a todos os moderadores",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A8-03, CD-1",
+  "versao": "depois"
+ },
+ {
+  "id": "A14-20",
+  "titulo": "Log Ingestion (1 GB/mês no grátis) é o primeiro limite a estourar: cresce com o número de chamadas (tique 30 s, rotina de 7 chamadas, extensão a cada 1 min), não com bytes",
+  "prio_original": "alta",
+  "veredito": "AJUSTADO",
+  "prio_final": "média",
+  "motivo": "O próprio modelo do a14 mostra 0,92 GB em 6 meses só no pior caso (20 pessoas + extensão 24 h); sem extensão, 0,53 GB. A extensão nem foi distribuída. Vira trava de lançamento da extensão (chrome.idle), não urgência.",
+  "junto": "A14-21, A14-22, A14-23, AT7",
+  "versao": "009z"
+ },
+ {
+  "id": "A14-21",
+  "titulo": "Rotina de 5 min faz 7 chamadas por pessoa (34% das chamadas do site)",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "média",
+  "motivo": "Parte do pacote do A14-20 (cortar chamadas antes da extensão).",
+  "junto": "A14-20",
+  "versao": "009z"
+ },
+ {
+  "id": "A14-22",
+  "titulo": "O tique de 30 s (ultima_mudanca) é metade das chamadas do site; dá para receber a mudança pelo Realtime",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Tique por Realtime corta metade das chamadas; mas a 008c tirou tabelas do Realtime de propósito: usar só a linha de versao_dados. 010.",
+  "junto": "A14-20, A3-22",
+  "versao": "010"
+ },
+ {
+  "id": "A14-23",
+  "titulo": "Não se sabe se o Supabase comprime as respostas (gzip): decide se a extensão cabe nos 5 GB",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Barato de medir (curl com Accept-Encoding no projeto real); decide o custo da extensão.",
+  "junto": "A14-20",
+  "versao": "009z"
+ },
+ {
+  "id": "A14-24",
+  "titulo": "Anexos ficam dentro do banco com teto de 200 MB (40% do banco grátis)",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "baixa",
+  "motivo": "0 anexos em 47 restrições; o teto de 200 MB é teórico. Baixar para 50 MB custa uma linha; Storage fica para a 012.",
+  "junto": "",
+  "versao": "009z"
+ },
+ {
+  "id": "A14-25",
+  "titulo": "Conta mensal de custos em 5 minutos (Usage + custos-mensal.sql)",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A13-02",
+  "versao": "009z"
+ },
+ {
+  "id": "A14-26",
+  "titulo": "Pausa do projeto grátis após 1 semana sem atividade (risco só em parada longa)",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "012"
+ },
+ {
+  "id": "A14-27",
+  "titulo": "MAU 12 com 10 membros: logins de fora da equipe criam usuário",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "F1",
+  "versao": "012"
+ },
+ {
+  "id": "A15-20",
+  "titulo": "Quem pula versões só vê a última: a janela de novidades mostra só VERSOES[0] e o tour só os passos dela; 7 versões (27 itens) de 20-21/11 ficaram em 'Versões anteriores'",
+  "prio_original": "alta",
+  "veredito": "AJUSTADO",
+  "prio_final": "média",
+  "motivo": "Confirmado no código (js/busca.js: const [atual, ...antigas] = VERSOES). Não atrasa a equipe toda semana: atrapalha quem pula versões, e com o trem semanal (A15-22) o problema encolhe. Fazer antes da Mesa limpa.",
+  "junto": "A15-21, A7-23, A15-06",
+  "versao": "009z"
+ },
+ {
+  "id": "A15-21",
+  "titulo": "'Mostrar onde' e o tour não fazem nada no celular: 9 de 13 seletores apontam para nav.modulos, escondido abaixo de 1024 px",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Tour aponta para nav.modulos, escondido abaixo de 1024 px: precisa de seletor alternativo (barra de baixo).",
+  "junto": "A15-20, A4-21",
+  "versao": "009z"
+ },
+ {
+  "id": "A15-22",
+  "titulo": "Ritmo de publicação: 13 trocas de versão em ~20 h (20-21/11), cada uma com 'Saiu uma versão nova'; propor 'trem semanal' com correções silenciosas",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Ritmo de 13 versões em 20 h é real. Trem semanal é decisão do dono; correção silenciosa só recarrega sem campo preenchido (já previsto).",
+  "junto": "A16-23, A15-23",
+  "versao": "009z"
+ },
+ {
+  "id": "A15-23",
+  "titulo": "Apresentar a Mesa limpa em 2 ondas: aviso geral na véspera, tela 'Onde foi parar', tour de 4 passos (computador e celular) e nomes antigos no Ctrl+K por 30 dias",
+  "prio_original": "alta",
+  "veredito": "AJUSTADO",
+  "prio_final": "média",
+  "motivo": "Plano de comunicação correto, mas só vale se a Mesa limpa for aprovada; prioridade herdada da decisão do dono, não de defeito.",
+  "junto": "A16-23, A13-23, A15-22, A4-21",
+  "versao": "010"
+ },
+ {
+  "id": "A15-24",
+  "titulo": "Os 40 subtítulos que a Mesa limpa tira guardam 9 regras que não estão em outro lugar da tela (leves, Atenção, responsável da cidade, adicional, taxa do log, 'o entregador não recebe'…)",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Trava para a Mesa limpa: nenhum subtítulo sai antes de a regra ter outro lugar.",
+  "junto": "A12-22",
+  "versao": "010"
+ },
+ {
+  "id": "A15-25",
+  "titulo": "Uso zero: separar 'não sabem' de 'não precisam' antes de esconder; teste de descoberta de 2 semanas só para silenciar/seguir",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Argumento central contra esconder cedo.",
+  "junto": "A16-21",
+  "versao": "009z"
+ },
+ {
+  "id": "A15-26",
+  "titulo": "Primeiros passos se marcam como feitos só de clicar no link; moderador recebe 7 itens; 'Pegar' em vez de 'Eu faço'",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Parte \"Pegar\" junto do A12-24.",
+  "junto": "A12-24",
+  "versao": "009z"
+ },
+ {
+  "id": "A15-27",
+  "titulo": "Novidades sem papel: o suporte lê itens de moderador (campo 'papel' proposto em A15-06 não entrou)",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A15-06",
+  "versao": "009z"
+ },
+ {
+  "id": "A15-28",
+  "titulo": "Kit de lançamento mínimo (texto do aviso geral, cartão PNG para o WhatsApp, 'Onde foi parar') gerado do VERSOES pelo lançador",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Depende do lançador (A13-22).",
+  "junto": "A13-22",
+  "versao": "009z"
+ },
+ {
+  "id": "A15-29",
+  "titulo": "Estados vazios que ensinam o próximo passo (3 de ~45 hoje)",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "",
+  "versao": "010"
+ },
+ {
+  "id": "A16-20",
+  "titulo": "Restrições caíram 30 → 14 → 3: a queda começou em s1, antes da troca de nome (009x4) e da navegação nova (009y1); descobrir a causa sem vigiar (Quero Log agregado, consulta por infração, funil envio/erro no uso_dia, uma pergunta anônima)",
+  "prio_original": "alta",
+  "veredito": "CONFIRMADO",
+  "prio_final": "alta",
+  "motivo": "Mesmo fato do A10-20, com o plano de diagnóstico (Quero Log agregado + restricoes-diagnostico.sql + envio/erro no contar_uso). Fica como o item-mãe.",
+  "junto": "A10-20",
+  "versao": "009z"
+ },
+ {
+  "id": "A16-21",
+  "titulo": "009z5 'Mesa enxuta': esconder em 'Mais opções' as 17 funções com uso zero e retirar 3 telas repetidas (Seus números, Consultar, Ativações), sem migração e sem mudar nada de lugar",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "média",
+  "motivo": "Reduzir o escopo: a 009x5 combinou congelar funções pouco usadas até 8 semanas de dados (16/01/2027). Esconder agora derruba ainda mais o uso e vicia a medida (A15-25). Na 009z5: retirar só o que é repetição pura (Seus números) e enxugar o cartão de tarefa; o resto espera a data.",
+  "junto": "A10-22, A10-24, A10-25, A16-22, A15-25",
+  "versao": "009z"
+ },
+ {
+  "id": "A16-22",
+  "titulo": "Medir o que foi escondido (uso_dia 'mais:<recurso>') para a decisão das 8 semanas (16/01/2027): 0 aberturas = retirar, 5+/semana = volta para a tela",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Necessário se algo for escondido.",
+  "junto": "A16-21",
+  "versao": "009z"
+ },
+ {
+  "id": "A16-23",
+  "titulo": "Plano de versões em fatias de uma mudança visível por semana: 009z5 Mesa enxuta → 010a base visual → 010b linha única → 010c Hoje → 010d Restrições em vistas → 010e navegação → 010f comemorativa",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "média",
+  "motivo": "Fatias semanais: sim. Ordem: correções e diagnóstico antes do visual; Restrições (010d) só depois de entender a queda; navegação e topo claro (010e) só com o ok explícito do dono.",
+  "junto": "A15-23, A13-23, A15-22",
+  "versao": "010"
+ },
+ {
+  "id": "A16-24",
+  "titulo": "Parceiros é módulo de menu com 3 abas e atalho fixo para 2 ativações em 3 semanas: retirar a aba Ativações (009z5) e virar janela pelo 'Novo' (010e)",
+  "prio_original": "média",
+  "veredito": "DERRUBADO",
+  "prio_final": "baixa",
+  "motivo": "Conflita com decisões do dono: Parceiros foi pedido como módulo (\"telas que interagem\", 009e) e a aba Ativações está \"em teste por um tempo\" por pedido dele (009f/009g4). Não retirar sem perguntar.",
+  "junto": "A2-24",
+  "versao": "009z"
+ },
+ {
+  "id": "A16-25",
+  "titulo": "Inventário 'O que existe hoje' parou na 009w (faltam Ctrl+K, Vence hoje, lembretes, primeiros passos, uso_dia, limpar avisos...)",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A13-22",
+  "versao": "009z"
+ },
+ {
+  "id": "A3-20",
+  "titulo": "Tela inicial salta ao abrir o app (CLS 0,58 no PC, 0,65 no celular) e mostra 'Nada esperando por você agora' antes de o resumo chegar",
+  "prio_original": "alta",
+  "veredito": "AJUSTADO",
+  "prio_final": "média",
+  "motivo": "Confirmado no código (js/inicio.js: precisa vazio vira \"Nada esperando por você agora\" enquanto S.resumo não chegou). É salto de ~0,3 s na entrada, não atraso semanal; correção pequena e visível: entra na 009z5.",
+  "junto": "A3-24, A3-05",
+  "versao": "009z"
+ },
+ {
+  "id": "A3-21",
+  "titulo": "Tratativas virou a tela mais pesada: desde a 009x6 desenha todas as pendentes de todas as cidades, sem limite (12.443 elementos, 99 mil px, 0,7-0,9 s por redesenho no celular)",
+  "prio_original": "alta",
+  "veredito": "DERRUBADO",
+  "prio_final": "baixa",
+  "motivo": "Medido em massa de 250 pendentes; no banco real há 2 tratativas pendentes e 14 criadas em 3 semanas (0 atrasadas). Pendentes não se acumulam. Resolve-se de carona com o A2-20 (pedir só as minhas).",
+  "junto": "A2-20, A3-18",
+  "versao": "009z"
+ },
+ {
+  "id": "A3-22",
+  "titulo": "Voltar a uma tela já vista baixa tudo de novo, mesmo sem nada mudar no banco (Minha fila 617 KB a cada visita); com a equipe gravando, cada tique de 30 s refaz a carga completa",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "baixa",
+  "motivo": "Egress real 2% do limite; com 10 pessoas não atrasa ninguém. Vem junto do A14-22.",
+  "junto": "A14-22",
+  "versao": "009z"
+ },
+ {
+  "id": "A3-23",
+  "titulo": "'Ver' da tela inicial baixa a lista inteira para mostrar 5 cartões (tratativas: 364 KB, 0,9 s com latência)",
+  "prio_original": "média",
+  "veredito": "AJUSTADO",
+  "prio_final": "baixa",
+  "motivo": "Lista real pequena (2 tratativas, 4 cadastros aguardando).",
+  "junto": "A2-20",
+  "versao": "009z"
+ },
+ {
+  "id": "A3-24",
+  "titulo": "Saltos fortes também em Análises simples, Histórico de restrições e Avisos no celular (0,69 / 0,28 / 0,12), além de Lançamentos e Ativações (A3-05)",
+  "prio_original": "média",
+  "veredito": "CONFIRMADO",
+  "prio_final": "média",
+  "motivo": "Mesmo remédio do A3-20 (reservar lugar / esqueleto); juntar na mesma entrega.",
+  "junto": "A3-20, A3-05",
+  "versao": "009z"
+ },
+ {
+  "id": "A3-25",
+  "titulo": "Entrada: 3 idas e voltas em série antes do conteúdo e a rotina de 5 min (6 chamadas) disparada junto da 1ª carga; o resumo é a 15ª chamada",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A3-12",
+  "versao": "009z"
+ },
+ {
+  "id": "A3-26",
+  "titulo": "Lançamentos pede até 5.000 linhas e desenha todas (6.416 elementos; 371-411 ms por redesenho no celular)",
+  "prio_original": "baixa",
+  "veredito": "CONFIRMADO",
+  "prio_final": "baixa",
+  "motivo": "Evidência lida e coerente com o código/dados; prioridade mantida (não reproduzido à parte).",
+  "junto": "A3-14",
+  "versao": "009z"
+ }
+]
