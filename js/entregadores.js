@@ -28,7 +28,7 @@
       const r = await rpc("cadastrar_entregador", { p_id_app: id, p_nome: nome, p_cidade: $("#en-cidade").value || null, p_comentario: $("#en-comentario").value.trim() || null });
       form.reset();
       E.feito = r;
-      toast(r.bloqueios_completados ? `Entregador cadastrado. Nome e cidade completados em ${r.bloqueios_completados} restrição(ões).` : "Entregador cadastrado.");
+      toast(r.bloqueios_completados ? `Entregador cadastrado. Nome e cidade completados em ${App.u.plural(r.bloqueios_completados, "restrição", "restrições")}.` : "Entregador cadastrado.");
       await carregar(); renderCadastrar();
     } catch (err) {
       const msg = msgErro(err);
@@ -46,8 +46,8 @@
       el("div", { class: "meta", text: "Entregador cadastrado" }),
       el("div", { class: "grande", text: r.nome }),
       el("div", {}, el("span", { class: "mono", text: r.id_app }), " · ", r.cidade || "sem cidade"),
-      r.bloqueios_completados ? el("div", { text: `Nome e cidade completados em ${r.bloqueios_completados} restrição(ões) que esperavam os dados.` }) : null,
-      r.bloqueios_pendentes ? el("div", { text: `Este ID tem ${r.bloqueios_pendentes} restrição(ões) esperando o monitoramento completar os dados.` }) : null,
+      r.bloqueios_completados ? el("div", { text: `Nome e cidade completados em ${App.u.plural(r.bloqueios_completados, "restrição", "restrições")} que esperavam os dados.` }) : null,
+      r.bloqueios_pendentes ? el("div", { text: `Este ID tem ${App.u.plural(r.bloqueios_pendentes, "restrição", "restrições")} esperando o monitoramento completar os dados.` }) : null,
       el("div", { class: "actions" }, el("button", { class: "btn small", type: "button", onclick: () => fecharEAbrirFicha(r.id_app) }, "Abrir a ficha"))));
   }
 

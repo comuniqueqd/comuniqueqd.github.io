@@ -533,7 +533,7 @@
     const hist = p.historico || [];
     const nomeDigitado = norm($("#bq-nome").value.trim());
     partes.push(el("div", { class: "panel", style: "margin:0" },
-      el("h3", { text: hist.length ? `Histórico deste ID (${hist.length} restrição(ões))` : "Este ID não tem restrições anteriores" }),
+      el("h3", { text: hist.length ? `Histórico deste ID (${App.u.plural(hist.length, "restrição", "restrições")})` : "Este ID não tem restrições anteriores" }),
       p.cadastro ? el("p", { class: "meta", text: `Cadastro na ativação: ${p.cadastro.situacao} (enviado em ${dt(p.cadastro.enviado_em)}, ${p.cadastro.cidade}).` }) : el("p", { class: "meta", text: "Sem cadastro no módulo de ativação." }),
       hist.length ? el("ol", { class: "timeline" }, hist.slice(0, 12).map((h) => el("li", {},
         el("b", { text: dt(h.inicio) }), ` · ${h.infracao}${h.leve ? " (leve)" : " · " + ord(h.ocorrencia)} · ${horasTxt(h.horas)} · ${SIT[h.situacao]} · por ${h.registrado_por_nome}`,
@@ -680,7 +680,7 @@
       el("label", {}, "Nome do entregador", nome),
       el("label", {}, "Cidade", cid),
       qtdBloqueios ? el("label", { class: "marcar" }, aplicar,
-        el("span", { text: `Aplicar também aos ${qtdBloqueios} restrição(ões) já registradas com este ID. Deixe desmarcado se o ID foi usado por pessoas diferentes (corrija esses registros um por um).` })) : null,
+        el("span", { text: `Aplicar também ${qtdBloqueios === 1 ? "à restrição já registrada" : `às ${qtdBloqueios} restrições já registradas`} com este ID. Deixe desmarcado se o ID foi usado por pessoas diferentes (corrija esses registros um por um).` })) : null,
       el("label", {}, "Motivo", mot),
       el("p", { class: "meta", style: "margin:0", text: "Os próximos registros deste ID já vêm com estes dados. A alteração fica registrada nos comentários do entregador." }),
       erro,
@@ -693,7 +693,7 @@
           try {
             const r = await rpc("salvar_entregador", { p_id_app: f.id_app, p_nome: nome.value.trim(), p_cidade: cid.value || null, p_aplicar: aplicar.checked, p_motivo: mot.value.trim() || null });
             d.close();
-            toast(r.bloqueios_alterados ? `Dados salvos e aplicados a ${r.bloqueios_alterados} restrição(ões).` : "Dados do entregador salvos.");
+            toast(r.bloqueios_alterados ? `Dados salvos e aplicados a ${App.u.plural(r.bloqueios_alterados, "restrição", "restrições")}.` : "Dados do entregador salvos.");
             await reconsultar(); carregar();
           } catch (err) { btn.disabled = false; erro.textContent = msgErro(err); erro.hidden = false; }
         } }, "Salvar"),
@@ -741,8 +741,8 @@
             el("span", { class: "chip", text: f.cidade || "Sem cidade" }),
             el("span", { class: "chip" + (seus.some((b) => b.situacao === "bloqueado") ? " x" : ""), text: seus.some((b) => b.situacao === "bloqueado") ? "Com restrição agora" : "Não está com restrição agora" }),
             seus.some((b) => b.situacao === "encerramento") ? el("span", { class: "chip x", text: "Parceria encerrada" }) : null,
-            el("span", { class: "chip", text: `${normais.length} restrição(ões)` }),
-            el("span", { class: "chip", text: `${leves.length} infração(ões) leve(s)` }),
+            el("span", { class: "chip", text: App.u.plural(normais.length, "restrição", "restrições") }),
+            el("span", { class: "chip", text: App.u.plural(leves.length, "infração leve", "infrações leves") }),
             el("span", { class: "chip", text: cad.length ? "Ativação: " + cad.map((x) => x.situacao).join(", ") : "Sem cadastro na ativação" })),
           nomes.length > 1 ? el("p", { class: "alerta-revisar bloco", text: `Este ID aparece com ${nomes.length} nomes nas restrições: ${nomes.join(", ")}. Se forem pessoas diferentes, corrija o ID de cada registro.` }) : null,
           f.atualizado_em ? el("p", { class: "meta", text: `Dados alterados por ${f.atualizado_por_nome} em ${dt(f.atualizado_em)}.` }) : null,
@@ -828,7 +828,7 @@
     const paginas = Math.max(1, Math.ceil(h.total / h.por));
     const ini = (h.pagina - 1) * h.por;
     $("#bq-hist-sub").textContent = "Todas as restrições e infrações leves. Clique numa linha para ver o histórico de cada um.";
-    $("#bq-hist-total").textContent = `${h.total} de ${h.total_geral} restrição(ões)` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + h.por, h.total)}` : "");
+    $("#bq-hist-total").textContent = `${h.total} de ${App.u.plural(h.total_geral, "restrição", "restrições")}` + (paginas > 1 ? ` · mostrando ${ini + 1} a ${Math.min(ini + h.por, h.total)}` : "");
     $("#bq-hist-meus-box").hidden = false;  // 009x6: o suporte vê tudo e pode filtrar os seus
     // 008d: quadrinhos como os do Histórico da ativação; clicar filtra pela situação
     const c = h.contagens, sitAtual = $("#bq-hist-sit").value;
@@ -1013,7 +1013,7 @@
           x.bloqueado_agora ? pillSit("bloqueado") : null),
         el("span", { class: "espera velho", text: `último registro ${dt(x.ultimo)}` })),
       el("div", { class: "motivos" }, x.motivos.map((m) => el("span", { text: App.u.restricao(m) }))),
-      el("div", { class: "meta", text: `${x.cidade || "Sem cidade"} · ${x.bloqueios} restrição(ões) e ${x.leves} infração(ões) leve(s) contando agora` })))));
+      el("div", { class: "meta", text: `${x.cidade || "Sem cidade"} · ${App.u.plural(x.bloqueios, "restrição", "restrições")} e ${App.u.plural(x.leves, "infração leve", "infrações leves")} contando agora` })))));
   }
   ["#bq-q-atencao", "#bq-atencao-motivo"].forEach((s) => $(s).addEventListener("input", () => renderAtencao()));
 

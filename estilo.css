@@ -231,7 +231,7 @@ a.modulo-card p { margin: 0; color: var(--muted); font-size: 14px; }
 .regras label.check { display: inline-flex; flex-direction: row; gap: 6px; align-items: center; font-weight: 400; }
 .regras label.check input { width: auto; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { font-size: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; font-variant-numeric: tabular-nums; }
+.chip { display: inline-flex; align-items: center; justify-content: center; font-size: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; font-variant-numeric: tabular-nums; }
 .chip.x { background: var(--ink); color: var(--surface); border-color: var(--ink); }
 
 /* alerta "revisar" clicável, janela de correção e cadastro do entregador (migração 003) */
@@ -1102,7 +1102,7 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
 .pular:focus { top: 8px; }
 /* AP-08: no toque, alvos de pelo menos 44 px */
 @media (pointer: coarse) {
-  .btn, .btn.small, .btn.link, nav.tabs a, nav.grupo a, .chip, .seg button, button.tile.clicavel, .barra-baixo a, .btn-copiar { min-height: 44px; }
+  .btn, .btn.small, .btn.link, nav.tabs a, nav.grupo a, button.chip, .seg button, button.tile.clicavel, .barra-baixo a, .btn-copiar { min-height: 44px; }
   .btn-copiar { min-width: 44px; }
 }
 /* 009z (M2): prazo em contagem regressiva */

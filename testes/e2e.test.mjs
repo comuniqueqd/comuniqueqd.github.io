@@ -571,7 +571,7 @@ try {
   await s.screenshot({ path: path.join(PRINTS, "b6-painel.png"), fullPage: true });
   await ir(s, "#bloqueios/consultar");
   await s.fill("#bq-q-consulta", "mal00001"); await s.click("#bq-f-consulta button[type=submit]");
-  ok(await esperar(s, "#bq-consulta >> text=1 restrição(ões)"), "consulta por ID");
+  ok(await esperar(s, "#bq-consulta >> text=1 restrição"), "consulta por ID");
   ok(await s.isVisible("#bq-consulta .comentarios >> text=Educado, mas costuma atrasar a coleta."), "consulta mostra o comentário feito no registro");
   ok(!(await texto(s, "#bq-consulta")).includes("null"), "consulta sem textos vazios (null)");
   ok(!(await s.isVisible("#bq-consulta >> text=Alterar dados")) && await s.isVisible("#bq-consulta button:text-is('Corrigir')"), "suporte não altera a ficha, mas corrige a restrição que registrou (008b)");
