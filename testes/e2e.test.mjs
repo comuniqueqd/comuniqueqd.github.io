@@ -1755,12 +1755,14 @@ try {
       await v.focus(".pular"); await v.keyboard.press("Enter");
       ok(await v.evaluate(() => document.activeElement?.id === "ola" && location.hash === "#inicio"), "009y2: 'Ir para o conteúdo' leva ao título da tela"); }
     // 009y1f: "Ver" abre a tira com a prévia, sem sair da tela inicial
+    ok(!(await v.$("#precisa-lista li[data-chave=pedidas]")), "009z4b: \"pedidas para você\" não tem linha própria (entra em \"tarefas abertas\", com cor)");
     ok(!(await v.$("#precisa-lista li[data-chave=atrasadas]")), "009z4b: as tratativas atrasadas não têm linha própria (ficam dentro de \"tratativas pendentes\", em vermelho)");
     { const linha = (await v.$("#precisa-lista li[data-chave=cadastros]")) ? "cadastros" : (await v.$eval("#precisa-lista li[data-chave]", (x) => x.dataset.chave));
       await v.click(`#precisa-lista li[data-chave=${linha}] button`);
       ok(await esperar(v, `#precisa-lista li[data-chave=${linha}] .precisa-tira .tira-card, #precisa-lista li[data-chave=${linha}] .precisa-tira p`) && await v.evaluate(() => location.hash) === "#inicio",
         "009y1f: 'Ver' abre a prévia logo abaixo da linha (" + linha + "), sem sair da tela inicial");
       ok(await v.$eval(`#precisa-lista li[data-chave=${linha}] .precisa-tira`, (t) => t.querySelectorAll(".tira-card").length <= 5), "009y1f: a prévia mostra no máximo 5");
+      if (linha === "cadastros") ok(await v.$(`#precisa-lista li[data-chave=cadastros] .tira-card [data-copiar-id]`), "009z4b: o cartão do cadastro tem \"Copiar ID\"");
       ok(await v.$eval(`#precisa-lista li[data-chave=${linha}] .precisa-tira`, (t) => [...t.querySelectorAll(".tira-txt")].every((x) => x.getBoundingClientRect().width > 160)),
         "009y2: os cartões da prévia não ficam espremidos");
       if (linha === "cadastros") ok(await v.isVisible(`#precisa-lista li[data-chave=cadastros] .tira-card >> text=Aprovar`) && await v.isVisible(`#precisa-lista li[data-chave=cadastros] .tira-card >> text=Reprovar`),

@@ -19,6 +19,13 @@
     try { await App.u.rpc(fn, args); App.u.toast(msg); await buscarTira(chave); App.carregar(); }
     catch (e) { botao.disabled = false; App.u.toast(App.u.msgErro(e)); }
   }
+  // 009z4b (pedido do usuário): copiar só o ID do entregador direto do cartão, para agilizar
+  const copiarId = (id) => !id ? null : el("button", { class: "btn small", type: "button", "data-copiar-id": id, onclick: async (e) => {
+    const bt = e.currentTarget;
+    try { await navigator.clipboard.writeText(String(id)); bt.textContent = "ID copiado"; App.uso?.("botao:copiar_id"); }
+    catch (_) { bt.textContent = "Não deu para copiar"; }
+    setTimeout(() => { if (bt.isConnected) bt.textContent = "Copiar ID"; }, 1600);
+  } }, "Copiar ID");
   async function buscarTira(chave) {
     tiras[chave] = { ...(tiras[chave] || {}), carregando: true, erro: null };
     try {
@@ -30,15 +37,16 @@
           .map((t) => ({ titulo: t.bloqueio?.nome || t.bloqueio?.nome_entregador || (t.bloqueio?.id_app ? "ID " + t.bloqueio.id_app : "Sem nome"),
             detalhe: [t.bloqueio?.infracao, t.cidade, t.atrasada ? `atrasada há ${tempo(t.criada_em)}` : `há ${tempo(t.criada_em)}`].filter(Boolean).join(" · "),
             alerta: t.atrasada,
-            acoes: [t.bloqueio?.id_app ? el("button", { class: "btn small", type: "button", onclick: () => App.abrirFicha?.(t.bloqueio.id_app) }, "Ver a ficha") : null,
+            acoes: [copiarId(t.bloqueio?.id_app), t.bloqueio?.id_app ? el("button", { class: "btn small", type: "button", onclick: () => App.abrirFicha?.(t.bloqueio.id_app) }, "Ver a ficha") : null,
               el("a", { class: "btn small primary", href: "#bloqueios/tratativas" }, "Tratar")].filter(Boolean) }));
       } else if (chave === "pedidas" || chave === "comigo" || chave === "abertas") {
         const l = await (App.listarAtividades ? App.listarAtividades(0) : App.u.rpc("listar_atividades"));
         const filtro = { pedidas: (a) => a.status === "aberta" && a.para_mim && a.pode_aceitar && !a.opcional_para_mim && !a.automatica,
           comigo: (a) => a.status === "aceita" && a.sou_participante && !a.automatica,
-          abertas: (a) => a.status === "aberta" && !a.automatica && a.pode_aceitar && !a.para_mim && !a.opcional_para_mim && a.criada_por !== S.me.id }[chave];
-        itens = l.filter(filtro).sort((a, b) => String(a.prazo || "9").localeCompare(String(b.prazo || "9")) || String(a.criada_em).localeCompare(String(b.criada_em)))
-          .map((a) => ({ titulo: a.titulo,
+          abertas: (a) => a.status === "aberta" && !a.automatica && a.pode_aceitar && a.criada_por !== S.me.id }[chave];
+        const paraMim = (a) => a.para_mim && !a.opcional_para_mim;
+        itens = l.filter(filtro).sort((a, b) => (paraMim(b) - paraMim(a)) || String(a.prazo || "9").localeCompare(String(b.prazo || "9")) || String(a.criada_em).localeCompare(String(b.criada_em)))
+          .map((a) => ({ titulo: (paraMim(a) && chave === "abertas" ? "Para você: " : "") + a.titulo, paraMim: chave === "abertas" && paraMim(a),
             detalhe: [a.cidade, a.prazo ? `prazo ${App.u.dt(a.prazo)}` : "sem prazo", chave !== "comigo" && a.criada_por_nome ? `pedida por ${a.criada_por_nome}` : null].filter(Boolean).join(" · "),
             alerta: !!a.atrasada,
             acoes: chave === "comigo" ? [el("a", { class: "btn small", href: "#atividades/pendencias" }, "Abrir")]
@@ -51,12 +59,13 @@
             acoes: [
               App.decidirCadastro ? el("button", { class: "btn approve small", type: "button", onclick: (e) => App.decidirCadastro.aprovar(c, e.currentTarget, () => buscarTira(chave)) }, "Aprovar") : null,
               App.decidirCadastro ? el("button", { class: "btn reject small", type: "button", onclick: () => App.decidirCadastro.reprovar(c, () => buscarTira(chave)) }, "Reprovar") : null,
-              el("button", { class: "btn small", type: "button", onclick: () => App.abrirCadastro?.(c.id) }, "Revisar")].filter(Boolean) }));
+              el("button", { class: "btn small", type: "button", onclick: () => App.abrirCadastro?.(c.id) }, "Revisar"),
+              copiarId(c.id_app)].filter(Boolean) }));
       } else if (chave === "lancamentos") {
         const r = await App.u.rpc("listar_lancamentos", { p_pendentes: true, p_meus: true, p_limite: 50 });
         itens = (r.itens || []).map((l) => ({ titulo: `${l.tipo === "adicional" ? "Adicional" : "Ajuste de bairro"} de ${real(l.valor)}`,
           detalhe: [l.nome_entregador, l.cidade, l.pedido ? "pedido " + l.pedido : null, `há ${tempo(l.criado_em)}`].filter(Boolean).join(" · "),
-          acoes: [el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoTira("marcar_lancado", { p_id: l.id, p_lancado: true }, e.currentTarget, "Marcado como lançado.", chave) }, "Já lancei")] }));
+          acoes: [el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoTira("marcar_lancado", { p_id: l.id, p_lancado: true }, e.currentTarget, "Marcado como lançado.", chave) }, "Já lancei"), copiarId(l.id_app)].filter(Boolean) }));
       }
       tiras[chave] = { itens };
     } catch (e) { tiras[chave] = { itens: [], erro: App.u.msgErro(e) }; }
@@ -69,7 +78,7 @@
       t.carregando && !t.itens ? App.u.vazio("Carregando…")
         : t.erro ? el("p", { class: "err", text: t.erro })
         : !itens.length ? el("p", { class: "meta", text: "Nada aqui agora. O número se atualiza em instantes." })
-        : el("ul", { class: "tira-cards" }, itens.slice(0, MAX).map((i) => el("li", { class: "tira-card" + (i.alerta ? " alerta" : "") },
+        : el("ul", { class: "tira-cards" }, itens.slice(0, MAX).map((i) => el("li", { class: "tira-card" + (i.alerta ? " alerta" : "") + (i.paraMim ? " para-mim" : "") },
             el("div", { class: "tira-txt" }, el("b", { text: i.titulo }), el("span", { class: "meta", text: i.detalhe })),
             i.acoes?.length ? el("div", { class: "tira-acoes" }, ...i.acoes) : null))),
       el("a", { class: "btn link", href: x.href }, itens.length > MAX ? `Ver todos os ${itens.length} na tela completa` : "Abrir a tela completa"));
@@ -166,12 +175,12 @@
     // ---------- 009y1 parte 2 (AP-10): o que precisa de você agora, em linhas, do mais urgente ao resto ----------
     const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
     const precisa = [
-      at?.para_aceitar ? { n: at.para_aceitar, txt: plural(at.para_aceitar, "tarefa pedida para você", "tarefas pedidas para você"), href: "#atividades/pendencias", chave: "pedidas" } : null,
       at?.minhas_em_andamento ? { n: at.minhas_em_andamento, txt: plural(at.minhas_em_andamento, "tarefa com você em andamento", "tarefas com você em andamento"), href: "#atividades/pendencias", chave: "comigo" } : null,
       staffBloq() && b?.tratativas_pendentes ? { n: b.tratativas_pendentes, txt: plural(b.tratativas_pendentes, S.me.papel_bloqueios === "moderador" ? "tratativa pendente" : "tratativa com você", S.me.papel_bloqueios === "moderador" ? "tratativas pendentes" : "tratativas com você"), href: "#bloqueios/tratativas", chave: "tratativas", atrasadas: b.tratativas_atrasadas || 0 } : null,  // 009z5 (pedido do usuário): as atrasadas entram aqui, em vermelho
       staffAtiv() && a?.equipe_aguardando_analise ? { n: a.equipe_aguardando_analise, txt: plural(a.equipe_aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"), href: "#ativacao/pendentes", chave: "cadastros" } : null,
       r?.financeiro_pendentes ? { n: r.financeiro_pendentes, txt: plural(r.financeiro_pendentes, "lançamento seu ainda não lançado no sistema", "lançamentos seus ainda não lançados no sistema"), href: "#financeiro/lancamentos/pendentes", chave: "lancamentos" } : null,
-      at?.abertas_para_pegar ? { n: at.abertas_para_pegar, txt: plural(at.abertas_para_pegar, "tarefa aberta para a equipe", "tarefas abertas para a equipe"), href: "#atividades/sugeridas", leve: true, chave: "abertas" } : null,
+      // 009z4b (pedido do usuário): uma linha só para as tarefas abertas; as pedidas para você aparecem primeiro, com outra cor
+      (at?.abertas_para_pegar || at?.para_aceitar) ? { n: Math.max(at.abertas_para_pegar || 0, at.para_aceitar || 0), txt: plural(Math.max(at.abertas_para_pegar || 0, at.para_aceitar || 0), "tarefa aberta", "tarefas abertas"), href: "#atividades/sugeridas", chave: "abertas" } : null,
     ].filter(Boolean);
     // 009y1f (pedido do usuário): "Ver" abre uma tira logo abaixo com a prévia do que é preciso fazer (até 5), sem sair da tela
     $("#precisa-lista").replaceChildren(...(precisa.length ? precisa.map((x) => {
