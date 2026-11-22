@@ -1156,3 +1156,67 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; gap:
   .card.linha-cad .actions { flex-wrap: wrap; row-gap: 4px; }
   .card.linha-cad .actions .spacer { display: none; }
 }
+
+/* 009z6: Pedidos fora do limite */
+.caixa-importar { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 14px; background: var(--surface); }
+.caixa-importar > summary { cursor: pointer; font-weight: 600; }
+.caixa-importar[open] > summary { margin-bottom: 8px; }
+.ped-passos { margin: 0 0 8px; padding-left: 20px; display: grid; gap: 4px; }
+.ped-resumo-leitura { margin: 8px 0; }
+.ped-filtros .ped-data { display: inline-flex; align-items: center; gap: 6px; flex: 0 1 auto; font-size: 14px; }
+.ped-filtros .ped-data input { flex: 0 1 auto; width: auto; }
+.card.linha-ped { gap: 6px; }
+.card.linha-ped.atencao { border-color: var(--warn); }
+.linha-ped .head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; align-items: center; }
+.linha-ped p { margin: 0; }
+.ped-titulo { display: inline-flex; align-items: center; gap: 6px; }
+.tag.ped-atencao { color: var(--ink); background: var(--warn-soft); }
+.ped-entregador { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.ped-aviso-id { font-size: 13px; color: var(--warn); font-weight: 600; }
+.ped-sinais { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill.ped-sinal { background: var(--gray-soft); color: var(--ink); white-space: normal; }
+.pill.ped-sinal.forte { background: var(--bad-soft); color: var(--bad); }
+.ped-etapas { font-size: 13px; color: var(--muted); }
+.ped-etapas .estourou { color: var(--bad); font-weight: 700; }
+.ped-decidido { align-items: center; color: var(--muted); font-size: 14px; }
+.ped-opcoes { display: flex; flex-wrap: wrap; gap: 6px; }
+.ped-previa p { margin: 4px 0; }
+.ped-previa label { display: flex; gap: 8px; align-items: flex-start; font-weight: 400; margin: 4px 0; }
+/* 009z6: o desenho "Restrições em tempo real" (topo com números, cartões em duas colunas, barra das etapas) */
+.ped-topo { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 4px 16px; }
+.ped-topo .sub { margin-bottom: 8px; }
+.ped-atualizado { margin: 0 0 12px; }
+.ped-numeros { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 10px; margin-bottom: 14px; }
+.ped-numeros:empty { display: none; }
+.ped-numero { display: grid; gap: 2px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.ped-numero .k { font-size: 13px; color: var(--muted); }
+.ped-numero .v { font-family: var(--font-titulo); font-size: 28px; font-weight: 700; line-height: 1.1; }
+.ped-numero .v small { font-size: 16px; font-weight: 600; }
+.ped-numero .meta { font-size: 13px; }
+.ped-linha-filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: space-between; }
+.ped-linha-filtros .filtro-contagem { flex: 1 1 auto; margin-bottom: 8px; }
+.ped-linha-filtros select { flex: 0 1 220px; min-width: 0; }
+.ped-mais-filtros { margin-bottom: 12px; }
+.ped-mais-filtros > summary { cursor: pointer; font-size: 14px; color: var(--accent); }
+.ped-mais-filtros[open] > summary { margin-bottom: 8px; }
+.ped-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 12px; align-items: start; }
+.ped-pedido { font-size: 13px; }
+.ped-nome { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
+.ped-nome h3 { margin: 0; }
+.btn.small.ped-copiar { min-height: 28px; padding: 2px 10px; font-size: 13px; }
+.ped-frase { font-size: 15px; }
+.pill.ped-sinal.loja { background: var(--warn-soft); color: var(--warn); }
+.ped-barra-box { display: grid; gap: 4px; margin: 4px 0; }
+.ped-barra { display: flex; gap: 2px; height: 10px; border-radius: 999px; overflow: hidden; }
+.ped-barra .seg { flex-basis: 0; min-width: 4px; background: var(--ok); opacity: .45; }
+.ped-barra .seg.loja { background: var(--warn); opacity: .8; }
+.ped-barra .seg.estourou { background: var(--bad); opacity: 1; }
+.ped-barra-rotulos { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 12px; color: var(--muted); }
+.ped-barra-rotulos .estourou { color: var(--bad); font-weight: 700; }
+.ped-barra-rotulos .ped-total { margin-left: auto; color: var(--ink); }
+.ped-sugestao { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 14px; border-top: 1px solid var(--line); padding-top: 8px; }
+.ped-sugestao .rot { font-size: 12px; color: var(--muted); }
+.linha-ped .actions { align-items: center; }
+.linha-ped .ped-dir { margin-left: auto; }
+.btn.link.ped-ficha { justify-self: start; padding-inline: 0; }
+.ped-legenda { margin-top: 14px; font-size: 13px; }

@@ -9886,7 +9886,8 @@
   ],
   "telas_extra": [
    "bloqueios"
-  ]
+  ],
+  "situacao": "Feito na 009z6 \"Pedidos fora do limite\" (22/11/2026): aguardando o usuário rodar o SQL no Supabase para publicar."
  },
  {
   "ag": "csv",
@@ -9915,7 +9916,8 @@
   ],
   "telas_extra": [
    "bloqueios"
-  ]
+  ],
+  "situacao": "Feito na 009z6 \"Pedidos fora do limite\" (22/11/2026): aguardando o usuário rodar o SQL no Supabase para publicar."
  },
  {
   "ag": "csv",
@@ -9948,7 +9950,8 @@
     "quando": "com o DP-2",
     "fonte": "CSV de finalizados"
    }
-  ]
+  ],
+  "situacao": "Feito na 009z6 \"Pedidos fora do limite\" (22/11/2026): aguardando o usuário rodar o SQL no Supabase para publicar. Regras: chegada > 15 min do aceite; 45 min do chamado até entregue, com a causa; finalização tardia à parte."
  },
  {
   "ag": "csv",
@@ -10209,7 +10212,8 @@
   ],
   "telas_extra": [
    "bloqueios"
-  ]
+  ],
+  "situacao": "Feito na 009z6 \"Pedidos fora do limite\" (22/11/2026): aguardando o usuário rodar o SQL no Supabase para publicar."
  },
  {
   "ag": "pedido",
@@ -10302,7 +10306,8 @@
   "esf": 1,
   "depende": [
    "DP-10"
-  ]
+  ],
+  "situacao": "Feito na 009z6 \"Pedidos fora do limite\" (22/11/2026): aguardando o usuário rodar o SQL no Supabase para publicar."
  },
  {
   "ag": "csv",

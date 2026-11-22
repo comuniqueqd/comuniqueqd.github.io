@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "npm run test:banco && npm run test:e2e && npm run test:extensao",
-    "test:banco": "npm run test:sql && npm run test:bloqueios && npm run test:entregadores && npm run test:atividades && npm run test:analises && npm run test:equipe && npm run test:pao && npm run test:espiao && npm run test:cadastrar && npm run test:avisos && npm run test:analises008c && npm run test:avisos2 && npm run test:financeiro && npm run test:mensagens && npm run test:ajuda && npm run test:tarefas && npm run test:painel && npm run test:parceiros && npm run test:ficha && npm run test:bairros && npm run test:semcpf && npm run test:mesa && npm run test:casa",
+    "test:banco": "npm run test:sql && npm run test:bloqueios && npm run test:entregadores && npm run test:atividades && npm run test:analises && npm run test:equipe && npm run test:pao && npm run test:espiao && npm run test:cadastrar && npm run test:avisos && npm run test:analises008c && npm run test:avisos2 && npm run test:financeiro && npm run test:mensagens && npm run test:ajuda && npm run test:tarefas && npm run test:painel && npm run test:parceiros && npm run test:ficha && npm run test:bairros && npm run test:semcpf && npm run test:mesa && npm run test:casa && npm run test:pedidos",
     "test:sql": "node sql.test.mjs",
     "test:bloqueios": "node bloqueios.test.mjs",
     "test:entregadores": "node entregadores.test.mjs",
@@ -29,7 +29,8 @@
     "test:semcpf": "node semcpf.test.mjs",
     "test:mesa": "node mesa.test.mjs",
     "test:casa": "node casa.test.mjs",
-    "test:extensao": "node extensao.test.mjs"
+    "test:extensao": "node extensao.test.mjs",
+    "test:pedidos": "node pedidos.test.mjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "2.117.3",

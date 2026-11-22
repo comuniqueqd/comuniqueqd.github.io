@@ -118,10 +118,15 @@
   campo.placeholder = "Buscar ID ou nome (Ctrl+K)";
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009z5";
+  const VERSAO = "009z6";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009z6", tema: "Pedidos fora do limite", itens: [
+      ["Veja os pedidos que passaram do tempo", "Nova aba em Restrições: os pedidos que demoraram mais de 15 min para chegar na loja ou mais de 45 min no total, com o entregador, o ID e onde o tempo foi gasto.", 'nav.modulos a[data-grupo="entregadores"]'],
+      ["Decida pedido por pedido", "Nada vira restrição sozinho: “Confirmar restrição” mostra a punição prevista e registra por atraso; “Não vira restrição” guarda o motivo. Outro pedido do mesmo entregador no dia pode ser juntado à mesma restrição."],
+      ["Envie os dados do Tableau", "O moderador escolhe os arquivos baixados do Tableau (etapas, Resumo e Tempo de entrega dos entregadores) e o Comunique junta tudo. Os dados chegam com um dia de atraso."],
+    ] },
     { versao: "009z5", tema: "Casa certa", itens: [
       ["Veja a tela inicial mais enxuta", "O bloco “Seus números” saiu (os números estão em “Precisa de você” e nas Análises). As tarefas ganharam a faixa “Atividades em espera”, cada cartão diz quem pediu e com quem está; o moderador vê também as de toda a equipe.", "#precisa-lista"],
       ["Comece a digitar direto", "No computador, os formulários (Nova ativação, Nova restrição, Registrar adicional, Calculadora, Ativar parceiro) já abrem com o cursor no primeiro campo."],

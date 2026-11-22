@@ -71,6 +71,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z2-funcoes-sem-uso.s
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z3-mais-rapido.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z4-mensagem-certa.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z5-casa-certa.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z6-pedidos-fora-do-limite.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -129,7 +130,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009z5"); localStorage.setItem("comunique-tour", "009z5"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009z6"); localStorage.setItem("comunique-tour", "009z6"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -452,7 +453,7 @@ try {
     const abasA = await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));
     ok(abasA[0] === "novo" && abasA[1] === "pendentes" && await s.isVisible("nav.tabs a[data-view=pendentes] .count"), "Ativação abre no Novo cadastro, e Pendentes vem em seguida com o número: " + abasA);
     await ir(s, "#bloqueios"); await esperar(s, "#v-bq-novo:not([hidden])"); }
-  ok(JSON.stringify(abasB) === JSON.stringify(["novo", "tratativas", "ativos", "atencao", "consultar", "historico"]), "009x6: suporte vê também Tratativas e Com restrição agora (só leitura): " + abasB);
+  ok(JSON.stringify(abasB) === JSON.stringify(["novo", "tratativas", "pedidos", "ativos", "atencao", "consultar", "historico"]), "009x6: suporte vê também Tratativas e Com restrição agora (só leitura), e os Pedidos fora do limite (009z6): " + abasB);
   await s.fill("#bq-id", "mal00001"); await s.fill("#bq-nome", "Fulano de Tal");
   await s.selectOption("#bq-cidade", "LAGARTO - SE"); await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
   await s.fill("#bq-comentario", "Educado, mas costuma atrasar a coleta.");
@@ -947,27 +948,79 @@ try {
   ok(await esperar(s, "#bq-atencao-lista .card") || await esperar(s, "#bq-atencao-lista >> text=Ninguém em atenção agora"), "aba Atenção abre para o suporte");
   await s.screenshot({ path: path.join(PRINTS, "e3-atencao.png"), fullPage: true });
 
+  // 009z6 · Pedidos fora do limite: o moderador envia os arquivos do Tableau (fictícios, UTF-16 como o Tableau baixa),
+  // a lista abre nos atrasos, o suporte confirma uma restrição e diz por que outro pedido não vira
+  { const utf16 = (t) => Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(t, "utf16le")]);
+    const base = new Date(Date.now() - 3 * 3600000 - 86400000); base.setUTCHours(12, 0, 0, 0);   // ontem, 12h de Brasília
+    const hr = (min) => { const d = new Date(base.getTime() + min * 60000), z = (n) => String(n).padStart(2, "0");
+      return `${z(d.getUTCDate())}/${z(d.getUTCMonth() + 1)}/${d.getUTCFullYear()} ${z(d.getUTCHours())}:${z(d.getUTCMinutes())}:00`; };
+    const cab = ["UF - Cidade", "estabelecimentoId", "Entrega Id", "Estabelecimento", "bairro (place)", "Código", "createdAt (pedido)", 'Tempo de "Preparo"',
+      "Solicitado At", "Tempo para associar", "associadoAt", "Tempo até a loja", "Chegou Loja At", "Tempo para aceitar", "Aceite At", "Tempo para sair",
+      "Saiu Loja At", "Tempo até a entrega", "Entregue At", "Tempo para finalizar", "Finalizado At"];
+    const linha = (id, cod, c, ac, l, sa, e, f) => ["SE - LAGARTO", "lojae2e0001", id, "Loja do Teste", "CENTRO", cod, hr(c - 5), "5 min", hr(c), "", "", "",
+      hr(l), "", hr(ac), "", hr(sa), "", hr(e), "", hr(f)];
+    const etapas = [cab.map((x) => (x.includes('"') ? `"${x.replace(/"/g, '""')}"` : x)), ...[
+      linha("e2epedido0001", "PED001", 0, 1, 20, 22, 30, 31),        // chegou na loja 19 min depois de aceitar
+      linha("e2epedido0002", "PED002", 120, 122, 128, 130, 170, 171), // 50 min no total, entrega sozinho
+      linha("e2epedido0003", "PED003", 300, 301, 305, 306, 315, 316)].flatMap((r) => [r, r])] // o Tableau repete a linha por medida
+      .map((r) => r.join("\t")).join("\n");
+    const resumo = ["Status das Entregas\tEntrega Id\tCodigo (Pedido)\tStatus das entregas\tCriada em\tUF / Cidade\tEstabelecimento\tEntregador",
+      ...["e2epedido0001", "e2epedido0002", "e2epedido0003"].map((id) => `FINALIZADAS\t${id}\tX\tFINALIZADAS\t${hr(0)}\tSE - Lagarto\tLoja do Teste\tRAFA  TESTE PEDIDOS`)].join("\n");
+    const ents = "entregadorId (entregadorQueroLog)\tNome\tnome (municipioQueroLog)\tUf\nraf0000001\tRafa Teste Pedidos\tLagarto\tSE";
+    await ir(a, "#bloqueios/pedidos"); await a.reload();
+    ok(await esperar(a, "#ped-importar:not([hidden]) > summary"), "009z6: moderador vê Enviar dados do Tableau");
+    await a.click("#ped-importar > summary");
+    await a.setInputFiles("#ped-arquivos", [{ name: "Solicitacoes_por_place.csv", mimeType: "text/csv", buffer: utf16(etapas) },
+      { name: "Resumo_filtro.csv", mimeType: "text/csv", buffer: utf16(resumo) }, { name: "Tempo_de_entrega.csv", mimeType: "text/csv", buffer: utf16(ents) }]);
+    ok(await esperar(a, "#ped-importar >> text=3 pedidos") && await a.isVisible("#ped-importar >> text=100% com o ID"), "009z6: lê os 3 arquivos, junta o entregador e o ID");
+    await a.click("#ped-importar button:has-text('Enviar 3 pedidos')");
+    ok(await esperar(a, "#ped-lista .linha-ped"), "009z6: depois de enviar, a lista mostra os pedidos fora do limite");
+    ok((await a.$$("#ped-lista .linha-ped")).length === 2, "009z6: só os 2 atrasos (o pedido dentro do limite não aparece)");
+    await ir(s, "#bloqueios/pedidos"); await s.reload();
+    ok(await esperar(s, "#ped-lista .linha-ped:has-text('PED001')") && !(await s.isVisible("#ped-importar")), "009z6: o suporte vê a lista, sem o envio");
+    ok(await s.isVisible("#ped-lista .linha-ped:has-text('PED001') >> text=Chegada na loja: 19 min")
+      && await s.isVisible("#ped-lista .linha-ped:has-text('PED001') >> text=Levou 19 min para chegar na loja depois de aceitar.")
+      && await s.isVisible("#ped-lista .linha-ped:has-text('PED001') .ped-barra .seg.estourou")
+      && await s.isVisible("#ped-lista .linha-ped:has-text('PED001') >> text=Atraso · 1ª ocorrência em 60 dias"), "009z6: o cartão como no desenho: o limite que passou, a frase, a barra das etapas e a sugestão");
+    ok((await texto(s, "#ped-numeros")).includes("Chegada na loja acima de 15 min1de 3 pedidos (33,3%)"), "009z6: os números do topo contam os pedidos do período: " + (await texto(s, "#ped-numeros")).slice(0, 80));
+  ok(!/\bnull\b|undefined|NaN/.test(await texto(s, "#v-bq-pedidos")), "009z6: nada de null/undefined/NaN na tela de pedidos");
+    await s.screenshot({ path: path.join(PRINTS, "e4-pedidos.png"), fullPage: true });
+    await s.click("#ped-lista .linha-ped:has-text('PED001') button:text-is('Confirmar restrição')");
+    ok(await esperar(s, "dialog.janela .ped-previa >> text=1ª ocorrência"), "009z6: a janela mostra a punição prevista");
+    ok(await s.inputValue("dialog.janela input.mono") === "raf0000001", "009z6: o ID já vem preenchido");
+    await s.screenshot({ path: path.join(PRINTS, "e5-pedido-confirmar.png") });
+    await s.click("dialog.janela button:text-is('Registrar restrição')");
+    ok(await esperar(s, "text=Restrição registrada: 1ª ocorrência"), "009z6: confirmar registra a restrição");
+    ok(await sumir(s, "#ped-lista .linha-ped:has-text('PED001')"), "009z6: o pedido decidido sai de A decidir");
+    await s.click("#ped-lista .linha-ped:has-text('PED002') button:text-is('Descartar')");
+    await s.selectOption("dialog.janela select", "loja");
+    await s.click("dialog.janela button:text-is('Salvar')");
+    ok(await esperar(s, "#ped-lista >> text=Nada com esses filtros"), "009z6: descartado com motivo, a lista de a decidir fica vazia");
+    await s.click("#ped-situacoes button:has-text('Descartados')");
+    ok(await esperar(s, "#ped-lista >> text=Descartado (Demora da loja)"), "009z6: o descarte mostra o motivo e quem decidiu");
+  }
+
   // 16. migração 007 · "pão quentinho": novidades, nome, revisar, tarefa opcional, aviso da decisão, histórico do ID, busca
   { const d7 = new pg.Client({ connectionString: DB }); await d7.connect();
     await d7.query("select importar_bloqueio('rev00002', 'Nome Velho', 'ITABAIANA - SE', 'Avaria de Produto', now() - interval '120 days', 'Planilha', 'Nome diferente na planilha', '24')");
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
-  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Veja a tela inicial mais enxuta"), "janela O que há de novo aparece na primeira vez");
+  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Veja os pedidos que passaram do tempo"), "janela O que há de novo aparece na primeira vez");
   // 009y1 (A15-06): só a versão nova aberta; as anteriores recolhidas
   ok(!(await n7.isVisible("dialog.janela >> text=Sino com tira")) && await n7.isVisible("dialog.janela details.versoes-antigas > summary")
       && await n7.isVisible("dialog.janela .mostrar-onde"), "009y1: a janela mostra só a versão nova, com Mostrar onde; as anteriores ficam recolhidas");
   { const hs = await n7.$$eval("dialog.janela .bloco-versao h4", (l) => l.map((x) => x.textContent));
-    ok(hs.length === 36 && hs[0] === "Agora: Casa certa" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
+    ok(hs.length === 37 && hs[0] === "Agora: Pedidos fora do limite" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
-  ok(await esperar(n7, "#tour-passo:popover-open >> text=Veja a tela inicial mais enxuta") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
+  ok(await esperar(n7, "#tour-passo:popover-open >> text=Veja os pedidos que passaram do tempo") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
       && (await n7.getAttribute("#tour-passo", "role")) === "dialog", "009n: tour das novidades abre no 1º passo, com o foco dentro do balão");
   await n7.screenshot({ path: path.join(PRINTS, "f1b-tour.png") });
-  await n7.click("#tour-passo >> text=Próximo");
-  ok(await esperar(n7, "#tour-passo >> text=Veja tudo o que mudou desde a sua visita"), "009n: o tour passa pelos passos (009y1: saem dos itens da versão)");
+  // 009z6: a versão tem um passo só (os itens com "Mostrar onde"); o tour termina nele
+  ok(!(await n7.isVisible("#tour-passo >> text=Próximo")), "009n: o tour tem só os passos da versão nova (009y1: saem dos itens da versão)");
   await n7.click("#tour-passo >> text=Entendi");
-  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z5"), "009n: “Entendi” fecha o tour e ele não volta");
+  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z6"), "009n: “Entendi” fecha o tour e ele não volta");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
   ok(!(await n7.isVisible("dialog.janela")), "e não aparece de novo" + ((await n7.isVisible("dialog.janela")) ? ": " + (await n7.textContent("dialog.janela[open]").catch(() => "?")) : ""));
   // suporte envia sem nome: marca revisar e tarefa para o admin (opcional para os outros)
