@@ -9859,7 +9859,7 @@
   "rodada": "2026-11-22",
   "impacto": 3,
   "esf": 1,
-  "situacao": "Caminho achado em 22/11: o 'Painel Resumo filtro' (QueroLog / Quero Log) traz Entrega Id, código, status e o NOME do entregador, com Entregador (Tudo). Junta-se ao painel por loja pelo Entrega Id. O ID do entregador sai do 'Painel Entregas rejeitadas por entregador' (entregadorId + nome + cidade) ou da ficha do Comunique pelo nome + cidade. Pedido ao time de dados segue (ID direto evita homônimos)."
+  "situacao": "Contornado em 22/11: o ID vem do 'Tempo de entrega dos entregadores' pelo nome (98,6% dos pedidos). O pedido ao time de dados continua valendo para acabar com nomes iguais."
  },
  {
   "ag": "csv",
@@ -9887,7 +9887,8 @@
   "telas_extra": [
    "bloqueios"
   ],
-  "situacao": "Feito na 009z6 \"Pedidos fora do limite\" (22/11/2026): aguardando o usuário rodar o SQL no Supabase para publicar."
+  "situacao": "Feito e publicado na 009z6 (22/11/2026): Monitoramento → Pedidos fora do limite; base de Lagarto 01/10–16/11 enviada (4.889 pedidos com atraso).",
+  "feito": "009z6"
  },
  {
   "ag": "csv",
@@ -9917,7 +9918,8 @@
   "telas_extra": [
    "bloqueios"
   ],
-  "situacao": "Feito na 009z6 \"Pedidos fora do limite\" (22/11/2026): aguardando o usuário rodar o SQL no Supabase para publicar."
+  "situacao": "Feito e publicado na 009z6 (22/11/2026): Monitoramento → Pedidos fora do limite; base de Lagarto 01/10–16/11 enviada (4.889 pedidos com atraso).",
+  "feito": "009z6"
  },
  {
   "ag": "csv",
@@ -9951,7 +9953,8 @@
     "fonte": "CSV de finalizados"
    }
   ],
-  "situacao": "Feito na 009z6 \"Pedidos fora do limite\" (22/11/2026): aguardando o usuário rodar o SQL no Supabase para publicar. Regras: chegada > 15 min do aceite; 45 min do chamado até entregue, com a causa; finalização tardia à parte."
+  "situacao": "Feito e publicado na 009z6 (22/11/2026): Monitoramento → Pedidos fora do limite; base de Lagarto 01/10–16/11 enviada (4.889 pedidos com atraso). Regras: chegada > 15 min do aceite; 45 min do chamado até entregue, com a causa; finalização tardia à parte.",
+  "feito": "009z6"
  },
  {
   "ag": "csv",
@@ -9987,7 +9990,8 @@
     "quando": "mensal",
     "fonte": "CSV de finalizados"
    }
-  ]
+  ],
+  "situacao": "Em parte (009z6c): o cartão avisa quando a entrega foi marcada menos de 1 min depois de sair da loja. Falta o filtro/sinal próprio no banco para listar os 1.846 casos que não têm outro atraso."
  },
  {
   "ag": "csv",
@@ -10213,7 +10217,8 @@
   "telas_extra": [
    "bloqueios"
   ],
-  "situacao": "Feito na 009z6 \"Pedidos fora do limite\" (22/11/2026): aguardando o usuário rodar o SQL no Supabase para publicar."
+  "situacao": "Feito e publicado na 009z6 (22/11/2026): Monitoramento → Pedidos fora do limite; base de Lagarto 01/10–16/11 enviada (4.889 pedidos com atraso).",
+  "feito": "009z6"
  },
  {
   "ag": "pedido",
@@ -10307,7 +10312,8 @@
   "depende": [
    "DP-10"
   ],
-  "situacao": "Feito na 009z6 \"Pedidos fora do limite\" (22/11/2026): aguardando o usuário rodar o SQL no Supabase para publicar."
+  "situacao": "Feito: o envio aceita qualquer período sem repetir pedidos, a tela tem filtro de período, e a guarda dos pedidos sem atraso é de 7 dias (009z7). Rotina combinada: envio diário do dia anterior.",
+  "feito": "009z6"
  },
  {
   "ag": "csv",
@@ -10379,6 +10385,150 @@
   "esf": 1,
   "depende": [
    "DP-10"
+  ]
+ },
+ {
+  "ag": "pedido",
+  "id": "DP-22",
+  "titulo": "Infração própria para a finalização tardia",
+  "prio": "alta",
+  "prio_orig": "alta",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "onde": "",
+  "sugestao": "Hoje, ao confirmar uma finalização tardia, ela vira restrição por Atraso. Criar a infração (orientação ou leve) e usar no cartão; decidir com o usuário as horas.",
+  "objetivo": "regras",
+  "tela": "dados",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Estudo dos CSVs do Tableau (Lagarto, 10 a 16/11/2026: 4.408 finalizados, 35 cancelados), 22/11/2026. Prioridade dada pelo usuário.",
+  "junto": "",
+  "versao": "dados",
+  "rodada": "2026-11-22",
+  "impacto": 2,
+  "esf": 1,
+  "depende": [
+   "DP-3"
+  ]
+ },
+ {
+  "ag": "pedido",
+  "id": "DP-23",
+  "titulo": "Link 'Ver o pedido' no Quero Log",
+  "prio": "alta",
+  "prio_orig": "alta",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "onde": "",
+  "sugestao": "Trocar o 'Copiar código' pelo link direto do pedido, como no desenho. Falta o endereço de um pedido aberto no Quero Log (o usuário manda).",
+  "objetivo": "menos",
+  "tela": "dados",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Estudo dos CSVs do Tableau (Lagarto, 10 a 16/11/2026: 4.408 finalizados, 35 cancelados), 22/11/2026. Prioridade dada pelo usuário.",
+  "junto": "",
+  "versao": "dados",
+  "rodada": "2026-11-22",
+  "impacto": 2,
+  "esf": 1,
+  "depende": [
+   "DP-3"
+  ]
+ },
+ {
+  "ag": "pedido",
+  "id": "DP-24",
+  "titulo": "Rotina diária do envio com lembrete",
+  "prio": "alta",
+  "prio_orig": "alta",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "onde": "",
+  "sugestao": "Envio todo dia do dia anterior (etapas + Resumo + Tempo de entrega do mês). Lembrete às 9h30 com a data já no formato do Tableau. Primeiro envio da rotina em 23/11 (17 a 22/11).",
+  "objetivo": "menos",
+  "tela": "dados",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Estudo dos CSVs do Tableau (Lagarto, 10 a 16/11/2026: 4.408 finalizados, 35 cancelados), 22/11/2026. Prioridade dada pelo usuário.",
+  "junto": "",
+  "versao": "dados",
+  "rodada": "2026-11-22",
+  "impacto": 3,
+  "esf": 1,
+  "depende": [
+   "DP-3"
+  ]
+ },
+ {
+  "ag": "claude",
+  "id": "DP-25",
+  "titulo": "Revisão leve da tela de pedidos depois de alguns dias de uso",
+  "prio": "alta",
+  "prio_orig": "alta",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "onde": "",
+  "sugestao": "Pela metodologia: textos, volume de casos por dia, se os limites (15/45/35 min) estão justos, quantos viram restrição e quantos são descartados e por quê (o uso já é contado).",
+  "objetivo": "regras",
+  "tela": "dados",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Estudo dos CSVs do Tableau (Lagarto, 10 a 16/11/2026: 4.408 finalizados, 35 cancelados), 22/11/2026. Prioridade dada pelo usuário.",
+  "junto": "",
+  "versao": "dados",
+  "rodada": "2026-11-22",
+  "impacto": 3,
+  "esf": 1,
+  "depende": [
+   "DP-3"
+  ]
+ },
+ {
+  "ag": "claude",
+  "id": "DP-26",
+  "titulo": "Limites editáveis pelo moderador",
+  "prio": "alta",
+  "prio_orig": "alta",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "onde": "",
+  "sugestao": "Os números (15, 45, 35, 10 min e a guarda de 7 dias) estão em parametros_pedidos, mas só mudam por SQL. Uma tela simples para o moderador, como a de Regras.",
+  "objetivo": "regras",
+  "tela": "dados",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Estudo dos CSVs do Tableau (Lagarto, 10 a 16/11/2026: 4.408 finalizados, 35 cancelados), 22/11/2026. Prioridade dada pelo usuário.",
+  "junto": "",
+  "versao": "dados",
+  "rodada": "2026-11-22",
+  "impacto": 2,
+  "esf": 1,
+  "depende": [
+   "DP-25"
+  ]
+ },
+ {
+  "ag": "pedido",
+  "id": "DP-27",
+  "titulo": "Outras cidades no Monitoramento",
+  "prio": "alta",
+  "prio_orig": "alta",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "onde": "",
+  "sugestao": "O envio já aceita qualquer cidade do Tableau. Antes de abrir: conferir se a cidade existe no Comunique (nome igual), e medir o banco (cada cidade ~5 a 8 MB com a guarda de 7 dias).",
+  "objetivo": "analises",
+  "tela": "dados",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Estudo dos CSVs do Tableau (Lagarto, 10 a 16/11/2026: 4.408 finalizados, 35 cancelados), 22/11/2026. Prioridade dada pelo usuário.",
+  "junto": "",
+  "versao": "dados",
+  "rodada": "2026-11-22",
+  "impacto": 3,
+  "esf": 1,
+  "depende": [
+   "DP-24"
   ]
  }
 ]
