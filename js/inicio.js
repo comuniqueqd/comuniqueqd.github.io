@@ -48,7 +48,7 @@
         const paraMim = (a) => a.para_mim && !a.opcional_para_mim;
         itens = l.filter(filtro).sort((a, b) => (paraMim(b) - paraMim(a)) || String(a.prazo || "9").localeCompare(String(b.prazo || "9")) || String(a.criada_em).localeCompare(String(b.criada_em)))
           .map((a) => ({ titulo: (paraMim(a) && chave === "abertas" ? "Para você: " : "") + a.titulo, paraMim: chave === "abertas" && paraMim(a),
-            detalhe: [a.cidade, a.prazo ? `prazo ${App.u.dt(a.prazo)}` : "sem prazo", chave !== "comigo" && a.criada_por_nome ? `pedida por ${a.criada_por_nome}` : null].filter(Boolean).join(" · "),
+            detalhe: [a.cidade, a.prazo ? `prazo ${App.u.dt(a.prazo)}` : "sem prazo"].filter(Boolean).join(" · "), pedidoPor: pedidaPor(a),
             alerta: !!a.atrasada,
             acoes: chave === "comigo" ? [el("a", { class: "btn small", href: "#atividades/pendencias" }, "Abrir")]
               : [el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoTira("aceitar_atividade", { p_id: a.id }, e.currentTarget, "Tarefa aceita. Ela está com você.", chave) }, "Eu faço")] }));
@@ -61,21 +61,9 @@
           .map((a) => {
             const com = (a.participantes?.length ? a.participantes.map((x) => x.nome || x) : [a.aceita_por_nome]).filter(Boolean).join(", ");
             return { titulo: (comigo(a) ? "Com você: " : "") + a.titulo, paraMim: comigo(a), alerta: !!a.atrasada,
-              detalhe: [a.automatica ? "atividade da equipe" : a.status === "aceita" ? `com ${com || "alguém"}` : (a.sugeridas_nomes?.length ? `esperando ${a.sugeridas_nomes.join(", ")} pegar` : "esperando alguém pegar"),
-                a.cidade, a.prazo ? App.u.textoPrazo(a.prazo) : null].filter(Boolean).join(" · "),
+              detalhe: [a.automatica ? "atividade da equipe" : a.status === "aceita" ? `com ${com || "alguém"}` : (a.sugeridas_nomes?.length ? `aguardando aceite de ${a.sugeridas_nomes.join(", ")}` : "aguardando aceite"),
+                a.cidade, a.prazo ? App.u.textoPrazo(a.prazo) : null].filter(Boolean).join(" · "), pedidoPor: pedidaPor(a),
               acoes: [el("a", { class: "btn small", href: comigo(a) ? "#atividades/pendencias" : "#atividades/sugeridas" }, "Abrir")] };
-          });
-      } else if (chave === "pedidas_por_mim") {
-        // 009z5 (pedido do usuário): as tarefas que eu pedi e ainda não foram concluídas, com a situação de cada uma
-        const l = await (App.listarAtividades ? App.listarAtividades(0) : App.u.rpc("listar_atividades"));
-        itens = l.filter((a) => a.criada_por === S.me.id && ["aberta", "aceita"].includes(a.status) && !a.automatica && !a.sou_participante)
-          .sort((a, b) => String(a.prazo || "9").localeCompare(String(b.prazo || "9")) || String(a.criada_em).localeCompare(String(b.criada_em)))
-          .map((a) => {
-            const com = (a.participantes?.length ? a.participantes.map((x) => x.nome || x) : [a.aceita_por_nome]).filter(Boolean).join(", ");
-            return { titulo: a.titulo, alerta: !!a.atrasada,
-              detalhe: [a.status === "aceita" ? `com ${com || "alguém"}` : (a.sugeridas_nomes?.length ? `esperando ${a.sugeridas_nomes.join(", ")} pegar` : "esperando alguém pegar"),
-                a.cidade, a.prazo ? App.u.textoPrazo(a.prazo) : "sem prazo"].filter(Boolean).join(" · "),
-              acoes: [el("a", { class: "btn small", href: "#atividades/sugeridas" }, "Abrir")] };
           });
       } else if (chave === "cadastros") {
         const r = await App.u.rpc("listar_cadastros_pagina", { p_pagina: 1, p_por: 200, p_status: "aguardando_analise" });
@@ -97,6 +85,8 @@
     } catch (e) { tiras[chave] = { itens: [], erro: App.u.msgErro(e) }; }
     if (tiraAberta === chave || Object.values(abertaEm).includes(chave)) App.render();
   }
+  // 009z5 (pedido do usuário): linha no cartão dizendo quem pediu a tarefa
+  const pedidaPor = (a) => a.automatica || !a.criada_por_nome ? null : a.criada_por === S.me.id ? "Pedida por você" : `Pedida por ${a.criada_por_nome}`;
   function tira(x) {
     const t = tiras[x.chave] || { carregando: true };
     const MAX = 5, itens = t.itens || [];
@@ -105,7 +95,7 @@
         : t.erro ? el("p", { class: "err", text: t.erro })
         : !itens.length ? el("p", { class: "meta", text: "Nada aqui agora. O número se atualiza em instantes." })
         : el("ul", { class: "tira-cards" }, itens.slice(0, MAX).map((i) => el("li", { class: "tira-card" + (i.alerta ? " alerta" : "") + (i.paraMim ? " para-mim" : "") },
-            el("div", { class: "tira-txt" }, el("b", { text: i.titulo }), el("span", { class: "meta", text: i.detalhe })),
+            el("div", { class: "tira-txt" }, el("b", { text: i.titulo }), el("span", { class: "meta", text: i.detalhe }), i.pedidoPor ? el("span", { class: "meta tira-pedido", text: i.pedidoPor }) : null),
             i.acoes?.length ? el("div", { class: "tira-acoes" }, ...i.acoes) : null))),
       el("a", { class: "btn link", href: x.href }, itens.length > MAX ? `Ver todos os ${itens.length} na tela completa` : "Abrir a tela completa"));
   }  // 009y2 (pedido do usuário): a mesma prévia em outras telas (Minha fila); host = onde está aberta
@@ -205,7 +195,6 @@
       at?.minhas_em_andamento ? { n: at.minhas_em_andamento, txt: plural(at.minhas_em_andamento, "tarefa com você em andamento", "tarefas com você em andamento"), href: "#atividades/pendencias", chave: "comigo" } : null,
       // 009z4b (pedido do usuário): uma linha só para as tarefas abertas; as pedidas para você aparecem primeiro, com outra cor
       souModerador() && at?.equipe_abertas ? { n: at.equipe_abertas, txt: plural(at.equipe_abertas, "tarefa da equipe agora", "tarefas da equipe agora"), href: "#atividades/sugeridas", leve: true, chave: "equipe_agora" } : null,  // 009z5 (pedido do usuário)
-      at?.pedidas_por_mim ? { n: at.pedidas_por_mim, txt: plural(at.pedidas_por_mim, "tarefa que você pediu", "tarefas que você pediu"), href: "#atividades/sugeridas", leve: true, chave: "pedidas_por_mim" } : null,  // 009z5 (pedido do usuário)
       (at?.abertas_para_pegar || at?.para_aceitar) ? { n: Math.max(at.abertas_para_pegar || 0, at.para_aceitar || 0), txt: plural(Math.max(at.abertas_para_pegar || 0, at.para_aceitar || 0), "tarefa aberta", "tarefas abertas"), href: "#atividades/sugeridas", chave: "abertas" } : null,
     ].filter(Boolean);
     // 009y1f (pedido do usuário): "Ver" abre uma tira logo abaixo com a prévia do que é preciso fazer (até 5), sem sair da tela

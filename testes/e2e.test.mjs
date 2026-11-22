@@ -764,18 +764,16 @@ try {
   await s.check("#at-para label:has-text('Monitor Um') input");
   await s.click("#at-enviar");
   ok(await esperar(s, "#at-sug-lista >> text=Ligar para o restaurante Sabor") && await s.isVisible("#at-sug-lista >> text=abre para todos em"), "atividade sugerida aparece esperando aceite");
-  // 009z5 (pedido do usuário): quem pediu vê, na tela inicial, a linha das tarefas que pediu, com a situação
-  await ir(s, "#inicio"); await s.evaluate(() => App.carregar());
-  ok(await esperar(s, "#atividades-lista li[data-chave=pedidas_por_mim]"), "009z5: tela inicial mostra \"tarefas que você pediu\"");
-  await s.click("#atividades-lista li[data-chave=pedidas_por_mim] button");
-  ok(await esperar(s, "#atividades-lista li[data-chave=pedidas_por_mim] .tira-card:has-text('Ligar para o restaurante Sabor') >> text=esperando"), "009z5: a prévia mostra a tarefa pedida e a situação dela");
-  await s.click("#atividades-lista li[data-chave=pedidas_por_mim] button");
+  // 009z5 (pedido do usuário): sem a linha "tarefas que você pediu"; quem pediu aparece no cartão
+  await ir(s, "#inicio"); await s.evaluate(() => App.carregar()); await esperar(s, "#precisa-lista li");
+  ok(!(await s.$("li[data-chave=pedidas_por_mim]")), "009z5: a tela inicial não tem a linha \"tarefas que você pediu\"");
   ok(!(await s.isVisible("#atividades-lista li[data-chave=equipe_agora]")), "009z5: quem não é moderador não vê \"tarefas da equipe agora\"");
   // 009z5 (pedido do usuário): o moderador vê as tarefas da equipe agora, mesmo as que não estão com ele
   await ir(a2, "#inicio"); await a2.evaluate(() => App.carregar());
   ok(await esperar(a2, "#atividades-lista li[data-chave=equipe_agora]"), "009z5: moderador vê \"tarefas da equipe agora\"");
   await a2.click("#atividades-lista li[data-chave=equipe_agora] button");
-  ok(await esperar(a2, "#atividades-lista li[data-chave=equipe_agora] .tira-card:has-text('Ligar para o restaurante Sabor') >> text=esperando"), "009z5: a prévia da equipe mostra a tarefa de outra pessoa e com quem está");
+  ok(await esperar(a2, "#atividades-lista li[data-chave=equipe_agora] .tira-card:has-text('Ligar para o restaurante Sabor') >> text=aguardando aceite")
+    && await a2.isVisible("#atividades-lista li[data-chave=equipe_agora] .tira-card:has-text('Ligar para o restaurante Sabor') .tira-pedido:has-text('Pedida por Suporte Um')"), "009z5: a prévia da equipe mostra a tarefa de outra pessoa, com quem está e quem pediu");
   await a2.click("#atividades-lista li[data-chave=equipe_agora] button");
   await ir(s, "#atividades/sugeridas");
   ok(await s.isVisible("#at-sug-lista .card:has-text('Sabor') >> text=esperando há"), "cartão mostra há quanto tempo espera");

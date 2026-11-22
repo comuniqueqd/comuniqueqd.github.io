@@ -132,7 +132,7 @@
       if (a.meu || a.aceito_por_mim) botoes = [acao("Resolvido", () => rpc("resolver_aviso_rapido", { p_id: a.id, p_nota: null }), { classe: "btn small primary", ok: "Pedido de ajuda resolvido.", erro })];
     } else if (a.meu) {
       if (a.para_moderadores) {
-        situacao = "Enviado para os moderadores, esperando alguém pegar";
+        situacao = "Enviado para os moderadores, aguardando aceite";
         botoes = [acao("Cancelar pedido", () => rpc("encerrar_aviso_rapido", { p_id: a.id }), { ok: "Pedido cancelado.", erro })];
       } else if (expirado) {
         situacao = "Ninguém pegou em 10 minutos";

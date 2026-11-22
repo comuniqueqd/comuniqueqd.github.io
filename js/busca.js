@@ -123,7 +123,7 @@
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
     { versao: "009z5", tema: "Casa certa", itens: [
-      ["Veja a tela inicial mais enxuta", "O bloco “Seus números” saiu (os números estão em “Precisa de você” e nas Análises). As tarefas ganharam a faixa “Atividades em espera”, com as que você pediu e com quem está cada uma; o moderador vê também as de toda a equipe.", "#precisa-lista"],
+      ["Veja a tela inicial mais enxuta", "O bloco “Seus números” saiu (os números estão em “Precisa de você” e nas Análises). As tarefas ganharam a faixa “Atividades em espera”, cada cartão diz quem pediu e com quem está; o moderador vê também as de toda a equipe.", "#precisa-lista"],
       ["Comece a digitar direto", "No computador, os formulários (Nova ativação, Nova restrição, Registrar adicional, Calculadora, Ativar parceiro) já abrem com o cursor no primeiro campo."],
       ["Confira o ajuste de bairro repetido", "Registrar o mesmo ajuste duas vezes (mesmo ID e pedido, ou mesmos bairros no dia) pergunta antes, como no adicional."],
       ["Leia um tempo só na tratativa", "O cartão mostra só “vence em…” ou “venceu há…”. Tarefa aguardando terceiro não aparece mais como vencida."],
