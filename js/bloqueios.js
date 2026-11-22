@@ -149,7 +149,7 @@
         tarefaMinha ? el("button", { class: "btn approve", type: "button", onclick: () => abrir(b.id, completar ? "completar" : "tratar") },
           completar ? "Completar dados" : b.tarefa.tipo === "encerramento_parceria" ? "Marcar encerramento como tratado" : "Marcar tratativa como resolvida") : null,
         tarefaMinha && !completar ? el("button", { class: "btn", type: "button", onclick: () => mensagemTratativa(b, b.tarefa) }, "Gerar mensagem") : null,
-        mod() && b.tarefa?.status === "pendente" && b.tarefa.tipo !== "completar_dados" ? el("button", { class: "btn link", type: "button", onclick: () => realocar(b.tarefa, b) }, "Realocar…") : null,
+        mod() && b.tarefa?.status === "pendente" && b.tarefa.tipo !== "completar_dados" ? el("button", { class: "btn link", type: "button", onclick: () => realocar(b.tarefa, b) }, "Realocar") : null,
         el("button", { class: "btn link", type: "button", onclick: () => abrirFicha(b.id_app) }, "Consultar entregador"),
         botaoAnexos(b),
         podeCorrigir(b) ? el("button", { class: "btn link", type: "button", onclick: () => abrirCorrecao(b) }, "Corrigir dados") : null,

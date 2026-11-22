@@ -35,11 +35,23 @@
         const l = await App.u.rpc("listar_tarefas", { p_status: "pendente", p_minhas: true });
         itens = l.filter((t) => t.minha && t.tipo !== "completar_dados" && (chave === "tratativas" || t.atrasada))
           .sort((a, b) => (b.atrasada - a.atrasada) || String(a.criada_em).localeCompare(String(b.criada_em)))
-          .map((t) => ({ titulo: t.bloqueio?.nome || t.bloqueio?.nome_entregador || (t.bloqueio?.id_app ? "ID " + t.bloqueio.id_app : "Sem nome"),
-            detalhe: [t.bloqueio?.infracao, t.cidade, t.prazo_horas ? App.u.textoPrazo(new Date(t.criada_em).getTime() + t.prazo_horas * 3600000) : `há ${tempo(t.criada_em)}`].filter(Boolean).join(" · "),
-            alerta: t.atrasada,
-            acoes: [copiarId(t.bloqueio?.id_app), t.bloqueio?.id_app ? el("button", { class: "btn small", type: "button", onclick: () => App.abrirFicha?.(t.bloqueio.id_app) }, "Ver a ficha") : null,
-              el("a", { class: "btn small primary", href: "#bloqueios/tratativas" }, "Tratar")].filter(Boolean) }));
+          .map((t) => {
+            // 009z5 (pedido do usuário): cartão curto: prazo · infração · ocorrência · cidade; resolver e mensagem ali mesmo
+            const b = t.bloqueio || {};
+            const fim = t.prazo_horas ? new Date(t.criada_em).getTime() + t.prazo_horas * 3600000 : null;
+            return { titulo: b.nome || b.nome_entregador || (b.id_app ? "ID " + b.id_app : "Sem nome"),
+              // 009z5 (pedido do usuário): só o motivo, quantas vezes e a cidade; o resto em "Detalhes"
+              detalhe: [b.infracao, b.ocorrencia ? `${App.bloqueios?.ord ? App.bloqueios.ord(b.ocorrencia) : b.ocorrencia + "ª"} vez` : null, t.cidade || b.cidade].filter(Boolean).join(" · "),
+              mais: [fim ? App.u.textoPrazo(fim).replace(/^./, (c) => c.toUpperCase()) : `Pendente há ${tempo(t.criada_em)}`,
+                b.horas != null && App.bloqueios?.horasTxt ? `restrição de ${App.bloqueios.horasTxt(b.horas)}` : null,
+                t.responsavel_nome ? `com ${t.responsavel_nome}` : null, b.registrado_por_nome ? `registrada por ${b.registrado_por_nome}` : null].filter(Boolean).join(" · "),
+              alerta: t.atrasada,
+              acoes: [App.bloqueios?.concluir ? el("button", { class: "btn small primary", type: "button",
+                  onclick: async (e) => { if (await App.bloqueios.concluir(t.id, "", e.currentTarget)) { buscarTira(chave); App.carregar?.(); } } }, "Marcar como resolvida") : null,
+                App.bloqueios?.mensagemTratativa && b.id ? el("button", { class: "btn small", type: "button", onclick: () => App.bloqueios.mensagemTratativa(b, t) }, "Gerar mensagem") : null,
+                copiarId(b.id_app),
+                S.me.papel_bloqueios === "moderador" && App.bloqueios?.realocar ? el("button", { class: "btn link", type: "button", onclick: () => App.bloqueios.realocar(t, b) }, "Realocar") : null].filter(Boolean) };
+          });
       } else if (chave === "pedidas" || chave === "comigo" || chave === "abertas") {
         const l = await (App.listarAtividades ? App.listarAtividades(0) : App.u.rpc("listar_atividades"));
         const filtro = { pedidas: (a) => a.status === "aberta" && a.para_mim && a.pode_aceitar && !a.opcional_para_mim && !a.automatica,
@@ -95,7 +107,8 @@
         : t.erro ? el("p", { class: "err", text: t.erro })
         : !itens.length ? el("p", { class: "meta", text: "Nada aqui agora. O número se atualiza em instantes." })
         : el("ul", { class: "tira-cards" }, itens.slice(0, MAX).map((i) => el("li", { class: "tira-card" + (i.alerta ? " alerta" : "") + (i.paraMim ? " para-mim" : "") },
-            el("div", { class: "tira-txt" }, el("b", { text: i.titulo }), el("span", { class: "meta", text: i.detalhe }), i.pedidoPor ? el("span", { class: "meta tira-pedido", text: i.pedidoPor }) : null),
+            el("div", { class: "tira-txt" }, el("b", { text: i.titulo }), el("span", { class: "meta", text: i.detalhe }), i.pedidoPor ? el("span", { class: "meta tira-pedido", text: i.pedidoPor }) : null,
+              i.mais ? el("details", { class: "tira-mais" }, el("summary", {}, "Detalhes"), el("span", { class: "meta", text: i.mais })) : null),
             i.acoes?.length ? el("div", { class: "tira-acoes" }, ...i.acoes) : null))),
       el("a", { class: "btn link", href: x.href }, itens.length > MAX ? `Ver todos os ${itens.length} na tela completa` : "Abrir a tela completa"));
   }  // 009y2 (pedido do usuário): a mesma prévia em outras telas (Minha fila); host = onde está aberta

@@ -30,7 +30,6 @@
       extra);
   }
 
-  const venceHoje = (fim) => App.u.diaChave(fim) <= App.u.diaChave(Date.now());
   function renderPendencias() {
     const box = $("#at-lista");
     const r = S.resumo;
@@ -53,7 +52,7 @@
     const minhas = A.atividades.filter((x) => (x.status === "aberta" && x.pode_aceitar && !x.opcional_para_mim && x.criada_por !== S.me.id && x.para_mim) || (x.status === "aceita" && x.sou_participante && !x.automatica))
       .sort((x, y) => String(x.prazo || "9").localeCompare(String(y.prazo || "9")));
     // Pedidos para ser responsável de cidade (moderadores, 008b)
-    itens.push(...App.avisos.cartoesPedidos(item));
+    itens.push(...App.avisos.cartoesPedidos(item).map((li) => { li.dataset.tipo = "pedidos"; return li; }));
     // 009z4 (NF-9): retornos combinados com o entregador (lembrete no comentário da ficha)
     for (const l of A.lembretes || []) {
       const quem = l.nome || "ID " + l.id_app;
@@ -61,8 +60,7 @@
         detalhe: `${l.vencido ? "Era para " : "Lembrete para "}${dt(l.lembrar_em)} · ${l.texto}`,
         acoes: [el("button", { class: "btn small primary", type: "button", onclick: (e) => acaoAtividade("concluir_lembrete", { p_id: l.id }, e.currentTarget, "Retorno feito.") }, "Feito"),
           el("button", { class: "btn link", type: "button", onclick: () => App.abrirFicha?.(l.id_app) }, "Ver a ficha")] });
-      li.dataset.lembrete = l.id;
-      if (venceHoje(l.lembrar_em)) li.dataset.hoje = "1";
+      li.dataset.lembrete = l.id; li.dataset.tipo = "retornos";
       itens.push(li);
     }
     // 009y2 (pedido do usuário): "porta-cartões": o botão abre logo abaixo os cartões curtos (os mesmos da tela inicial),
@@ -74,48 +72,43 @@
         extra: aberta ? App.previa.tira({ chave, txt, href }) : null };
     };
     // Ativação
+    const tipar = (tipo, li, n = 1) => { li.dataset.tipo = tipo; li.dataset.n = n; return li; };
     if (staffAtiv() && r.ativacao.aguardando_analise)
-      itens.push(item({ modulo: "ATIVAÇÃO", titulo: App.u.plural(r.ativacao.aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"),
-        detalhe: "Aprovar, reprovar ou encerrar.", ...porta("cadastros", App.u.plural(r.ativacao.aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"), "#ativacao/pendentes", "Ver os cadastros") }));
+      itens.push(tipar("cadastros", item({ modulo: "ATIVAÇÃO", titulo: App.u.plural(r.ativacao.aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"),
+        ...porta("cadastros", App.u.plural(r.ativacao.aguardando_analise, "cadastro aguardando análise", "cadastros aguardando análise"), "#ativacao/pendentes", "Ver os cadastros") }), r.ativacao.aguardando_analise));
     if (!staffAtiv() && (r.ativacao.aguardando_analise || r.ativacao.aguardando_contato))
-      itens.push(item({ modulo: "ATIVAÇÃO", titulo: "Seus cadastros em andamento", estado: "sem",
+      itens.push(tipar("cadastros", item({ modulo: "ATIVAÇÃO", titulo: "Seus cadastros em andamento", estado: "sem",
         detalhe: `${r.ativacao.aguardando_analise} aguardando análise · ${r.ativacao.aguardando_contato} aguardando novo contato. Você acompanha, quem decide é o responsável.`,
-        acoes: [el("a", { class: "btn small", href: "#ativacao/pendentes" }, "Acompanhar")] }));
+        acoes: [el("a", { class: "btn small", href: "#ativacao/pendentes" }, "Acompanhar")] })));
     // Bloqueios
+    const minhasTrat = [];
     for (const t of A.tarefas || []) {
       const b = t.bloqueio;
       const tipo = App.bloqueios.TAREFA[t.tipo] || "Tratativa";
       if (t.tipo === "completar_dados") {
-        if (staffBloq()) itens.push(item({ modulo: "RESTRIÇÕES", titulo: `${tipo}: ID ${b.id_app}`,
+        if (staffBloq()) itens.push(tipar("tratativas", item({ modulo: "RESTRIÇÕES", titulo: `${tipo}: ID ${b.id_app}`,
           detalhe: `Registrado só com o ID (${b.infracao}) por ${b.registrado_por_nome} há ${duracao(t.criada_em).txt}. Falta nome e cidade.`,
-          acoes: [el("a", { class: "btn approve small", href: "#bloqueios/tratativas" }, "Completar na tela de tratativas")] }));
+          acoes: [el("a", { class: "btn approve small", href: "#bloqueios/tratativas" }, "Completar na tela de tratativas")] })));
         continue;
       }
       const punicao = App.bloqueios.horasTxt(b.horas);
       const fimTrat = t.prazo_horas ? new Date(new Date(t.criada_em).getTime() + t.prazo_horas * 3600000) : null;
-      const atraso = fimTrat ? `${App.u.textoPrazo(fimTrat).replace(/^./, (c) => c.toUpperCase())} · ` : "";  // 009z5 (A5-4): um tempo só
       if (staffBloq() && t.minha) {
-        const cx = A.caixa[t.id];
-        const nota = cx ? el("textarea", { rows: "2", maxlength: "600", placeholder: "O que foi feito? (opcional)", "aria-label": "Nota da tratativa", oninput: (e) => (cx.texto = e.target.value) }) : null;
-        if (nota) nota.value = cx.texto;
-        itens.push(item({ modulo: "RESTRIÇÕES", titulo: `${tipo}: ${b.nome}`, estado: t.atrasada ? "atrasada" : "pendente", atrasada: t.atrasada,
-          detalhe: `${atraso}${b.infracao} · ${App.bloqueios.ord(b.ocorrencia)} ocorrência · ${punicao} · ${b.cidade || "sem cidade"} · com ${t.responsavel_nome} · registrado por ${b.registrado_por_nome}`,
-          acoes: [cx
-            ? el("button", { class: "btn approve small", type: "button", onclick: (e) => App.bloqueios.concluir(t.id, cx.texto, e.currentTarget).then(() => { delete A.caixa[t.id]; }) }, "Confirmar")
-            : el("button", { class: "btn approve small", type: "button", onclick: () => { A.caixa[t.id] = { texto: "" }; render(); } }, "Marcar como resolvida"),
-            cx ? el("button", { class: "btn link", type: "button", onclick: () => { delete A.caixa[t.id]; render(); } }, "Cancelar")
-              : el("button", { class: "btn small", type: "button", onclick: () => App.bloqueios.mensagemTratativa(b, t) }, "Gerar mensagem"),
-            S.me.papel_bloqueios === "moderador" ? el("button", { class: "btn link", type: "button", onclick: () => App.bloqueios.realocar(t, b) }, "Realocar…") : null,
-            el("a", { class: "btn link", href: "#bloqueios/tratativas" }, "Ver na tela de tratativas")].filter(Boolean),
-          extra: el("div", {}, App.u.previsao(t, "tarefa", t.id, true),
-            cx ? el("div", { class: "box" }, el("p", { class: "meta", style: "margin:0", text: "Resolver a tratativa não libera a restrição. Quem registrou recebe um aviso." }), nota) : null) }));
-        if (fimTrat && venceHoje(fimTrat)) itens[itens.length - 1].dataset.hoje = "1";  // 009z (M2): conta no "Vence hoje"
+        // 009z5 (pedido do usuário): as tratativas viram um porta-cartões só (cartões curtos logo abaixo, como na tela inicial)
+        minhasTrat.push(t);
       } else if (!staffBloq() && b.registrado_por === S.me.id) {  // 009x6: o suporte vê todas, mas acompanha só as que registrou
-        itens.push(item({ modulo: "RESTRIÇÕES", titulo: `Acompanhando: ${tipo.toLowerCase()} de ${b.nome}`, estado: "pendente",
+        itens.push(tipar("tratativas", item({ modulo: "RESTRIÇÕES", titulo: `Acompanhando: ${tipo.toLowerCase()} de ${b.nome}`, estado: "pendente",
           detalhe: `Pendente com ${t.responsavel_nome} há ${duracao(t.criada_em).txt} · ${b.infracao} · ${punicao}`,
           extra: App.u.previsao(t, "tarefa", t.id, false),
-          acoes: [el("a", { class: "btn small", href: "#bloqueios/historico" }, "Ver no Histórico")] }));
+          acoes: [el("a", { class: "btn small", href: "#bloqueios/historico" }, "Ver no Histórico")] })));
       }
+    }
+    if (minhasTrat.length) {
+      const atr = minhasTrat.filter((t) => t.atrasada).length;
+      const txt = App.u.plural(minhasTrat.length, "tratativa com você", "tratativas com você");
+      const li = item({ modulo: "RESTRIÇÕES", titulo: txt + (atr ? ` · ${App.u.plural(atr, "atrasada", "atrasadas")}` : ""), atrasada: atr > 0,
+        ...porta("tratativas", txt, "#bloqueios/tratativas", "Ver as tratativas") });
+      itens.push(tipar("tratativas", li, minhasTrat.length));
     }
     // 009y1 (OP-4): as 3 tarefas abertas para a equipe mais urgentes (prazo mais perto, depois a mais antiga), com
     // "Eu faço", sem ir até a aba Tarefas
@@ -135,25 +128,34 @@
       el("h3", {}, "Atividades da equipe", el("span", { class: "count", text: daEquipe.length })),
       el("p", { class: "meta", style: "margin:0 0 6px", text: "Criadas pelo sistema. Todos participam: cada aprovação na cidade conta, e ela fecha sozinha quando bate a meta. Se não precisar mais, qualquer pessoa conclui antes, com o motivo." }),
       el("div", { class: "queue" }, daEquipe.map(cartaoAtividade))) : null;
-    // 009z (M2): "Vence hoje" mostra só o que é seu e vence até o fim do dia (ou já venceu), do mais urgente ao resto
-    const minhasHoje = minhas.filter((a) => a.prazo && !a.aguardando_desde && venceHoje(a.prazo));  // 009z5 (A5-20): pausada não vence
-    const tratHoje = itens.filter((x) => x.dataset.hoje);
-    const nHoje = minhasHoje.length + tratHoje.length;
-    const chave = el("div", { class: "fila-filtro" },
-      el("button", { class: "chip" + (A.soHoje ? " ativo" : ""), type: "button", "aria-pressed": String(!!A.soHoje), id: "at-vence-hoje",
-        onclick: () => { A.soHoje = !A.soHoje; render(); } }, `Vence hoje (${nHoje})`));
-    if (A.soHoje) return box.replaceChildren(chave, ...(nHoje ? [
-      minhasHoje.length ? el("div", { class: "grupo" }, el("h3", {}, "Tarefas", el("span", { class: "count", text: minhasHoje.length })), el("div", { class: "queue" }, minhasHoje.map(cartaoAtividade))) : null,
-      tratHoje.length ? el("div", { class: "grupo" }, el("h3", {}, "Tratativas", el("span", { class: "count", text: tratHoje.length })), el("ul", { class: "queue", style: "padding:0;margin:0" }, tratHoje)) : null].filter(Boolean)
-      : [vazio("Nada vence hoje", "Nenhuma tarefa ou tratativa sua vence até o fim do dia. Clique em “Vence hoje” de novo para ver tudo.")]));
+    // 009z5 (pedido do usuário): no lugar do "Vence hoje", filtros pelo que aparece nesta tela (Tarefas, Tratativas, Cadastros...)
+    const doTipo = (t) => itens.filter((x) => x.dataset.tipo === t);
+    const soma = (l) => l.reduce((n, x) => n + Number(x.dataset.n || 1), 0);
+    const grupos = [
+      ["tarefas", "Tarefas", minhas.length],
+      ["tratativas", "Tratativas", soma(doTipo("tratativas"))],
+      ["cadastros", "Cadastros", soma(doTipo("cadastros"))],
+      ["retornos", "Retornos", doTipo("retornos").length],
+      ["pedidos", "Pedidos de cidade", doTipo("pedidos").length],
+      ["equipe", "Atividades da equipe", daEquipe.length],
+      ["abertas", "Abertas para a equipe", abertas.length],
+      ["opcionais", "Opcionais", opcionais.length],
+    ].filter(([, , n]) => n);
+    if (A.filtroFila && !grupos.some(([t]) => t === A.filtroFila)) A.filtroFila = null;
+    const f = A.filtroFila, ver = (t) => !f || f === t;
+    const chip = (t, rotulo, n) => el("button", { class: "chip" + (f === t ? " ativo" : ""), type: "button", "aria-pressed": String(f === t), "data-filtro": t || "tudo",
+      onclick: () => { A.filtroFila = f === t ? null : t; render(); } }, n == null ? rotulo : `${rotulo} (${n})`);
+    const filtros = grupos.length > 1 ? el("div", { class: "fila-filtro", id: "at-fila-filtros", role: "group", "aria-label": "Mostrar" },
+      chip(null, "Tudo"), ...grupos.map(([t, rotulo, n]) => chip(t, rotulo, n))) : null;
+    const itensVer = itens.filter((x) => ver(x.dataset.tipo));
     box.replaceChildren(...[
-      nHoje ? chave : null,
-      blocoEquipe,
-      minhas.length ? el("div", { class: "grupo" }, el("h3", {}, "Tarefas com você", el("span", { class: "count", text: minhas.length })),
+      filtros,
+      ver("equipe") ? blocoEquipe : null,
+      ver("tarefas") && minhas.length ? el("div", { class: "grupo" }, el("h3", {}, "Tarefas com você", el("span", { class: "count", text: minhas.length })),
         el("div", { class: "queue" }, minhas.map(cartaoAtividade))) : null,
-      itens.length ? el("ul", { class: "queue", style: "padding:0;margin:0" }, itens) : minhas.length || blocoAbertas ? null : vazio("Tudo em dia", "Nenhuma pendência só sua agora."),
-      blocoAbertas,
-      opcionais.length ? el("div", { class: "grupo" }, el("h3", {}, "Opcionais: quem puder, pega", el("span", { class: "count", text: opcionais.length })),
+      itensVer.length ? el("ul", { class: "queue", style: "padding:0;margin:0" }, itensVer) : f || minhas.length || blocoAbertas ? null : vazio("Tudo em dia", "Nenhuma pendência só sua agora."),
+      ver("abertas") ? blocoAbertas : null,
+      ver("opcionais") && opcionais.length ? el("div", { class: "grupo" }, el("h3", {}, "Opcionais: quem puder, pega", el("span", { class: "count", text: opcionais.length })),
         el("ul", { class: "queue", style: "padding:0;margin:0" }, opcionais)) : null].filter(Boolean));
   }
 

@@ -491,6 +491,23 @@ try {
   await ir(m, "#bloqueios/tratativas");
   ok(await esperar(m, "#v-bq-tratativas:not([hidden]) .card"), "monitorador vê as Tratativas");
   ok((await texto(m, "#c-trat")) === "2", "contador de tratativas: 2 (mal uso e furto em LAGARTO)");
+  // 009z5 (pedido do usuário): tratativas da Minha fila num porta-cartões; cartão de cadastros sem a linha de instrução
+  await ir(m, "#atividades/pendencias"); await esperar(m, "#at-lista .card");
+  ok(!(await texto(m, "#at-lista")).includes("Aprovar, reprovar ou encerrar"), "009z5: Minha fila sem a linha 'Aprovar, reprovar ou encerrar'");
+  ok(!(await m.$("#at-vence-hoje")) && (!(await m.$("#at-fila-filtros")) || await m.isVisible("#at-fila-filtros [data-filtro=tratativas]")), "009z5: no lugar do 'Vence hoje', filtros por tipo (Tratativas...)");
+  if (await m.$("#at-fila-filtros")) { await m.click("#at-fila-filtros [data-filtro=tratativas]");
+    ok(!(await m.isVisible("#at-lista >> text=Tarefas com você")) && await m.isVisible("#at-lista .card:has-text('tratativa')"), "009z5: o filtro Tratativas mostra só as tratativas");
+    await m.click("#at-fila-filtros [data-filtro=tudo]"); }
+  { const porta = "#at-lista .card:has-text('tratativa') button:has-text('Ver as tratativas')";
+    ok(await esperar(m, porta), "009z5: as tratativas da Minha fila viram um cartão só com 'Ver as tratativas'");
+    await m.click(porta);
+    ok(await esperar(m, "#at-lista .precisa-tira .tira-card button:has-text('Marcar como resolvida')")
+      && await m.isVisible("#at-lista .precisa-tira .tira-card button:has-text('Gerar mensagem')"), "009z5: a prévia das tratativas tem Marcar como resolvida e Gerar mensagem");
+    ok(!(await texto(m, "#at-lista .precisa-tira .tira-card .tira-txt > .meta")).includes("registrada por"), "009z5: o cartão curto da tratativa traz só motivo, vezes e cidade");
+    await m.click("#at-lista .precisa-tira .tira-card summary:has-text('Detalhes')");
+    ok(await m.isVisible("#at-lista .precisa-tira .tira-card .tira-mais[open] >> text=registrada por"), "009z5: o resto aparece em Detalhes");
+    await m.click("#at-lista .card:has-text('tratativa') button:has-text('Fechar')"); }
+  await ir(m, "#bloqueios/tratativas"); await esperar(m, "#v-bq-tratativas:not([hidden]) .card");
   ok(await m.isVisible(".grupo:has-text('Encerramentos de parceria') >> text=Ladrão"), "encerramento de parceria em grupo próprio");
   await m.screenshot({ path: path.join(PRINTS, "b3-tratativas.png"), fullPage: true });
   const cardF = "#bq-trat-lista .card:has-text('Fulano de Tal')";
@@ -744,7 +761,7 @@ try {
   const cardAt = "#bq-trat-lista .card.atrasada:has-text('Atrasildo')";
   ok(await esperar(a2, cardAt) && /Tratativa atrasada[\s\S]*venceu há/.test(await texto(a2, cardAt)) && !(await texto(a2, cardAt)).includes("atrasada há"), "tratativa com mais de 32 h fica vermelha, com um tempo só (009z5: \"venceu há\")");
   await a2.screenshot({ path: path.join(PRINTS, "c1-atrasada.png"), fullPage: true });
-  await a2.click(`${cardAt} >> text=Realocar…`);
+  await a2.click(`${cardAt} >> text=Realocar`);
   await a2.selectOption("dialog.janela select", "mateuslopesmb@gmail.com");
   await a2.click("dialog.janela .actions button.primary");
   ok(await esperar(a2, "#toast:has-text('Tarefa realocada')"), "moderador realoca a tratativa atrasada");
@@ -1741,10 +1758,7 @@ try {
       ok(await esperar(v, "dialog.paleta li >> text=Entregador"), "009z: com 3 letras a paleta procura entregadores também");
       await v.keyboard.press("Escape");
       await v.evaluate(() => { location.hash = "#atividades/pendencias"; });
-      ok(await esperar(v, "#at-vence-hoje") || await esperar(v, "#at-lista"), "009z: Minha fila abre");
-      if (await v.$("#at-vence-hoje")) { await v.click("#at-vence-hoje");
-        ok(await v.getAttribute("#at-vence-hoje", "aria-pressed") === "true", "009z: 'Vence hoje' filtra a Minha fila");
-        await v.click("#at-vence-hoje"); }
+      ok(await esperar(v, "#at-lista"), "009z: Minha fila abre");
       await v.evaluate(() => { location.hash = "#inicio"; }); await esperar(v, "#precisa-lista li"); }
     // 009z parte 2 (A13-12): acessibilidade automática (axe-core) nas telas principais: nada grave nem crítico
     { const axeSrc = fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "node_modules/axe-core/axe.min.js"), "utf8");
