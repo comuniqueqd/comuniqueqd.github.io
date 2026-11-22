@@ -451,4 +451,16 @@
   $("#ped-busca").addEventListener("input", (e) => mudou("busca", e.target.value));
 
   App.pedidos = { carregar, render, ler, linhas, decodificar, P };
+  // 009z6b (pedido do usuário): item próprio no menu, "Monitoramento"; mesmo acesso das Restrições
+  App.modulo({
+    id: "monitoramento", nome: "Monitoramento",
+    acesso: () => !!papel(),
+    abas: [{ id: "pedidos", nome: "Pedidos fora do limite", secao: "v-bq-pedidos" }],
+    padrao: () => "pedidos",
+    async carregar() {
+      const B = App.bloqueios?.B;   // as cidades da janela de confirmar vêm das regras das Restrições
+      await Promise.all([carregar(), B && !B.regras ? rpc("regras_bloqueio").then((d) => { B.regras = d; B.regrasEm = Date.now(); }) : null]);
+    },
+    render() { render(); },
+  });
 })();

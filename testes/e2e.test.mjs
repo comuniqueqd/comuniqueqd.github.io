@@ -453,7 +453,7 @@ try {
     const abasA = await s.$$eval("nav.tabs a", (as) => as.map((x) => x.dataset.view));
     ok(abasA[0] === "novo" && abasA[1] === "pendentes" && await s.isVisible("nav.tabs a[data-view=pendentes] .count"), "Ativação abre no Novo cadastro, e Pendentes vem em seguida com o número: " + abasA);
     await ir(s, "#bloqueios"); await esperar(s, "#v-bq-novo:not([hidden])"); }
-  ok(JSON.stringify(abasB) === JSON.stringify(["novo", "tratativas", "pedidos", "ativos", "atencao", "consultar", "historico"]), "009x6: suporte vê também Tratativas e Com restrição agora (só leitura), e os Pedidos fora do limite (009z6): " + abasB);
+  ok(JSON.stringify(abasB) === JSON.stringify(["novo", "tratativas", "ativos", "atencao", "consultar", "historico"]), "009x6: suporte vê também Tratativas e Com restrição agora (só leitura): " + abasB);
   await s.fill("#bq-id", "mal00001"); await s.fill("#bq-nome", "Fulano de Tal");
   await s.selectOption("#bq-cidade", "LAGARTO - SE"); await s.selectOption("#bq-infracao", { label: "Mal Uso Proposital do Aplicativo" });
   await s.fill("#bq-comentario", "Educado, mas costuma atrasar a coleta.");
@@ -967,7 +967,8 @@ try {
     const resumo = ["Status das Entregas\tEntrega Id\tCodigo (Pedido)\tStatus das entregas\tCriada em\tUF / Cidade\tEstabelecimento\tEntregador",
       ...["e2epedido0001", "e2epedido0002", "e2epedido0003"].map((id) => `FINALIZADAS\t${id}\tX\tFINALIZADAS\t${hr(0)}\tSE - Lagarto\tLoja do Teste\tRAFA  TESTE PEDIDOS`)].join("\n");
     const ents = "entregadorId (entregadorQueroLog)\tNome\tnome (municipioQueroLog)\tUf\nraf0000001\tRafa Teste Pedidos\tLagarto\tSE";
-    await ir(a, "#bloqueios/pedidos"); await a.reload();
+    await ir(a, "#bloqueios/pedidos"); await a.reload();   // endereço antigo: leva ao Monitoramento
+    ok(await esperar(a, "#v-bq-pedidos:not([hidden])") && await a.isVisible('nav.modulos a[data-mod="monitoramento"][aria-current="page"]') && await a.isVisible('nav.modulos a[data-mod="monitoramento"]'), "009z6b: Monitoramento é item próprio do menu; o endereço antigo leva até ele");
     ok(await esperar(a, "#ped-importar:not([hidden]) > summary"), "009z6: moderador vê Enviar dados do Tableau");
     await a.click("#ped-importar > summary");
     await a.setInputFiles("#ped-arquivos", [{ name: "Solicitacoes_por_place.csv", mimeType: "text/csv", buffer: utf16(etapas) },
@@ -976,7 +977,7 @@ try {
     await a.click("#ped-importar button:has-text('Enviar 3 pedidos')");
     ok(await esperar(a, "#ped-lista .linha-ped"), "009z6: depois de enviar, a lista mostra os pedidos fora do limite");
     ok((await a.$$("#ped-lista .linha-ped")).length === 2, "009z6: só os 2 atrasos (o pedido dentro do limite não aparece)");
-    await ir(s, "#bloqueios/pedidos"); await s.reload();
+    await ir(s, "#monitoramento/pedidos"); await s.reload();
     ok(await esperar(s, "#ped-lista .linha-ped:has-text('PED001')") && !(await s.isVisible("#ped-importar")), "009z6: o suporte vê a lista, sem o envio");
     ok(await s.isVisible("#ped-lista .linha-ped:has-text('PED001') >> text=Chegada na loja: 19 min")
       && await s.isVisible("#ped-lista .linha-ped:has-text('PED001') >> text=Levou 19 min para chegar na loja depois de aceitar.")

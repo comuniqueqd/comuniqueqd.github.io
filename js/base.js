@@ -361,7 +361,9 @@
                      "ferramentas/tarifas": "ferramentas/calculadora/tarifas", "financeiro/pendentes": "financeiro/lancamentos/pendentes",
                      // 009m: Avisos virou item do menu (Para mim + Toda a equipe = os Registros); o Painel das tarefas foi para as Análises
                      "atividades/avisos": "avisos/para-mim", "registros": "avisos/equipe", "registros/feed": "avisos/equipe",
-                     "atividades/painel": "analises/tarefas" };
+                     "atividades/painel": "analises/tarefas",
+                     // 009z6b: os Pedidos fora do limite saíram das Restrições para o item próprio Monitoramento
+                     "bloqueios/pedidos": "monitoramento/pedidos" };
   const abasPermitidas = (m) => m.abas.filter((a) => !a.pode || a.pode());
   App.atual = { mod: null, aba: null };
   // Grupos: módulos que aparecem juntos sob um item só do menu, com uma segunda barra para escolher entre eles.
@@ -585,7 +587,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009z6";
+  const VERSAO_APP = "009z6b";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;

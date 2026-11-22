@@ -123,7 +123,7 @@
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
     { versao: "009z6", tema: "Pedidos fora do limite", itens: [
-      ["Veja os pedidos que passaram do tempo", "Nova aba em Restrições: os pedidos que demoraram mais de 15 min para chegar na loja ou mais de 45 min no total, com o entregador, o ID e onde o tempo foi gasto.", 'nav.modulos a[data-grupo="entregadores"]'],
+      ["Veja os pedidos que passaram do tempo", "Novo item Monitoramento no menu: os pedidos que demoraram mais de 15 min para chegar na loja ou mais de 45 min no total, com o entregador, o ID e onde o tempo foi gasto.", 'nav.modulos a[data-mod="monitoramento"]'],
       ["Decida pedido por pedido", "Nada vira restrição sozinho: “Confirmar restrição” mostra a punição prevista e registra por atraso; “Não vira restrição” guarda o motivo. Outro pedido do mesmo entregador no dia pode ser juntado à mesma restrição."],
       ["Envie os dados do Tableau", "O moderador escolhe os arquivos baixados do Tableau (etapas, Resumo e Tempo de entrega dos entregadores) e o Comunique junta tudo. Os dados chegam com um dia de atraso."],
     ] },

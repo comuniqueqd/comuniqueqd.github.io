@@ -1032,7 +1032,6 @@
     abas: [
       { id: "novo", nome: "Nova restrição", secao: "v-bq-novo" },
       { id: "tratativas", nome: "Tratativas", secao: "v-bq-tratativas", contador: "c-trat", alerta: true },  // 009x6: todos veem; só leitura para o suporte
-      { id: "pedidos", nome: "Pedidos fora do limite", secao: "v-bq-pedidos" },  // 009z6
       { id: "ativos", nome: "Com restrição agora", secao: "v-bq-ativos" },
       { id: "atencao", nome: "Atenção", secao: "v-bq-atencao", contador: "c-atencao" },
       { id: "consultar", nome: "Consultar entregador", secao: "v-bq-consultar" },
@@ -1049,12 +1048,11 @@
       if (aba === "ativos") t.push(rpc("listar_bloqueios", { p_escopo: "ativos" }).then((d) => (B.lista.ativos = d)));
       if (aba === "atencao") t.push(rpc("entregadores_atencao").then((d) => (B.atencao = d)));
       if (aba === "historico") t.push(carregarHist());
-      if (aba === "pedidos") t.push(App.pedidos.carregar());
       await Promise.all(t);
     },
     render(aba) {
       ({ tratativas: renderTratativas, novo: renderNovo, ativos: renderAtivos, atencao: renderAtencao, consultar: renderConsulta,
-         historico: renderHist, regras: renderRegras, pedidos: () => App.pedidos.render() })[aba]?.();
+         historico: renderHist, regras: renderRegras })[aba]?.();
     },
     contadores() {
       if (staff()) App.contador("c-trat", S.resumo?.bloqueios?.tratativas_pendentes || 0);
