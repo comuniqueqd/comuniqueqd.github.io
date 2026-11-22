@@ -116,6 +116,11 @@ h1{font-size:clamp(24px,3.6vw,32px);font-weight:800}
 .mente[data-nivel="1"] .no.obj{cursor:zoom-in}
 .mente:not(.modo-caminho) path.dep{display:none}
 .mente.modo-caminho path.dep:not(.no-caminho){display:none}
+/* o caminho escolhido aparece em qualquer zoom: linhas grossas, bolinhas cheias e com o código */
+.mente.modo-caminho path.dep.no-caminho{display:inline!important;stroke-width:calc(6px * var(--k,1))}
+.mente.modo-caminho .pt.no-caminho,.mente.modo-caminho .pt.sel{opacity:1!important;pointer-events:auto!important;z-index:4;transform:scale(calc(var(--k,1) * 2.2))}
+.mente.modo-caminho .pt.no-caminho .pt-rot,.mente.modo-caminho .pt.sel .pt-rot{display:block;font-size:15px;background:var(--surface);padding:0 4px;border-radius:4px;border:1px solid var(--line)}
+.cartao-sel li{margin:2px 0}.cartao-sel .link-sel{display:inline}
 .cartao-sel{position:absolute;left:12px;top:56px;z-index:5;width:min(360px,calc(100% - 24px));max-height:calc(100% - 140px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:0 6px 20px rgb(0 0 0 / .12);font-size:14px}
 .cartao-sel .cs-topo{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .cartao-sel .cs-tit{font-weight:600;margin:6px 0}.cartao-sel .cs-txt{margin:0 0 8px;color:var(--muted)}.cartao-sel .cs-leg{font-size:13px;color:var(--muted);margin:6px 0}
@@ -284,7 +289,7 @@ function telas(){const l=filtrados();const m=agrupar(l,"tela");
 // ---------- mapa mental (v2: anéis por versão, zoom por níveis, caminho, pontes, cenários, linha do tempo) ----------
 // Inspirado em: Obsidian (gráfico local por profundidade, vizinhos ao passar o mouse, grupos por cor, animação no tempo),
 // XMind/MindNode (recolher galhos, foco, ver como lista) e Kumu (colorir por campo, minimapa).
-let abertas=new Set(),recolhidos=new Set(),zoom=null,foco=null,focoObj=null,selM=null,profM=1,corPor="quadrante",verLista=false,ATE=null;
+let abertas=new Set(),recolhidos=new Set(),zoom=null,foco=null,focoObj=null,enquadrar=false,selM=null,profM=1,corPor="quadrante",verLista=false,ATE=null;
 const ORDEM_FEITO=[["009u","19/11"],["009v","19/11"],["009w","19/11"],["009x","20/11"],["009x5","20/11"],["009y1","20/11"],["009y1c","20/11"],["009y1d","20/11"],["009y1e","20/11"],["009y2a","20/11"],["009y2b","20/11"],["009z1","20/11"],["009z2","20/11"],["009z3","21/11"],["009z4","21/11"]];
 const idxFeito=(f)=>ORDEM_FEITO.findIndex(([v])=>v===f);
 // feito "até" a versão escolhida na linha do tempo (decididos e derrubados contam sempre)
@@ -361,7 +366,7 @@ function mente(){
      const naCorrente=chain&&chain.has(i.id);
      const p=el("button",{type:"button",class:"pt"+(feitoAte(i)?" feito":"")+(travado(i)?" travado":"")+(FATIA.has(i.id)?" na-fatia":"")+(naCorrente?" no-caminho":"")+(i.id===selM?" sel":"")+(impEf(i)>=3?" forte":""),
       style:`left:${px}px;top:${py}px;--c:${corDe(i)}`,title:`${i.id} · ${i.titulo}`,"aria-label":`${i.id}: ${i.titulo}`,"data-id":i.id,"data-obj":k},el("span",{class:"pt-rot",text:i.id}));
-     p.addEventListener("click",()=>{selM=selM===i.id?null:i.id;det.replaceChildren(selM?el("div",{class:"lista"},linha2(i)):"");desenhar()});
+     p.addEventListener("click",()=>{selM=selM===i.id?null:i.id;enquadrar=!!selM;det.replaceChildren(selM?el("div",{class:"lista"},linha2(i)):"");desenhar()});
      p.addEventListener("mouseenter",()=>{const viz=corrente(i.id,1);tela.querySelectorAll(".pt").forEach((q)=>q.classList.toggle("vizinho",viz.has(q.dataset.id)&&q.dataset.id!==i.id))});
      p.addEventListener("mouseleave",()=>tela.querySelectorAll(".pt.vizinho").forEach((q)=>q.classList.remove("vizinho")));
      tela.append(p)})}
@@ -382,7 +387,7 @@ function mente(){
   if(chain&&chain.has(id))for(const t of i.telas_extra||[])if(posTel.has(t)){const[x2,y2]=posTel.get(t);curva(x,y,x2,y2,"ponte",0.1)}}
  if(selM&&det.childNodes.length===0&&PORID.get(selM))det.append(el("div",{class:"lista"},linha2(PORID.get(selM))));
  if(selM&&PORID.get(selM)){const i=PORID.get(selM);const dep=(i.depende||[]).map((d)=>PORID.get(d)).filter(Boolean),lib=(LIBERA.get(i.id)||[]).map((d)=>PORID.get(d)).filter(Boolean);
-  const li=(x)=>el("li",{},el("button",{type:"button",class:"link-sel",onclick:()=>{selM=x.id;desenhar()}},`${x.id} · ${x.titulo}`),x.feito?el("span",{class:"feito-tag",text:" feito"}):null);
+  const li=(x)=>el("li",{},el("button",{type:"button",class:"link-sel",onclick:()=>{selM=x.id;enquadrar=true;desenhar()}},`${x.id} · ${x.titulo}`),x.feito?el("span",{class:"feito-tag",text:" feito"}):null);
   caixa.append(el("div",{class:"cartao-sel",role:"dialog","aria-label":"Item escolhido"},
    el("div",{class:"cs-topo"},el("b",{text:`${i.id}${i.feito?" · feito":""}`}),el("button",{type:"button",class:"btn-m","aria-label":"Fechar",onclick:()=>{selM=null;det.replaceChildren();desenhar()}},"Fechar")),
    el("p",{class:"cs-tit",text:i.titulo}),
@@ -405,11 +410,16 @@ function mente(){
   caixa.dataset.nivel=zoom.s<0.36?"1":zoom.s<0.7?"2":"3";
   miniV.style.cssText=`left:${-zoom.x/zoom.s*MS}px;top:${-zoom.y/zoom.s*MS}px;width:${w/zoom.s*MS}px;height:${h/zoom.s*MS}px`};
  const z=(f,cx,cy)=>{const w=caixa.clientWidth,h=caixa.clientHeight;cx??=w/2;cy??=h/2;zoom.x=cx-(cx-zoom.x)*f;zoom.y=cy-(cy-zoom.y)*f;zoom.s*=f;aplicar()};
- caixa.addEventListener("wheel",(e)=>{e.preventDefault();const r=caixa.getBoundingClientRect();z(e.deltaY<0?1.12:1/1.12,e.clientX-r.left,e.clientY-r.top)},{passive:false});
- let arr=null;caixa.addEventListener("pointerdown",(e)=>{if(e.target.closest(".no,.pt,.controles,.minimapa"))return;arr={x:e.clientX,y:e.clientY,zx:zoom.x,zy:zoom.y};caixa.classList.add("arrastando");caixa.setPointerCapture(e.pointerId)});
+ caixa.addEventListener("wheel",(e)=>{if(e.target.closest(".cartao-sel"))return;e.preventDefault();const r=caixa.getBoundingClientRect();z(e.deltaY<0?1.12:1/1.12,e.clientX-r.left,e.clientY-r.top)},{passive:false});
+ let arr=null;caixa.addEventListener("pointerdown",(e)=>{if(e.target.closest(".no,.pt,.controles,.minimapa,.cartao-sel,.dica"))return;arr={x:e.clientX,y:e.clientY,zx:zoom.x,zy:zoom.y};caixa.classList.add("arrastando");caixa.setPointerCapture(e.pointerId)});
  caixa.addEventListener("pointermove",(e)=>{if(!arr)return;zoom.x=arr.zx+e.clientX-arr.x;zoom.y=arr.zy+e.clientY-arr.y;aplicar()});
  caixa.addEventListener("pointerup",()=>{arr=null;caixa.classList.remove("arrastando")});
- requestAnimationFrame(()=>{if(foco){const w=caixa.clientWidth,h=caixa.clientHeight;const sc=0.6;const fx=foco.x+Math.cos(foco.a)*200,fy=foco.y+Math.sin(foco.a)*200;zoom={s:sc,x:w/2-fx*sc,y:h/2-fy*sc};foco=null;aplicar()}else aplicar(false)});
+ requestAnimationFrame(()=>{if(enquadrar&&selM&&chain){enquadrar=false;const ps=[...chain].map((id)=>posPt.get(id)).filter(Boolean);
+   if(ps.length){const w=caixa.clientWidth,h=caixa.clientHeight,esq=Math.min(400,w*0.4);const xs=ps.map((q)=>q[0]),ys=ps.map((q)=>q[1]);
+    const x0=Math.min(...xs)-160,x1=Math.max(...xs)+160,y0=Math.min(...ys)-160,y1=Math.max(...ys)+160;
+    const sc=Math.max(0.12,Math.min(0.9,(w-esq-40)/(x1-x0),(h-80)/(y1-y0)));
+    zoom={s:sc,x:esq+(w-esq)/2-((x0+x1)/2)*sc,y:h/2-((y0+y1)/2)*sc};aplicar();return}}
+  if(foco){const w=caixa.clientWidth,h=caixa.clientHeight;const sc=0.6;const fx=foco.x+Math.cos(foco.a)*200,fy=foco.y+Math.sin(foco.a)*200;zoom={s:sc,x:w/2-fx*sc,y:h/2-fy*sc};foco=null;aplicar()}else aplicar(false)});
  return el("div",{},barraMente(l),painelFatia(),caixa,det,l.length?null:el("p",{class:"vazio",text:"Nada com esses filtros."}))}
 
 // barra do mapa: linha do tempo, colorir por, profundidade do caminho, ver como lista
