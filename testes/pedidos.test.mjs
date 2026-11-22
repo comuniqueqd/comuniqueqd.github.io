@@ -13,6 +13,7 @@ const db = new pg.Client({ connectionString: url });
 await db.connect();
 await db.query("set client_min_messages = warning");
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z6-pedidos-fora-do-limite.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z7-guarda-7-dias.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -189,8 +190,9 @@ await t("Só o moderador reabre uma decisão", async () => {
   igual((await um("select decisao from pedidos_log where entrega_id = 'pedido000003'")).decisao, null);
 });
 
-await t("Pedidos sem sinal são apagados depois de 20 dias; os com sinal ficam", async () => {
-  const velho = (min) => new Date(Date.now() - 25 * 86400000 + min * 60000).toISOString();
+await t("Pedidos sem sinal são apagados depois de 7 dias (009z7); os com sinal ficam", async () => {
+  igual(Number((await um("select guardar_dias from parametros_pedidos")).guardar_dias), 7, "guarda");
+  const velho = (min) => new Date(Date.now() - 9 * 86400000 + min * 60000).toISOString();
   await rpc(mod, "importar_pedidos", { p_itens: [
     { entrega_id: "velho0000001", cidade: "LAGARTO - SE", chamado_em: velho(0), aceite_em: velho(1), chegou_em: velho(5), saiu_em: velho(6), entregue_em: velho(15), finalizado_em: velho(16), entregador_nome: "Ana Entregadora" },
     { entrega_id: "velho0000002", cidade: "LAGARTO - SE", chamado_em: velho(0), aceite_em: velho(1), chegou_em: velho(25), saiu_em: velho(26), entregue_em: velho(35), finalizado_em: velho(36), entregador_nome: "Bia Entregadora" }] });
