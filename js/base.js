@@ -370,8 +370,8 @@
     entregadores: { nome: "Entregadores", membros: [
       { mod: "ativacao", nome: "Ativação", contador: "c-pend" },
       { mod: "bloqueios", nome: "Restrições", contador: "c-trat", alerta: true }],  // 009m: Cadastrar entregador virou janela
-      // número no item do menu de cima: o que está esperando pela pessoa dentro do grupo
-      aviso: () => App.valores["c-trat"] || 0 },
+      // 009z5 (pedido do usuário): sem número no item do menu; o total já está em Atividades
+    },
   };
   const grupoDe = (id) => Object.keys(App.grupos).find((g) => App.grupos[g].membros.some((m) => m.mod === id));
   const podeMod = (id) => { const d = App.modulos[id]; return !!d && (!d.acesso || d.acesso()); };

@@ -61,7 +61,7 @@
           .map((a) => {
             const com = (a.participantes?.length ? a.participantes.map((x) => x.nome || x) : [a.aceita_por_nome]).filter(Boolean).join(", ");
             return { titulo: (comigo(a) ? "Com você: " : "") + a.titulo, paraMim: comigo(a), alerta: !!a.atrasada,
-              detalhe: [a.automatica ? "atividade da equipe" : a.status === "aceita" ? `com ${com || "alguém"}` : (a.sugeridas_nomes?.length ? `aguardando aceite de ${a.sugeridas_nomes.join(", ")}` : "aguardando aceite"),
+              detalhe: [a.automatica ? "atividade da equipe" : a.status === "aceita" ? `com ${com || "alguém"}` : "aguardando aceite",
                 a.cidade, a.prazo ? App.u.textoPrazo(a.prazo) : null].filter(Boolean).join(" · "), pedidoPor: pedidaPor(a),
               acoes: [el("a", { class: "btn small", href: comigo(a) ? "#atividades/pendencias" : "#atividades/sugeridas" }, "Abrir")] };
           });
