@@ -67,10 +67,12 @@
   function ler(arquivos) {
     const dist = new Map();
     const avisos = [], etapas = new Map(), nomes = new Map(), ids = new Map(), lidos = { etapas: 0, resumo: 0, entregadores: 0 };
+    const porArquivo = [];   // 009z6d: o que cada arquivo trouxe, para a lista da tela
     for (const a of arquivos) {
       const rows = linhas(a.texto), t = tipoArquivo(rows);
-      if (!t) { avisos.push(`"${a.nome}" não é um dos arquivos esperados: confira se baixou a planilha certa (Tabela de referência cruzada).`); continue; }
+      if (!t) { porArquivo.push({ nome: a.nome, tipo: null }); avisos.push(`"${a.nome}" não é um dos arquivos esperados: confira se baixou a planilha certa (Tabela de referência cruzada).`); continue; }
       lidos[t.tipo]++;
+      const antes = { etapas: etapas.size, resumo: nomes.size, entregadores: ids.size };
       const ix = (n) => t.h.indexOf(n);
       const corpo = rows.slice(t.i + 1);
       if (t.tipo === "etapas") {
@@ -103,6 +105,13 @@
           const l = ids.get(k) || []; if (!l.some((x) => x.id === id)) l.push({ id, cidade: nomeChave(r[cc]) }); ids.set(k, l);
         }
       }
+      const fonte = t.tipo === "etapas" ? etapas : t.tipo === "resumo" ? nomes : ids;
+      const info = { nome: a.nome, tipo: t.tipo, n: fonte.size - antes[t.tipo] };
+      if (t.tipo === "etapas") {
+        const ds = [...etapas.values()].slice(antes.etapas).map((p) => p.chamado_em).filter(Boolean).sort();
+        info.de = ds[0]; info.ate = ds[ds.length - 1];
+      }
+      porArquivo.push(info);
     }
     if (!lidos.etapas) avisos.push("Falta o arquivo do painel \"Entregas por Loja (com tempo)\": é ele que traz os tempos de cada pedido.");
     if (lidos.etapas && !lidos.resumo) avisos.push("Falta o \"Resumo filtro\": sem ele, os pedidos chegam sem o nome do entregador.");
@@ -120,15 +129,20 @@
     const resumo = { pedidos: pedidos.length, de: datas[0] || null, ate: datas[datas.length - 1] || null,
       com_entregador: pedidos.filter((p) => p.entregador_nome).length, com_id: pedidos.filter((p) => p.entregador_id).length,
       cidades: [...new Set(pedidos.map((p) => p.cidade).filter(Boolean))].sort(), lidos };
-    return { pedidos, avisos, resumo };
+    return { pedidos, avisos, resumo, porArquivo };
   }
 
+  // 009z6d: cada escolha SOMA à lista (antes trocava, e quem escolhia em mais de uma vez perdia as etapas)
+  P.arquivos = [];
   async function lerArquivos(files) {
-    const arquivos = [];
-    for (const f of files) arquivos.push({ nome: f.name, texto: decodificar(await f.arrayBuffer()) });
-    P.leitura = ler(arquivos);
-    renderImportar();
+    for (const f of files) {
+      const a = { nome: f.name, texto: decodificar(await f.arrayBuffer()) };
+      const i = P.arquivos.findIndex((x) => x.nome === a.nome);
+      if (i >= 0) P.arquivos[i] = a; else P.arquivos.push(a);
+    }
+    releer();
   }
+  function releer() { P.leitura = P.arquivos.length ? ler(P.arquivos) : null; renderImportar(); }
 
   async function enviar(btn) {
     const l = P.leitura; if (!l?.pedidos.length || P.enviando) return;
@@ -148,7 +162,7 @@
         for (const k in r) r[k] += x[k] || 0;
       }
       App.uso("pedidos:importar");
-      P.leitura = null;
+      P.leitura = null; P.arquivos = [];
       toast(`${r.pedidos.toLocaleString("pt-BR")} pedidos no período; ${plural(r.com_sinal, "pedido fora do limite", "pedidos fora do limite")} (${r.atencao} com atenção).`);
       $("#ped-importar").open = false;
       await recarregar();
@@ -162,8 +176,20 @@
     if (!mod()) return;
     const l = P.leitura;
     const input = el("input", { type: "file", multiple: true, accept: ".csv,.txt,text/csv,text/tab-separated-values", id: "ped-arquivos",
-      onchange: (e) => e.target.files.length && lerArquivos([...e.target.files]) });
+      onchange: (e) => { const fs = [...e.target.files]; e.target.value = ""; if (fs.length) lerArquivos(fs); } });
     const r = l?.resumo;
+    const TIPO = { etapas: "Etapas", resumo: "Resumo filtro", entregadores: "Tempo de entrega dos entregadores" };
+    const descr = (x) => !x.tipo ? "não reconhecido"
+      : x.tipo === "etapas" ? `${TIPO.etapas}: ${x.n.toLocaleString("pt-BR")} pedidos${x.de ? ` de ${App.u.dia(x.de)} a ${App.u.dia(x.ate)}` : ""}`
+      : x.tipo === "resumo" ? `${TIPO.resumo}: ${x.n.toLocaleString("pt-BR")} entregas com o entregador`
+      : `${TIPO.entregadores}: ${x.n.toLocaleString("pt-BR")} nomes com ID`;
+    const lista = l?.porArquivo?.length ? el("div", { class: "ped-escolhidos" },
+      el("p", { class: "meta", text: `Arquivos escolhidos (${l.porArquivo.length}). Escolher de novo soma à lista.` }),
+      el("ul", {}, l.porArquivo.map((x) => el("li", { class: x.tipo ? "" : "nao" },
+        el("span", { class: "ped-arq-nome", text: x.nome }), el("span", { class: "meta", text: descr(x) }),
+        el("button", { class: "btn link", type: "button", "aria-label": "Tirar " + x.nome, disabled: P.enviando,
+          onclick: () => { P.arquivos = P.arquivos.filter((a) => a.nome !== x.nome); releer(); } }, "Tirar")))),
+      el("button", { class: "btn link", type: "button", disabled: P.enviando, onclick: () => { P.arquivos = []; releer(); } }, "Limpar a lista")) : null;
     $("#ped-importar-corpo").replaceChildren(...[
       el("ol", { class: "ped-passos" },
         el("li", { text: "\"Entregas por Loja (com tempo)\": Estabelecimento (Tudo), Status FINALIZADO, o período que quiser (uma semana por arquivo, se ficar pesado)." }),
@@ -171,6 +197,7 @@
         el("li", { text: "\"Tempo de entrega dos entregadores\": os meses do período marcados, município em (Tudo)." })),
       el("p", { class: "meta", text: "Em cada painel: Download, Tabela de referência cruzada, CSV. Pode escolher todos os arquivos de uma vez; reenviar um período não repete pedidos." }),
       el("label", {}, "Arquivos baixados do Tableau", input),
+      lista,
       ...(l ? [
         ...l.avisos.map((a) => el("p", { class: "warn-msg", text: a })),
         r.pedidos ? el("p", { class: "ped-resumo-leitura" },
