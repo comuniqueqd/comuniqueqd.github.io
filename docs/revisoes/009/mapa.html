@@ -110,7 +110,11 @@ h1{font-size:clamp(24px,3.6vw,32px);font-weight:800}
 .mente[data-nivel="1"] .no.tel,.mente[data-nivel="1"] path.lig:not(.forte){display:none}
 .mente.modo-caminho .pt:not(.no-caminho):not(.sel),.mente.modo-caminho .no.it:not(.no-caminho){opacity:.15}
 .mente.tela-aberta .pt,.mente.tela-aberta .no.tel:not(.aberto),.mente.tela-aberta .no.obj,.mente.tela-aberta path.lig:not(.fina){opacity:.3}
-.mente[data-nivel="1"] path.dep,.mente[data-nivel="1"] path.ponte{display:none}
+.mente[data-nivel="1"] path.dep,.mente[data-nivel="1"] path.ponte,.mente[data-nivel="1"] .pt,.mente[data-nivel="1"] circle.anel,.mente[data-nivel="1"] text.anel-rot{display:none}
+.mente[data-nivel="1"] .no.obj{cursor:zoom-in}
+.mente:not(.modo-caminho) path.dep{display:none}
+.mente .fora{opacity:.12}
+.mente.com-foco path.lig:not(.forte){opacity:.35}
 .no.obj{position:absolute}.no.obj.recolhido{opacity:.6;border-style:dashed}
 .barra-obj{display:block;height:6px;border-radius:3px;margin-top:6px;background:linear-gradient(90deg,#8FD0AC var(--p),rgb(255 255 255/.25) var(--p))}
 .semaforo{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:0;border:1px solid rgb(0 0 0/.2)}
@@ -156,7 +160,7 @@ h1{font-size:clamp(24px,3.6vw,32px);font-weight:800}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .no.tel.completo{background:#1F8A5B;color:#fff}}
 .controles{position:absolute;right:10px;top:10px;display:flex;gap:6px;z-index:2}
 .controles button{font:600 14px var(--b);min-width:40px;min-height:40px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
-.dica{position:absolute;left:12px;bottom:10px;z-index:2;font-size:12px;color:var(--muted);background:var(--surface);padding:4px 8px;border-radius:6px;border:1px solid var(--line)}
+.dica{position:absolute;left:12px;bottom:10px;z-index:2;font-size:14px;color:var(--fg);max-width:min(560px,calc(100% - 200px));background:var(--surface);padding:4px 8px;border-radius:6px;border:1px solid var(--line)}
 .painel-det{margin-top:12px}
 
 /* como seguir */
@@ -273,7 +277,7 @@ function telas(){const l=filtrados();const m=agrupar(l,"tela");
 // ---------- mapa mental (v2: anéis por versão, zoom por níveis, caminho, pontes, cenários, linha do tempo) ----------
 // Inspirado em: Obsidian (gráfico local por profundidade, vizinhos ao passar o mouse, grupos por cor, animação no tempo),
 // XMind/MindNode (recolher galhos, foco, ver como lista) e Kumu (colorir por campo, minimapa).
-let abertas=new Set(),recolhidos=new Set(),zoom=null,foco=null,selM=null,profM=1,corPor="quadrante",verLista=false,ATE=null;
+let abertas=new Set(),recolhidos=new Set(),zoom=null,foco=null,focoObj=null,selM=null,profM=1,corPor="quadrante",verLista=false,ATE=null;
 const ORDEM_FEITO=[["009u","19/11"],["009v","19/11"],["009w","19/11"],["009x","20/11"],["009x5","20/11"],["009y1","20/11"],["009y1c","20/11"],["009y1d","20/11"],["009y1e","20/11"],["009y2a","20/11"],["009y2b","20/11"],["009z1","20/11"],["009z2","20/11"],["009z3","21/11"],["009z4","21/11"]];
 const idxFeito=(f)=>ORDEM_FEITO.findIndex(([v])=>v===f);
 // feito "até" a versão escolhida na linha do tempo (decididos e derrubados contam sempre)
@@ -317,8 +321,10 @@ function mente(){
   const set=Math.PI*2*pesos[oi]/tot,meio=ang+set/2;const its=porObj.get(k);
   const[ox,oy]=pol(820,meio);curva(C,C,ox,oy,"lig forte",0.05);
   const fo=its.filter(feitoAte).length,pct=Math.round(100*fo/its.length);const rec=recolhidos.has(k);
-  const nObj=no(ox,oy,"obj"+(rec?" recolhido":""),[nome,el("small",{text:`${fo} de ${its.length} feitos${PESOS[k]?` · peso ${PESOS[k]>0?"maior":"menor"}`:""}${rec?" · recolhido":""}`}),el("span",{class:"barra-obj",style:`--p:${pct}%`})],{tabindex:"0",role:"button","aria-expanded":String(!rec),title:"Clique para recolher ou abrir este galho"});
-  const togO=()=>{if(rec)recolhidos.delete(k);else recolhidos.add(k);desenhar()};nObj.addEventListener("click",togO);nObj.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();togO()}});
+  const nObj=no(ox,oy,"obj"+(rec?" recolhido":""),[nome,el("small",{text:`${fo} de ${its.length} feitos${PESOS[k]?` · peso ${PESOS[k]>0?"maior":"menor"}`:""}${rec?" · recolhido":""}`}),el("span",{class:"barra-obj",style:`--p:${pct}%`})],{tabindex:"0",role:"button","aria-expanded":String(!rec),title:"Clique para aproximar deste objetivo (Shift+clique recolhe)"});
+  const togO=()=>{if(rec)recolhidos.delete(k);else recolhidos.add(k);desenhar()};
+  const irObj=()=>{const w=caixa.clientWidth,h=caixa.clientHeight,sc=0.45;const[fx,fy]=pol(1250,meio);zoom={s:sc,x:w/2-fx*sc,y:h/2-fy*sc};focoObj=k;marcarFoco();aplicar()};
+  nObj.addEventListener("click",(e)=>{if(e.shiftKey)togO();else irObj()});nObj.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();irObj()}});
   if(rec){ang+=set;return}
   const tl=[...agrupar(its,"tela").entries()].sort((a,b)=>b[1].length-a[1].length);
   const totT=tl.reduce((s,[,ii])=>s+Math.max(3,ii.length),0);let a0=ang+set*0.04;const util=set*0.92;
@@ -337,7 +343,7 @@ function mente(){
    const tam=(0.85+0.6*Math.sqrt(ab/maxAb)).toFixed(2);
    const n=no(tx,ty,"tel"+(aberta?" aberto":"")+(pct===100?" completo":""),[el("span",{class:"semaforo "+sc,title:"Saúde: "+st,"aria-label":"Saúde: "+st}),TEL[t]||t,
      el("small",{text:`${ft} de ${ii.length} feitos${nTrav?` · ${nTrav} ${nTrav===1?"travado":"travados"}`:""}${nMed?` · ${nMed} com medida`:""}${aberta?" · fechar":""}`})],
-    {tabindex:"0",role:"button","aria-expanded":String(aberta),style:`left:${tx}px;top:${ty}px;--p:${pct}%;--t:${tam}`});
+    {tabindex:"0",role:"button","aria-expanded":String(aberta),"data-obj":k,style:`left:${tx}px;top:${ty}px;--p:${pct}%;--t:${tam}`});
    const tog=()=>{if(aberta)abertas.delete(chave);else{abertas.add(chave);foco={x:tx,y:ty,a}}desenhar()};
    n.addEventListener("click",tog);n.addEventListener("keydown",(e)=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();tog()}});
    // pontos: cada item no anel da sua versão, dentro da fatia da tela
@@ -347,7 +353,7 @@ function mente(){
      const aa=a-span/2+span*(pos+0.5)/qtd;const[px,py]=pol(raio+fila*40-((Math.ceil(lst.length/cabe)-1)*20),aa);posPt.set(i.id,[px,py]);
      const naCorrente=chain&&chain.has(i.id);
      const p=el("button",{type:"button",class:"pt"+(feitoAte(i)?" feito":"")+(travado(i)?" travado":"")+(FATIA.has(i.id)?" na-fatia":"")+(naCorrente?" no-caminho":"")+(i.id===selM?" sel":"")+(impEf(i)>=3?" forte":""),
-      style:`left:${px}px;top:${py}px;--c:${corDe(i)}`,title:`${i.id} · ${i.titulo}`,"aria-label":`${i.id}: ${i.titulo}`,"data-id":i.id},el("span",{class:"pt-rot",text:i.id}));
+      style:`left:${px}px;top:${py}px;--c:${corDe(i)}`,title:`${i.id} · ${i.titulo}`,"aria-label":`${i.id}: ${i.titulo}`,"data-id":i.id,"data-obj":k},el("span",{class:"pt-rot",text:i.id}));
      p.addEventListener("click",()=>{selM=selM===i.id?null:i.id;det.replaceChildren(selM?el("div",{class:"lista"},linha2(i)):"");desenhar()});
      p.addEventListener("mouseenter",()=>{const viz=corrente(i.id,1);tela.querySelectorAll(".pt").forEach((q)=>q.classList.toggle("vizinho",viz.has(q.dataset.id)&&q.dataset.id!==i.id))});
      p.addEventListener("mouseleave",()=>tela.querySelectorAll(".pt.vizinho").forEach((q)=>q.classList.remove("vizinho")));
@@ -369,16 +375,18 @@ function mente(){
   if(chain&&chain.has(id))for(const t of i.telas_extra||[])if(posTel.has(t)){const[x2,y2]=posTel.get(t);curva(x,y,x2,y2,"ponte",0.1)}}
  if(selM&&det.childNodes.length===0&&PORID.get(selM))det.append(el("div",{class:"lista"},linha2(PORID.get(selM))));
  // controles, legenda, minimapa
- const ctr=el("div",{class:"controles"},el("button",{type:"button","aria-label":"Aproximar",text:"+",onclick:()=>z(1.25)}),el("button",{type:"button","aria-label":"Afastar",text:"−",onclick:()=>z(1/1.25)}),el("button",{type:"button",text:"Centralizar",onclick:()=>{zoom=null;aplicar(true)}}));
+ const ctr=el("div",{class:"controles"},el("button",{type:"button","aria-label":"Aproximar",text:"+",onclick:()=>z(1.25)}),el("button",{type:"button","aria-label":"Afastar",text:"−",onclick:()=>z(1/1.25)}),el("button",{type:"button",text:"Centralizar",onclick:()=>{zoom=null;focoObj=null;marcarFoco();aplicar(true)}}));
  const leg=el("div",{class:"legenda-m"},rotCor[corPor].map(([t,c])=>el("span",{},el("i",{style:`background:${c}`}),t)),el("span",{},el("i",{class:"leg-trav"}),"travado"),el("span",{},el("i",{class:"leg-fatia"}),"na fatia"));
  const mini=el("div",{class:"minimapa","aria-hidden":"true"});const miniV=el("div",{class:"mini-vista"});
  const MS=150/W;for(const[,[x,y]]of posPt)mini.append(el("i",{style:`left:${x*MS}px;top:${y*MS}px`}));mini.append(miniV);
  mini.addEventListener("click",(e)=>{const r=mini.getBoundingClientRect();const gx=(e.clientX-r.left)/MS,gy=(e.clientY-r.top)/MS;const w=caixa.clientWidth,h=caixa.clientHeight;zoom.x=w/2-gx*zoom.s;zoom.y=h/2-gy*zoom.s;aplicar()});
- caixa.append(ctr,leg,mini,el("div",{class:"dica",text:"De longe: objetivos. Mais perto: telas e pontos (cada ponto é um item, no anel da sua versão). Clique num ponto para ver o caminho dele; numa tela para abrir os cartões; num objetivo para recolher."}));
- const aplicar=(ajustar)=>{const w=caixa.clientWidth||1000,h=caixa.clientHeight||700;if(ajustar||!zoom){const sc=Math.min(w,h)/(2*(R0+ANEIS.length*PASSO)+300);zoom={s:sc,x:w/2-C*sc,y:h/2-C*sc}}
+ caixa.append(ctr,leg,mini,el("div",{class:"dica",text:"Clique num objetivo para aproximar: aparecem as telas e os pontos (cada ponto é um item, no anel da sua versão). Clique numa tela para ler os itens dela. Use + e −, a roda do mouse ou arraste. \u201cVer como lista\u201d mostra tudo em texto."}));
+ const marcarFoco=()=>{caixa.classList.toggle("com-foco",!!focoObj);tela.querySelectorAll("[data-obj]").forEach((n)=>n.classList.toggle("fora",!!focoObj&&n.dataset.obj!==focoObj))};
+ requestAnimationFrame(marcarFoco);
+ const aplicar=(ajustar)=>{const w=caixa.clientWidth||1000,h=caixa.clientHeight||700;if(ajustar||!zoom){const sc=Math.min(w,h)/2600;zoom={s:sc,x:w/2-C*sc,y:h/2-C*sc}}
   tela.style.transform=`translate(${zoom.x}px,${zoom.y}px) scale(${zoom.s})`;
-  const k=Math.min(2,Math.max(1,0.42/zoom.s));caixa.style.setProperty("--k",k.toFixed(3));
-  caixa.dataset.nivel=zoom.s<0.28?"1":zoom.s<0.5?"2":"3";
+  const k=Math.min(2.4,Math.max(1,0.5/zoom.s));caixa.style.setProperty("--k",k.toFixed(3));
+  caixa.dataset.nivel=zoom.s<0.36?"1":zoom.s<0.7?"2":"3";
   miniV.style.cssText=`left:${-zoom.x/zoom.s*MS}px;top:${-zoom.y/zoom.s*MS}px;width:${w/zoom.s*MS}px;height:${h/zoom.s*MS}px`};
  const z=(f,cx,cy)=>{const w=caixa.clientWidth,h=caixa.clientHeight;cx??=w/2;cy??=h/2;zoom.x=cx-(cx-zoom.x)*f;zoom.y=cy-(cy-zoom.y)*f;zoom.s*=f;aplicar()};
  caixa.addEventListener("wheel",(e)=>{e.preventDefault();const r=caixa.getBoundingClientRect();z(e.deltaY<0?1.12:1/1.12,e.clientX-r.left,e.clientY-r.top)},{passive:false});
