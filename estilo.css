@@ -1220,3 +1220,4 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; gap:
 .linha-ped .ped-dir { margin-left: auto; }
 .btn.link.ped-ficha { justify-self: start; padding-inline: 0; }
 .ped-legenda { margin-top: 14px; font-size: 13px; }
+.ped-alerta { margin: 4px 0; padding: 8px 12px; border-radius: var(--r-controle); background: var(--warn-soft); color: var(--ink); border: 1px solid var(--warn); font-size: 14px; }

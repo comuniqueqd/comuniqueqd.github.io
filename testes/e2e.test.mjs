@@ -960,7 +960,7 @@ try {
     const linha = (id, cod, c, ac, l, sa, e, f) => ["SE - LAGARTO", "lojae2e0001", id, "Loja do Teste", "CENTRO", cod, hr(c - 5), "5 min", hr(c), "", "", "",
       hr(l), "", hr(ac), "", hr(sa), "", hr(e), "", hr(f)];
     const etapas = [cab.map((x) => (x.includes('"') ? `"${x.replace(/"/g, '""')}"` : x)), ...[
-      linha("e2epedido0001", "PED001", 0, 1, 20, 22, 30, 31),        // chegou na loja 19 min depois de aceitar
+      linha("e2epedido0001", "PED001", 0, 1, 20, 22, 22, 23),        // chegou na loja 19 min depois de aceitar; "entregue" no mesmo minuto em que saiu
       linha("e2epedido0002", "PED002", 120, 122, 128, 130, 170, 171), // 50 min no total, entrega sozinho
       linha("e2epedido0003", "PED003", 300, 301, 305, 306, 315, 316)].flatMap((r) => [r, r])] // o Tableau repete a linha por medida
       .map((r) => r.join("\t")).join("\n");
@@ -985,6 +985,8 @@ try {
       && await s.isVisible("#ped-lista .linha-ped:has-text('PED001') >> text=Atraso · 1ª ocorrência em 60 dias"), "009z6: o cartão como no desenho: o limite que passou, a frase, a barra das etapas e a sugestão");
     ok((await texto(s, "#ped-numeros")).includes("Chegada na loja acima de 15 min1de 3 pedidos (33,3%)"), "009z6: os números do topo contam os pedidos do período: " + (await texto(s, "#ped-numeros")).slice(0, 80));
   ok(!/\bnull\b|undefined|NaN/.test(await texto(s, "#v-bq-pedidos")), "009z6: nada de null/undefined/NaN na tela de pedidos");
+    ok(await s.isVisible("#ped-lista .linha-ped:has-text('PED001') .ped-alerta >> text=Marcou “entregue” 0 segundos depois de sair da loja")
+      && !(await s.isVisible("#ped-lista .linha-ped:has-text('PED002') .ped-alerta")), "009z6c: o cartão avisa quando a entrega foi marcada segundos depois de sair da loja (e só nele)");
     await s.screenshot({ path: path.join(PRINTS, "e4-pedidos.png"), fullPage: true });
     await s.click("#ped-lista .linha-ped:has-text('PED001') button:text-is('Confirmar restrição')");
     ok(await esperar(s, "dialog.janela .ped-previa >> text=1ª ocorrência"), "009z6: a janela mostra a punição prevista");

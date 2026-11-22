@@ -270,6 +270,14 @@
       el("span", { text: p.decisao === "restricao" ? `Virou restrição · ${quem}` : `Descartado (${p.motivo || "sem motivo"}) · ${quem}` }),
       p.pode_reabrir ? el("button", { class: "btn link", type: "button", onclick: (e) => reabrir(p, e.currentTarget) }, "Reabrir") : null), ficha];
   }
+  // 009z6c (pedido do usuário): etapas marcadas fora do lugar, como no desenho (caixa âmbar)
+  function foraDoLugar(p) {
+    const seg = (x, y) => (x && y ? Math.round((new Date(y) - new Date(x)) / 1000) : null);
+    const s = seg(p.saiu_em, p.entregue_em);
+    if (s == null || s < 0 || s >= 60) return null;
+    return el("p", { class: "ped-alerta", role: "note" },
+      `Marcou “entregue” ${s === 1 ? "1 segundo" : s + " segundos"} depois de sair da loja${p.distancia_m != null ? `, para uma entrega de ${km(p.distancia_m)}` : ""}. Vale conferir se as etapas foram marcadas na hora certa (pode ser finalização falsa).`);
+  }
   function card(p) {
     const [rot, cls] = rotulo(p), [f1, f2] = frase(p);
     return el("article", { class: "card linha-ped" + (p.atencao && !p.decisao ? " atencao" : "") },
@@ -280,6 +288,7 @@
       el("p", { class: "meta", text: [p.cidade, p.loja].filter(Boolean).join(" · ") }),
       el("p", { class: "ped-frase" }, el("b", { text: f1 }), f2),
       barra(p),
+      foraDoLugar(p),
       sugestao(p),
       ...acoes(p));
   }
