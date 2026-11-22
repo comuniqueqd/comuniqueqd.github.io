@@ -60,56 +60,36 @@
   }
 
   function card(c) {
-    const esp = duracao(c.status_desde), env = duracao(c.enviado_em);
+    const esp = duracao(c.status_desde);
     const contato = c.status === "aguardando_contato";
     const destacado = S.destaque === c.id || S.destaque === "_mostrado_" + c.id;
     const cx = S.caixa[c.id];
     const prevPassou = c.previsao && new Date(c.previsao) < Date.now();
-    // 009y2 (AP-03): cada cadastro é uma linha (quem, cidade, há quanto tempo e as decisões); "Detalhes" abre o resto
-    S.abertoCad = S.abertoCad || new Set();
-    const aberto = destacado || S.abertoCad.has(c.id) || S.abertos.has(c.id);
-    if (!aberto) return el("article", { class: "card linha-cad" + (contato ? " contato" : "") + (prevPassou ? " previsao-passou" : ""), "data-id": c.id },
+    // 009z5 (pedido do usuário): uma linha só, sem "Detalhes": nome, situação, só o botão de copiar o ID,
+    // cidade · quem enviou · quando, e à direita Editar dados e Encerrar
+    const copiarId = !c.id_app ? el("span", { class: "meta", text: "Sem ID" }) : el("button", { class: "btn small", type: "button", "data-copiar-id": c.id_app, title: "ID " + c.id_app, onclick: async (e) => {
+      const bt = e.currentTarget;
+      try { await navigator.clipboard.writeText(String(c.id_app)); bt.textContent = "ID copiado"; App.uso?.("botao:copiar_id"); } catch (_) { bt.textContent = "Não deu para copiar"; }
+      setTimeout(() => { if (bt.isConnected) bt.replaceChildren("Copiar ID", el("span", { class: "so-leitor", text: " " + c.id_app })); }, 1600);
+    } }, "Copiar ID", el("span", { class: "so-leitor", text: " " + c.id_app }));  // o ID fica para o leitor de tela e para a busca da página
+    return el("article", { class: "card linha-cad" + (contato ? " contato" : "") + (prevPassou ? " previsao-passou" : "") + (destacado ? " destaque" : ""), "data-id": c.id },
       el("div", { class: "head" },
-        el("span", { class: "name" }, c.nome ? el("span", { text: c.nome }) : null, c.id_app ? App.u.copiavel(c.id_app, "ID " + c.id_app, "mono" + (c.nome ? " meta" : ""), titulo(c)) : el("span", { class: "meta", text: "Sem ID" }),
-          c.revisar ? botaoRevisar(c, true) : null),
+        el("span", { class: "name" }, el("span", { text: c.nome || "Sem nome" }), pill(c.status, true), copiarId,
+          destacado ? el("span", { class: "tag", text: "RECÉM-ENVIADO" }) : null, c.revisar ? botaoRevisar(c, true) : null),
         el("span", { class: "espera" + (esp.velho ? " velho" : ""), title: "Desde " + dt(c.status_desde), text: (contato ? "contato há " : "há ") + esp.txt })),
-      el("div", { class: "meta linha-cad-info", text: [c.cidade, staff() ? (c.enviado_por === S.me.id ? "enviado por você" : c.enviado_por_nome ? "enviado por " + c.enviado_por_nome : null) : null,
-        c.previsao ? `Previsão: até ${dt(c.previsao)}` : null].filter(Boolean).join(" · ") }),
+      el("div", { class: "meta linha-cad-info", text: [c.cidade,
+        staff() ? (c.enviado_por === S.me.id ? "enviado por você" : c.enviado_por_nome ? "enviado por " + c.enviado_por_nome : null) : null,
+        `em ${dt(c.enviado_em)}`, c.previsao ? `Previsão: até ${dt(c.previsao)}` : null].filter(Boolean).join(" · ") }),
       contato ? el("div", { class: "motivo" }, el("b", { text: `Reprovado por ${c.decidido_por_nome} em ${dt(c.decidido_em)}: ` }), c.motivo, c.detalhe ? " — " + c.detalhe : "") : null,
       c.observacao ? el("div", { class: "obs linha-cad-obs", title: c.observacao, text: c.observacao }) : null,  // 009z (pedido do usuário): o comentário aparece sem abrir
       el("div", { class: "actions" },
         staff() ? el("button", { class: "btn approve small", type: "button", onclick: (e) => decidir(c, "aprovar", e.currentTarget) }, "Aprovar") : null,
         staff() && !contato ? el("button", { class: "btn reject small", type: "button", onclick: () => abrir(c.id, "reprovar") }, "Reprovar") : null,
-        // Encerrar fica na linha só para quem já foi reprovado (é a decisão daquele grupo); nos outros, em Detalhes
-        staff() && contato ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrir(c.id, "encerrar") }, "Encerrar…") : null,
-        el("span", { class: "spacer" }),
-        el("button", { class: "btn link", type: "button", "aria-expanded": "false", onclick: () => { S.abertoCad.add(c.id); render(); } }, "Detalhes")),
-      cx ? caixa(c, cx) : null);
-    return el("article", { class: "card" + (contato ? " contato" : "") + (prevPassou ? " previsao-passou" : "") + (destacado ? " destaque" : ""), "data-id": c.id },
-      el("div", { class: "head" },
-        el("span", { class: "name" }, c.nome ? el("span", { text: c.nome }) : null, c.id_app ? App.u.copiavel(c.id_app, "ID " + c.id_app, "mono" + (c.nome ? " meta" : ""), titulo(c)) : el("span", { class: "meta", text: "Sem ID" }), pill(c.status, true),
-          destacado ? el("span", { class: "tag", text: "RECÉM-ENVIADO" }) : null, c.revisar ? botaoRevisar(c, true) : null),
-        el("span", { class: "espera" + (esp.velho ? " velho" : ""), title: "Desde " + dt(c.status_desde), text: (contato ? "aguardando contato há " : "esperando há ") + esp.txt })),
-      el("dl", { class: "fields" },
-        fld("Nome", c.nome), fld("ID do entregador", c.id_app, true), fld("Cidade", c.cidade),
-        fld("Enviado", `${dt(c.enviado_em)} (há ${env.txt})`),
-        staff() ? fld("Enviado por", c.enviado_por === S.me.id ? "Você" : c.enviado_por_nome) : null),
-      App.u.previsao(c, "cadastro", c.id, staff()),
-      c.historico && !soDesteCadastro(c.historico, c) ? resumoHistorico(c.historico, c.id_app) : null,
-      contato ? el("div", { class: "motivo" }, el("b", { text: `Reprovado por ${c.decidido_por_nome} em ${dt(c.decidido_em)}: ` }), c.motivo, c.detalhe ? " — " + c.detalhe : "") : null,
-      c.observacao ? el("div", { class: "obs", text: c.observacao }) : null,
-      el("div", { class: "actions" },
-        staff() ? el("button", { class: "btn approve", type: "button", onclick: (e) => decidir(c, "aprovar", e.currentTarget) }, "Aprovar") : null,
-        staff() && !contato ? el("button", { class: "btn reject", type: "button", onclick: () => abrir(c.id, "reprovar") }, "Reprovar") : null,
-        el("button", { class: "btn small", type: "button", onclick: () => copiar(c) }, "Copiar dados"),
-        el("button", { class: "btn link", type: "button", onclick: () => App.abrirCadastro(c.id) }, "Editar dados"),
-        botaoHistorico(c.id),
         !staff() ? el("span", { class: "meta", text: contato ? "O responsável vai retomar o contato com o entregador." : "Aguardando análise do responsável." }) : null,
         el("span", { class: "spacer" }),
-        staff() ? el("button", { class: "btn quiet small", type: "button", onclick: () => abrir(c.id, "encerrar") }, "Encerrar…") : null,
-        !destacado ? el("button", { class: "btn link", type: "button", "aria-expanded": "true", onclick: () => { S.abertoCad.delete(c.id); S.abertos.delete(c.id); render(); } }, "Fechar detalhes") : null),
-      cx ? caixa(c, cx) : null,
-      S.abertos.has(c.id) ? timeline(c.id) : null);
+        el("button", { class: "btn link", type: "button", onclick: () => App.abrirCadastro(c.id) }, "Editar dados"),
+        staff() ? el("button", { class: "btn link", type: "button", onclick: () => abrir(c.id, "encerrar") }, "Encerrar") : null),
+      cx ? caixa(c, cx) : null);
   }
   const fld = (k, v, mono) => el("div", {}, el("dt", { text: k }), el("dd", { class: mono ? "mono" : null, text: v || "—" }));
 

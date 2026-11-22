@@ -202,7 +202,7 @@ try {
   await s.click("#b-enviar");
   ok(await esperar(s, "#v-pendentes:not([hidden]) .card.destaque"), "após enviar, vai para Pendentes com o cadastro destacado");
   ok((await texto(s, ".card.destaque")).includes("Aguardando análise"), "card mostra a situação Aguardando análise");
-  ok((await texto(s, ".card.destaque")).includes("esperando há"), "card mostra há quanto tempo espera");
+  { const tx = await texto(s, ".card.destaque .espera"); ok(/^há /.test(tx), "card mostra há quanto tempo espera: " + tx); }
   await s.screenshot({ path: path.join(PRINTS, "3-suporte-pendentes.png"), fullPage: true });
   await ir(s, "#novo");
   ok(!(await s.$("#f-cpf")) && (await texto(s, "#form")).includes("não guarda CPF"), "009s: o Novo cadastro não pede CPF");
@@ -242,10 +242,13 @@ try {
     "009y1: a mensagem de reprovação traz o motivo e o que reenviar");
   await m.click("dialog.janela[open] >> text=Fechar"); await sumir(m, "dialog.janela[open]");
   ok((await texto(m, cardLagarto)).includes("Fotos sem camisa — Foto do rosto também"), "card mostra motivo e detalhe");
-  ok(!(await m.isVisible(`${cardLagarto} >> text=Reprovar`)) && await m.isVisible(`${cardLagarto} >> text=Aprovar`) && await m.isVisible(`${cardLagarto} >> text=Encerrar…`), "aguardando contato: só Aprovar ou Encerrar");
+  ok(!(await m.isVisible(`${cardLagarto} >> text=Reprovar`)) && await m.isVisible(`${cardLagarto} >> text=Aprovar`) && await m.isVisible(`${cardLagarto} button:text-is('Encerrar')`), "aguardando contato: só Aprovar ou Encerrar");
   const cardZ = "#queue .card:has-text('zzz99881')";
-  await m.click(`${cardZ} >> button:text-is('Detalhes')`);  // 009y2: na linha de quem aguarda análise, Encerrar fica nos Detalhes
-  await m.click(`${cardZ} >> text=Encerrar…`);
+  // 009z5 (pedido do usuário): sem "Detalhes"; Editar dados e Encerrar ficam na linha; só o botão de copiar o ID
+  ok(!(await m.isVisible(`${cardZ} button:text-is('Detalhes')`)), "009z5: linha do cadastro sem Detalhes");
+  ok(await m.isVisible(`${cardZ} button:text-is('Editar dados')`) && await m.isVisible(`${cardZ} button[data-copiar-id]`), "009z5: Copiar ID e Editar dados na linha");
+  { const inf = await texto(m, `${cardZ} .linha-cad-info`); ok(/ em \d/.test(inf), "009z5: a linha diz quando foi enviado: " + inf); }
+  await m.click(`${cardZ} button:text-is('Encerrar')`);
   ok((await texto(m, `${cardZ} .box`)).includes("definitivo"), "encerrar avisa que é definitivo");
   await m.selectOption(`${cardZ} select`, "CPF com restrição");
   await m.screenshot({ path: path.join(PRINTS, "4-monitorador-pendentes.png"), fullPage: true });
@@ -931,12 +934,9 @@ try {
   await ir(m, "#ativacao/pendentes"); await m.reload();
   const cardP = "#queue .card:has-text('prev0001')";
   await esperar(m, cardP);
-  // 009y2 (AP-03): o cadastro é uma linha; "Detalhes" abre o cartão completo
   ok(!(await m.isVisible(`${cardP} >> text=Informar previsão de término`)) && await m.isVisible(`${cardP} >> text=Aprovar`), "009y2: a linha do cadastro mostra a decisão e esconde o resto");
-  await m.click(`${cardP} >> button:text-is('Detalhes')`);
-  await m.click(`${cardP} >> text=Informar previsão de término`);
-  await m.click("dialog.janela >> text=+2 h");
-  await m.click("dialog.janela .actions button.primary");
+  { const idCad = await m.getAttribute(cardP, "data-id");  // 009z5: a previsão do cadastro não tem mais botão na linha
+    await m.evaluate(async (id) => { await App.u.rpc("definir_previsao", { p_tipo: "cadastro", p_id: id, p_previsao: new Date(Date.now() + 2 * 3600000).toISOString() }); await App.carregar(); }, idCad); }
   ok(await esperar(m, `${cardP} >> text=Previsão: até`), "monitorador informa a previsão no cadastro");
   ok(await esperar(m, "#b-avisos[data-novas=true]"), "responsável pelos operadores recebe aviso do cadastro novo da cidade");
   await ir(s, "#ativacao/pendentes"); await s.reload();
@@ -1784,7 +1784,7 @@ try {
       await v.reload(); await v.setViewportSize({ width: 320, height: 800 });
       if (await esperar(v, "#v-pendentes:not([hidden]) #queue .card.linha-cad")) {
         const alt = (await v.locator("#v-pendentes #queue .card.linha-cad").first().boundingBox())?.height || 0;
-        ok(alt <= 170, "009y2: em 320 px, a linha do cadastro tem até 170 px (as fontes do GitHub são maiores): " + Math.round(alt));
+        ok(alt <= 230, "009y2: em 320 px, a linha do cadastro tem até 230 px (009z5: data do envio, Editar dados e Encerrar na linha; as fontes do GitHub são maiores): " + Math.round(alt));
       }
       await v.setViewportSize({ width: 1280, height: 900 }); await v.evaluate(() => { location.hash = "#inicio"; }); await esperar(v, "#precisa-lista li"); }
     // 009y2 (A12-06): o primeiro Tab chega no "Ir para o conteúdo", que leva ao título da tela sem trocar o endereço
