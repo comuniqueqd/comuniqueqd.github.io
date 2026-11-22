@@ -110,11 +110,18 @@ h1{font-size:clamp(24px,3.6vw,32px);font-weight:800}
 .mente[data-nivel="1"] .no.tel,.mente[data-nivel="1"] path.lig:not(.forte){display:none}
 .mente.modo-caminho .pt:not(.no-caminho):not(.sel),.mente.modo-caminho .no.it:not(.no-caminho){opacity:.15}
 .mente.tela-aberta .pt,.mente.tela-aberta .no.tel:not(.aberto),.mente.tela-aberta .no.obj,.mente.tela-aberta path.lig:not(.fina){opacity:.3}
-.mente[data-nivel="1"] path.dep,.mente[data-nivel="1"] path.ponte,.mente[data-nivel="1"] .pt,.mente[data-nivel="1"] circle.anel,.mente[data-nivel="1"] text.anel-rot{display:none}
+.mente[data-nivel="1"] path.dep,.mente[data-nivel="1"] path.ponte,.mente[data-nivel="1"] text.anel-rot{display:none}
+.mente[data-nivel="1"] .pt{opacity:.3;pointer-events:none}
+.mente[data-nivel="1"] circle.anel{stroke-opacity:.08}
 .mente[data-nivel="1"] .no.obj{cursor:zoom-in}
 .mente:not(.modo-caminho) path.dep{display:none}
-.mente .fora{opacity:.12}
-.mente.com-foco path.lig:not(.forte){opacity:.35}
+.mente.modo-caminho path.dep:not(.no-caminho){display:none}
+.cartao-sel{position:absolute;left:12px;top:56px;z-index:5;width:min(360px,calc(100% - 24px));max-height:calc(100% - 140px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:0 6px 20px rgb(0 0 0 / .12);font-size:14px}
+.cartao-sel .cs-topo{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cartao-sel .cs-tit{font-weight:600;margin:6px 0}.cartao-sel .cs-txt{margin:0 0 8px;color:var(--muted)}.cartao-sel .cs-leg{font-size:13px;color:var(--muted);margin:6px 0}
+.cartao-sel ul{margin:4px 0 8px 18px;padding:0}.cartao-sel .link-sel{background:none;border:0;padding:0;color:var(--accent);text-align:left;cursor:pointer;font:inherit;text-decoration:underline}
+.cartao-sel .feito-tag{color:var(--muted);font-size:12px}
+
 .no.obj{position:absolute}.no.obj.recolhido{opacity:.6;border-style:dashed}
 .barra-obj{display:block;height:6px;border-radius:3px;margin-top:6px;background:linear-gradient(90deg,#8FD0AC var(--p),rgb(255 255 255/.25) var(--p))}
 .semaforo{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:0;border:1px solid rgb(0 0 0/.2)}
@@ -374,6 +381,15 @@ function mente(){
   for(const d of i.depende||[])if(posPt.has(d)){const[x2,y2]=posPt.get(d);curva(x2,y2,x,y,"dep"+(chain&&chain.has(id)&&chain.has(d)?" no-caminho":""),0.12)}
   if(chain&&chain.has(id))for(const t of i.telas_extra||[])if(posTel.has(t)){const[x2,y2]=posTel.get(t);curva(x,y,x2,y2,"ponte",0.1)}}
  if(selM&&det.childNodes.length===0&&PORID.get(selM))det.append(el("div",{class:"lista"},linha2(PORID.get(selM))));
+ if(selM&&PORID.get(selM)){const i=PORID.get(selM);const dep=(i.depende||[]).map((d)=>PORID.get(d)).filter(Boolean),lib=(LIBERA.get(i.id)||[]).map((d)=>PORID.get(d)).filter(Boolean);
+  const li=(x)=>el("li",{},el("button",{type:"button",class:"link-sel",onclick:()=>{selM=x.id;desenhar()}},`${x.id} · ${x.titulo}`),x.feito?el("span",{class:"feito-tag",text:" feito"}):null);
+  caixa.append(el("div",{class:"cartao-sel",role:"dialog","aria-label":"Item escolhido"},
+   el("div",{class:"cs-topo"},el("b",{text:`${i.id}${i.feito?" · feito":""}`}),el("button",{type:"button",class:"btn-m","aria-label":"Fechar",onclick:()=>{selM=null;det.replaceChildren();desenhar()}},"Fechar")),
+   el("p",{class:"cs-tit",text:i.titulo}),
+   i.sugestao?el("p",{class:"cs-txt",text:i.sugestao.length>260?i.sugestao.slice(0,257)+"…":i.sugestao}):null,
+   el("p",{class:"cs-leg",text:"As linhas tracejadas âmbar ligam este item aos itens de que ele depende e aos que ele destrava. Clique num nome abaixo para seguir o caminho."}),
+   dep.length?el("div",{},el("b",{text:"Precisa antes:"}),el("ul",{},dep.map(li))):el("p",{class:"cs-leg",text:"Não depende de nenhum outro item."}),
+   lib.length?el("div",{},el("b",{text:"Destrava depois:"}),el("ul",{},lib.map(li))):el("p",{class:"cs-leg",text:"Nenhum item espera por este."})))}
  // controles, legenda, minimapa
  const ctr=el("div",{class:"controles"},el("button",{type:"button","aria-label":"Aproximar",text:"+",onclick:()=>z(1.25)}),el("button",{type:"button","aria-label":"Afastar",text:"−",onclick:()=>z(1/1.25)}),el("button",{type:"button",text:"Centralizar",onclick:()=>{zoom=null;focoObj=null;marcarFoco();aplicar(true)}}));
  const leg=el("div",{class:"legenda-m"},rotCor[corPor].map(([t,c])=>el("span",{},el("i",{style:`background:${c}`}),t)),el("span",{},el("i",{class:"leg-trav"}),"travado"),el("span",{},el("i",{class:"leg-fatia"}),"na fatia"));
