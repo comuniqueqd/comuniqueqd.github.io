@@ -971,8 +971,9 @@ try {
     const ents = "entregadorId (entregadorQueroLog)\tNome\tnome (municipioQueroLog)\tUf\nraf0000001\tRafa Teste Pedidos\tLagarto\tSE";
     await ir(a, "#bloqueios/pedidos"); await a.reload();   // endereço antigo: leva ao Monitoramento
     ok(await esperar(a, "#v-bq-pedidos:not([hidden])") && await a.isVisible('nav.modulos a[data-mod="monitoramento"][aria-current="page"]') && await a.isVisible('nav.modulos a[data-mod="monitoramento"]'), "009z6b: Monitoramento é item próprio do menu; o endereço antigo leva até ele");
-    ok(await esperar(a, "#ped-importar:not([hidden]) > summary"), "009z6: moderador vê Enviar dados do Tableau");
-    await a.click("#ped-importar > summary");
+    ok(await esperar(a, 'nav.tabs a[href="#monitoramento/enviar"]'), "009z6e: o moderador tem a aba Enviar dados no Monitoramento");
+    await a.click('nav.tabs a[href="#monitoramento/enviar"]');
+    ok(await esperar(a, "#v-mon-enviar:not([hidden]) #ped-arquivos"), "009z6e: a aba Enviar dados tem a escolha de arquivos");
     // 009z6d: escolher em duas vezes soma (antes a 2ª escolha trocava a 1ª e as etapas sumiam)
     await a.setInputFiles("#ped-arquivos", [{ name: "Solicitacoes_por_place.csv", mimeType: "text/csv", buffer: utf16(etapas) }]);
     ok(await esperar(a, "#ped-importar .ped-escolhidos >> text=Etapas: 3 pedidos"), "009z6d: a lista mostra o que o arquivo de etapas trouxe");
@@ -985,7 +986,7 @@ try {
     ok(await esperar(a, "#ped-lista .linha-ped"), "009z6: depois de enviar, a lista mostra os pedidos fora do limite");
     ok((await a.$$("#ped-lista .linha-ped")).length === 2, "009z6: só os 2 atrasos (o pedido dentro do limite não aparece)");
     await ir(s, "#monitoramento/pedidos"); await s.reload();
-    ok(await esperar(s, "#ped-lista .linha-ped:has-text('PED001')") && !(await s.isVisible("#ped-importar")), "009z6: o suporte vê a lista, sem o envio");
+    ok(await esperar(s, "#ped-lista .linha-ped:has-text('PED001')") && !(await s.isVisible('nav.tabs a[href="#monitoramento/enviar"]')), "009z6: o suporte vê a lista, sem a aba de envio");
     ok(await s.isVisible("#ped-lista .linha-ped:has-text('PED001') >> text=Chegada na loja: 19 min")
       && await s.isVisible("#ped-lista .linha-ped:has-text('PED001') >> text=Levou 19 min para chegar na loja depois de aceitar.")
       && await s.isVisible("#ped-lista .linha-ped:has-text('PED001') .ped-barra .seg.estourou")

@@ -164,16 +164,14 @@
       App.uso("pedidos:importar");
       P.leitura = null; P.arquivos = [];
       toast(`${r.pedidos.toLocaleString("pt-BR")} pedidos no período; ${plural(r.com_sinal, "pedido fora do limite", "pedidos fora do limite")} (${r.atencao} com atenção).`);
-      $("#ped-importar").open = false;
-      await recarregar();
+      await carregar();
+      location.hash = "#monitoramento/pedidos";   // 009z6e: depois de enviar, volta para a lista
     } catch (e) { toast(msgErro(e)); }
     finally { P.enviando = false; btn.disabled = false; prog.textContent = ""; renderImportar(); }
   }
 
   function renderImportar() {
-    const box = $("#ped-importar"); if (!box) return;
-    box.hidden = !mod();
-    if (!mod()) return;
+    if (!mod() || !$("#ped-importar-corpo")) return;
     const l = P.leitura;
     const input = el("input", { type: "file", multiple: true, accept: ".csv,.txt,text/csv,text/tab-separated-values", id: "ped-arquivos",
       onchange: (e) => { const fs = [...e.target.files]; e.target.value = ""; if (fs.length) lerArquivos(fs); } });
@@ -354,7 +352,6 @@
   }
 
   function render() {
-    renderImportar();
     const d = P.dados, box = $("#ped-lista");
     if (!d) return box.replaceChildren(carregandoEl());
     opcoes($("#ped-cidade"), d.cidades, "Todas as cidades");
@@ -362,7 +359,7 @@
     pilhas(); numeros();
     $("#ped-atualizado").textContent = d.periodo?.de
       ? `Dados de ${App.u.dia(d.periodo.de)} a ${App.u.dia(d.periodo.ate)}${d.importado_em ? ` · enviados em ${dt(d.importado_em)}` : ""}` : "";
-    if (!d.periodo?.de) return box.replaceChildren(vazio("Nenhum pedido ainda", mod() ? "Envie os arquivos do Tableau em \"Enviar dados do Tableau\", acima." : "Quando um moderador enviar os dados do Tableau, os pedidos fora do limite aparecem aqui."));
+    if (!d.periodo?.de) return box.replaceChildren(vazio("Nenhum pedido ainda", mod() ? "Envie os arquivos do Tableau na aba Enviar dados, aqui no Monitoramento." : "Quando um moderador enviar os dados do Tableau, os pedidos fora do limite aparecem aqui."));
     if (!d.itens.length) return box.replaceChildren(vazio("Nada com esses filtros", ""));
     box.replaceChildren(...[el("div", { class: "ped-grade" }, d.itens.map(card)),
       d.total > d.itens.length ? el("div", { class: "actions" }, el("button", { class: "btn", type: "button", onclick: () => { P.limite += 50; recarregar(); } },
@@ -491,12 +488,14 @@
   App.modulo({
     id: "monitoramento", nome: "Monitoramento",
     acesso: () => !!papel(),
-    abas: [{ id: "pedidos", nome: "Pedidos fora do limite", secao: "v-bq-pedidos" }],
+    abas: [{ id: "pedidos", nome: "Pedidos fora do limite", secao: "v-bq-pedidos" },
+           { id: "enviar", nome: "Enviar dados", secao: "v-mon-enviar", pode: mod }],   // 009z6e: o envio saiu de cima da lista
     padrao: () => "pedidos",
-    async carregar() {
+    async carregar(aba) {
+      if (aba === "enviar") return;
       const B = App.bloqueios?.B;   // as cidades da janela de confirmar vêm das regras das Restrições
       await Promise.all([carregar(), B && !B.regras ? rpc("regras_bloqueio").then((d) => { B.regras = d; B.regrasEm = Date.now(); }) : null]);
     },
-    render() { render(); },
+    render(aba) { if (aba === "enviar") renderImportar(); else render(); },
   });
 })();
