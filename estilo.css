@@ -1226,3 +1226,9 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; gap:
 .ped-escolhidos li.nao { border-color: var(--warn); background: var(--warn-soft); }
 .ped-arq-nome { font-weight: 600; overflow-wrap: anywhere; }
 .ped-escolhidos li .btn.link { margin-left: auto; }
+.ped-aviso-id.link { background: none; border: 0; padding: 0; text-align: left; cursor: pointer; text-decoration: underline; font: inherit; font-size: 13px; color: var(--warn); font-weight: 600; }
+.ped-opcoes-lista { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 8px; }
+.ped-opcoes-lista li { border: 1px solid var(--line); border-radius: var(--r-controle); padding: 10px 12px; display: grid; gap: 4px; }
+.ped-opcoes-lista li.atual { border-color: var(--warn); }
+.ped-opcoes-lista p { margin: 0; }
+.ped-op-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }

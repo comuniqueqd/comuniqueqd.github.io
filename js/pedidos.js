@@ -277,12 +277,55 @@
       try { await navigator.clipboard.writeText(valor); toast(aviso); } catch (_) { toast("Não deu para copiar: " + valor); } } }, rot);
   }
   function entregador(p) {
-    const aviso = { conferir: "Nome igual ao de outro entregador: confira o ID.", escolher: "Nome igual ao de outro entregador: escolha o ID ao confirmar.",
+    const aviso = { conferir: "Nome igual ao de outro entregador: confira o ID.", escolher: "Nome igual ao de outro entregador: escolha o ID.",
       sem_id: p.entregador_nome ? "Sem ID: preencha ao confirmar." : "Entregador não encontrado no Resumo: preencha o ID ao confirmar." }[p.entregador_situacao];
+    // 009z9: com nomes iguais, o aviso abre os entregadores com esse nome para escolher o certo
+    const clicavel = !p.decisao && (p.entregador_situacao === "conferir" || p.entregador_situacao === "escolher");
     return [el("div", { class: "ped-nome" }, el("h3", { text: p.entregador_nome || "Entregador sem nome" }),
         p.entregador_id ? copiarBtn(p.entregador_id, "Copiar ID", "ID copiado.") : null,
         p.entregador_id ? el("span", { class: "so-leitor", text: p.entregador_id }) : null),
-      aviso ? el("p", { class: "ped-aviso-id", text: aviso }) : null];
+      !aviso ? null : clicavel
+        ? el("button", { class: "ped-aviso-id link", type: "button", onclick: () => abrirEscolha(p) }, aviso, " Ver os entregadores com este nome")
+        : el("p", { class: "ped-aviso-id", text: aviso })];
+  }
+  async function abrirEscolha(p) {
+    const corpo = el("div", { class: "ped-escolha" }, carregandoEl());
+    const erro = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    const todos = el("input", { type: "checkbox" });
+    const caixaTodos = el("label", { class: "check", hidden: true }, todos, el("span", {}));
+    const d = janela("Qual é o entregador deste pedido?",
+      el("p", { class: "meta", style: "margin:0", text: [p.codigo ? `Pedido ${p.codigo}` : null, p.loja, p.cidade, p.chamado_em ? dt(p.chamado_em) : null].filter(Boolean).join(" · ") }),
+      corpo, caixaTodos, erro,
+      el("div", { class: "actions" }, el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
+    let o;
+    try { o = await rpc("opcoes_entregador_pedido", { p_entrega_id: p.entrega_id }); }
+    catch (e) { corpo.replaceChildren(el("p", { class: "warn-msg", text: msgErro(e) })); return; }
+    if (o.pedidos_mesmo_nome > 1) {
+      todos.checked = true; caixaTodos.hidden = false;
+      caixaTodos.lastChild.textContent = ` Aplicar também aos outros ${o.pedidos_mesmo_nome - 1} pedidos de ${o.nome} ainda não decididos`;
+    }
+    const escolher = async (id, btn) => {
+      erro.hidden = true; btn.disabled = true;
+      try {
+        const r = await rpc("escolher_entregador_pedido", { p_entrega_id: p.entrega_id, p_id_app: id, p_todos: todos.checked && !caixaTodos.hidden });
+        App.uso("pedidos:escolher_id");
+        d.close(); toast(r.pedidos > 1 ? `ID ${id} gravado em ${r.pedidos} pedidos.` : `ID ${id} gravado no pedido.`);
+        await recarregar();
+      } catch (e) { btn.disabled = false; erro.textContent = msgErro(e); erro.hidden = false; }
+    };
+    corpo.replaceChildren(
+      el("p", { text: `Há ${o.opcoes.length} entregadores chamados ${o.nome}. Confira pela ficha, pela cidade e pelas restrições e escolha o deste pedido.` }),
+      el("ul", { class: "ped-opcoes-lista" }, o.opcoes.map((x) => el("li", { class: x.atual ? "atual" : "" },
+        el("div", { class: "ped-op-topo" }, el("b", { class: "mono", text: x.id }), copiarBtn(x.id, "Copiar ID", "ID copiado."),
+          x.atual ? el("span", { class: "tag", text: "no pedido agora" }) : null),
+        el("p", { class: "meta", text: [
+          x.ficha_nome ? `Ficha: ${x.ficha_nome}${x.ficha_cidade ? " · " + x.ficha_cidade : ""}` : "Sem ficha no Comunique",
+          x.cidade_tableau ? `Cidade no Quero Log: ${x.cidade_tableau}` : null].filter(Boolean).join(" · ") }),
+        el("p", { class: "meta", text: [App.u.plural(x.restricoes, "restrição", "restrições") + (x.ultima_restricao ? ` (última em ${App.u.dia(x.ultima_restricao)})` : ""),
+          App.u.plural(x.cadastros, "cadastro na ativação", "cadastros na ativação"), App.u.plural(x.pedidos, "pedido aqui", "pedidos aqui")].join(" · ") }),
+        el("div", { class: "actions" },
+          el("button", { class: "btn" + (x.atual ? "" : " primary"), type: "button", onclick: (e) => escolher(x.id, e.currentTarget) }, x.atual ? "Manter este" : "É este"),
+          x.ficha_nome ? el("button", { class: "btn link", type: "button", onclick: () => App.abrirFicha?.(x.id) }, "Ver a ficha") : null)))));
   }
   function acoes(p) {
     const ficha = p.entregador_id ? el("button", { class: "btn link ped-ficha", type: "button", onclick: () => App.abrirFicha?.(p.entregador_id) }, "Ficha do entregador") : null;

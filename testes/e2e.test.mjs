@@ -74,6 +74,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z5-casa-certa.sql"),
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z6-pedidos-fora-do-limite.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z7-guarda-7-dias.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z8-pedidos-limpeza-por-semana.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z9-escolher-entregador-pedido.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -1009,6 +1010,22 @@ try {
     ok(await esperar(s, "#ped-lista >> text=Nada com esses filtros"), "009z6: descartado com motivo, a lista de a decidir fica vazia");
     await s.click("#ped-situacoes button:has-text('Descartados')");
     ok(await esperar(s, "#ped-lista >> text=Descartado (Demora da loja)"), "009z6: o descarte mostra o motivo e quem decidiu");
+    // 009z9: nome igual ao de outro entregador → o aviso abre os dois e a pessoa escolhe o certo
+    { const dz = new pg.Client({ connectionString: DB }); await dz.connect();
+      await dz.query(`insert into pedidos_log (entrega_id, codigo, cidade, loja, chamado_em, aceite_em, chegou_em, saiu_em, entregue_em, finalizado_em,
+          entregador_nome, entregador_id, entregador_situacao, entregador_opcoes)
+        values ('e2egemeo0001', 'GEM001', 'LAGARTO - SE', 'Loja do Teste', now() - interval '1 day', now() - interval '1 day' + interval '1 min',
+          now() - interval '1 day' + interval '20 min', now() - interval '1 day' + interval '21 min', now() - interval '1 day' + interval '30 min',
+          now() - interval '1 day' + interval '31 min', 'Gemeo E2e', 'gme00001', 'conferir', '[{"id":"gme00001","cidade":"Lagarto"},{"id":"gme00002","cidade":"Itabaiana"}]')`);
+      await dz.query("select classificar_pedidos(now() - interval '2 days', now())"); await dz.end(); }
+    await s.reload(); await esperar(s, "#ped-situacoes");
+    await s.click("#ped-situacoes button:has-text('A decidir')");
+    ok(await esperar(s, "#ped-lista .linha-ped:has-text('GEM001') button.ped-aviso-id"), "009z9: o aviso de nome igual é um botão");
+    await s.click("#ped-lista .linha-ped:has-text('GEM001') button.ped-aviso-id");
+    ok(await esperar(s, "dialog.janela >> text=Há 2 entregadores chamados Gemeo E2e"), "009z9: a janela mostra os entregadores com o mesmo nome");
+    await s.click("dialog.janela .ped-opcoes-lista li:has-text('gme00002') button:text-is('É este')");
+    ok(await esperar(s, "text=ID gme00002 gravado no pedido.") && await sumir(s, "#ped-lista .linha-ped:has-text('GEM001') button.ped-aviso-id"),
+      "009z9: escolher grava o ID e o aviso some");
   }
 
   // 16. migração 007 · "pão quentinho": novidades, nome, revisar, tarefa opcional, aviso da decisão, histórico do ID, busca

@@ -15,6 +15,7 @@ await db.query("set client_min_messages = warning");
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z6-pedidos-fora-do-limite.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z7-guarda-7-dias.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z8-pedidos-limpeza-por-semana.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z9-escolher-entregador-pedido.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -216,6 +217,25 @@ await t("009z8: envio de várias semanas antigas fechado uma semana por vez não
   await rpc(mod, "fechar_importacao_pedidos", { p_de: em(36, 0), p_ate: em(29, 0) });
   igual((await db.query("select entrega_id from pedidos_log where entrega_id like 'semana%' order by 1")).rows.map((x) => x.entrega_id),
     ["semanaA00001", "semanaB00003"], "depois da 2ª: ficam os dois com atraso");
+});
+
+await t("009z9: nome igual — mostra os entregadores com o nome e grava o escolhido (neste ou em todos os pedidos do nome)", async () => {
+  const gemeo = { nome: "Gemeo Igual", id: "gem00001", sit: "conferir", opcoes: [{ id: "gem00001", cidade: "Lagarto" }, { id: "gem00002", cidade: "Itabaiana" }] };
+  await rpc(mod, "importar_pedidos", { p_itens: [
+    ped("gemeo0000001", gemeo, { c: 400, a: 401, l: 420, s: 421, e: 430, f: 431 }),
+    ped("gemeo0000002", gemeo, { c: 500, a: 501, l: 520, s: 521, e: 530, f: 531 })] });
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: h(380), p_ate: h(560) });
+  await db.query("insert into entregadores (id_app, nome, cidade) values ('gem00002', 'Gemeo Igual', 'LAGARTO - SE') on conflict do nothing");
+  const o = await rpc(sup, "opcoes_entregador_pedido", { p_entrega_id: "gemeo0000001" });
+  igual([o.opcoes.length, o.pedidos_mesmo_nome, o.opcoes[0].id, o.opcoes[0].atual], [2, 2, "gem00001", true], "opções, com o atual primeiro");
+  igual([o.opcoes[1].ficha_nome, o.opcoes[1].cidade_tableau], ["Gemeo Igual", "Itabaiana"], "o que se sabe do outro ID");
+  await erro(rpc(sup, "escolher_entregador_pedido", { p_entrega_id: "gemeo0000001", p_id_app: "x" }), "Escolha o ID");
+  const r = await rpc(sup, "escolher_entregador_pedido", { p_entrega_id: "gemeo0000001", p_id_app: "gem00002", p_todos: true });
+  igual(r.pedidos, 2, "os dois pedidos do nome");
+  igual((await db.query("select entregador_id, entregador_situacao from pedidos_log where entrega_id like 'gemeo%' order by 1")).rows.map((x) => [x.entregador_id, x.entregador_situacao]),
+    [["gem00002", "ok"], ["gem00002", "ok"]], "ID gravado e aviso some");
+  await erro(rpc(sup, "escolher_entregador_pedido", { p_entrega_id: "pedido000001", p_id_app: "abcd1234" }), "já foi decidido");
+  await erro(rpc(fora, "opcoes_entregador_pedido", { p_entrega_id: "gemeo0000001" }), "módulo");
 });
 
 await t("Não guarda CPF escrito no motivo", async () => {
