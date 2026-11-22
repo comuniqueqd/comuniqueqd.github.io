@@ -9859,7 +9859,7 @@
   "rodada": "2026-11-22",
   "impacto": 3,
   "esf": 1,
-  "situacao": "Pedido ao time de dados em andamento (22/11)."
+  "situacao": "Caminho achado em 22/11: o 'Painel Resumo filtro' (QueroLog / Quero Log) traz Entrega Id, código, status e o NOME do entregador, com Entregador (Tudo). Junta-se ao painel por loja pelo Entrega Id. O ID do entregador sai do 'Painel Entregas rejeitadas por entregador' (entregadorId + nome + cidade) ou da ficha do Comunique pelo nome + cidade. Pedido ao time de dados segue (ID direto evita homônimos)."
  },
  {
   "ag": "csv",
@@ -10299,6 +10299,78 @@
   "versao": "dados",
   "rodada": "2026-11-22",
   "impacto": 3,
+  "esf": 1,
+  "depende": [
+   "DP-10"
+  ]
+ },
+ {
+  "ag": "csv",
+  "id": "DP-19",
+  "titulo": "Entregadores sem entregar: lista para reativar e engajar",
+  "prio": "alta",
+  "prio_orig": "alta",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "onde": "",
+  "sugestao": "Do 'Painel Ranking (Entregadores)': dias sem entregar, última entrega, status, Nuvem × Próprio, por cidade. Vira lista de reativação ligada às mensagens de engajamento e à tarefa Procurar entregador; cruza com a ficha (aprovado e nunca entregou).",
+  "objetivo": "menos",
+  "tela": "dados",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Estudo dos CSVs do Tableau (Lagarto, 10 a 16/11/2026: 4.408 finalizados, 35 cancelados), 22/11/2026. Prioridade dada pelo usuário.",
+  "junto": "",
+  "versao": "dados",
+  "rodada": "2026-11-22",
+  "impacto": 3,
+  "esf": 1,
+  "depende": [
+   "DP-10"
+  ]
+ },
+ {
+  "ag": "csv",
+  "id": "DP-20",
+  "titulo": "Da aprovação à primeira entrega (conversão)",
+  "prio": "alta",
+  "prio_orig": "alta",
+  "esforco": "médio",
+  "tipo": "sugestao",
+  "onde": "",
+  "sugestao": "Do 'Painel Cadastro - Análise de Entregadores': aprovados por mês e cidade e % que fez entrega (61,6% em 3 meses; 50% em novembro). Cruzar com os cadastros aprovados no Comunique: quem a equipe aprovou e ainda não entregou recebe contato; vira número das Análises de ativação.",
+  "objetivo": "analises",
+  "tela": "ativacao",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Estudo dos CSVs do Tableau (Lagarto, 10 a 16/11/2026: 4.408 finalizados, 35 cancelados), 22/11/2026. Prioridade dada pelo usuário.",
+  "junto": "",
+  "versao": "dados",
+  "rodada": "2026-11-22",
+  "impacto": 3,
+  "esf": 2,
+  "depende": [
+   "DP-10"
+  ]
+ },
+ {
+  "ag": "csv",
+  "id": "DP-21",
+  "titulo": "Rejeições por entregador",
+  "prio": "alta",
+  "prio_orig": "alta",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "onde": "",
+  "sugestao": "Do 'Painel Entregas rejeitadas por entregador' (entregadorId, nome, cidade, quantas rejeitou no período): quem mais rejeita por cidade e semana; também serve de dicionário nome → ID para o cruzamento dos pedidos.",
+  "objetivo": "regras",
+  "tela": "dados",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Estudo dos CSVs do Tableau (Lagarto, 10 a 16/11/2026: 4.408 finalizados, 35 cancelados), 22/11/2026. Prioridade dada pelo usuário.",
+  "junto": "",
+  "versao": "dados",
+  "rodada": "2026-11-22",
+  "impacto": 2,
   "esf": 1,
   "depende": [
    "DP-10"
