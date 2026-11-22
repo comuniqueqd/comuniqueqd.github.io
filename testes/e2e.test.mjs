@@ -979,7 +979,7 @@ try {
     ok(await esperar(a, "#ped-importar .ped-escolhidos >> text=Etapas: 3 pedidos"), "009z6d: a lista mostra o que o arquivo de etapas trouxe");
     await a.setInputFiles("#ped-arquivos", [{ name: "Resumo_filtro.csv", mimeType: "text/csv", buffer: utf16(resumo) },
       { name: "Tempo_de_entrega.csv", mimeType: "text/csv", buffer: utf16(ents) }]);
-    ok((await a.$$("#ped-importar .ped-escolhidos li")).length === 3 && await a.isVisible("#ped-importar .ped-escolhidos >> text=Resumo filtro: 3 entregas"),
+    ok(await esperar(a, "#ped-importar .ped-escolhidos >> text=Resumo filtro: 3 entregas") && (await a.$$("#ped-importar .ped-escolhidos li")).length === 3,
       "009z6d: a 2ª escolha soma à lista (3 arquivos)");
     ok(await esperar(a, "#ped-importar >> text=3 pedidos") && await a.isVisible("#ped-importar >> text=100% com o ID"), "009z6: lê os 3 arquivos, junta o entregador e o ID");
     await a.click("#ped-importar button:has-text('Enviar 3 pedidos')");
