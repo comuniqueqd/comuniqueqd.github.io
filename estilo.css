@@ -1143,3 +1143,5 @@ h4 { font-size: 15px; font-weight: 700; }
 .btn.small { padding: 5px 12px; }
 input, select, textarea { border-radius: var(--r-controle); }
 a.btn { display: inline-flex; align-items: center; justify-content: center; gap: .35em; }
+/* 009z5: no celular, a linha do cadastro (Aprovar · Reprovar · Detalhes) volta ao recuo de antes; com 12 px passava 8 px da tela de 320 px no CI */
+@media (max-width: 480px) { .card.linha-cad .actions .btn.small { padding-inline: 10px; } }
