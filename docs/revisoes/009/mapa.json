@@ -123,7 +123,11 @@
   "situacao": "Decisão do usuário (19/11/2026): o pedido de ajuda continua só na tela inicial.",
   "versao": "decidido",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "avisos",
+   "inicio"
+  ]
  },
  {
   "ag": "a1",
@@ -143,7 +147,10 @@
   "junto": "",
   "versao": "010",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "inicio"
+  ]
  },
  {
   "ag": "a1",
@@ -203,7 +210,10 @@
   "junto": "",
   "versao": "010",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "bloqueios"
+  ]
  },
  {
   "ag": "a1",
@@ -329,7 +339,12 @@
   "situacao": "Feito na 009x (publicada em 20/11/2026): Histórico da ativação em páginas de 100 (listar_cadastros_pagina), tratativas concluídas de 100 em 100 (listar_tarefas_concluidas) e Atividades com as 50 concluídas mais recentes.",
   "versao": "009x",
   "impacto": 3,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "ativacao",
+   "bloqueios",
+   "tarefas"
+  ]
  },
  {
   "ag": "a2",
@@ -373,7 +388,10 @@
   "situacao": "Feito na 009x (publicada em 20/11/2026): Análises guardam os números por 5 min (com 'Números de HH:MM · Atualizar').",
   "versao": "009x",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "analises"
+  ]
  },
  {
   "ag": "a2",
@@ -707,7 +725,11 @@
   "situacao": "Reaberto na varredura de 20/11/2026: com dados, Lançamentos e Ativações de parceiros ainda pulam (0,55 e 0,58; bom é 0,1).",
   "versao": "009z",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "financeiro",
+   "parceiros"
+  ]
  },
  {
   "ag": "a3",
@@ -807,7 +829,11 @@
   "junto": "",
   "versao": "009z",
   "impacto": 2,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "parceiros",
+   "tarefas"
+  ]
  },
  {
   "ag": "a3",
@@ -1437,7 +1463,10 @@
   "junto": "",
   "versao": "010",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "tarefas"
+  ]
  },
  {
   "ag": "a5",
@@ -1980,7 +2009,10 @@
   "junto": "",
   "versao": "depois",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a8",
@@ -3662,7 +3694,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "010",
   "impacto": 1,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "analises"
+  ]
  },
  {
   "ag": "e1",
@@ -3728,7 +3763,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "011",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "parceiros"
+  ]
  },
  {
   "ag": "e1",
@@ -3749,7 +3787,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "011",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "inicio"
+  ]
  },
  {
   "ag": "e1",
@@ -3923,7 +3964,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "011",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "bloqueios"
+  ]
  },
  {
   "ag": "e3",
@@ -4208,7 +4252,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "ext",
   "impacto": 3,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "bloqueios"
+  ]
  },
  {
   "ag": "e4",
@@ -4230,7 +4277,10 @@
   "feito": "decidido",
   "versao": "decidido",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "parceiros"
+  ]
  },
  {
   "ag": "e4",
@@ -4295,7 +4345,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "011",
   "impacto": 1,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "parceiros"
+  ]
  },
  {
   "ag": "e4",
@@ -4316,7 +4369,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "011",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "extensao"
+  ]
  },
  {
   "ag": "e4",
@@ -4337,7 +4393,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "011",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "financeiro"
+  ]
  },
  {
   "ag": "e4",
@@ -4379,7 +4438,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "ext",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "bloqueios"
+  ]
  },
  {
   "ag": "e4",
@@ -4463,7 +4525,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "ext",
   "impacto": 3,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "tarefas"
+  ]
  },
  {
   "ag": "e4",
@@ -4485,7 +4550,10 @@
   "feito": "decidido",
   "versao": "decidido",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "financeiro"
+  ]
  },
  {
   "ag": "e4",
@@ -4659,7 +4727,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "010",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "tarefas"
+  ]
  },
  {
   "ag": "e2",
@@ -4680,7 +4751,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "011",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "parceiros"
+  ]
  },
  {
   "ag": "e2",
@@ -4701,7 +4775,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "009z",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "bloqueios"
+  ]
  },
  {
   "ag": "e2",
@@ -4786,7 +4863,10 @@
   "situacao": "Estudo de nov/2026, ainda não aprovado.",
   "versao": "010",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a13",
@@ -4807,7 +4887,11 @@
   "versao": "009z",
   "situacao": "Varredura de 20/11/2026.",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "extensao",
+   "navegacao"
+  ]
  },
  {
   "ag": "a13",
@@ -4870,7 +4954,10 @@
   "versao": "010",
   "situacao": "Varredura de 20/11/2026.",
   "impacto": 1,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a13",
@@ -5189,7 +5276,12 @@
   "situacao": "Feito na 009z parte 1 (publicada em 20/11/2026): caminhos do banco antigo removidos.",
   "feito": "009z1",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "ativacao",
+   "bloqueios",
+   "financeiro"
+  ]
  },
  {
   "ag": "a7",
@@ -5487,7 +5579,10 @@
   "situacao": "Em parte: na 009y1c as atividades da equipe saíram do número de 'abertas para pegar'. Conferir de novo depois da 009y2.",
   "feito": "decidido",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "tarefas"
+  ]
  },
  {
   "ag": "a1",
@@ -5529,7 +5624,10 @@
   "versao": "009y2",
   "situacao": "Varredura de 20/11/2026.",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a1",
@@ -5763,7 +5861,10 @@
   "situacao": "Feito na 009y2 parte 1 (publicada em 20/11/2026): conferido em 320 px no e2e.",
   "feito": "009y2a",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "tarefas"
+  ]
  },
  {
   "ag": "a4",
@@ -5998,7 +6099,10 @@
   "versao": "010",
   "situacao": "Varredura de 20/11/2026.",
   "impacto": 3,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "avisos"
+  ]
  },
  {
   "ag": "a8",
@@ -6147,7 +6251,10 @@
   "versao": "009z",
   "situacao": "Varredura de 20/11/2026.",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "bloqueios"
+  ]
  },
  {
   "ag": "a3",
@@ -6274,7 +6381,12 @@
   "versao": "009y2",
   "situacao": "Varredura de 20/11/2026.",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "extensao",
+   "ficha",
+   "inicio"
+  ]
  },
  {
   "ag": "a12",
@@ -6295,7 +6407,10 @@
   "versao": "009y2",
   "situacao": "Varredura de 20/11/2026.",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "bloqueios"
+  ]
  },
  {
   "ag": "a12",
@@ -6317,7 +6432,10 @@
   "situacao": "Feito na 009z parte 1 (publicada em 20/11/2026): tradutor único de erros no site e na extensão.",
   "feito": "009z1",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "extensao"
+  ]
  },
  {
   "ag": "a12",
@@ -6594,7 +6712,10 @@
   "situacao": "Feito na 009z4, só com Copiar (decisão do usuário). (publicada em 21/11/2026)",
   "feito": "009z4",
   "impacto": 3,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "bloqueios"
+  ]
  },
  {
   "ag": "a16",
@@ -6856,7 +6977,10 @@
   "versao": "010",
   "situacao": "Proposta da rodada de 20/11 (a15/a16), ainda não aprovada.",
   "impacto": 3,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a15",
@@ -6941,7 +7065,10 @@
   "versao": "010",
   "situacao": "Proposta da rodada de 20/11 (a15/a16), ainda não aprovada.",
   "impacto": 3,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "financeiro"
+  ]
  },
  {
   "ag": "a15",
@@ -6963,7 +7090,10 @@
   "situacao": "Feito na 009y1 parte 1 (publicada em 20/11/2026): a janela mostra só a versão nova; as antigas ficam recolhidas; 'Mostrar onde'.",
   "feito": "009y1",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a15",
@@ -7006,7 +7136,10 @@
   "situacao": "Feito na 009y1 parte 1 (publicada em 20/11/2026): o tour sai dos itens da novidade e o e2e falha se um passo apontar para algo que sumiu.",
   "feito": "009y1",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a15",
@@ -7484,7 +7617,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "parceiros"
+  ]
  },
  {
   "ag": "a5",
@@ -7526,7 +7662,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "inicio"
+  ]
  },
  {
   "ag": "a5",
@@ -7841,7 +7980,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "tarefas"
+  ]
  },
  {
   "ag": "a7",
@@ -7862,7 +8004,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "extensao"
+  ]
  },
  {
   "ag": "a7",
@@ -7883,7 +8028,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a7",
@@ -7925,7 +8073,10 @@
   "versao": "010",
   "rodada": "2026-11-21",
   "impacto": 1,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "extensao"
+  ]
  },
  {
   "ag": "a7",
@@ -8053,7 +8204,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "bloqueios"
+  ]
  },
  {
   "ag": "a2",
@@ -8179,7 +8333,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a12",
@@ -8305,7 +8462,11 @@
   "versao": "010",
   "rodada": "2026-11-21",
   "impacto": 3,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "inicio",
+   "tarefas"
+  ]
  },
  {
   "ag": "a1",
@@ -8326,7 +8487,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a1",
@@ -8431,7 +8595,10 @@
   "versao": "010",
   "rodada": "2026-11-21",
   "impacto": 3,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "bloqueios"
+  ]
  },
  {
   "ag": "a4",
@@ -8557,7 +8724,12 @@
   "versao": "010",
   "rodada": "2026-11-21",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "financeiro",
+   "inicio",
+   "tarefas"
+  ]
  },
  {
   "ag": "a11",
@@ -8653,7 +8825,7 @@
   "tipo": "achado",
   "onde": "extensao/formularios.js:155-160",
   "sugestao": "Mostrar um .alerta com dois botões como #fi-repetido no site (mesmos textos).",
-  "objetivo": "fluidez",
+  "objetivo": "rapidez",
   "tela": "extensao",
   "onda": 3,
   "veredito": "CONFIRMADO",
@@ -8767,7 +8939,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a13",
@@ -8845,7 +9020,7 @@
   "tipo": "sugestao",
   "onde": "js/inicio.js (#inicio-precisa, tiras de prévia, 'Seus números'), js/atividades.js (aba pendencias 'Minha fila'), menu Atividades (c-at-menu)",
   "sugestao": "A tela inicial passa a ser a fila do dia ('Hoje'): Atrasado · Vence hoje · Para você · Da equipe, em linhas (formato A4-22), cada linha com a ação direta que as tiras já têm; a aba 'Minha fila' vira apelido do Início e o menu Atividades fica só com o quadro da equipe. Some o bloco 'Seus números' (A1-20) e o número duplicado (PB-7).",
-  "objetivo": "conciso",
+  "objetivo": "aparencia",
   "tela": "inicio",
   "onda": 3,
   "veredito": "CONFIRMADO",
@@ -8854,7 +9029,10 @@
   "versao": "010",
   "rodada": "2026-11-21",
   "impacto": 2,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "tarefas"
+  ]
  },
  {
   "ag": "a8",
@@ -8866,7 +9044,7 @@
   "tipo": "sugestao",
   "onde": "js/ativacao.js:69-110 (S.abertoCad + render() para abrir/fechar 'Detalhes'), App.abrirFicha (js/bloqueios.js:377, dialog), Tratativas, Com restrição agora, Histórico, Minha fila",
   "sugestao": "A partir de 1280 px, telas de fila (Pendentes, Tratativas, Com restrição, Histórico, Minha fila) ganham um painel à direita com o item selecionado (cadastro com observação e histórico do ID; restrição com a escada e Gerar mensagem; ficha). Aprovar/Reprovar ficam no painel e a lista anda sozinha para o próximo. No celular o painel é a tela cheia da rota #ficha/ ou #cadastro/ (já existem). Corta o 'Detalhes/Fechar detalhes', a janela da ficha no computador e o redesenho ao abrir linha.",
-  "objetivo": "conciso",
+  "objetivo": "aparencia",
   "tela": "ativacao",
   "onda": 3,
   "veredito": "DERRUBADO",
@@ -8877,7 +9055,10 @@
   "situacao": "Derrubado pelo revisor na varredura de 21/11: Esforço grande para 10 pessoas e conflita com a tendência \"menos telas/menos jeitos\": a linha que abre (\"Detalhes\") já existe. Fica para depois.",
   "rodada": "2026-11-21",
   "impacto": 1,
-  "esf": 3
+  "esf": 3,
+  "telas_extra": [
+   "bloqueios"
+  ]
  },
  {
   "ag": "a8",
@@ -8889,7 +9070,7 @@
   "tipo": "sugestao",
   "onde": "js/bloqueios.js:1029-1037 (abas novo, tratativas, ativos, atencao, consultar, historico, regras)",
   "sugestao": "Uma aba 'Restrições' com seletor de vista em pílulas com contagem (como os filtros AP-11): 'Para tratar (3) · Com restrição (5) · Atenção (2) · Todas'; uma só linha de restrição (A4-25) com a ação da vista ('Tratar', 'Liberar antes'). Consultar some (A1-22) e Nova restrição sai para o botão 'Novo' (A8-23). Restrições cai de 7 para 2 abas (lista + Regras). Rotas antigas viram apelidos (APELIDOS).",
-  "objetivo": "conciso",
+  "objetivo": "aparencia",
   "tela": "bloqueios",
   "onda": 3,
   "veredito": "CONFIRMADO",
@@ -8913,7 +9094,7 @@
   "tipo": "sugestao",
   "onde": "abas ativacao/novo, bloqueios/novo, financeiro/adicional, parceiros/novo; bloco 'Atalhos' do Início (js/inicio.js); App.cadastrarEntregador (009m, já é janela)",
   "sugestao": "Botão 'Novo' no topo (e no 'Mais' do celular) com 6 itens: ativação, restrição, adicional, entregador, parceiro, tarefa. Cada um abre uma gaveta lateral sobre a tela atual (mesmo jeito do #janela-cad-ent), com a tecla N e a paleta Ctrl+K. As rotas #ativacao/novo etc. continuam abrindo a gaveta (links e extensão). Saem 4 abas e o bloco Atalhos (A1-23). Cuidado com A10-20 (restrições caíram depois da troca de navegação): medir o uso de 'Nova restrição' antes e depois com uso_dia.",
-  "objetivo": "conciso",
+  "objetivo": "aparencia",
   "tela": "geral",
   "onda": 3,
   "veredito": "CONFIRMADO",
@@ -8922,7 +9103,10 @@
   "versao": "010",
   "rodada": "2026-11-21",
   "impacto": 2,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "inicio"
+  ]
  },
  {
   "ag": "a8",
@@ -8934,7 +9118,7 @@
   "tipo": "sugestao",
   "onde": "js/avisos.js (tira do sino e aba Para mim), minhas_notificacoes/listar_avisos (notificacoes.categoria nula = pessoal; motivo de_olho/cidade/seguindo/moderador)",
   "sugestao": "Sem mudar o banco: a tira e a tela de Avisos ganham 'Prioridade' (pessoais, ajuda, aviso geral, turno, de olho, atraso/previsão) e 'Outros' (registros da cidade/moderador). O número do sino e do menu contam só Prioridade; 'Outros' mostra a contagem em cinza e não toca som. A preferência vem pronta (a equipe não configura).",
-  "objetivo": "avisos",
+  "objetivo": "menos",
   "tela": "avisos",
   "onda": 3,
   "veredito": "AJUSTADO",
@@ -8955,7 +9139,7 @@
   "tipo": "sugestao",
   "onde": "responsavel_da_cidade / inserir_bloqueio (tarefa vai para moderadores quando a cidade não tem responsável), avisar_registro",
   "sugestao": "Só se o volume crescer ou junto com o A8-03 (em turno): tratativa de cidade sem responsável vai para o monitorador/moderador em turno com menos tratativas pendentes; os outros não recebem aviso.",
-  "objetivo": "operacao",
+  "objetivo": "menos",
   "tela": "bloqueios",
   "onda": 3,
   "veredito": "CONFIRMADO",
@@ -8985,7 +9169,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "extensao"
+  ]
  },
  {
   "ag": "a14",
@@ -9153,7 +9340,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a15",
@@ -9174,7 +9364,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a15",
@@ -9216,7 +9409,10 @@
   "versao": "010",
   "rodada": "2026-11-21",
   "impacto": 2,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a15",
@@ -9300,7 +9496,10 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 1,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "navegacao"
+  ]
  },
  {
   "ag": "a15",
@@ -9384,7 +9583,7 @@
   "tipo": "sugestao",
   "onde": "js/atividades.js (cartão e formulário), js/bloqueios.js (agravante, anexos, consultar), js/avisos.js (#av-prefs), js/inicio.js (#modulos-grid, atalhos, notícias), js/parceiros.js (cidades), rotinas gerar_recorrentes/verificar_previsoes",
   "sugestao": "details 'Mais opções'/'…' para o que tem uso zero; rotas antigas viram apelidos; gerar_recorrentes só com recorrente ativa; linha nas novidades 'Guardamos em Mais opções o que ninguém usou'.",
-  "objetivo": "conciso",
+  "objetivo": "aparencia",
   "tela": "geral",
   "onda": 3,
   "veredito": "AJUSTADO",
@@ -9393,7 +9592,12 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 2,
-  "esf": 2
+  "esf": 2,
+  "telas_extra": [
+   "avisos",
+   "bloqueios",
+   "inicio"
+  ]
  },
  {
   "ag": "a16",
@@ -9405,7 +9609,7 @@
   "tipo": "sugestao",
   "onde": "App.uso (js/base.js:510), details 'Mais opções' novos",
   "sugestao": "toggle de cada 'Mais opções' chama App.uso('mais:<recurso>'); regra 0 → guardado/, 1–4 → continua escondido, ≥5/sem → volta.",
-  "objetivo": "medir",
+  "objetivo": "analises",
   "tela": "geral",
   "onda": 3,
   "veredito": "CONFIRMADO",
@@ -9426,7 +9630,7 @@
   "tipo": "sugestao",
   "onde": "roteiro do mapa (aba Próximas versões)",
   "sugestao": "uma publicação visível por semana, às terças; uma mudança de lugar por versão, com tour; antes × depois no artifact (A13-23); meta de adoção por fatia (A16-08). Fatias e metas em a16/relatorio.md.",
-  "objetivo": "conciso",
+  "objetivo": "aparencia",
   "tela": "geral",
   "onda": 3,
   "veredito": "AJUSTADO",
@@ -9447,7 +9651,7 @@
   "tipo": "sugestao",
   "onde": "js/parceiros.js, menu de cima, atalho Ativar parceiro",
   "sugestao": "009z5: retirar Ativações (o número da semana já está no início); 010e: Ativar parceiro em janela, Parceiros ativos dentro de Entregadores ou Ferramentas, item do menu sai.",
-  "objetivo": "conciso",
+  "objetivo": "aparencia",
   "tela": "parceiros",
   "onda": 3,
   "veredito": "DERRUBADO",
@@ -9470,7 +9674,7 @@
   "tipo": "sugestao",
   "onde": "docs/revisoes/estudo-2026-11/inventario.json",
   "sugestao": "o lançador (A13-22) atualiza o inventário a cada versão; campos uso_3sem e proposta.",
-  "objetivo": "manter",
+  "objetivo": "base",
   "tela": "geral",
   "onda": 3,
   "veredito": "CONFIRMADO",
@@ -9586,7 +9790,12 @@
   "versao": "009z",
   "rodada": "2026-11-21",
   "impacto": 2,
-  "esf": 1
+  "esf": 1,
+  "telas_extra": [
+   "analises",
+   "avisos",
+   "bloqueios"
+  ]
  },
  {
   "ag": "a3",
