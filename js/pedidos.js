@@ -155,8 +155,9 @@
       }
       // calcula os sinais uma semana por vez (cada chamada fica bem abaixo do limite de tempo do Supabase)
       const r = { pedidos: 0, com_sinal: 0, atencao: 0 };
-      const fim = new Date(l.resumo.ate).getTime();
-      for (let ini = new Date(l.resumo.de).getTime(); ini <= fim; ini += 7 * 86400000) {
+      // 009z10: semanas de dias inteiros de Brasília (o resumo das Análises é feito por dia)
+      const fim = new Date(l.resumo.ate.slice(0, 10) + "T23:59:59-03:00").getTime();
+      for (let ini = new Date(l.resumo.de.slice(0, 10) + "T00:00:00-03:00").getTime(); ini <= fim; ini += 7 * 86400000) {
         prog.textContent = `Calculando os sinais (${App.u.dia(new Date(ini).toISOString())})…`;
         const x = await rpc("fechar_importacao_pedidos", { p_de: new Date(ini).toISOString(), p_ate: new Date(Math.min(ini + 7 * 86400000 - 1000, fim)).toISOString() });
         for (const k in r) r[k] += x[k] || 0;
@@ -399,6 +400,8 @@
     if (!d) return box.replaceChildren(carregandoEl());
     opcoes($("#ped-cidade"), d.cidades, "Todas as cidades");
     opcoes($("#ped-loja"), d.lojas, "Todas as lojas");
+    // 009z10: vindo de uma loja das Análises, o filtro aparece escolhido e aberto
+    if (P.filtros.loja) { $("#ped-loja").value = P.filtros.loja; const mf = $(".ped-mais-filtros"); if (mf) mf.open = true; }
     pilhas(); numeros();
     $("#ped-atualizado").textContent = d.periodo?.de
       ? `Dados de ${App.u.dia(d.periodo.de)} a ${App.u.dia(d.periodo.ate)}${d.importado_em ? ` · enviados em ${dt(d.importado_em)}` : ""}` : "";

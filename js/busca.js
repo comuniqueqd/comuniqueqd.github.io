@@ -118,10 +118,14 @@
   campo.placeholder = "Buscar ID ou nome (Ctrl+K)";
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009z6";
+  const VERSAO = "009z10";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009z10", tema: "Análises dos pedidos", itens: [
+      ["Veja quando e por que os pedidos atrasam", "Nova aba Pedidos nas Análises, com os dados do Tableau: o mapa dos horários de atraso, o efeito das rotas com vários pedidos, os atrasos do entregador e as lojas lentas (preparo, espera e acima de 45 min). Os cards dessa leva têm a marca Tableau.", 'nav.modulos a[data-mod="analises"]'],
+      ["Escolha o entregador certo quando o nome se repete", "No Monitoramento, o aviso de nome igual abre os entregadores com esse nome, com ficha e restrições, para escolher o ID de uma vez."],
+    ] },
     { versao: "009z6", tema: "Pedidos fora do limite", itens: [
       ["Veja os pedidos que passaram do tempo", "Novo item Monitoramento no menu: os pedidos que demoraram mais de 15 min para chegar na loja ou mais de 45 min no total, com o entregador, o ID e onde o tempo foi gasto.", 'nav.modulos a[data-mod="monitoramento"]'],
       ["Decida pedido por pedido", "Nada vira restrição sozinho: “Confirmar restrição” mostra a punição prevista e registra por atraso; “Não vira restrição” guarda o motivo. Outro pedido do mesmo entregador no dia pode ser juntado à mesma restrição."],

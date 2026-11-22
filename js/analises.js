@@ -382,6 +382,143 @@
     renderUso();
   });
 
+
+  // ---------- 009z10: Pedidos (dados do Tableau) ----------
+  // Os cards desta aba saem de analise_pedidos (supabase/009z10-analises-pedidos.sql). Todos levam o marcador
+  // "Tableau" (pedido do usuário), para separar a leva de análises que vem dos arquivos do Tableau.
+  const DP = { d: null, chave: "", erro: null, em: 0 };
+  const chavePed = () => `${A.periodo}|${A.cidade}`;
+  async function carregarPedidos() {
+    if (DP.chave === chavePed() && DP.d && Date.now() - DP.em < 300000) return;
+    try {
+      const d = await rpc("analise_pedidos", { p_dias: A.periodo === "tudo" ? null : A.periodo, p_cidade: A.cidade || null });
+      DP.d = d; DP.chave = chavePed(); DP.erro = null; DP.em = Date.now();
+      if (!A.cidades) A.cidades = d.cidades || [];
+    } catch (e) { DP.erro = msgErro(e); }
+  }
+  const marca = () => el("span", { class: "tag-tableau", title: "Análise feita com os dados do Tableau" }, el("i", { "aria-hidden": "true" }), "Tableau");
+  const cardT = (titulo, nota, ...conteudo) => el("div", { class: "panel ped-an" },
+    el("h3", {}, titulo, " ", marca()), nota ? el("p", { class: "an-nota", text: nota }) : null, ...conteudo.filter(Boolean));
+  const pc = (a, b) => (b ? (Math.round((1000 * a) / b) / 10).toFixed(1).replace(".", ",") + "%" : "—");
+  const minTxt = (v) => (v == null ? "—" : String(Math.round(Number(v))) + " min");
+  const leitura = (txt) => el("p", { class: "ped-leitura", text: txt });
+  const tendencia = (agora, antes, menorMelhor = true) => {
+    if (agora == null || antes == null) return "sem comparação";
+    const d = Math.round((Number(agora) - Number(antes)) * 10) / 10;
+    if (Math.abs(d) < 1) return "igual ao período anterior";
+    const pior = menorMelhor ? d > 0 : d < 0;
+    return `${pior ? "piorou" : "melhorou"} (${d > 0 ? "+" : ""}${String(d).replace(".", ",")})`;
+  };
+  // mapa de calor com a % acima de 45 min (só a cor; o número exato no título da célula)
+  function mapaPct(lista) {
+    const m = new Map(lista.map((x) => [`${x.dia}-${x.hora}`, x]));
+    const vals = lista.filter((x) => x.pedidos >= 10).map((x) => x.acima45 / x.pedidos);
+    const max = Math.max(0.01, ...vals);
+    const cel = [el("span")];
+    for (let h = 0; h < 24; h++) cel.push(el("span", { class: "h", text: h % 3 === 0 ? String(h) : "" }));
+    for (let d = 0; d < 7; d++) {
+      cel.push(el("span", { text: DIAS[d] }));
+      for (let h = 0; h < 24; h++) {
+        const x = m.get(`${d}-${h}`), ok = x && x.pedidos >= 10, v = ok ? x.acima45 / x.pedidos : 0;
+        cel.push(el("span", { class: "c", title: x ? `${DIAS_LONGOS[d]}, ${h}h: ${pc(x.acima45, x.pedidos)} acima de 45 min (${x.acima45} de ${x.pedidos} pedidos)` : `${DIAS_LONGOS[d]}, ${h}h: sem pedidos`,
+          style: ok && x.acima45 ? `background:color-mix(in srgb, var(--bad) ${Math.round(15 + (85 * v) / max)}%, transparent)` : null }));
+      }
+    }
+    return el("div", { class: "calor", role: "img", "aria-label": "Porcentagem de pedidos acima de 45 minutos por dia da semana e hora" }, cel);
+  }
+  const irLoja = (loja) => { if (App.pedidos?.P) { Object.assign(App.pedidos.P.filtros, { loja, tipo: "", situacao: "" }); App.pedidos.P.limite = 50; } location.hash = "#monitoramento/pedidos"; };
+  function tabelaLojas(lista, colunas) {
+    if (!lista.length) return el("p", { class: "meta", text: "Nenhuma loja com 30 pedidos ou mais no período." });
+    return el("div", { class: "tablewrap" }, el("table", { class: "ped-lojas" },
+      el("thead", {}, el("tr", {}, el("th", { text: "Loja" }), ...colunas.map(([t]) => el("th", { text: t })))),
+      el("tbody", {}, lista.map((l) => el("tr", {},
+        el("td", {}, el("button", { class: "btn link", type: "button", title: "Ver os pedidos desta loja no Monitoramento", onclick: () => irLoja(l.loja) }, l.loja)),
+        ...colunas.map(([, f]) => el("td", { text: f(l) })))))));
+  }
+  function renderPedidosAn() {
+    prepararFiltros();
+    const box = $("#ap-cards"), d = DP.d;
+    if (DP.erro && !d) return box.replaceChildren(el("p", { class: "err", text: DP.erro }));
+    if (!d || DP.chave !== chavePed()) return box.replaceChildren(carregandoEl());
+    document.querySelectorAll("#v-an-pedidos [data-an-atualizado]").forEach((x) => x.replaceChildren(
+      `Números de ${new Date(DP.em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: App.u.FUSO })} `,
+      el("button", { class: "btn link small", type: "button", onclick: () => { DP.em = 0; App.carregar(); } }, "Atualizar")));
+    if (d.vazio) return box.replaceChildren(vazio("Ainda não há pedidos do Tableau", "Quando um moderador enviar os arquivos em Monitoramento → Enviar dados, as análises aparecem aqui."));
+    $("#ap-sub").textContent = `Pedidos de ${App.u.dia(d.de)} a ${App.u.dia(d.ate)} (o último dia com dados), vindos dos arquivos do Tableau. Tempos contados do chamado até a entrega.`;
+    const t = d.totais, ro = d.rota, en = d.entregador;
+    // A. quando
+    const porDia = d.por_dia_semana.filter((x) => x.pedidos >= 30).map((x) => ({ ...x, v: x.acima45 / x.pedidos }));
+    const piorDia = porDia.reduce((m, x) => (!m || x.v > m.v ? x : m), null);
+    const porHora = Array.from({ length: 24 }, (_, h) => d.mapa.filter((x) => x.hora === h).reduce((a, x) => ({ hora: h, pedidos: a.pedidos + x.pedidos, acima45: a.acima45 + x.acima45 }), { hora: h, pedidos: 0, acima45: 0 }))
+      .filter((x) => x.pedidos >= 30).map((x) => ({ ...x, v: x.acima45 / x.pedidos }));
+    const piorHora = porHora.reduce((m, x) => (!m || x.v > m.v ? x : m), null);
+    const cA = cardT("Quando o atraso acontece", "Porcentagem dos pedidos que passaram de 45 minutos do chamado até a entrega, por dia da semana e hora. Quanto mais vermelho, pior. Passe o mouse para ver o número.",
+      el("div", { class: "destaques" }, destaque(t.pedidos, "pedidos"), destaque(pc(t.acima45, t.pedidos), "acima de 45 min"),
+        piorDia ? destaque(DIAS_LONGOS[piorDia.dia], `pior dia (${pc(piorDia.acima45, piorDia.pedidos)})`) : null,
+        piorHora ? destaque(piorHora.hora + "h", `pior hora (${pc(piorHora.acima45, piorHora.pedidos)})`) : null),
+      mapaPct(d.mapa),
+      el("h4", { text: "Por dia da semana" }),
+      ...barras(porDia.map((x) => ({ rotulo: DIAS_LONGOS[x.dia], qtd: x.v, extra: `${pc(x.acima45, x.pedidos)} · ${x.acima45} de ${x.pedidos}` })), "var(--bad)", "Sem pedidos suficientes."));
+    largo(cA);
+    // B. rota
+    const soz = t.pedidos - ro.em_rota;
+    const rotaHora = ro.por_hora.filter((x) => x.pedidos >= 30);
+    const cB = cardT("Rota com vários pedidos", "Quando o entregador sai da loja levando mais de um pedido (saíram com até 5 minutos de diferença). O último da rota naturalmente demora mais.",
+      el("div", { class: "destaques" },
+        destaque(pc(ro.em_rota, t.pedidos), "dos pedidos saem em rota"),
+        destaque(pc(ro.em_rota_acima45, ro.em_rota), "em rota passam de 45 min"),
+        destaque(pc(ro.sozinho_acima45, soz), "sozinho passam de 45 min"),
+        destaque(pc(ro.causa_rota, ro.acima45), "dos atrasos vieram de rota")),
+      el("div", { class: "destaques" }, destaque(minTxt(ro.media_cliente_rota), "da loja ao cliente em rota"), destaque(minTxt(ro.media_cliente_so), "da loja ao cliente sozinho")),
+      leitura(ro.em_rota && soz ? `Em rota, a chance de passar de 45 min é ${String(Math.round(((ro.em_rota_acima45 / ro.em_rota) / Math.max(0.0001, ro.sozinho_acima45 / soz)) * 10) / 10).replace(".", ",")} vezes maior do que saindo sozinho.` : "Sem dados de rota no período."),
+      el("h4", { text: "Em que horários os pedidos saem em rota" }),
+      ...barras(rotaHora.map((x) => ({ rotulo: x.hora + "h", qtd: x.em_rota / x.pedidos, extra: `${pc(x.em_rota, x.pedidos)} em rota · ${x.causa_rota} atrasos por rota` })), "var(--warn)", "Sem pedidos suficientes."));
+    // C. entregador
+    const entHora = en.por_hora.filter((x) => x.chegada15 + x.entrega35 > 0);
+    const cC = cardT("Atraso do entregador", "Os casos em que a demora foi do entregador: chegou na loja mais de 15 min depois de aceitar, ou levou mais de 35 min do aceite até entregar saindo sozinho.",
+      el("div", { class: "destaques" }, destaque(en.chegada15, "chegaram tarde na loja"), destaque(en.entrega35, "demoraram na entrega sozinhos")),
+      el("h4", { text: "Por hora" }),
+      ...barras(entHora.map((x) => ({ rotulo: x.hora + "h", qtd: x.chegada15 + x.entrega35, extra: `${x.chegada15} na loja · ${x.entrega35} na entrega` })), "var(--bad)", "Nenhum caso no período."),
+      el("h4", { text: "Quem mais repete" }),
+      en.quem.length ? el("div", { class: "tablewrap" }, el("table", {},
+        el("thead", {}, el("tr", {}, ...["Entregador", "Casos", "Chegou tarde", "Demorou na entrega", "Restrições"].map((x) => el("th", { text: x })))),
+        el("tbody", {}, en.quem.map((q) => el("tr", {},
+          el("td", {}, el("button", { class: "btn link link-ficha", type: "button", onclick: () => App.abrirFicha?.(q.id) }, q.nome || q.id)),
+          el("td", { text: String(q.casos) }), el("td", { text: String(q.chegada) }), el("td", { text: String(q.entrega) }), el("td", { text: String(q.restricoes) })))))) :
+        el("p", { class: "meta", text: "Ninguém no período." }));
+    // D. lojas (um card por tipo de lentidão)
+    const L = d.lojas || [];
+    const top = (f, ord) => L.filter(f).sort(ord).slice(0, 10);
+    const cD1 = cardT("Lojas: preparo longo", "Do pedido do cliente até a loja chamar o entregador. Preparo longo atrasa o pedido antes de o entregador entrar na história. Lojas com 30 pedidos ou mais.",
+      tabelaLojas(top((l) => l.preparo_medio != null, (a, b) => b.preparo_medio - a.preparo_medio), [
+        ["Pedidos", (l) => String(l.pedidos)], ["Preparo médio", (l) => minTxt(l.preparo_medio)],
+        ["Acima de 30 min", (l) => pc(l.preparo30, l.n_preparo)], ["Hora em que mais demora", (l) => (l.pior_hora == null ? "—" : `${l.pior_hora}h (${minTxt(l.pior_hora_preparo)})`)],
+        ["Período anterior", (l) => tendencia(l.preparo_medio, l.antes?.preparo_medio)]]));
+    const cD2 = cardT("Lojas: espera na loja", "O entregador chegou e esperou para sair com o pedido. Espera acima de 10 min não conta contra o entregador.",
+      tabelaLojas(top((l) => l.espera_media != null && l.n_espera >= 10, (a, b) => b.espera_media - a.espera_media), [
+        ["Pedidos", (l) => String(l.pedidos)], ["Espera média", (l) => minTxt(l.espera_media)],
+        ["Acima de 10 min", (l) => pc(l.espera10, l.n_espera)], ["Período anterior", (l) => tendencia(l.espera_media, l.antes?.espera_media)]]));
+    const cD3 = cardT("Lojas: pedidos acima de 45 min", "Do chamado até a entrega. A coluna “Por causa da loja” conta os que atrasaram pela espera na loja.",
+      tabelaLojas(top(() => true, (a, b) => b.acima45 / b.pedidos - a.acima45 / a.pedidos), [
+        ["Pedidos", (l) => String(l.pedidos)], ["Acima de 45 min", (l) => pc(l.acima45, l.pedidos)], ["Por causa da loja", (l) => String(l.causa_loja)],
+        ["Período anterior", (l) => (l.antes ? tendencia(100 * l.acima45 / l.pedidos, 100 * l.antes.acima45 / l.antes.pedidos) : "sem comparação")]]));
+    [cD1, cD2, cD3].forEach(largo);
+    // E. causas por semana
+    const CAUSAS = [["entregador", "Entregador", "var(--bad)"], ["rota", "Rota com vários pedidos", "var(--warn)"], ["aceite", "Ninguém aceitou", "var(--gray)"],
+      ["loja", "Espera na loja", "var(--accent)"], ["outras", "Várias pequenas", "var(--line-forte)"]];
+    const cE = cardT("De onde veio o atraso, por semana", "Cada pedido acima de 45 min entra na causa que mais pesou. Semanas de terça a segunda.",
+      el("div", { class: "legend" }, CAUSAS.map(([, nome, cor]) => el("span", {}, el("i", { style: `background:${cor}` }), nome))),
+      el("div", { class: "ped-semanas" }, d.causas_semana.map((w) => {
+        const tot = CAUSAS.reduce((s, [k]) => s + w[k], 0);
+        return el("div", { class: "ped-semana" },
+          el("div", { class: "ped-semana-rot" }, el("span", { text: `Semana de ${App.u.dia(w.semana)}` }), el("b", { text: `${w.acima45} de ${w.pedidos} (${pc(w.acima45, w.pedidos)})` })),
+          el("div", { class: "ped-pilha", role: "img", "aria-label": CAUSAS.map(([k, nome]) => `${nome}: ${w[k]}`).join(", ") },
+            ...CAUSAS.filter(([k]) => w[k]).map(([k, nome, cor]) => el("span", { title: `${nome}: ${w[k]}`, style: `flex-grow:${w[k]};background:${cor}` }))),
+          tot ? null : el("p", { class: "meta", text: "Nenhum atraso." }));
+      })));
+    largo(cE);
+    box.replaceChildren(cA, cB, cC, cD1, cD2, cD3, cE);
+  }
   App.modulo({
     id: "analises", nome: "Análises",
     abas: [
@@ -389,9 +526,10 @@
       { id: "complexas", nome: "Análises complexas", secao: "v-an-analises" },
       { id: "resumo", nome: "Resumo semanal", secao: "v-an-resumo" },
       { id: "tarefas", nome: "Painel das tarefas", secao: "v-at-painel" },  // 009m: o Painel das tarefas (antes em Atividades)
+      { id: "pedidos", nome: "Pedidos", secao: "v-an-pedidos", pode: () => !!S.me?.papel_bloqueios },  // 009z10: dados do Tableau
     ],
     padrao: () => "simples",
-    carregar: (aba) => (aba === "tarefas" ? App.painel.carregar() : aba === "resumo" ? carregarResumo() : carregarAnalises(aba === "complexas" ? "complexas" : "simples")),
-    render: (aba) => (aba === "tarefas" ? App.painel.render() : aba === "resumo" ? renderResumo() : aba === "complexas" ? renderComplexas() : (renderSimples(), renderUso())),
+    carregar: (aba) => (aba === "pedidos" ? carregarPedidos() : aba === "tarefas" ? App.painel.carregar() : aba === "resumo" ? carregarResumo() : carregarAnalises(aba === "complexas" ? "complexas" : "simples")),
+    render: (aba) => (aba === "pedidos" ? renderPedidosAn() : aba === "tarefas" ? App.painel.render() : aba === "resumo" ? renderResumo() : aba === "complexas" ? renderComplexas() : (renderSimples(), renderUso())),
   });
 })();

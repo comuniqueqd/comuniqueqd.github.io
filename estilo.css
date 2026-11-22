@@ -1232,3 +1232,14 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; gap:
 .ped-opcoes-lista li.atual { border-color: var(--warn); }
 .ped-opcoes-lista p { margin: 0; }
 .ped-op-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+/* 009z10: análises dos pedidos (dados do Tableau) */
+.tag-tableau { display: inline-flex; align-items: center; gap: 5px; vertical-align: middle; font-family: var(--font-body); font-size: 12px; font-weight: 600; color: var(--ink); background: var(--warn-soft); border: 1px solid var(--ambar); border-radius: 999px; padding: 1px 8px; }
+.tag-tableau i { width: 7px; height: 7px; border-radius: 50%; background: var(--ambar); }
+.ped-an h4 { margin: 14px 0 6px; font-size: 14px; }
+.ped-leitura { margin: 4px 0 8px; font-size: 14px; font-weight: 600; }
+.ped-lojas td:first-child .btn.link { text-align: left; padding: 0; }
+.ped-semanas { display: grid; gap: 10px; }
+.ped-semana { display: grid; gap: 4px; }
+.ped-semana-rot { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.ped-pilha { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--line); gap: 1px; }
+.ped-pilha span { flex-basis: 0; min-width: 3px; }

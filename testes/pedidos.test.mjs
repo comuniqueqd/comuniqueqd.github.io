@@ -16,6 +16,7 @@ for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z7-guarda-7-dias.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z8-pedidos-limpeza-por-semana.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z9-escolher-entregador-pedido.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z10-analises-pedidos.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -236,6 +237,26 @@ await t("009z9: nome igual — mostra os entregadores com o nome e grava o escol
     [["gem00002", "ok"], ["gem00002", "ok"]], "ID gravado e aviso some");
   await erro(rpc(sup, "escolher_entregador_pedido", { p_entrega_id: "pedido000001", p_id_app: "abcd1234" }), "já foi decidido");
   await erro(rpc(fora, "opcoes_entregador_pedido", { p_entrega_id: "gemeo0000001" }), "módulo");
+});
+
+await t("009z10: o resumo guarda o dia inteiro e a análise monta mapa, rota, entregador e causas", async () => {
+  const r = await rpc(sup, "analise_pedidos", { p_dias: 60 });
+  verdade(!r.vazio && r.totais.pedidos >= 8, "totais: " + JSON.stringify(r.totais));
+  const dow = (await um("select extract(dow from (now() at time zone 'America/Sao_Paulo')::date - 2)::int d")).d;
+  verdade(r.mapa.some((x) => x.dia === dow && x.hora === 12 && x.pedidos >= 1), "mapa com o dia e a hora dos pedidos");
+  verdade(r.rota.em_rota >= 2, "pedidos 3 e 4 saíram juntos");
+  const ana = r.entregador.quem.find((x) => x.id === "ana0001");
+  verdade(ana && ana.casos >= 1 && ana.restricoes >= 1, "Ana aparece em quem mais repete, com a restrição registrada");
+  verdade(r.causas_semana.length >= 1 && r.causas_semana.some((w) => w.entregador >= 1), "causas por semana");
+  await erro(rpc(fora, "analise_pedidos", {}), "módulo");
+});
+
+await t("009z10: um dia incompleto (pedidos normais já apagados) não estraga o resumo", async () => {
+  // as semanas de 40 e 30 dias atrás: 2 pedidos cada; depois da limpeza ficou só o com atraso
+  const antes = await um("select sum(pedidos)::int n from pedidos_resumo where dia = (now() at time zone 'America/Sao_Paulo')::date - 30");
+  igual(antes.n, 2, "o resumo contou os 2 pedidos do dia");
+  await db.query("select resumir_pedidos(now() - interval '45 days', now() - interval '25 days')");
+  igual((await um("select sum(pedidos)::int n from pedidos_resumo where dia = (now() at time zone 'America/Sao_Paulo')::date - 30")).n, 2, "refazer com 1 pedido não troca o resumo de 2");
 });
 
 await t("Não guarda CPF escrito no motivo", async () => {
