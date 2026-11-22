@@ -9920,13 +9920,13 @@
  {
   "ag": "csv",
   "id": "DP-4",
-  "titulo": "Regras: 35 min do aceite até finalizar e 15 min de coleta; meta de 45 min contada do chamado",
+  "titulo": "Regras: 35 min do aceite até finalizar e 15 min do aceite até chegar na loja; meta de 45 min contada do chamado",
   "prio": "alta",
   "prio_orig": "alta",
   "esforco": "pequeno",
   "tipo": "sugestao",
   "onde": "",
-  "sugestao": "Decisão do usuário (22/11): o indicador de 45 min conta do chamado (solicitação) até finalizar; a infração acontece quando do aceite até finalizar passa de 35 min, ou quando a coleta passa de 15 min. Semana de Lagarto (10–16/11): 359 pedidos passaram de 45 min do chamado; 584 passaram de 35 min do aceite; coleta > 15 min = 95 (aceite até chegar na loja) ou 555 (aceite até sair da loja), a confirmar qual. No CSV, o aceite é o primeiro entre associadoAt e Aceite At.",
+  "sugestao": "Decisão do usuário (22/11): o indicador de 45 min conta do chamado (solicitação) até finalizar; a infração acontece quando do aceite até finalizar passa de 35 min, ou quando a coleta passa de 15 min. Semana de Lagarto (10–16/11): 359 pedidos passaram de 45 min do chamado; 584 passaram de 35 min do aceite; coleta > 15 min = 95 (decidido em 22/11: do aceite até CHEGAR na loja; a espera pelo preparo fica com a loja). No CSV, o aceite é o primeiro entre associadoAt e Aceite At.",
   "objetivo": "regras",
   "tela": "dados",
   "onda": 1,
@@ -9942,8 +9942,8 @@
   ],
   "medida": [
    {
-    "metrica": "Pedidos fora do limite por semana (35 min do aceite / coleta 15 min)",
-    "antes": "584 / 95 ou 555 (10–16/11, Lagarto)",
+    "metrica": "Pedidos fora do limite por semana (35 min do aceite / chegada na loja 15 min)",
+    "antes": "584 / 95 (10–16/11, Lagarto)",
     "depois": null,
     "quando": "com o DP-2",
     "fonte": "CSV de finalizados"
