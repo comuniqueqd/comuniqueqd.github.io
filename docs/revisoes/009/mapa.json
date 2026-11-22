@@ -9848,7 +9848,7 @@
   "esforco": "pequeno",
   "tipo": "achado",
   "onde": "",
-  "sugestao": "O 'Painel Entregas por Loja (com tempo)' traz todas as etapas do pedido, mas não diz quem entregou; o 'Painel Entregas por Entregador' só filtra um entregador por vez, sem (Tudo). Pedir a coluna entregadorId (e nome) no painel por loja, ou o (Tudo) no painel por entregador. Sem isso, nenhum card de restrição sai do CSV. Mensagem já redigida na conversa de 22/11.",
+  "sugestao": "O 'Painel Entregas por Loja (com tempo)' traz todas as etapas do pedido, mas não diz quem entregou; o 'Painel Entregas por Entregador' só filtra um entregador por vez, sem (Tudo). Pedir a coluna entregadorId (e nome) no painel por loja, ou o (Tudo) no painel por entregador. Sem isso, nenhum card de restrição sai do CSV. Mensagem já redigida na conversa de 22/11. Usuário vai pedir ao time de dados (22/11).",
   "objetivo": "regras",
   "tela": "dados",
   "onda": 1,
@@ -9858,7 +9858,8 @@
   "versao": "dados",
   "rodada": "2026-11-22",
   "impacto": 3,
-  "esf": 1
+  "esf": 1,
+  "situacao": "Pedido ao time de dados em andamento (22/11)."
  },
  {
   "ag": "csv",
@@ -9890,13 +9891,13 @@
  {
   "ag": "csv",
   "id": "DP-3",
-  "titulo": "Tela 'Restrições em tempo real': sugestões que uma pessoa confirma",
+  "titulo": "Tela de pedidos fora do limite: cada pessoa confirma se vira restrição",
   "prio": "alta",
   "prio_orig": "alta",
   "esforco": "grande",
   "tipo": "sugestao",
   "onde": "",
-  "sugestao": "Cards por pedido que passou do limite (chegada na loja > 15 min do aceite; finalização > 45 min do aceite; demora da loja), com a barra das etapas, a ocorrência e a punição que viria; 'Confirmar restrição' abre o Novo bloqueio preenchido; 'Descartar' pede motivo. Nada é aplicado sozinho. Desenho: artifact 'Restrições em tempo real'.",
+  "sugestao": "Decisão do usuário (22/11): lista de PEDIDOS (não de entregadores), porque o CSV ainda não traz quem entregou. Cada linha: código do pedido, loja, cidade, as etapas e qual limite passou. 'Confirmar restrição' pede o ID do entregador (achado no Quero Log pelo código; a extensão já lê o ID nessa tela) e abre a Nova restrição preenchida; 'Não vira restrição' pede o motivo. Em teste, todos os papéis confirmam. Com a coluna do entregador (DP-1), o ID já vem preenchido.",
   "objetivo": "menos",
   "tela": "dados",
   "onda": 1,
@@ -9919,13 +9920,13 @@
  {
   "ag": "csv",
   "id": "DP-4",
-  "titulo": "Regra dos 45 min contada do aceite, não do pedido",
+  "titulo": "Regras: 35 min do aceite até finalizar e 15 min de coleta; meta de 45 min contada do chamado",
   "prio": "alta",
   "prio_orig": "alta",
   "esforco": "pequeno",
   "tipo": "sugestao",
   "onde": "",
-  "sugestao": "Na semana: 1.440 pedidos passaram de 45 min contando do pedido do cliente; só 352 contando do chamado ao entregador. Nos acima de 45 min, a etapa mais pesada foi o preparo da loja (1.051). Contar do pedido culpa o entregador pela loja. Definir na regra: do aceite até finalizar; preparo vira indicador da loja.",
+  "sugestao": "Decisão do usuário (22/11): o indicador de 45 min conta do chamado (solicitação) até finalizar; a infração acontece quando do aceite até finalizar passa de 35 min, ou quando a coleta passa de 15 min. Semana de Lagarto (10–16/11): 359 pedidos passaram de 45 min do chamado; 584 passaram de 35 min do aceite; coleta > 15 min = 95 (aceite até chegar na loja) ou 555 (aceite até sair da loja), a confirmar qual. No CSV, o aceite é o primeiro entre associadoAt e Aceite At.",
   "objetivo": "regras",
   "tela": "dados",
   "onda": 1,
@@ -9941,8 +9942,8 @@
   ],
   "medida": [
    {
-    "metrica": "Pedidos acima de 45 min (do aceite × do pedido)",
-    "antes": "352 × 1.440 (10–16/11, Lagarto)",
+    "metrica": "Pedidos fora do limite por semana (35 min do aceite / coleta 15 min)",
+    "antes": "584 / 95 ou 555 (10–16/11, Lagarto)",
     "depois": null,
     "quando": "com o DP-2",
     "fonte": "CSV de finalizados"
@@ -10277,6 +10278,30 @@
   "esf": 1,
   "depende": [
    "DP-2"
+  ]
+ },
+ {
+  "ag": "pedido",
+  "id": "DP-18",
+  "titulo": "Base histórica: outros períodos e filtro de período na tela",
+  "prio": "alta",
+  "prio_orig": "alta",
+  "esforco": "pequeno",
+  "tipo": "sugestao",
+  "onde": "",
+  "sugestao": "Baixar semanas anteriores (e outras cidades) para a base ficar completa; a rotina e a tela aceitam qualquer período, sem duplicar pedido já guardado, e a tela de pedidos ganha filtro de período, cidade, loja e limite que passou.",
+  "objetivo": "analises",
+  "tela": "dados",
+  "onda": 1,
+  "veredito": "",
+  "nota": "Estudo dos CSVs do Tableau (Lagarto, 10 a 16/11/2026: 4.408 finalizados, 35 cancelados), 22/11/2026. Prioridade dada pelo usuário.",
+  "junto": "",
+  "versao": "dados",
+  "rodada": "2026-11-22",
+  "impacto": 3,
+  "esf": 1,
+  "depende": [
+   "DP-10"
   ]
  }
 ]
