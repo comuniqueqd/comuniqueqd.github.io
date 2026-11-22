@@ -14,6 +14,7 @@ await db.connect();
 await db.query("set client_min_messages = warning");
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z6-pedidos-fora-do-limite.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z7-guarda-7-dias.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z8-pedidos-limpeza-por-semana.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -199,6 +200,22 @@ await t("Pedidos sem sinal são apagados depois de 7 dias (009z7); os com sinal 
   const r = await rpc(mod, "fechar_importacao_pedidos", { p_de: velho(-60), p_ate: velho(600) });
   igual(r.apagados, 1, "apagou o normal");
   igual((await db.query("select entrega_id from pedidos_log where entrega_id like 'velho%'")).rows.map((x) => x.entrega_id), ["velho0000002"]);
+});
+
+await t("009z8: envio de várias semanas antigas fechado uma semana por vez não apaga as semanas ainda não calculadas", async () => {
+  const em = (dias, min) => new Date(Date.now() - dias * 86400000 + min * 60000).toISOString();
+  // semana A (40 dias atrás) e semana B (30 dias atrás): um pedido com atraso e um normal em cada
+  const p = (id, dias, chegada) => ({ entrega_id: id, cidade: "LAGARTO - SE", entregador_nome: "Semana Teste " + id.slice(-1),
+    chamado_em: em(dias, 0), aceite_em: em(dias, 1), chegou_em: em(dias, 1 + chegada), saiu_em: em(dias, 2 + chegada),
+    entregue_em: em(dias, 10 + chegada), finalizado_em: em(dias, 11 + chegada) });
+  await rpc(mod, "importar_pedidos", { p_itens: [p("semanaA00001", 40, 20), p("semanaA00002", 40, 3), p("semanaB00003", 30, 20), p("semanaB00004", 30, 3)] });
+  // como o site faz: 1ª semana, depois a 2ª
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: em(43, 0), p_ate: em(36, 0) });
+  igual((await db.query("select entrega_id from pedidos_log where entrega_id like 'semana%' order by 1")).rows.map((x) => x.entrega_id),
+    ["semanaA00001", "semanaB00003", "semanaB00004"], "depois da 1ª semana: o normal da semana A sai, a semana B fica inteira");
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: em(36, 0), p_ate: em(29, 0) });
+  igual((await db.query("select entrega_id from pedidos_log where entrega_id like 'semana%' order by 1")).rows.map((x) => x.entrega_id),
+    ["semanaA00001", "semanaB00003"], "depois da 2ª: ficam os dois com atraso");
 });
 
 await t("Não guarda CPF escrito no motivo", async () => {
