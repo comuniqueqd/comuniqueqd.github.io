@@ -1243,3 +1243,15 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; gap:
 .ped-semana-rot { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
 .ped-pilha { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--line); gap: 1px; }
 .ped-pilha span { flex-basis: 0; min-width: 3px; }
+/* 009z11: linhas com a cor do nível comparado à média (sempre com o texto do nível) */
+.ped-nivel { display: grid; gap: 3px; margin: 6px 0; --nivel: var(--gray); }
+.ped-nivel.n-alto { --nivel: var(--bad); }
+.ped-nivel.n-medio { --nivel: var(--warn); }
+.ped-nivel.n-baixo { --nivel: var(--ok); }
+.ped-nivel-rot { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.ped-nivel-barra { height: 8px; border-radius: 999px; background: var(--gray-soft); overflow: hidden; }
+.ped-nivel-barra span { display: block; height: 100%; border-radius: 999px; background: var(--nivel); }
+.ped-nivel-txt { font-size: 12px; font-weight: 600; color: var(--nivel); }
+.ped-nivel.n-neutro .ped-nivel-txt { color: var(--muted); }
+details.ped-mais { margin-top: 10px; }
+details.ped-mais > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--accent); }

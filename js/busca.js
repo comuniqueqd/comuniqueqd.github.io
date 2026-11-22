@@ -118,10 +118,15 @@
   campo.placeholder = "Buscar ID ou nome (Ctrl+K)";
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009z10";
+  const VERSAO = "009z11";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009z11", tema: "Atraso a partir de 30 min", itens: [
+      ["Veja os atrasos a partir de 30 minutos", "As Análises dos pedidos agora contam como atraso o pedido com mais de 30 min do chamado até a entrega, como no dia a dia.", 'nav.modulos a[data-mod="analises"]'],
+      ["Comece pelos horários mais críticos", "O card Quando o atraso acontece mostra os 5 piores horários, com a cor e o texto do nível (bem acima, acima, na média ou abaixo da média)."],
+      ["Saiba o motivo de cada atraso", "A causa agora é a etapa que mais passou do próprio limite. A espera na loja aparece quando pesou mais que a rota."],
+    ] },
     { versao: "009z10", tema: "Análises dos pedidos", itens: [
       ["Veja quando e por que os pedidos atrasam", "Nova aba Pedidos nas Análises, com os dados do Tableau: o mapa dos horários de atraso, o efeito das rotas com vários pedidos, os atrasos do entregador e as lojas lentas (preparo, espera e acima de 45 min). Os cards dessa leva têm a marca Tableau.", 'nav.modulos a[data-mod="analises"]'],
       ["Escolha o entregador certo quando o nome se repete", "No Monitoramento, o aviso de nome igual abre os entregadores com esse nome, com ficha e restrições, para escolher o ID de uma vez."],

@@ -409,22 +409,36 @@
     const pior = menorMelhor ? d > 0 : d < 0;
     return `${pior ? "piorou" : "melhorou"} (${d > 0 ? "+" : ""}${String(d).replace(".", ",")})`;
   };
-  // mapa de calor com a % acima de 45 min (só a cor; o número exato no título da célula)
-  function mapaPct(lista) {
+  // mapa de calor com a % de atrasos (só a cor; o número exato no título da célula)
+  function mapaPct(lista, LIM) {
     const m = new Map(lista.map((x) => [`${x.dia}-${x.hora}`, x]));
-    const vals = lista.filter((x) => x.pedidos >= 10).map((x) => x.acima45 / x.pedidos);
+    const vals = lista.filter((x) => x.pedidos >= 10).map((x) => x.atraso / x.pedidos);
     const max = Math.max(0.01, ...vals);
     const cel = [el("span")];
     for (let h = 0; h < 24; h++) cel.push(el("span", { class: "h", text: h % 3 === 0 ? String(h) : "" }));
     for (let d = 0; d < 7; d++) {
       cel.push(el("span", { text: DIAS[d] }));
       for (let h = 0; h < 24; h++) {
-        const x = m.get(`${d}-${h}`), ok = x && x.pedidos >= 10, v = ok ? x.acima45 / x.pedidos : 0;
-        cel.push(el("span", { class: "c", title: x ? `${DIAS_LONGOS[d]}, ${h}h: ${pc(x.acima45, x.pedidos)} acima de 45 min (${x.acima45} de ${x.pedidos} pedidos)` : `${DIAS_LONGOS[d]}, ${h}h: sem pedidos`,
-          style: ok && x.acima45 ? `background:color-mix(in srgb, var(--bad) ${Math.round(15 + (85 * v) / max)}%, transparent)` : null }));
+        const x = m.get(`${d}-${h}`), ok = x && x.pedidos >= 10, v = ok ? x.atraso / x.pedidos : 0;
+        cel.push(el("span", { class: "c", title: x ? `${DIAS_LONGOS[d]}, ${h}h: ${pc(x.atraso, x.pedidos)} acima de ${LIM} (${x.atraso} de ${x.pedidos} pedidos)` : `${DIAS_LONGOS[d]}, ${h}h: sem pedidos`,
+          style: ok && x.atraso ? `background:color-mix(in srgb, var(--bad) ${Math.round(15 + (85 * v) / max)}%, transparent)` : null }));
       }
     }
-    return el("div", { class: "calor", role: "img", "aria-label": "Porcentagem de pedidos acima de 45 minutos por dia da semana e hora" }, cel);
+    return el("div", { class: "calor", role: "img", "aria-label": `Porcentagem de pedidos acima de ${LIM} por dia da semana e hora` }, cel);
+  }
+  // linhas com a cor do nível comparado à média (sempre com o texto: a cor nunca fala sozinha)
+  const NIVEIS = [[1.5, "n-alto", "bem acima da média"], [1.1, "n-medio", "acima da média"], [0.9, "n-neutro", "na média"], [0, "n-baixo", "abaixo da média"]];
+  function linhasNivel(itens, media, vazioTxt) {
+    if (!itens.length) return vazioTxt ? [el("p", { class: "meta", text: vazioTxt })] : [];
+    const max = Math.max(0.0001, ...itens.map((x) => x.v));
+    return itens.map((x) => {
+      const r = media ? x.v / media : 1;
+      const [, cls, txt] = NIVEIS.find(([f]) => r >= f) || NIVEIS[3];
+      return el("div", { class: `ped-nivel ${cls}` },
+        el("div", { class: "ped-nivel-rot" }, el("span", { text: x.rotulo }), el("b", { text: x.extra })),
+        el("div", { class: "ped-nivel-barra" }, el("span", { style: `width:${Math.max(2, Math.round((100 * x.v) / max))}%` })),
+        el("span", { class: "ped-nivel-txt", text: txt }));
+    });
   }
   const irLoja = (loja) => { if (App.pedidos?.P) { Object.assign(App.pedidos.P.filtros, { loja, tipo: "", situacao: "" }); App.pedidos.P.limite = 50; } location.hash = "#monitoramento/pedidos"; };
   function tabelaLojas(lista, colunas) {
@@ -443,45 +457,61 @@
     document.querySelectorAll("#v-an-pedidos [data-an-atualizado]").forEach((x) => x.replaceChildren(
       `Números de ${new Date(DP.em).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: App.u.FUSO })} `,
       el("button", { class: "btn link small", type: "button", onclick: () => { DP.em = 0; App.carregar(); } }, "Atualizar")));
-    if (d.vazio) return box.replaceChildren(vazio("Ainda não há pedidos do Tableau", "Quando um moderador enviar os arquivos em Monitoramento → Enviar dados, as análises aparecem aqui."));
-    $("#ap-sub").textContent = `Pedidos de ${App.u.dia(d.de)} a ${App.u.dia(d.ate)} (o último dia com dados), vindos dos arquivos do Tableau. Tempos contados do chamado até a entrega.`;
-    const t = d.totais, ro = d.rota, en = d.entregador;
-    // A. quando
-    const porDia = d.por_dia_semana.filter((x) => x.pedidos >= 30).map((x) => ({ ...x, v: x.acima45 / x.pedidos }));
+    if (d.vazio) return box.replaceChildren(d.antigos
+      ? vazio("Reenvie os arquivos do Tableau", `As análises agora contam como atraso o pedido com mais de ${d.atraso_min || 30} min. Para os dias que já estavam no banco entrarem nessa conta, um moderador precisa reenviar os arquivos em Monitoramento → Enviar dados.`)
+      : vazio("Ainda não há pedidos do Tableau", "Quando um moderador enviar os arquivos em Monitoramento → Enviar dados, as análises aparecem aqui."));
+    $("#ap-sub").textContent = `Pedidos de ${App.u.dia(d.de)} a ${App.u.dia(d.ate)} (o último dia com dados), vindos dos arquivos do Tableau. Atraso = mais de ${d.atraso_min || 30} min do chamado até a entrega.`;
+    const t = d.totais, ro = d.rota, en = d.entregador, lim = d.atraso_min || 30;
+    const LIM = `${lim} min`;
+    // A. quando (009z11: frase de uso, os 5 horários mais críticos e o mapa completo fechado)
+    const media = t.pedidos ? t.atraso / t.pedidos : 0;
+    const porDia = d.por_dia_semana.filter((x) => x.pedidos >= 30).map((x) => ({ ...x, v: x.atraso / x.pedidos }));
     const piorDia = porDia.reduce((m, x) => (!m || x.v > m.v ? x : m), null);
-    const porHora = Array.from({ length: 24 }, (_, h) => d.mapa.filter((x) => x.hora === h).reduce((a, x) => ({ hora: h, pedidos: a.pedidos + x.pedidos, acima45: a.acima45 + x.acima45 }), { hora: h, pedidos: 0, acima45: 0 }))
-      .filter((x) => x.pedidos >= 30).map((x) => ({ ...x, v: x.acima45 / x.pedidos }));
-    const piorHora = porHora.reduce((m, x) => (!m || x.v > m.v ? x : m), null);
-    const cA = cardT("Quando o atraso acontece", "Porcentagem dos pedidos que passaram de 45 minutos do chamado até a entrega, por dia da semana e hora. Quanto mais vermelho, pior. Passe o mouse para ver o número.",
-      el("div", { class: "destaques" }, destaque(t.pedidos, "pedidos"), destaque(pc(t.acima45, t.pedidos), "acima de 45 min"),
-        piorDia ? destaque(DIAS_LONGOS[piorDia.dia], `pior dia (${pc(piorDia.acima45, piorDia.pedidos)})`) : null,
-        piorHora ? destaque(piorHora.hora + "h", `pior hora (${pc(piorHora.acima45, piorHora.pedidos)})`) : null),
-      mapaPct(d.mapa),
+    const celulas = d.mapa.filter((x) => x.pedidos >= 30).map((x) => ({ ...x, v: x.atraso / x.pedidos })).sort((a, b) => b.v - a.v);
+    const faixa = (h) => `${h}h às ${(h + 1) % 24}h`;
+    const criticos = celulas.slice(0, 5);
+    const pior = criticos[0];
+    const cA = cardT("Quando o atraso acontece", `Para saber em que dias e horários reforçar a escala de entregadores. Atraso = mais de ${LIM} do chamado até a entrega. Só entram horários com 30 pedidos ou mais.`,
+      el("div", { class: "destaques" }, destaque(t.pedidos, "pedidos"), destaque(pc(t.atraso, t.pedidos), `passaram de ${LIM}`),
+        piorDia ? destaque(DIAS_LONGOS[piorDia.dia], `pior dia (${pc(piorDia.atraso, piorDia.pedidos)})`) : null),
+      pior ? leitura(`O pior horário é ${DIAS_LONGOS[pior.dia]}, das ${faixa(pior.hora)}: ${pc(pior.atraso, pior.pedidos)} dos pedidos passam de ${LIM}, contra ${pc(t.atraso, t.pedidos)} na média. Comece reforçando a escala nos horários abaixo.`) : null,
+      el("h4", { text: "Os 5 horários mais críticos" }),
+      ...linhasNivel(criticos.map((x) => ({ rotulo: `${DIAS_LONGOS[x.dia]}, ${faixa(x.hora)}`, v: x.v, extra: `${pc(x.atraso, x.pedidos)} · ${x.atraso} de ${x.pedidos}` })), media, "Sem horários com pedidos suficientes."),
       el("h4", { text: "Por dia da semana" }),
-      ...barras(porDia.map((x) => ({ rotulo: DIAS_LONGOS[x.dia], qtd: x.v, extra: `${pc(x.acima45, x.pedidos)} · ${x.acima45} de ${x.pedidos}` })), "var(--bad)", "Sem pedidos suficientes."));
+      ...linhasNivel(porDia.map((x) => ({ rotulo: DIAS_LONGOS[x.dia], v: x.v, extra: `${pc(x.atraso, x.pedidos)} · ${x.atraso} de ${x.pedidos}` })), media, "Sem pedidos suficientes."),
+      el("details", { class: "ped-mais" }, el("summary", { text: "Ver o mapa completo (dia da semana × hora)" }),
+        el("p", { class: "meta", text: "Quanto mais vermelho, maior a parte dos pedidos que passou do limite. Passe o mouse sobre um quadrinho para ver o número." }),
+        mapaPct(d.mapa, LIM)));
     largo(cA);
     // B. rota
     const soz = t.pedidos - ro.em_rota;
-    const rotaHora = ro.por_hora.filter((x) => x.pedidos >= 30);
+    const mediaRota = ro.em_rota ? ro.em_rota_atraso / ro.em_rota : 0;
+    const rotaHora = ro.por_hora.filter((x) => x.em_rota >= 30).map((x) => ({ ...x, v: x.em_rota_atraso / x.em_rota }));
+    const linhaRota = (x) => ({ rotulo: faixa(x.hora), v: x.v, extra: `${pc(x.em_rota_atraso, x.em_rota)} das rotas atrasam · ${pc(x.em_rota, x.pedidos)} saem em rota` });
     const cB = cardT("Rota com vários pedidos", "Quando o entregador sai da loja levando mais de um pedido (saíram com até 5 minutos de diferença). O último da rota naturalmente demora mais.",
       el("div", { class: "destaques" },
         destaque(pc(ro.em_rota, t.pedidos), "dos pedidos saem em rota"),
-        destaque(pc(ro.em_rota_acima45, ro.em_rota), "em rota passam de 45 min"),
-        destaque(pc(ro.sozinho_acima45, soz), "sozinho passam de 45 min"),
-        destaque(pc(ro.causa_rota, ro.acima45), "dos atrasos vieram de rota")),
+        destaque(pc(ro.em_rota_atraso, ro.em_rota), `em rota passam de ${LIM}`),
+        destaque(pc(ro.sozinho_atraso, soz), `sozinho passam de ${LIM}`),
+        destaque(pc(ro.causa_rota, ro.atraso), "dos atrasos vieram de rota")),
       el("div", { class: "destaques" }, destaque(minTxt(ro.media_cliente_rota), "da loja ao cliente em rota"), destaque(minTxt(ro.media_cliente_so), "da loja ao cliente sozinho")),
-      leitura(ro.em_rota && soz ? `Em rota, a chance de passar de 45 min é ${String(Math.round(((ro.em_rota_acima45 / ro.em_rota) / Math.max(0.0001, ro.sozinho_acima45 / soz)) * 10) / 10).replace(".", ",")} vezes maior do que saindo sozinho.` : "Sem dados de rota no período."),
-      el("h4", { text: "Em que horários os pedidos saem em rota" }),
-      ...barras(rotaHora.map((x) => ({ rotulo: x.hora + "h", qtd: x.em_rota / x.pedidos, extra: `${pc(x.em_rota, x.pedidos)} em rota · ${x.causa_rota} atrasos por rota` })), "var(--warn)", "Sem pedidos suficientes."));
+      leitura(ro.em_rota && soz && ro.sozinho_atraso ? `Em rota, a chance de passar de ${LIM} é ${String(Math.round(((ro.em_rota_atraso / ro.em_rota) / (ro.sozinho_atraso / soz)) * 10) / 10).replace(".", ",")} vezes maior do que saindo sozinho.` : "Sem dados de rota suficientes no período."),
+      el("h4", { text: "Horários em que a rota mais atrasa" }),
+      ...linhasNivel([...rotaHora].sort((a, b) => b.v - a.v).slice(0, 5).map(linhaRota), mediaRota, "Sem horários com rotas suficientes."),
+      rotaHora.length > 5 ? el("details", { class: "ped-mais" }, el("summary", { text: "Ver todos os horários" }), ...linhasNivel(rotaHora.map(linhaRota), mediaRota, "")) : null);
     // C. entregador
-    const entHora = en.por_hora.filter((x) => x.chegada15 + x.entrega35 > 0);
-    const cC = cardT("Atraso do entregador", "Os casos em que a demora foi do entregador: chegou na loja mais de 15 min depois de aceitar, ou levou mais de 35 min do aceite até entregar saindo sozinho.",
-      el("div", { class: "destaques" }, destaque(en.chegada15, "chegaram tarde na loja"), destaque(en.entrega35, "demoraram na entrega sozinhos")),
-      el("h4", { text: "Por hora" }),
-      ...barras(entHora.map((x) => ({ rotulo: x.hora + "h", qtd: x.chegada15 + x.entrega35, extra: `${x.chegada15} na loja · ${x.entrega35} na entrega` })), "var(--bad)", "Nenhum caso no período."),
+    const entHora = en.por_hora.filter((x) => x.pedidos >= 30).map((x) => ({ ...x, v: (x.chegada15 + x.entrega35) / x.pedidos }));
+    const mediaEnt = t.pedidos ? (en.chegada15 + en.entrega35) / t.pedidos : 0;
+    const linhaEnt = (x) => ({ rotulo: faixa(x.hora), v: x.v, extra: `${x.chegada15} até chegar na loja · ${x.entrega35} até entregar` });
+    const cC = cardT("Atraso do entregador", "Os casos em que a demora foi do entregador: levou mais de 15 min do aceite até chegar na loja, ou mais de 35 min do aceite até entregar saindo sozinho.",
+      el("div", { class: "destaques" }, destaque(en.chegada15, "demoraram até chegar na loja"), destaque(en.entrega35, "demoraram até entregar, saindo sozinhos")),
+      el("h4", { text: "Horários com mais casos" }),
+      el("p", { class: "meta", text: "A cor compara os casos com o número de pedidos de cada horário." }),
+      ...linhasNivel([...entHora].sort((a, b) => b.v - a.v).slice(0, 5).map(linhaEnt), mediaEnt, "Nenhum caso no período."),
+      entHora.length > 5 ? el("details", { class: "ped-mais" }, el("summary", { text: "Ver todos os horários" }), ...linhasNivel(entHora.map(linhaEnt), mediaEnt, "")) : null,
       el("h4", { text: "Quem mais repete" }),
       en.quem.length ? el("div", { class: "tablewrap" }, el("table", {},
-        el("thead", {}, el("tr", {}, ...["Entregador", "Casos", "Chegou tarde", "Demorou na entrega", "Restrições"].map((x) => el("th", { text: x })))),
+        el("thead", {}, el("tr", {}, ...["Entregador", "Casos", "Até chegar na loja", "Até entregar", "Restrições"].map((x) => el("th", { text: x })))),
         el("tbody", {}, en.quem.map((q) => el("tr", {},
           el("td", {}, el("button", { class: "btn link link-ficha", type: "button", onclick: () => App.abrirFicha?.(q.id) }, q.nome || q.id)),
           el("td", { text: String(q.casos) }), el("td", { text: String(q.chegada) }), el("td", { text: String(q.entrega) }), el("td", { text: String(q.restricoes) })))))) :
@@ -498,20 +528,21 @@
       tabelaLojas(top((l) => l.espera_media != null && l.n_espera >= 10, (a, b) => b.espera_media - a.espera_media), [
         ["Pedidos", (l) => String(l.pedidos)], ["Espera média", (l) => minTxt(l.espera_media)],
         ["Acima de 10 min", (l) => pc(l.espera10, l.n_espera)], ["Período anterior", (l) => tendencia(l.espera_media, l.antes?.espera_media)]]));
-    const cD3 = cardT("Lojas: pedidos acima de 45 min", "Do chamado até a entrega. A coluna “Por causa da loja” conta os que atrasaram pela espera na loja.",
-      tabelaLojas(top(() => true, (a, b) => b.acima45 / b.pedidos - a.acima45 / a.pedidos), [
-        ["Pedidos", (l) => String(l.pedidos)], ["Acima de 45 min", (l) => pc(l.acima45, l.pedidos)], ["Por causa da loja", (l) => String(l.causa_loja)],
-        ["Período anterior", (l) => (l.antes ? tendencia(100 * l.acima45 / l.pedidos, 100 * l.antes.acima45 / l.antes.pedidos) : "sem comparação")]]));
+    const cD3 = cardT(`Lojas: pedidos acima de ${LIM}`, `Do chamado até a entrega. “Esperaram na loja” conta os atrasados em que o entregador esperou mais de 10 min na loja, mesmo que o atraso tenha tido outra causa.`,
+      tabelaLojas(top(() => true, (a, b) => b.atraso / b.pedidos - a.atraso / a.pedidos), [
+        ["Pedidos", (l) => String(l.pedidos)], [`Acima de ${LIM}`, (l) => pc(l.atraso, l.pedidos)],
+        ["Esperaram na loja", (l) => (l.atraso ? `${l.espera_loja} de ${l.atraso} atrasados` : "—")],
+        ["Período anterior", (l) => (l.antes ? tendencia(100 * l.atraso / l.pedidos, 100 * l.antes.atraso / l.antes.pedidos) : "sem dados antes")]]));
     [cD1, cD2, cD3].forEach(largo);
-    // E. causas por semana
-    const CAUSAS = [["entregador", "Entregador", "var(--bad)"], ["rota", "Rota com vários pedidos", "var(--warn)"], ["aceite", "Ninguém aceitou", "var(--gray)"],
-      ["loja", "Espera na loja", "var(--accent)"], ["outras", "Várias pequenas", "var(--line-forte)"]];
-    const cE = cardT("De onde veio o atraso, por semana", "Cada pedido acima de 45 min entra na causa que mais pesou. Semanas de terça a segunda.",
+    // E. causas por semana (009z11: a causa é a etapa que mais passou do próprio limite)
+    const CAUSAS = [["entregador", "Entregador", "var(--bad)"], ["loja", "Espera na loja", "var(--ambar)"], ["aceite", "Demora para aceitar", "var(--accent)"],
+      ["rota", "Rota com vários pedidos", "var(--warn)"], ["outras", "Soma de pequenas demoras", "var(--gray)"]];
+    const cE = cardT("De onde veio o atraso, por semana", `Cada pedido acima de ${LIM} entra na etapa que mais passou do próprio limite. “Soma de pequenas demoras” = nenhuma etapa passou do limite, mas juntas passaram de ${LIM}. Semanas de terça a segunda.`,
       el("div", { class: "legend" }, CAUSAS.map(([, nome, cor]) => el("span", {}, el("i", { style: `background:${cor}` }), nome))),
       el("div", { class: "ped-semanas" }, d.causas_semana.map((w) => {
         const tot = CAUSAS.reduce((s, [k]) => s + w[k], 0);
         return el("div", { class: "ped-semana" },
-          el("div", { class: "ped-semana-rot" }, el("span", { text: `Semana de ${App.u.dia(w.semana)}` }), el("b", { text: `${w.acima45} de ${w.pedidos} (${pc(w.acima45, w.pedidos)})` })),
+          el("div", { class: "ped-semana-rot" }, el("span", { text: `Semana de ${App.u.dia(w.semana)}` }), el("b", { text: `${w.atraso} de ${w.pedidos} (${pc(w.atraso, w.pedidos)})` })),
           el("div", { class: "ped-pilha", role: "img", "aria-label": CAUSAS.map(([k, nome]) => `${nome}: ${w[k]}`).join(", ") },
             ...CAUSAS.filter(([k]) => w[k]).map(([k, nome, cor]) => el("span", { title: `${nome}: ${w[k]}`, style: `flex-grow:${w[k]};background:${cor}` }))),
           tot ? null : el("p", { class: "meta", text: "Nenhum atraso." }));

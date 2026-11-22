@@ -17,6 +17,7 @@ for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z8-pedidos-limpeza-por-semana.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z9-escolher-entregador-pedido.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z10-analises-pedidos.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z11-analises-atraso-30.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -257,6 +258,29 @@ await t("009z10: um dia incompleto (pedidos normais já apagados) não estraga o
   igual(antes.n, 2, "o resumo contou os 2 pedidos do dia");
   await db.query("select resumir_pedidos(now() - interval '45 days', now() - interval '25 days')");
   igual((await um("select sum(pedidos)::int n from pedidos_resumo where dia = (now() at time zone 'America/Sao_Paulo')::date - 30")).n, 2, "refazer com 1 pedido não troca o resumo de 2");
+});
+
+await t("009z11: a causa do atraso é a etapa que mais passou do próprio limite", async () => {
+  const c = async (...v) => (await um("select causa_atraso($1, $2, $3, $4, $5, $6) c", v)).c;
+  igual(await c(5, 20, 2, 25, 20, 2), "loja", "esperou 25 min na loja e saiu em rota: a loja pesou mais (15 além) que a rota (5 além)");
+  igual(await c(5, 20, 2, 12, 30, 2), "rota", "rota de 30 min da loja ao cliente pesa mais que 2 min além na loja");
+  igual(await c(20, 30, 2, 12, 10, 1), "entregador", "chegou 5 min além do limite");
+  igual(await c(10, 30, 8, 8, 12, 2), "outras", "nenhuma etapa passou do limite: soma de pequenas demoras");
+  igual(await c(null, null, 25, null, null, 1), "aceite", "25 min para alguém aceitar");
+});
+
+await t("009z11: as Análises contam atraso a partir de 30 min e deixam de fora o resumo antigo", async () => {
+  const r = await rpc(sup, "analise_pedidos", { p_dias: 60 });
+  igual(r.atraso_min, 30, "limite de 30 min");
+  const esperado = (await um("select count(*)::int n from pedidos_log where t_total > 30 and (chamado_em at time zone 'America/Sao_Paulo')::date between $1 and $2", [r.de, r.ate])).n;
+  verdade(r.totais.atraso >= 1 && r.totais.atraso <= esperado + 2, `atrasos ${r.totais.atraso} (no banco agora: ${esperado})`);
+  const soma = r.causas_semana.reduce((a, w) => a + w.entregador + w.loja + w.aceite + w.rota + w.outras, 0);
+  igual(soma, r.totais.atraso, "cada atraso entra numa causa só");
+  verdade(r.lojas.every((l) => "espera_loja" in l && "atraso" in l), "lojas com atrasos e espera na loja");
+  await db.query("update pedidos_resumo set atraso_min = null where dia = $1", [r.ate]);
+  const r2 = await rpc(sup, "analise_pedidos", { p_dias: 60 });
+  verdade(r2.antigos === true && (r2.vazio || r2.ate < r.ate), "o dia sem as contas novas fica de fora e o aviso de reenviar aparece");
+  await db.query("select resumir_pedidos(now() - interval '60 days', now())");
 });
 
 await t("Não guarda CPF escrito no motivo", async () => {

@@ -76,6 +76,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z7-guarda-7-dias.sql
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z8-pedidos-limpeza-por-semana.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z9-escolher-entregador-pedido.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z10-analises-pedidos.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z11-analises-atraso-30.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -134,7 +135,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009z10"); localStorage.setItem("comunique-tour", "009z10"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009z11"); localStorage.setItem("comunique-tour", "009z11"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -1034,10 +1035,15 @@ try {
     ok(await esperar(s, "#ap-cards .ped-an h3:has-text('Quando o atraso acontece') .tag-tableau"), "009z10: a aba Pedidos das Análises abre com o card do mapa, marcado Tableau");
     const titulos = await s.$$eval("#ap-cards .ped-an h3", (l) => l.map((x) => x.firstChild.textContent.trim()));
     ok(["Quando o atraso acontece", "Rota com vários pedidos", "Atraso do entregador", "Lojas: preparo longo", "Lojas: espera na loja",
-        "Lojas: pedidos acima de 45 min", "De onde veio o atraso, por semana"].every((t) => titulos.includes(t))
+        "Lojas: pedidos acima de 30 min", "De onde veio o atraso, por semana"].every((t) => titulos.includes(t))
       && (await s.$$("#ap-cards .tag-tableau")).length === titulos.length, "009z10: os 7 cards, todos com o marcador Tableau: " + titulos.join(" | "));
     ok(await s.isVisible("#ap-cards .ped-an:has-text('Atraso do entregador') >> text=Rafa Teste Pedidos"), "009z10: quem mais repete mostra o entregador do pedido que precisou de atenção");
     ok(!/\bnull\b|undefined|NaN/.test(await texto(s, "#v-an-pedidos")), "009z10: nada de null/undefined/NaN nas análises dos pedidos");
+    ok(await s.isVisible("#ap-cards .ped-an:has-text('Quando o atraso acontece') >> text=Os 5 horários mais críticos")
+      && !(await s.isVisible("#ap-cards details.ped-mais .calor"))
+      && await s.isVisible("#ap-cards .ped-an:has-text('Quando o atraso acontece') >> text=Sem horários com pedidos suficientes."), "009z11: horários críticos (aqui sem 30 pedidos por horário, então a frase de vazio); o mapa completo fica fechado");
+    ok(await s.isVisible("#ap-cards .ped-an:has-text('Atraso do entregador') >> text=demoraram até chegar na loja")
+      && await s.isVisible("#ap-cards >> text=Soma de pequenas demoras"), "009z11: rótulos novos (até chegar na loja, soma de pequenas demoras)");
     await s.screenshot({ path: path.join(PRINTS, "e6-analises-pedidos.png"), fullPage: true });
     await s.click("#ap-cards .ped-lojas button:has-text('Loja do Teste')").catch(() => {});
   }
@@ -1047,22 +1053,22 @@ try {
     await d7.query("select importar_bloqueio('rev00002', 'Nome Velho', 'ITABAIANA - SE', 'Avaria de Produto', now() - interval '120 days', 'Planilha', 'Nome diferente na planilha', '24')");
     await d7.end(); }
   const n7 = await abrir(sup, "#inicio", { novidades: true });
-  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Veja quando e por que os pedidos atrasam"), "janela O que há de novo aparece na primeira vez");
+  ok(await esperar(n7, "dialog.janela >> text=O que há de novo") && await n7.isVisible("dialog.janela >> text=Veja os atrasos a partir de 30 minutos"), "janela O que há de novo aparece na primeira vez");
   // 009y1 (A15-06): só a versão nova aberta; as anteriores recolhidas
   ok(!(await n7.isVisible("dialog.janela >> text=Sino com tira")) && await n7.isVisible("dialog.janela details.versoes-antigas > summary")
       && await n7.isVisible("dialog.janela .mostrar-onde"), "009y1: a janela mostra só a versão nova, com Mostrar onde; as anteriores ficam recolhidas");
   { const hs = await n7.$$eval("dialog.janela .bloco-versao h4", (l) => l.map((x) => x.textContent));
-    ok(hs.length === 38 && hs[0] === "Agora: Análises dos pedidos" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
+    ok(hs.length === 39 && hs[0] === "Agora: Atraso a partir de 30 min" && hs.includes("Tela inicial mais limpa") && hs.includes("Extensão do Comunique") && !(await texto(n7, "dialog.janela")).match(/\b00[89][a-z0-9]*\b/), "009u: as novidades de todas as versões aparecem juntas, da mais nova para a mais antiga, sem os códigos internos: " + hs.slice(0, 3)); }
   await n7.screenshot({ path: path.join(PRINTS, "f1-novidades.png") });
   await n7.click("dialog.janela >> text=Entendi");
   // 009n: depois da janela, o tour aponta para o que mudou
-  ok(await esperar(n7, "#tour-passo:popover-open >> text=Veja quando e por que os pedidos atrasam") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
+  ok(await esperar(n7, "#tour-passo:popover-open >> text=Veja os atrasos a partir de 30 minutos") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
       && (await n7.getAttribute("#tour-passo", "role")) === "dialog", "009n: tour das novidades abre no 1º passo, com o foco dentro do balão");
   await n7.screenshot({ path: path.join(PRINTS, "f1b-tour.png") });
   // 009z6: a versão tem um passo só (os itens com "Mostrar onde"); o tour termina nele
   ok(!(await n7.isVisible("#tour-passo >> text=Próximo")), "009n: o tour tem só os passos da versão nova (009y1: saem dos itens da versão)");
   await n7.click("#tour-passo >> text=Entendi");
-  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z10"), "009n: “Entendi” fecha o tour e ele não volta");
+  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z11"), "009n: “Entendi” fecha o tour e ele não volta");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
   ok(!(await n7.isVisible("dialog.janela")), "e não aparece de novo" + ((await n7.isVisible("dialog.janela")) ? ": " + (await n7.textContent("dialog.janela[open]").catch(() => "?")) : ""));
   // suporte envia sem nome: marca revisar e tarefa para o admin (opcional para os outros)
