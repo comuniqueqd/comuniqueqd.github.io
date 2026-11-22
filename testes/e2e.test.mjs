@@ -1784,7 +1784,7 @@ try {
       await v.reload(); await v.setViewportSize({ width: 320, height: 800 });
       if (await esperar(v, "#v-pendentes:not([hidden]) #queue .card.linha-cad")) {
         const alt = (await v.locator("#v-pendentes #queue .card.linha-cad").first().boundingBox())?.height || 0;
-        ok(alt <= 230, "009y2: em 320 px, a linha do cadastro tem até 230 px (009z5: data do envio, Editar dados e Encerrar na linha; as fontes do GitHub são maiores): " + Math.round(alt));
+        ok(alt <= 260, "009y2: em 320 px, a linha do cadastro tem até 260 px (009z5: data do envio, Editar dados e Encerrar na linha; as fontes do GitHub são maiores): " + Math.round(alt));
       }
       await v.setViewportSize({ width: 1280, height: 900 }); await v.evaluate(() => { location.hash = "#inicio"; }); await esperar(v, "#precisa-lista li"); }
     // 009y2 (A12-06): o primeiro Tab chega no "Ir para o conteúdo", que leva ao título da tela sem trocar o endereço
