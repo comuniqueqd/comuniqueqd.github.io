@@ -1214,6 +1214,7 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; gap:
 .ped-barra-rotulos { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 12px; color: var(--muted); }
 .ped-barra-rotulos .estourou { color: var(--bad); font-weight: 700; }
 .ped-barra-rotulos .ped-total { margin-left: auto; color: var(--ink); }
+.ped-barra-rotulos .ped-total.estourou { color: var(--bad); }
 .ped-sugestao { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 14px; border-top: 1px solid var(--line); padding-top: 8px; }
 .ped-sugestao .rot { font-size: 12px; color: var(--muted); }
 .linha-ped .actions { align-items: center; }

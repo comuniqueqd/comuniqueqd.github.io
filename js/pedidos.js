@@ -265,7 +265,10 @@
         ...passos.map(([n, v, c]) => el("span", { class: "seg " + c, style: `flex-grow:${Math.max(Number(v), soma * 0.03)}` }))),
       el("div", { class: "ped-barra-rotulos" },
         ...passos.map(([n, v, c]) => el("span", { class: c === "estourou" ? "estourou" : "" }, `${n} ${min(v)}`)),
-        el("b", { class: "ped-total", text: `Total ${min(total)}` })));
+        // 009z14b: passou do limite (chamado → entrega) = total em vermelho, com o texto (cor nunca sozinha)
+        Number(p.t_total) > limiteTotal()
+          ? el("b", { class: "ped-total estourou", text: `Total ${min(total)} · acima de ${limiteTotal()} min` })
+          : el("b", { class: "ped-total", text: `Total ${min(total)}` })));
   }
   function sugestao(p) {
     const B = App.bloqueios, g = p.sugestao;
