@@ -118,14 +118,16 @@
   campo.placeholder = "Buscar ID ou nome (Ctrl+K)";
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009z13";
+  const VERSAO = "009z14";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
-    { versao: "009z13", tema: "A rota, o bairro e quem parou de chamar", itens: [
+    { versao: "009z14", tema: "A rota, o bairro e quem parou de chamar", itens: [
       ["Veja quem saiu junto no mesmo pedido", "No Monitoramento, o cartão do pedido que saiu em rota tem “Ver a rota”: os outros pedidos, na ordem da entrega, com o bairro e o horário.", 'nav.modulos a[data-mod="monitoramento"]'],
       ["Saiba o bairro de cada entrega", "O cartão do pedido mostra cidade, bairro e loja, e as Análises dos pedidos ganharam o card dos bairros onde a entrega mais demora."],
-      ["Descubra quem parou de chamar", "Em Parceiros, a aba Sem chamar mostra as lojas que pararam ou estão chamando menos e os parceiros ativados que ainda não chamaram, com Criar tarefa de contato e Registrar acordo.", 'nav.modulos a[data-mod="parceiros"]'],
+      ["Descubra quem parou de chamar", "No Monitoramento, a aba Sem chamar mostra as lojas que pararam ou estão chamando menos e os parceiros ativados que ainda não chamaram, com Criar tarefa de contato e Registrar acordo.", 'nav.modulos a[data-mod="monitoramento"]'],
+      ["Veja os pedidos acima de 35 minutos", "O Monitoramento agora avisa os pedidos que passam de 35 min do chamado até a entrega (antes eram 45)."],
+      ["Veja os parceiros num lugar só", "Em Parceiros, a aba Parceiros ativos juntou o que era Ativações: o resumo da semana e as cidades no topo, a lista embaixo e o histórico por dia no fim."],
     ] },
     { versao: "009z12", tema: "Missão da equipe", itens: [
       ["Crie missões para a equipe toda", "Aprovar entregadores ou parceiros pedida para todos vira missão da equipe: todos participam, contam as aprovações de qualquer pessoa na cidade e ela fecha sozinha ao bater a meta. Pedida para pessoas escolhidas, continua só delas.", 'nav.modulos a[data-mod="atividades"]'],

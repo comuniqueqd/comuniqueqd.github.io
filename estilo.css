@@ -1274,3 +1274,7 @@ details.ped-rota > summary { cursor: pointer; font-size: 14px; font-weight: 600;
 .sem-chamar-txt { flex: 1 1 260px; min-width: 0; }
 .sem-chamar-txt .tag { margin-left: 6px; }
 .sem-chamar-linha .actions { margin: 0; }
+
+/* 009z13b: o histórico das ativações, fechado no fim de Parceiros ativos */
+details.pa-hist-box { margin-top: 16px; }
+details.pa-hist-box > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--accent); }

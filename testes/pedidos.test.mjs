@@ -19,6 +19,7 @@ for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z10-analises-pedidos.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z11-analises-atraso-30.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z13-rota-e-bairro.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z14-limite-35.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -326,6 +327,18 @@ await t("009z13: Sem chamar separa quem parou, quem está chamando menos e o par
   igual(s.menos.map((x) => x.loja), ["Loja Fraca"], "chamando menos");
   igual(s.sem_pedido.map((x) => x.estabelecimento), ["Padaria Nova"], "ativado que ainda não chamou");
   verdade(!s.parou.concat(s.menos).some((x) => x.loja === "Loja Viva"), "a loja que chama todo dia não aparece");
+});
+
+await t("009z14: o Monitoramento avisa a partir de 35 min (um pedido de 40 min vira sinal)", async () => {
+  igual(Number((await rpc(sup, "regras_pedidos")).total_min), 35, "limite de 35 min");
+  const d2 = (await um("select to_char((now() at time zone 'America/Sao_Paulo')::date - 1, 'YYYY-MM-DD') d")).d;
+  const h2 = (min) => new Date(new Date(`${d2}T18:00:00-03:00`).getTime() + min * 60000).toISOString();
+  await rpc(mod, "importar_pedidos", { p_itens: [{ entrega_id: "limite35ped1", codigo: "LIM035", cidade: "LAGARTO - SE", loja: "Loja Teste",
+    chamado_em: h2(0), aceite_em: h2(1), chegou_em: h2(6), saiu_em: h2(8), entregue_em: h2(40), finalizado_em: h2(41),
+    entregador_nome: "Lia Limite", entregador_id: "lia0035", entregador_situacao: "ok", entregador_opcoes: [] }] });
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d2}T00:00:00-03:00`, p_ate: `${d2}T23:59:59-03:00` });
+  const p = await um("select sinal_total, tem_sinal from pedidos_log where entrega_id = 'limite35ped1'");
+  igual([p.sinal_total, p.tem_sinal], [true, true], "40 min passa do limite de 35");
 });
 
 await t("Não guarda CPF escrito no motivo", async () => {

@@ -396,13 +396,15 @@
       ...acoes(p));
   }
 
+  // 009z14: o limite do total vem do banco (parametros_pedidos.total_min; 35 desde a 009z14)
+  const limiteTotal = () => Number(P.dados?.regras?.total_min || 35);
   // os quatro números do topo, como no desenho
   function numeros() {
     const n = P.dados?.numeros, box = $("#ped-numeros");
     if (!n) return box.replaceChildren();
     const de = (v) => (n.pedidos ? `de ${n.pedidos.toLocaleString("pt-BR")} pedidos (${((100 * v) / n.pedidos).toFixed(1).replace(".", ",")}%)` : "");
     const q = (k, v, sub) => el("div", { class: "tile ped-numero" }, el("div", { class: "k", text: k }), el("div", { class: "v", text: v.toLocaleString("pt-BR") }), el("div", { class: "meta", text: sub }));
-    box.replaceChildren(q("Chegada na loja acima de 15 min", n.chegada, de(n.chegada)), q("Pedidos acima de 45 min", n.total, de(n.total)),
+    box.replaceChildren(q("Chegada na loja acima de 15 min", n.chegada, de(n.chegada)), q(`Pedidos acima de ${limiteTotal()} min`, n.total, de(n.total)),
       q("A demora não foi do entregador", n.loja, "rota, espera na loja ou ninguém aceitou"),
       el("div", { class: "tile ped-numero" }, el("div", { class: "k", text: "Decisões" }),
         el("div", { class: "v" }, String(n.confirmados), el("small", { text: n.confirmados === 1 ? " confirmada" : " confirmadas" })),
@@ -416,7 +418,7 @@
       el("div", { class: "k", text: rot }), el("div", { class: "v", text: v ?? "…" }));
     const t = d?.tipos || {}, s = d?.situacoes || {};
     $("#ped-tipos").replaceChildren(botao("tipo", "atrasos", "Todos", t.atrasos), botao("tipo", "chegada", "Chegada na loja > 15 min", t.chegada),
-      botao("tipo", "total", "Acima de 45 min", t.total), botao("tipo", "loja", "A demora não foi do entregador", t.loja),
+      botao("tipo", "total", `Acima de ${limiteTotal()} min`, t.total), botao("tipo", "loja", "A demora não foi do entregador", t.loja),
       botao("tipo", "finalizacao", "Finalização tardia", t.finalizacao));
     $("#ped-situacoes").replaceChildren(botao("situacao", "a_decidir", "A decidir", s.a_decidir, s.a_decidir ? "hl" : ""),
       botao("situacao", "restricao", "Viraram restrição", s.restricao), botao("situacao", "descartado", "Descartados", s.descartado),
@@ -569,13 +571,15 @@
     id: "monitoramento", nome: "Monitoramento",
     acesso: () => !!papel(),
     abas: [{ id: "pedidos", nome: "Pedidos fora do limite", secao: "v-bq-pedidos" },
+           { id: "sem-chamar", nome: "Sem chamar", secao: "v-pa-sem" },   // 009z13b: veio de Parceiros
            { id: "enviar", nome: "Enviar dados", secao: "v-mon-enviar", pode: mod }],   // 009z6e: o envio saiu de cima da lista
     padrao: () => "pedidos",
     async carregar(aba) {
       if (aba === "enviar") return;
+      if (aba === "sem-chamar") return App.semChamar?.carregar();
       const B = App.bloqueios?.B;   // as cidades da janela de confirmar vêm das regras das Restrições
       await Promise.all([carregar(), B && !B.regras ? rpc("regras_bloqueio").then((d) => { B.regras = d; B.regrasEm = Date.now(); }) : null]);
     },
-    render(aba) { if (aba === "enviar") renderImportar(); else render(); },
+    render(aba) { if (aba === "enviar") renderImportar(); else if (aba === "sem-chamar") App.semChamar?.render(); else render(); },
   });
 })();

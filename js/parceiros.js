@@ -32,7 +32,6 @@
       await App.carregar();
     } catch (e) { erro.textContent = msgErro(e); erro.hidden = false; } finally { b.disabled = false; }
   });
-  $("#pa-hist-cidade").addEventListener("change", () => App.render());
   let busca = null;
   $("#pa-busca").addEventListener("input", () => { clearTimeout(busca); busca = setTimeout(() => App.carregar(), 350); });
   for (const id of ["#pa-filtro-cidade", "#pa-meus"]) $(id).addEventListener("change", () => App.carregar());
@@ -97,15 +96,14 @@
     sel.replaceChildren(el("option", { value: "", text: "Todas as cidades" }), ...d.por_cidade.map((c) => el("option", { value: c.cidade, text: `${c.cidade} (${c.n})` })));
     if (atual && !d.por_cidade.some((c) => c.cidade === atual)) sel.append(el("option", { value: atual, text: atual }));
     sel.value = atual;
-    box.replaceChildren(el("p", { class: "meta", text: `${d.total} parceiro(s) ativo(s) · você ativou ${d.meus_30d} nos últimos 30 dias` }),
+    box.replaceChildren(el("p", { class: "meta", text: `${d.total} ${d.total === 1 ? "parceiro ativo" : "parceiros ativos"} · você ativou ${d.meus_30d} nos últimos 30 dias` }),
       d.itens.length ? el("ul", { class: "parceiros-lista" }, d.itens.map(linha)) : vazio("Nenhum parceiro aqui", "Use “Ativar parceiro” para registrar um."));
+    renderCidades();   // 009z13b: a antiga aba Ativações agora fica no topo desta
   }
   // histórico das ativações: quem ativou qual parceiro, onde e quando, agrupado por dia
   function renderHistorico() {
     const box = $("#pa-historico");
-    const sel = $("#pa-hist-cidade"), atual = sel.value;
-    sel.replaceChildren(el("option", { value: "", text: "Todas as cidades" }), ...(P.cidades || []).map((c) => el("option", { value: c.cidade, text: c.cidade })));
-    sel.value = atual;
+    const sel = $("#pa-filtro-cidade");   // 009z13b: o mesmo filtro de cidade da lista
     if (!P.historico) { $("#pa-semana").replaceChildren(el("div", { class: "pa-semana-reserva", "aria-hidden": "true" })); return box.replaceChildren(carregandoEl()); }
     const lista = P.historico.filter((p) => !sel.value || p.cidade === sel.value);
     $("#pa-semana").replaceChildren(blocoSemana(resumoSemana(lista, sel.value || null)));
@@ -131,7 +129,7 @@
     if (!P.cidades.length) return box.replaceChildren(vazio("Nenhum parceiro ainda", "Quando alguém ativar um parceiro, a cidade aparece aqui."));
     const { ini, iniAnt } = semanas();
     const semanaDe = (cidade) => { const d = (P.historico || []).filter((p) => p.cidade === cidade).map((p) => diaBr(p.criado_em)); return [d.filter((x) => x >= ini).length, d.filter((x) => x >= iniAnt && x < ini).length]; };
-    const ver = (cidade) => { $("#pa-filtro-cidade").replaceChildren(el("option", { value: cidade, text: cidade })); $("#pa-filtro-cidade").value = cidade; location.hash = "#parceiros/lista"; };
+    const ver = (cidade) => { const f = $("#pa-filtro-cidade"); if (![...f.options].some((o) => o.value === cidade)) f.append(el("option", { value: cidade, text: cidade })); f.value = cidade; App.carregar(); App.u.rolar?.($("#pa-busca")); };
     box.replaceChildren(el("div", { class: "pa-cidades" }, P.cidades.map((c) => el("article", { class: "panel pa-cidade" },
       el("div", { class: "inicio-topo" }, el("h3", { style: "margin:0", text: c.cidade }),
         el("button", { class: "btn small", type: "button", onclick: () => ver(c.cidade) }, "Ver parceiros")),
@@ -216,24 +214,24 @@
         "Todos os parceiros ativados já chamaram."));
   }
   $("#pa-sem-cidade")?.addEventListener("change", () => renderSemChamar());
+  // 009z13b (pedido do usuário): a aba Sem chamar mora no Monitoramento (js/pedidos.js usa isto)
+  App.semChamar = { carregar: async () => { P.sem = await rpc("parceiros_sem_chamar", {}); }, render: renderSemChamar };
 
   App.modulo({
     id: "parceiros", nome: "Parceiros",
     abas: [
       { id: "novo", nome: "Ativar parceiro", secao: "v-pa-novo" },
       { id: "lista", nome: "Parceiros ativos", secao: "v-pa-lista" },
-      { id: "cidades", nome: "Ativações", secao: "v-pa-cidades" },
-      { id: "sem-chamar", nome: "Sem chamar", secao: "v-pa-sem" },   // 009z13
     ],
     padrao: () => "novo",
     async carregar(aba) {
       try {
-        if (aba === "sem-chamar") P.sem = await rpc("parceiros_sem_chamar", {});
-        else if (aba === "lista") P.lista = await rpc("listar_parceiros", { p_busca: $("#pa-busca").value.trim() || null, p_cidade: $("#pa-filtro-cidade").value || null, p_meus: $("#pa-meus").checked });
-        else if (aba === "cidades") {
-          // todas as ativações (o filtro de cidade é aplicado aqui no navegador: resumo e histórico)
-          const [c, todos] = await Promise.all([rpc("parceiros_por_cidade"), rpc("listar_parceiros", { p_limite: 2000 })]);
-          P.cidades = c; P.historico = todos.itens;
+        if (aba === "lista") {
+          // 009z13b: a lista + o que era a aba Ativações (resumo da semana, cidades e histórico; estes a cada 5 min)
+          const velho = !P.cidadesEm || Date.now() - P.cidadesEm > 300000;
+          const [l, c, todos] = await Promise.all([rpc("listar_parceiros", { p_busca: $("#pa-busca").value.trim() || null, p_cidade: $("#pa-filtro-cidade").value || null, p_meus: $("#pa-meus").checked }),
+            velho ? rpc("parceiros_por_cidade") : P.cidades, velho ? rpc("listar_parceiros", { p_limite: 2000 }).then((x) => x.itens) : P.historico]);
+          P.lista = l; P.cidades = c; P.historico = todos; if (velho) P.cidadesEm = Date.now();
         }
         else {
           const [l, t] = await Promise.all([rpc("listar_parceiros", { p_meus: true, p_limite: 8 }), (App.listarAtividades ? App.listarAtividades(0) : rpc("listar_atividades"))]);
@@ -243,7 +241,7 @@
         P.erro = null;
       } catch (e) { P.erro = msgErro(e); throw e; }
     },
-    render: (aba) => (aba === "sem-chamar" ? renderSemChamar() : aba === "lista" ? renderLista() : aba === "cidades" ? renderCidades() : renderNovo()),
+    render: (aba) => (aba === "lista" ? renderLista() : renderNovo()),
   });
 
   // ---------- Notícias rápidas (tela inicial) ----------

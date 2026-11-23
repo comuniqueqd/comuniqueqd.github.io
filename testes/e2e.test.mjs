@@ -79,6 +79,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z10-analises-pedidos
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z11-analises-atraso-30.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z12-missao-da-equipe.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z13-rota-e-bairro.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z14-limite-35.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -137,7 +138,7 @@ async function abrir(p, hash = "", { googleId = null, novidades = false } = {}) 
   await c.route("https://cdn.jsdelivr.net/**", (r) => r.fulfill({ contentType: "text/javascript", headers: { "Access-Control-Allow-Origin": "*" }, body: fs.readFileSync(path.join(UMD, r.request().url().split("/").pop())) }));
   await c.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" }));
   // a janela "O que há de novo" só aparece quando o teste pede (senão cobriria a tela nos outros passos)
-  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009z13"); localStorage.setItem("comunique-tour", "009z13"); } catch (_) {} });
+  if (!novidades) await c.addInitScript(() => { try { localStorage.setItem("comunique-novidades", "009z14"); localStorage.setItem("comunique-tour", "009z14"); } catch (_) {} });
   // Trusted Types (009j): o Playwright usa eval nas esperas (waitForFunction); a política "default" libera só isso.
   // innerHTML/outerHTML com texto continuam recusados (a política não tem createHTML).
   await c.addInitScript(() => { try { window.trustedTypes?.createPolicy("default", { createScript: (x) => x }); } catch (_) {} });
@@ -992,6 +993,7 @@ try {
     ok((await a.$$("#ped-lista .linha-ped")).length === 2, "009z6: só os 2 atrasos (o pedido dentro do limite não aparece)");
     await ir(s, "#monitoramento/pedidos"); await s.reload();
     ok(await esperar(s, "#ped-lista .linha-ped:has-text('PED001')") && !(await s.isVisible('nav.tabs a[href="#monitoramento/enviar"]')), "009z6: o suporte vê a lista, sem a aba de envio");
+    ok(await s.isVisible("#ped-tipos >> text=Acima de 35 min") && (await texto(s, "#ped-numeros")).includes("Pedidos acima de 35 min"), "009z14: o limite do total na tela vem do banco (35 min)");
     ok(await s.isVisible("#ped-lista .linha-ped:has-text('PED001') >> text=Chegada na loja: 19 min")
       && await s.isVisible("#ped-lista .linha-ped:has-text('PED001') >> text=Levou 19 min para chegar na loja depois de aceitar.")
       && await s.isVisible("#ped-lista .linha-ped:has-text('PED001') .ped-barra .seg.estourou")
@@ -1061,7 +1063,8 @@ try {
       && await s.isVisible("#ap-cards .ped-an:has-text('Quando o atraso acontece') >> text=Sem horários com pedidos suficientes."), "009z11: horários críticos (aqui sem 30 pedidos por horário, então a frase de vazio); o mapa completo fica fechado");
     ok(await s.isVisible("#ap-cards .ped-an:has-text('Atraso do entregador') >> text=demoraram até chegar na loja")
       && await s.isVisible("#ap-cards >> text=Soma de pequenas demoras"), "009z11: rótulos novos (até chegar na loja, soma de pequenas demoras)");
-    await ir(s, "#parceiros/sem-chamar"); await s.reload();
+    await ir(s, "#parceiros/sem-chamar"); await s.reload();   // endereço antigo: leva ao Monitoramento
+    ok(await esperar(s, 'nav.tabs a[href="#monitoramento/sem-chamar"][aria-current="page"]'), "009z13b: Sem chamar é uma aba do Monitoramento");
     ok(await esperar(s, "#v-pa-sem:not([hidden]) h3:has-text('Parou de chamar')") && await s.isVisible("#v-pa-sem h3:has-text('Chamando menos')")
       && await s.isVisible("#v-pa-sem h3:has-text('Ativados que ainda não chamaram')"), "009z13: Parceiros → Sem chamar com os três grupos");
     ok(!/\bnull\b|undefined|NaN/.test(await texto(s, "#v-pa-sem")), "009z13: nada de null/undefined/NaN em Sem chamar");
@@ -1091,7 +1094,7 @@ try {
   await n7.click("#tour-passo >> text=Próximo");
   ok(await esperar(n7, "#tour-passo:popover-open >> text=Descubra quem parou de chamar") && !(await n7.isVisible("#tour-passo >> text=Próximo")), "009z13: o 2º passo é o de Parceiros, e o tour termina nele");
   await n7.click("#tour-passo >> text=Entendi");
-  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z13"), "009n: “Entendi” fecha o tour e ele não volta");
+  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z14"), "009n: “Entendi” fecha o tour e ele não volta");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
   ok(!(await n7.isVisible("dialog.janela")), "e não aparece de novo" + ((await n7.isVisible("dialog.janela")) ? ": " + (await n7.textContent("dialog.janela[open]").catch(() => "?")) : ""));
   // suporte envia sem nome: marca revisar e tarefa para o admin (opcional para os outros)
@@ -1630,7 +1633,10 @@ try {
   await ir(s8, "#parceiros/cidades"); await s8.reload();
   ok(await esperar(s8, "#pa-semana #pa-resumo >> text=1 ativado nesta semana") && await s8.isVisible("#pa-resumo >> text=na semana passada"), "Ativações: esta semana comparada à passada");
   ok(await esperar(s8, "#pa-por-cidade .pa-cidade:has-text('LAGARTO - SE') >> text=ativos") && await s8.isVisible("#pa-por-cidade >> text=Quem mais ativou aqui"), "Ativações: resumo de cada cidade");
-  ok(await esperar(s8, "#pa-historico .pa-hist-frase >> text=Você ativou Padaria Sol em LAGARTO - SE!") && await s8.isVisible("nav.tabs a:has-text('Ativações')"), "Ativações: histórico com a frase de quem ativou o quê");
+  ok(await s8.isVisible("#v-pa-lista:not([hidden]) #pa-semana") && await s8.isVisible("#v-pa-lista #pa-lista .parceiro >> text=Padaria Sol")
+    && !(await s8.isVisible("nav.tabs a:has-text('Ativações')")) && !(await s8.isVisible("nav.tabs a:has-text('Sem chamar')")), "009z13b: Ativações entrou em Parceiros ativos (o endereço antigo leva até lá) e Sem chamar saiu de Parceiros");
+  await s8.click("#v-pa-lista details.pa-hist-box summary");
+  ok(await esperar(s8, "#pa-historico .pa-hist-frase >> text=Você ativou Padaria Sol em LAGARTO - SE!"), "Ativações: histórico com a frase de quem ativou o quê");
   await s8.screenshot({ path: path.join(PRINTS, "o6-ativacoes.png"), fullPage: true });
   await s8.screenshot({ path: path.join(PRINTS, "o3-parceiros-cidade.png"), fullPage: true });
   await ir(a8, "#inicio"); await a8.evaluate(() => App.carregar());
