@@ -21,6 +21,7 @@ for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z13-rota-e-bairro.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z14-limite-35.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z15-limite-30.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z16-reenvio-que-vale.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -364,6 +365,30 @@ await t("009z15: o Monitoramento avisa a partir de 30 min; para o entregador, 30
   await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d2}T00:00:00-03:00`, p_ate: `${d2}T23:59:59-03:00` });
   const q = await um("select sinal_total, causa from pedidos_log where entrega_id = 'limite30ped1'");
   igual([q.sinal_total, q.causa], [true, "entregador"], "33 min (32 em tela, sozinho) = atraso do entregador");
+});
+
+await t("009z16: reenvio do dia inteiro com uns poucos pedidos a menos refaz o resumo; envio parcial não", async () => {
+  const d = (await um("select to_char((now() at time zone 'America/Sao_Paulo')::date - 15, 'YYYY-MM-DD') d")).d;
+  const hd = (min) => new Date(new Date(`${d}T10:00:00-03:00`).getTime() + min * 60000).toISOString();
+  const rv = (i, bairro) => ({ entrega_id: `reenv${String(i).padStart(7, "0")}`, codigo: `RV${i}`, cidade: "LAGARTO - SE", loja: "Loja Reenvio", bairro,
+    chamado_em: hd(i * 20), aceite_em: hd(i * 20 + 1), chegou_em: hd(i * 20 + 4), saiu_em: hd(i * 20 + 6), entregue_em: hd(i * 20 + 15), finalizado_em: hd(i * 20 + 16),
+    entregador_nome: "Rita Reenvio", entregador_id: "rit0016", entregador_situacao: "ok", entregador_opcoes: [] });
+  const fecha = () => rpc(mod, "fechar_importacao_pedidos", { p_de: `${d}T00:00:00-03:00`, p_ate: `${d}T23:59:59-03:00` });
+  const resumo = async () => Number((await um("select coalesce(sum(pedidos), 0) n from pedidos_resumo where dia = $1 and cidade = 'LAGARTO - SE'", [d])).n);
+  const bairro = async () => Number((await um("select coalesce(sum(pedidos), 0) n from pedidos_resumo_bairro where dia = $1 and cidade = 'LAGARTO - SE'", [d])).n);
+  await rpc(mod, "importar_pedidos", { p_itens: Array.from({ length: 10 }, (_, i) => rv(i, null)) });
+  await fecha();
+  igual([await resumo(), await bairro()], [10, 0], "1º envio: 10 pedidos, sem bairro");
+  await db.query("update pedidos_log set importado_em = now() - interval '1 day' where entrega_id like 'reenv%'");
+  // reenvio do dia inteiro, agora com o bairro, mas o Tableau trouxe 9
+  await rpc(mod, "importar_pedidos", { p_itens: Array.from({ length: 9 }, (_, i) => rv(i, "Centro")) });
+  await fecha();
+  igual([await resumo(), await bairro()], [9, 9], "reenvio com 9 de 10 refaz o dia, com o bairro");
+  await db.query("update pedidos_log set importado_em = now() - interval '1 day' where entrega_id like 'reenv%'");
+  // envio parcial (3 pedidos) não estraga o resumo
+  await rpc(mod, "importar_pedidos", { p_itens: Array.from({ length: 3 }, (_, i) => rv(i, "Brejo")) });
+  await fecha();
+  igual(await resumo(), 9, "envio parcial não troca o resumo");
 });
 
 await t("Não guarda CPF escrito no motivo", async () => {
