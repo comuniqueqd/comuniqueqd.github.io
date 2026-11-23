@@ -1015,7 +1015,9 @@ try {
     await ir(s, "#monitoramento/pedidos"); await s.reload();
     ok(await esperar(s, "#ped-lista .linha-ped:has-text('PED001')") && !(await s.isVisible('nav.tabs a[href="#monitoramento/enviar"]')), "009z6: o suporte vê a lista, sem a aba de envio");
     ok(await s.isVisible("#ped-tipos >> text=Acima de 35 min") && (await texto(s, "#ped-numeros")).includes("Pedidos acima de 35 min"), "009z14: o limite do total na tela vem do banco (35 min)");
-    ok(await s.isVisible("#ped-lista .ped-total.estourou >> text=acima de 35 min"), "009z14b: o total que passou do limite fica em vermelho, com o texto");
+    ok(await s.isVisible("#ped-lista .ped-total .estourou")
+      && !(await s.$eval("#ped-lista .ped-total:has(.estourou)", (b) => { const c = b.cloneNode(true); c.querySelectorAll(".so-leitor").forEach((x) => x.remove()); return c.textContent; })).includes("acima de"),
+      "009z14d: o tempo do total acima de 30 min fica em vermelho, sem texto a mais na tela");
     ok(await s.isVisible("#ped-lista .linha-ped:has-text('PED001') >> text=Chegada na loja: 19 min")
       && await s.isVisible("#ped-lista .linha-ped:has-text('PED001') >> text=Levou 19 min para chegar na loja depois de aceitar.")
       && await s.isVisible("#ped-lista .linha-ped:has-text('PED001') .ped-barra .seg.estourou")

@@ -265,10 +265,8 @@
         ...passos.map(([n, v, c]) => el("span", { class: "seg " + c, style: `flex-grow:${Math.max(Number(v), soma * 0.03)}` }))),
       el("div", { class: "ped-barra-rotulos" },
         ...passos.map(([n, v, c]) => el("span", { class: c === "estourou" ? "estourou" : "" }, `${n} ${min(v)}`)),
-        // 009z14b: passou do limite (chamado → entrega) = total em vermelho, com o texto (cor nunca sozinha)
-        Number(p.t_total) > limiteTotal()
-          ? el("b", { class: "ped-total estourou", text: `Total ${min(total)} · acima de ${limiteTotal()} min` })
-          : el("b", { class: "ped-total", text: `Total ${min(total)}` })));
+        // 009z14d: passou de 30 min (chamado → entrega) = só o tempo em vermelho
+        el("b", { class: "ped-total" }, "Total ", tempoTotal(p.t_total, min(total)))));
   }
   function sugestao(p) {
     const B = App.bloqueios, g = p.sugestao;
@@ -373,9 +371,10 @@
           el("span", { class: "ped-rota-ordem", text: `${i + 1}º` }),
           el("span", { class: "ped-rota-txt" },
             el("b", { text: este ? "Este pedido" : x.codigo ? `Pedido ${x.codigo}` : "Pedido sem código" }),
-            [lojas.size > 1 ? x.loja : null, x.bairro, `entregue às ${horaTxt(x.entregue_em)}`, x.t_total != null ? `total ${Math.round(Number(x.t_total))} min` : null]
-              .filter(Boolean).map((t) => " · " + t).join(""),
-            x.sinal && !este ? el("span", { class: "pill bloqueado ped-rota-sinal", text: "passou do limite" }) : null),
+            [lojas.size > 1 ? x.loja : null, x.bairro, `entregue às ${horaTxt(x.entregue_em)}`, null].filter(Boolean).map((t) => " · " + t).join(""),
+            // 009z14d: sem a etiqueta "passou do limite" (juntava a chegada atrasada na loja com o total e confundia):
+            // o total acima de 30 min fica vermelho
+            x.t_total != null ? [" · total ", tempoTotal(x.t_total, `${Math.round(Number(x.t_total))} min`)] : null),
           !este && x.codigo ? copiarBtn(x.codigo, "Copiar", `Código ${x.codigo} copiado.`) : null);
       })),
       pos ? el("p", { class: "ped-rota-fim", text: `Este foi o ${pos}º de ${lista.length} entregas da rota.` }) : null);
@@ -401,6 +400,13 @@
 
   // 009z14: o limite do total vem do banco (parametros_pedidos.total_min; 35 desde a 009z14)
   const limiteTotal = () => Number(P.dados?.regras?.total_min || 35);
+  // 009z14d (pedido do usuário): o total fica vermelho a partir do atraso das Análises (analise_atraso_min, 30 min);
+  // só o número em vermelho, e o leitor de tela ouve o porquê
+  const limiteAtraso = () => Number(P.dados?.regras?.analise_atraso_min || 30);
+  function tempoTotal(t, txt) {
+    if (!(Number(t) > limiteAtraso())) return txt;
+    return el("span", { class: "estourou" }, txt, el("span", { class: "so-leitor", text: ` (acima de ${limiteAtraso()} min)` }));
+  }
   // os quatro números do topo, como no desenho
   function numeros() {
     const n = P.dados?.numeros, box = $("#ped-numeros");
