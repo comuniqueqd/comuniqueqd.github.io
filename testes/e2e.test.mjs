@@ -633,6 +633,27 @@ try {
   await s.click("#bq-consulta .ficha-topo .btn-copiar");
   ok(await esperar(s, "#bq-consulta .ficha-topo .copia-balao >> text=Copiado") && (await s.evaluate(() => navigator.clipboard.readText())) === "mal00001"
       && (await s.getAttribute("#bq-consulta .ficha-topo .btn-copiar", "aria-label")) === "Copiar ID mal00001", "copiar o ID da ficha: vai para a área de transferência e avisa “Copiado”");
+  // 009z14b: ID com nomes diferentes: o aviso amarelo abre a correção; "é a mesma pessoa" troca o nome nos registros
+  { const db = new pg.Client({ connectionString: DB }); await db.connect();
+    const [{ id: copia }] = (await db.query(`insert into bloqueios select (jsonb_populate_record(null::bloqueios, to_jsonb(b)
+        || jsonb_build_object('id', gen_random_uuid(), 'nome_entregador', 'Outro Nome Qualquer', 'inicio', b.inicio - interval '3 days', 'fim', b.fim - interval '3 days'))).*
+      from bloqueios b where id_app = 'mal00001' order by inicio limit 1 returning id`)).rows;
+    await ir(m, "#bloqueios/consultar");
+    await m.fill("#bq-q-consulta", "mal00001"); await m.click("#bq-f-consulta button[type=submit]");
+    ok(await esperar(m, "#bq-consulta button.alerta-revisar:has-text('Corrigir os registros')"), "009z14b: ID com 2 nomes: o aviso amarelo é um botão de correção");
+    await m.click("#bq-consulta button.alerta-revisar:has-text('Corrigir os registros')");
+    ok(await esperar(m, "dialog[open] >> text=Nomes diferentes neste ID") && await m.isVisible("dialog[open] h4:has-text('Outro Nome Qualquer')")
+      && await m.isVisible("dialog[open] .lista-nomes button:text-is('Corrigir')"), "009z14b: a janela agrupa os registros por nome, com Corrigir em cada um");
+    await m.click("dialog[open] button:has-text('É a mesma pessoa')");
+    ok(await esperar(m, "dialog[open] >> text=Informe o motivo."), "009z14b: “é a mesma pessoa” pede o motivo");
+    await m.fill("dialog[open] textarea", "Conferido no aplicativo: mesmo entregador.");
+    await m.click("dialog[open] button:has-text('É a mesma pessoa')");
+    ok(await esperar(m, "#toast:has-text('1 registro corrigido')"), "009z14b: o nome da ficha vai para o registro diferente");
+    const r = (await db.query("select nome_entregador nome from bloqueios where id = $1", [copia])).rows[0];
+    ok(r.nome !== "Outro Nome Qualquer", "009z14b: o registro ficou com o nome da ficha: " + r.nome);
+    ok(await m.locator("#bq-consulta .alerta-revisar.bloco").waitFor({ state: "detached", timeout: 8000 }).then(() => true, () => false), "009z14b: o aviso some depois da correção");
+    await db.query("delete from eventos_bloqueio where bloqueio_id = $1", [copia]).catch(() => {});
+    await db.query("delete from bloqueios where id = $1", [copia]); await db.end(); }
   // 008b: módulo Entregadores, cadastro avulso (sem ativação e sem bloqueio)
   ok(!(await s.isVisible("nav.grupo a[data-grupo-mod=entregadores]")), "009m: Cadastrar entregador saiu da barra de Entregadores (virou janela)");
   { const topo = await s.$$eval("nav.modulos a:not([hidden])", (as) => as.map((x) => x.textContent.trim()));

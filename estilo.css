@@ -1279,3 +1279,8 @@ details.ped-rota > summary { cursor: pointer; font-size: 14px; font-weight: 600;
 /* 009z13b: o histórico das ativações, fechado no fim de Parceiros ativos */
 details.pa-hist-box { margin-top: 16px; }
 details.pa-hist-box > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--accent); }
+
+/* 009z14b: janela "Nomes diferentes neste ID" */
+button.alerta-revisar.bloco { width: 100%; font-size: 13px; }
+.lista-nomes { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.lista-nomes li { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }

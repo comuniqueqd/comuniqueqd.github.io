@@ -223,6 +223,39 @@
         ev.length ? el("ol", { class: "timeline" }, ev.map((x) => el("li", {}, el("b", { text: dt(x.em) }), ` · ${EVB[x.tipo] || x.tipo}${x.por_nome ? " por " + x.por_nome : ""}${x.detalhe ? " · " + x.detalhe : ""}`))) : null].filter(Boolean));
     }).catch(() => contexto.replaceChildren());
   }
+  // 009z14b: ID com nomes diferentes nas restrições: corrigir cada registro ou, se for a mesma pessoa, usar o nome da ficha em todos
+  function abrirNomesDiferentes(f, seus) {
+    const grupos = new Map();
+    for (const b of seus) { const k = b.nome || "(sem nome)"; if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(b); }
+    const trocar = f.nome ? seus.filter((b) => podeCorrigir(b) && (b.nome || "").trim().toLowerCase() !== f.nome.trim().toLowerCase()) : [];
+    const mot = el("textarea", { maxlength: "300", rows: "2", "aria-label": "Motivo", placeholder: "Ex.: conferido no aplicativo: é o mesmo entregador, o nome estava escrito errado." });
+    const erro = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    async function mesmaPessoa(btn) {
+      erro.hidden = true;
+      if (!mot.value.trim()) { erro.textContent = "Informe o motivo."; erro.hidden = false; mot.focus(); return; }
+      btn.disabled = true;
+      try {
+        for (const b of trocar) await rpc("corrigir_bloqueio", { p_bloqueio: b.id, p_id_app: b.id_app, p_nome: f.nome, p_cidade: b.cidade, p_motivo: mot.value.trim() });
+        d.close();
+        toast(`${App.u.plural(trocar.length, "registro corrigido", "registros corrigidos")} com o nome ${f.nome}. A correção ficou no histórico.`);
+        await carregar();
+        if (B.consulta?.q) reconsultar();
+      } catch (e) { btn.disabled = false; erro.textContent = msgErro(e); erro.hidden = false; }
+    }
+    const d = janela("Nomes diferentes neste ID",
+      el("p", { class: "meta", style: "margin:0", text: `O ID ${f.id_app} aparece com ${grupos.size} nomes. Se forem pessoas diferentes, corrija o ID de cada registro que não é deste entregador. A punição e a ocorrência gravadas não mudam.` }),
+      ...[...grupos].map(([nome, lista]) => el("div", { class: "nomes-grupo" },
+        el("h4", { style: "margin:8px 0 4px", text: `${nome} · ${App.u.plural(lista.length, "registro", "registros")}` }),
+        el("ul", { class: "lista-nomes" }, lista.map((b) => el("li", {},
+          el("span", { text: `${dt(b.inicio)} · ${b.infracao}${b.leve ? " (leve)" : ""} · ${b.cidade || "sem cidade"}` }),
+          podeCorrigir(b) ? el("button", { class: "btn small", type: "button", onclick: () => { d.close(); abrirCorrecao(b); } }, "Corrigir") : null))))),
+      trocar.length ? el("div", { class: "box", style: "display:grid;gap:8px;margin-top:8px" },
+        el("h4", { style: "margin:0", text: "É a mesma pessoa?" }),
+        el("p", { class: "meta", style: "margin:0", text: `Troca o nome de ${App.u.plural(trocar.length, "registro", "registros")} para “${f.nome}”, o nome da ficha.` }),
+        el("label", {}, "Motivo (obrigatório)", mot), erro,
+        el("div", { class: "actions" }, el("button", { class: "btn primary", type: "button", onclick: (e) => mesmaPessoa(e.currentTarget) }, `É a mesma pessoa: usar “${f.nome}” em todos`))) : null,
+      el("div", { class: "actions" }, el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Fechar")));
+  }
   function abrir(id, acao) { B.caixa[id] = B.caixa[id]?.acao === acao ? undefined : { acao, texto: "" }; render(); }
   function caixa(b, cx) {
     if (cx.acao === "completar") {
@@ -747,7 +780,10 @@
             el("span", { class: "chip", text: App.u.plural(normais.length, "restrição", "restrições") }),
             el("span", { class: "chip", text: App.u.plural(leves.length, "infração leve", "infrações leves") }),
             el("span", { class: "chip", text: cad.length ? "Ativação: " + cad.map((x) => x.situacao).join(", ") : "Sem cadastro na ativação" })),
-          nomes.length > 1 ? el("p", { class: "alerta-revisar bloco", text: `Este ID aparece com ${nomes.length} nomes nas restrições: ${nomes.join(", ")}. Se forem pessoas diferentes, corrija o ID de cada registro.` }) : null,
+          nomes.length > 1 ? (seus.some(podeCorrigir)
+            ? el("button", { class: "alerta-revisar bloco", type: "button", onclick: () => abrirNomesDiferentes(f, seus) },
+                `Este ID aparece com ${nomes.length} nomes nas restrições: ${nomes.join(", ")}. Corrigir os registros ›`)
+            : el("p", { class: "alerta-revisar bloco", text: `Este ID aparece com ${nomes.length} nomes nas restrições: ${nomes.join(", ")}. Se forem pessoas diferentes, o monitoramento corrige o ID de cada registro.` })) : null,
           f.atualizado_em ? el("p", { class: "meta", text: `Dados alterados por ${f.atualizado_por_nome} em ${dt(f.atualizado_em)}.` }) : null,
           cad.length ? el("div", {}, el("h4", { style: "margin:12px 0 6px", text: "Cadastro na ativação" }), el("ul", { style: "margin:0;padding-left:18px" }, cad.map(linhaCadastro))) : null,
           el("h4", { style: "margin:12px 0 6px", text: f.comentarios.length ? `Comentários (${f.comentarios.length})` : "Comentários" }),
