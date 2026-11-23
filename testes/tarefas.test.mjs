@@ -85,7 +85,7 @@ await t("campos validados por tipo e título montado", async () => {
 let ativ;
 await t("ativar entregadores: pedido para alguém, progresso conta sozinho com os aprovados de quem pegou", async () => {
   ativ = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "LAGARTO - SE", quantidade: 2 }, p_para: [sup.sub] });
-  igual([ativ.titulo, ativ.meta, ativ.progresso, ativ.progresso_automatico, ativ.para_mim], ["Aprovar 2 entregador(es) · LAGARTO - SE", 2, 0, true, false]);
+  igual([ativ.titulo, ativ.meta, ativ.progresso, ativ.progresso_automatico, ativ.para_mim], ["Aprovar 2 entregadores · LAGARTO - SE", 2, 0, true, false]);
   igual((await avisos(sup)).filter((x) => x.includes("pediu para você: Aprovar 2")).length, 1);
   await falha(rpc(sup, "avancar_tarefa", { p_id: ativ.id }), "conta sozinho");
   await rpc(sup, "aceitar_atividade", { p_id: ativ.id });

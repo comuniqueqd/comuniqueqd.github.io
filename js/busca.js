@@ -118,10 +118,13 @@
   campo.placeholder = "Buscar ID ou nome (Ctrl+K)";
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009z11";
+  const VERSAO = "009z12";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009z12", tema: "Missão da equipe", itens: [
+      ["Crie missões para a equipe toda", "Aprovar entregadores ou parceiros pedida para todos vira missão da equipe: todos participam, contam as aprovações de qualquer pessoa na cidade e ela fecha sozinha ao bater a meta. Pedida para pessoas escolhidas, continua só delas.", 'nav.modulos a[data-mod="atividades"]'],
+    ] },
     { versao: "009z11", tema: "Atraso a partir de 30 min", itens: [
       ["Veja os atrasos a partir de 30 minutos", "As Análises dos pedidos agora contam como atraso o pedido com mais de 30 min do chamado até a entrega, como no dia a dia.", 'nav.modulos a[data-mod="analises"]'],
       ["Comece pelos horários mais críticos", "O card Quando o atraso acontece mostra os 5 piores horários, com a cor e o texto do nível (bem acima, acima, na média ou abaixo da média)."],

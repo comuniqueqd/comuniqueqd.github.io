@@ -76,12 +76,12 @@ await t("parceiros: registro direto por qualquer papel, sem repetir na mesma cid
 let tp, te;
 await t("Aprovar parceiros: conta sozinho os registrados por quem pegou, na cidade, depois de pegar", async () => {
   tp = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_parceiro", p_campos: { cidade: "LAGARTO - SE", quantidade: 2 }, p_para: [sup.sub] });
-  igual([tp.titulo, tp.tipo_nome, tp.progresso_automatico], ["Aprovar 2 parceiro(s) · LAGARTO - SE", "Aprovar parceiros", true]);
+  igual([tp.titulo, tp.tipo_nome, tp.progresso_automatico], ["Aprovar 2 parceiros · LAGARTO - SE", "Aprovar parceiros", true]);
   await rpc(sup, "registrar_parceiro", { p_estabelecimento: "Antes de pegar", p_cidade: "LAGARTO - SE" });
   await rpc(sup, "aceitar_atividade", { p_id: tp.id });
   await falha(rpc(sup, "avancar_tarefa", { p_id: tp.id }), "conta sozinho");
   const r = await rpc(sup, "registrar_parceiro", { p_estabelecimento: "Mercado Bom", p_cidade: "LAGARTO - SE" });
-  igual(r.tarefas.map((x) => [x.titulo, x.progresso, x.meta]), [["Aprovar 2 parceiro(s) · LAGARTO - SE", 1, 2]]);
+  igual(r.tarefas.map((x) => [x.titulo, x.progresso, x.meta]), [["Aprovar 2 parceiros · LAGARTO - SE", 1, 2]]);
   await rpc(sup, "registrar_parceiro", { p_estabelecimento: "Farmácia Vida", p_cidade: "ITABAIANA - SE" });
   await rpc(mon, "registrar_parceiro", { p_estabelecimento: "De outra pessoa", p_cidade: "LAGARTO - SE" });
   igual((await tarefa(sup, tp.id)).progresso, 1, "outra cidade e outra pessoa não contam:");
@@ -93,7 +93,7 @@ await t("Aprovar parceiros: conta sozinho os registrados por quem pegou, na cida
 await t("Aprovar entregadores: conta as aprovações feitas por quem pegou (não o que enviou); desfazer tira", async () => {
   te = await rpc(sup, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "LAGARTO - SE", quantidade: 3 }, p_para: [mon.sub] });
   const te2 = await rpc(sup, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "LAGARTO - SE", quantidade: 1 }, p_para: [mon.sub] });
-  igual(te.titulo, "Aprovar 3 entregador(es) · LAGARTO - SE");
+  igual(te.titulo, "Aprovar 3 entregadores · LAGARTO - SE");
   await rpc(mon, "aceitar_atividade", { p_id: te.id }); await rpc(mon, "aceitar_atividade", { p_id: te2.id });
   const ids = [];
   for (const [i, cid] of [["lag1001", "LAGARTO - SE"], ["lag1002", "LAGARTO - SE"], ["ita1001", "ITABAIANA - SE"], ["lag1003", "LAGARTO - SE"]])
@@ -135,12 +135,12 @@ await t("009f: por cidade e notícias rápidas", async () => {
 
 await t("009g: ativar parceiro cria 'Aprovar 5 entregadores' aberta na cidade, ou soma 5 na que já existe", async () => {
   const r = await rpc(sup2, "registrar_parceiro", { p_estabelecimento: "Açougue Novo", p_cidade: "SIMÃO DIAS - SE" });
-  igual([r.tarefa_entregadores.titulo, r.tarefa_entregadores.meta, r.tarefa_entregadores.nova], ["Aprovar 5 entregador(es) · SIMÃO DIAS - SE", 5, true]);
-  let t = (await rpc(mon, "listar_atividades")).find((x) => x.titulo === "Aprovar 5 entregador(es) · SIMÃO DIAS - SE");
+  igual([r.tarefa_entregadores.titulo, r.tarefa_entregadores.meta, r.tarefa_entregadores.nova], ["Aprovar 5 entregadores · SIMÃO DIAS - SE", 5, true]);
+  let t = (await rpc(mon, "listar_atividades")).find((x) => x.titulo === "Aprovar 5 entregadores · SIMÃO DIAS - SE");
   igual([t.status, t.sugeridas_nomes, t.para_todos, t.compartilhavel, t.campos.motivo], ["aberta", [], true, true, "Parceiro novo: Açougue Novo"]);
   await falha(rpc(mon, "aceitar_atividade", { p_id: t.id }), "");  // 009y1c: atividade da equipe não se pega
   const r2 = await rpc(sup, "registrar_parceiro", { p_estabelecimento: "Bar do Zé", p_cidade: "SIMÃO DIAS - SE" });
-  igual([r2.tarefa_entregadores.meta, r2.tarefa_entregadores.nova, r2.tarefa_entregadores.titulo], [10, false, "Aprovar 10 entregador(es) · SIMÃO DIAS - SE"]);
+  igual([r2.tarefa_entregadores.meta, r2.tarefa_entregadores.nova, r2.tarefa_entregadores.titulo], [10, false, "Aprovar 10 entregadores · SIMÃO DIAS - SE"]);
   t = (await rpc(mon, "listar_atividades")).find((x) => x.id === t.id);
   igual([t.meta, t.campos.quantidade, t.descricao.includes("+5 com o parceiro Bar do Zé")], [10, 10, true]);
   igual((await avisos(mon)).filter((x) => x.startsWith("A tarefa subiu para 10 entregadores")).length, 0, "sem participantes, ninguém é avisado");
@@ -148,7 +148,7 @@ await t("009g: ativar parceiro cria 'Aprovar 5 entregadores' aberta na cidade, o
 
 await t("009g: tarefa compartilhada: entrar junto, progresso somado, qualquer participante conclui", async () => {
   // 009y1c: a do parceiro é da equipe (não se pega); a compartilhada é uma pedida à mão
-  const t0 = await rpc(sup2, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "SIMÃO DIAS - SE", quantidade: 10 } });
+  const t0 = await rpc(sup2, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "SIMÃO DIAS - SE", quantidade: 10 }, p_para: [mon.sub, admin.sub] });  // 009z12: pedida para pessoas (para todos = da equipe)
   await rpc(mon, "aceitar_atividade", { p_id: t0.id });
   let v = (await rpc(sup, "listar_atividades")).find((x) => x.id === t0.id);
   igual([v.status, v.participantes, v.pode_entrar, v.pode_concluir], ["aceita", ["Monitora Teste"], true, false]);

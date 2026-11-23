@@ -167,7 +167,7 @@ await t("PB-1: tarefa sugerida só para outra pessoa (nos primeiros 10 min) e a 
   verdade((await rpc(mona, "resumo_inicio")).atividades.para_aceitar >= 1, "a Mona vê e conta a dela");
 });
 await t("PB-2: quem entra junto numa tarefa compartilhada conta ela em 'minhas em andamento'", async () => {
-  const tf = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "LAGARTO - SE", quantidade: 3 } });
+  const tf = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "LAGARTO - SE", quantidade: 3 }, p_para: [sup.sub, mona.sub] });
   await rpc(sup, "aceitar_atividade", { p_id: tf.id });
   await rpc(mona, "aceitar_atividade", { p_id: tf.id });
   const s1 = (await rpc(sup, "resumo_inicio")).atividades.minhas_em_andamento, m1 = (await rpc(mona, "resumo_inicio")).atividades.minhas_em_andamento;
@@ -224,7 +224,7 @@ await t("009x3: tarefa automática do parceiro conta as aprovações de qualquer
   igual(r.tarefa_entregadores.nova, true, "nasceu a automática");
   const auto = await um("select id, automatica from atividades where cidade = 'CARPINA - PE' and tipo = 'ativar_entregadores'");
   igual(auto.automatica, true, "marcada como automática");
-  const manual = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: JSON.stringify({ cidade: "CARPINA - PE", quantidade: 3 }) });
+  const manual = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: JSON.stringify({ cidade: "CARPINA - PE", quantidade: 3 }), p_para: [uAdmin] });
   const idManual = manual.id || manual;
   await rpc(admin, "aceitar_atividade", { p_id: idManual });
   await aprovar("auto0001", uSup);   // o suporte aprova, ninguém pegou a automática
@@ -423,7 +423,7 @@ await t("009z1 (A5-12): adicional sem nome do entregador é recusado pelo banco"
 await t("009z1 (A5-10): quem aceitou a tarefa compartilhada sai da equipe e ela fica com quem participa", async () => {
   const x = pessoa("sai.casa@x.com", "Sai Daqui"), y = pessoa("fica.casa@x.com", "Fica Aqui");
   for (const p of [x, y]) { await db.query("insert into membros (email, nome, papel) values ($1, $2, 'monitorador') on conflict do nothing", [p.email, p.nome]); await rpc(p, "entrar"); }
-  const tf = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "LAGARTO - SE", quantidade: 3 } });
+  const tf = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "LAGARTO - SE", quantidade: 3 }, p_para: [x.sub, y.sub] });
   await rpc(x, "aceitar_atividade", { p_id: tf.id });
   await rpc(y, "aceitar_atividade", { p_id: tf.id });
   await db.query("delete from membros where email = $1", [x.email]);
@@ -597,6 +597,28 @@ await t("A7-01: cada arquivo de supabase/funcoes/ é igual à função que está
     if (tira(txt) !== tira(banco)) dif.push(f);
   }
   igual(dif, [], "diferentes");
+});
+
+await t("009z12: aprovar para todos vira missão da equipe; pedida para uma pessoa continua dela; fecha ao bater a meta", async () => {
+  await db.query("insert into cidades (nome) values ('GRAVATA - PE') on conflict do nothing");
+  const eq = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "GRAVATA - PE", quantidade: 2 } });
+  const um1 = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_entregadores", p_campos: { cidade: "GRAVATA - PE", quantidade: 1 }, p_para: [uSup] });
+  igual([eq.automatica, um1.automatica, eq.titulo, um1.titulo], [true, false, "Aprovar 2 entregadores · GRAVATA - PE", "Aprovar 1 entregador · GRAVATA - PE"]);
+  let erroEq = ""; try { await rpc(sup, "aceitar_atividade", { p_id: eq.id }); } catch (e) { erroEq = e.message; }
+  verdade(erroEq !== "", "ninguém pega a missão da equipe");
+  const v = (await rpc(sup, "listar_atividades")).find((x) => x.id === eq.id);
+  verdade(v && !v.pode_aceitar, "a da equipe não tem Eu faço");
+  for (const [id, quem] of [["grav0001", uSup], ["grav0002", uAdmin]]) {
+    const c = await um("insert into cadastros (id_app, nome, cidade, status, enviado_por) values ($1, 'Aprovado Grav', 'GRAVATA - PE', 'aprovado', $2) returning id", [id, quem]);
+    await db.query("insert into eventos (cadastro_id, tipo, status_novo, por) values ($1, 'aprovado', 'aprovado', $2)", [c.id, quem]);
+  }
+  const fim = await um("select status, concluida_por_nome from atividades where id = $1", [eq.id]);
+  igual([fim.status, fim.concluida_por_nome], ["concluida", "Equipe"], "duas aprovações de pessoas diferentes bateram a meta");
+  igual((await um("select status from atividades where id = $1", [um1.id])).status, "aberta", "a pedida para uma pessoa não conta sozinha sem ela pegar");
+  const pa = await rpc(admin, "criar_tarefa", { p_tipo: "ativar_parceiro", p_campos: { cidade: "GRAVATA - PE", quantidade: 1 } });
+  igual(pa.automatica, true, "aprovar parceiros para todos também é da equipe");
+  await rpc(sup, "registrar_parceiro", { p_estabelecimento: "Padaria Gravatá", p_cidade: "GRAVATA - PE" });
+  igual((await um("select status from atividades where id = $1", [pa.id])).status, "concluida", "ativar o parceiro bateu a meta da missão");
 });
 
 console.log(`\n${n - falhas}/${n} ok`);
