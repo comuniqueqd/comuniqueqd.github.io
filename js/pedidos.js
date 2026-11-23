@@ -158,13 +158,15 @@
         prog.textContent = `Enviando ${Math.min(i + 1000, l.pedidos.length).toLocaleString("pt-BR")} de ${l.pedidos.length.toLocaleString("pt-BR")}…`;
         await rpc("importar_pedidos", { p_itens: l.pedidos.slice(i, i + 1000) });
       }
-      // calcula os sinais uma semana por vez (cada chamada fica bem abaixo do limite de tempo do Supabase)
+      // calcula os sinais um dia por vez (009z16b: uma semana inteira passava do limite de tempo do Supabase,
+      // "canceling statement due to statement timeout"); dias inteiros de Brasília (o resumo das Análises é por dia)
       const r = { pedidos: 0, com_sinal: 0, atencao: 0 };
-      // 009z10: semanas de dias inteiros de Brasília (o resumo das Análises é feito por dia)
       const fim = new Date(l.resumo.ate.slice(0, 10) + "T23:59:59-03:00").getTime();
-      for (let ini = new Date(l.resumo.de.slice(0, 10) + "T00:00:00-03:00").getTime(); ini <= fim; ini += 7 * 86400000) {
-        prog.textContent = `Calculando os sinais (${App.u.dia(new Date(ini).toISOString())})…`;
-        const x = await rpc("fechar_importacao_pedidos", { p_de: new Date(ini).toISOString(), p_ate: new Date(Math.min(ini + 7 * 86400000 - 1000, fim)).toISOString() });
+      const ini0 = new Date(l.resumo.de.slice(0, 10) + "T00:00:00-03:00").getTime();
+      const dias = Math.round((fim + 1000 - ini0) / 86400000);
+      for (let ini = ini0, n = 1; ini <= fim; ini += 86400000, n++) {
+        prog.textContent = `Calculando os sinais: dia ${n} de ${dias} (${App.u.dia(new Date(ini).toISOString())})…`;
+        const x = await rpc("fechar_importacao_pedidos", { p_de: new Date(ini).toISOString(), p_ate: new Date(Math.min(ini + 86400000 - 1000, fim)).toISOString() });
         for (const k in r) r[k] += x[k] || 0;
       }
       App.uso("pedidos:importar");
