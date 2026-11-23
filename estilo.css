@@ -1221,6 +1221,7 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; gap:
 .btn.link.ped-ficha { justify-self: start; padding-inline: 0; }
 .ped-legenda { margin-top: 14px; font-size: 13px; }
 .ped-alerta { margin: 4px 0; padding: 8px 12px; border-radius: var(--r-controle); background: var(--warn-soft); color: var(--ink); border: 1px solid var(--warn); font-size: 14px; }
+.ped-ok { margin: 4px 0; padding: 8px 12px; border-radius: var(--r-controle); background: var(--ok-soft); color: var(--ink); border: 1px solid var(--ok); font-size: 14px; }
 .ped-escolhidos ul { list-style: none; margin: 4px 0; padding: 0; display: grid; gap: 4px; }
 .ped-escolhidos li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--r-controle); }
 .ped-escolhidos li.nao { border-color: var(--warn); background: var(--warn-soft); }
@@ -1265,6 +1266,7 @@ details.ped-rota > summary { cursor: pointer; font-size: 14px; font-weight: 600;
 .ped-rota-ordem { font-family: var(--font-titulo); font-weight: 700; min-width: 2ch; }
 .ped-rota-txt { flex: 1 1 220px; min-width: 0; }
 .ped-rota-txt .estourou { color: var(--bad); font-weight: 700; }
+.ped-rota-sinal { margin-left: 6px; }
 .ped-rota-fim { margin: 4px 0 0; font-size: 14px; font-weight: 600; }
 
 /* 009z13: Parceiros → Sem chamar */

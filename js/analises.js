@@ -504,7 +504,7 @@
     const entHora = en.por_hora.filter((x) => x.pedidos >= 30).map((x) => ({ ...x, v: (x.chegada15 + x.entrega35) / x.pedidos }));
     const mediaEnt = t.pedidos ? (en.chegada15 + en.entrega35) / t.pedidos : 0;
     const linhaEnt = (x) => ({ rotulo: faixa(x.hora), v: x.v, extra: `${x.chegada15} até chegar na loja · ${x.entrega35} até entregar` });
-    const cC = cardT("Atraso do entregador", "Os casos em que a demora foi do entregador: levou mais de 15 min do aceite até chegar na loja, ou mais de 35 min do aceite até entregar saindo sozinho.",
+    const cC = cardT("Atraso do entregador", "Os casos em que a demora foi do entregador: levou mais de 15 min do aceite até chegar na loja, ou mais de 30 min com o pedido em tela (do aceite até entregar), saindo sozinho.",
       el("div", { class: "destaques" }, destaque(en.chegada15, "demoraram até chegar na loja"), destaque(en.entrega35, "demoraram até entregar, saindo sozinhos")),
       el("h4", { text: "Horários com mais casos" }),
       el("p", { class: "meta", text: "A cor compara os casos com o número de pedidos de cada horário." }),

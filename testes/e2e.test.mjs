@@ -80,6 +80,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z11-analises-atraso-
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z12-missao-da-equipe.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z13-rota-e-bairro.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z14-limite-35.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z15-limite-30.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -1014,7 +1015,18 @@ try {
     ok((await a.$$("#ped-lista .linha-ped")).length === 2, "009z6: só os 2 atrasos (o pedido dentro do limite não aparece)");
     await ir(s, "#monitoramento/pedidos"); await s.reload();
     ok(await esperar(s, "#ped-lista .linha-ped:has-text('PED001')") && !(await s.isVisible('nav.tabs a[href="#monitoramento/enviar"]')), "009z6: o suporte vê a lista, sem a aba de envio");
-    ok(await s.isVisible("#ped-tipos >> text=Acima de 35 min") && (await texto(s, "#ped-numeros")).includes("Pedidos acima de 35 min"), "009z14: o limite do total na tela vem do banco (35 min)");
+    ok(await s.isVisible("#ped-tipos >> text=Acima de 30 min") && (await texto(s, "#ped-numeros")).includes("Pedidos acima de 30 min"), "009z15: o limite do total na tela vem do banco (30 min)");
+    { // 009z15: PED003 vira um atraso de aceite (31 min no total, 16 até alguém aceitar, 14 em tela), confere o aviso e volta ao normal
+      const dz = new pg.Client({ connectionString: DB }); await dz.connect();
+      const mexe = (m) => dz.query(`update pedidos_log set aceite_em = aceite_em + $1 * interval '1 minute', chegou_em = chegou_em + $1 * interval '1 minute',
+        saiu_em = saiu_em + $1 * interval '1 minute', entregue_em = entregue_em + $1 * interval '1 minute', finalizado_em = finalizado_em + $1 * interval '1 minute'
+        where entrega_id = 'e2epedido0003'`, [m]).then(() => dz.query("select classificar_pedidos(min(chamado_em), max(chamado_em)) from pedidos_log"));
+      await mexe(16); await s.reload();
+      ok(await esperar(s, "#ped-lista .linha-ped:has-text('PED003') .ped-ok >> text=O entregador fez os tempos dele.")
+        && (await texto(s, "#ped-lista .linha-ped:has-text('PED003') .ped-ok")).includes("ficou 14 min com o pedido em tela"),
+        "009z15: pedido atrasado sem culpa do entregador mostra que ele fez os tempos, com a coleta e o tempo em tela");
+      ok(!(await s.isVisible("#ped-lista .linha-ped:has-text('PED002') .ped-ok")), "009z15: o atraso do entregador não ganha o aviso");
+      await mexe(-16); await dz.end(); await s.reload(); await esperar(s, "#ped-lista .linha-ped:has-text('PED002')"); }
     ok(await s.isVisible("#ped-lista .ped-total .estourou")
       && !(await s.$eval("#ped-lista .ped-total:has(.estourou)", (b) => { const c = b.cloneNode(true); c.querySelectorAll(".so-leitor").forEach((x) => x.remove()); return c.textContent; })).includes("acima de"),
       "009z14d: o tempo do total acima de 30 min fica em vermelho, sem texto a mais na tela");

@@ -259,7 +259,8 @@
       ["Até o cliente", m(p.saiu_em, p.entregue_em), p.sinal_total && p.causa === "entregador" && !p.sinal_chegada ? "estourou" : "ok"],
       ["Finalizar", m(p.entregue_em, p.finalizado_em), p.sinal_finalizacao ? "estourou" : "ok"]].filter((x) => x[1] != null && x[1] >= 0);
     const soma = passos.reduce((a, x) => a + Number(x[1]), 0) || 1;
-    const total = passos.reduce((a, x) => a + Number(x[1]), 0);
+    // 009z15: o Total vai do chamado até a entrega (o Finalizar acontece depois e fica só na barra)
+    const total = p.t_total != null ? Number(p.t_total) : passos.filter((x) => x[0] !== "Finalizar").reduce((a, x) => a + Number(x[1]), 0);
     return el("div", { class: "ped-barra-box" },
       el("div", { class: "ped-barra", role: "img", "aria-label": "Etapas: " + passos.map(([n, v]) => `${n} ${min(v)}`).join(", ") },
         ...passos.map(([n, v, c]) => el("span", { class: "seg " + c, style: `flex-grow:${Math.max(Number(v), soma * 0.03)}` }))),
@@ -346,6 +347,17 @@
       p.pode_reabrir ? el("button", { class: "btn link", type: "button", onclick: (e) => reabrir(p, e.currentTarget) }, "Reabrir") : null), ficha];
   }
   // 009z6c (pedido do usuário): etapas marcadas fora do lugar, como no desenho (caixa âmbar)
+  // 009z15 (pedido do usuário): atrasado conta desde o chamado; para o entregador, do aceite. Quando o pedido atrasou
+  // mas o entregador cumpriu os tempos dele, o cartão diz isso com os números
+  function tempoDoEntregador(p) {
+    if (!naoDoEntregador(p)) return null;
+    const r = P.dados?.regras || {}, partes = [];
+    if (p.t_chegada != null) partes.push(`chegou na loja ${min(p.t_chegada)} depois de aceitar (limite ${Number(r.chegada_min || 15)} min)`);
+    if (p.t_entrega != null) partes.push(`ficou ${min(p.t_entrega)} com o pedido em tela${p.rota_n > 1 ? `, numa rota com ${p.rota_n} pedidos` : ` (limite ${Number(r.entrega_min || 30)} min)`}`);
+    return el("p", { class: "ped-ok", role: "note" },
+      el("b", { text: "O entregador fez os tempos dele. " }),
+      `O pedido passou de ${limiteTotal()} min desde o chamado, mas ${partes.length ? partes.join(" e ") : "a demora não foi dele"}.`);
+  }
   function foraDoLugar(p) {
     const seg = (x, y) => (x && y ? Math.round((new Date(y) - new Date(x)) / 1000) : null);
     const s = seg(p.saiu_em, p.entregue_em);
@@ -374,7 +386,9 @@
             [lojas.size > 1 ? x.loja : null, x.bairro, `entregue às ${horaTxt(x.entregue_em)}`, null].filter(Boolean).map((t) => " · " + t).join(""),
             // 009z14d: sem a etiqueta "passou do limite" (juntava a chegada atrasada na loja com o total e confundia):
             // o total acima de 30 min fica vermelho
-            x.t_total != null ? [" · total ", tempoTotal(x.t_total, `${Math.round(Number(x.t_total))} min`)] : null),
+            x.t_total != null ? [" · total ", tempoTotal(x.t_total, `${Math.round(Number(x.t_total))} min`)] : null,
+            // 009z15: o entregador demorou para chegar na loja (aceite → chegou acima de 15 min)
+            x.chegada ? el("span", { class: "pill bloqueado ped-rota-sinal", title: x.t_chegada != null ? `Chegou na loja ${Math.round(Number(x.t_chegada))} min depois de aceitar` : null, text: "chegou tarde na loja" }) : null),
           !este && x.codigo ? copiarBtn(x.codigo, "Copiar", `Código ${x.codigo} copiado.`) : null);
       })),
       pos ? el("p", { class: "ped-rota-fim", text: `Este foi o ${pos}º de ${lista.length} entregas da rota.` }) : null);
@@ -393,13 +407,14 @@
       el("p", { class: "ped-frase" }, el("b", { text: f1 }), f2),
       barra(p),
       rota(p),
+      tempoDoEntregador(p),
       foraDoLugar(p),
       sugestao(p),
       ...acoes(p));
   }
 
   // 009z14: o limite do total vem do banco (parametros_pedidos.total_min; 35 desde a 009z14)
-  const limiteTotal = () => Number(P.dados?.regras?.total_min || 35);
+  const limiteTotal = () => Number(P.dados?.regras?.total_min || 30);
   // 009z14d (pedido do usuário): o total fica vermelho a partir do atraso das Análises (analise_atraso_min, 30 min);
   // só o número em vermelho, e o leitor de tela ouve o porquê
   const limiteAtraso = () => Number(P.dados?.regras?.analise_atraso_min || 30);

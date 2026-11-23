@@ -20,6 +20,7 @@ for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z11-analises-atraso-30.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z13-rota-e-bairro.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z14-limite-35.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z15-limite-30.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -68,7 +69,7 @@ const itens = [
   ped("pedido000002", bia, { a: 2, l: 8, s: 10, e: 50, f: 51, loja: "Outra Loja" }),  // 50 min no total, entrega 48 min sozinho → entregador
   ped("pedido000003", cai, { a: 1, l: 5, s: 6, e: 46, f: 47 }),            // rota com o 4 (saíram juntos) → causa rota
   ped("pedido000004", cai, { a: 1, l: 5, s: 8, e: 20, f: 21 }),            // dentro do limite (só serve para a rota)
-  ped("pedido000005", ana, { c: 60, a: 75, l: 80, s: 82, e: 107, f: 108 }),         // 47 min, demorou para aceitar → causa aceite (info)
+  ped("pedido000005", ana, { c: 60, a: 75, l: 80, s: 82, e: 104, f: 105 }),         // 44 min, demorou para aceitar (29 em tela) → causa aceite (info)
   ped("pedido000006", bia, { c: 120, a: 121, l: 125, s: 126, e: 140, f: 165 }),            // finalizou 25 min depois de entregar → finalização tardia
   ped("pedido000007", dup, { a: 1, l: 18, s: 20, e: 28, f: 29 }),          // chegada > 15, ID a escolher
   ped("pedido000008", ana, { a: 1, l: 5, s: 6, e: 15, f: 16 }),            // normal, sem sinal
@@ -285,6 +286,21 @@ await t("009z11: as Análises contam atraso a partir de 30 min e deixam de fora 
   await db.query("select resumir_pedidos(now() - interval '60 days', now())");
 });
 
+await t("009z15: a rota diz quem chegou tarde na loja, separado do total", async () => {
+  const d1 = (await um("select to_char((now() at time zone 'America/Sao_Paulo')::date - 1, 'YYYY-MM-DD') d")).d;
+  const h1 = (min) => new Date(new Date(`${d1}T17:00:00-03:00`).getTime() + min * 60000).toISOString();
+  const rr = (id, m) => ({ entrega_id: id, codigo: id.slice(-6).toUpperCase(), cidade: "LAGARTO - SE", loja: "Loja Chegada", bairro: "CENTRO",
+    chamado_em: h1(m.c), aceite_em: h1(m.c + 1), chegou_em: h1(m.ch), saiu_em: h1(30), entregue_em: h1(m.e), finalizado_em: h1(m.e + 1),
+    entregador_nome: "Caio Chegada", entregador_id: "caio0015", entregador_situacao: "ok", entregador_opcoes: [] });
+  // o 1º foi aceito cedo e ele levou 20 min para chegar na loja (total 26 min); o 2º passou do total (50 min)
+  await rpc(mod, "importar_pedidos", { p_itens: [rr("chegped00001", { c: 10, ch: 31, e: 36 }), rr("chegped00002", { c: 0, ch: 10, e: 50 })] });
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d1}T00:00:00-03:00`, p_ate: `${d1}T23:59:59-03:00` });
+  const r = (await um("select rota_pedidos from pedidos_log where entrega_id = 'chegped00002'")).rota_pedidos;
+  const um1 = r.find((x) => x.entrega_id === "chegped00001"), dois = r.find((x) => x.entrega_id === "chegped00002");
+  verdade(um1.chegada === true && Number(um1.t_chegada) === 20 && Number(um1.t_total) === 26, "o de 26 min aparece como chegou tarde na loja (20 min)");
+  verdade(dois.chegada === false, "o que passou só do total não é marcado como chegada tarde");
+});
+
 await t("009z13: guarda o bairro em maiúsculas e a rota de quem saiu junto, mesmo depois da limpeza", async () => {
   const d1 = (await um("select to_char((now() at time zone 'America/Sao_Paulo')::date - 1, 'YYYY-MM-DD') d")).d;
   const h1 = (min) => new Date(new Date(`${d1}T15:00:00-03:00`).getTime() + min * 60000).toISOString();
@@ -299,6 +315,7 @@ await t("009z13: guarda o bairro em maiúsculas e a rota de quem saiu junto, mes
   igual((await um("select bairro from pedidos_log where entrega_id = 'rotaped00001'")).bairro, "CENTRO NOVO", "espaços juntados");
   igual(p3.rota_pedidos.map((x) => x.entrega_id), ["rotaped00001", "rotaped00002", "rotaped00003"], "os três, na ordem da entrega");
   igual(p3.rota_pedidos.map((x) => x.bairro), ["CENTRO NOVO", "BREJO", "BREJO"]);
+  igual(p3.rota_pedidos.map((x) => x.chegada), [false, false, false], "009z15: ninguém chegou tarde na loja (3 min depois de aceitar)");
   await db.query("delete from pedidos_log where entrega_id in ('rotaped00001', 'rotaped00002')");
   const j = (await rpc(sup, "listar_pedidos", { p_busca: "rotaped00003" })).itens[0];
   verdade(j && j.bairro === "BREJO" && j.rota_pedidos.length === 3, "o cartão ainda mostra a rota depois que os companheiros saíram do banco");
@@ -329,8 +346,9 @@ await t("009z13: Sem chamar separa quem parou, quem está chamando menos e o par
   verdade(!s.parou.concat(s.menos).some((x) => x.loja === "Loja Viva"), "a loja que chama todo dia não aparece");
 });
 
-await t("009z14: o Monitoramento avisa a partir de 35 min (um pedido de 40 min vira sinal)", async () => {
-  igual(Number((await rpc(sup, "regras_pedidos")).total_min), 35, "limite de 35 min");
+await t("009z15: o Monitoramento avisa a partir de 30 min; para o entregador, 30 min com o pedido em tela", async () => {
+  const rg = await rpc(sup, "regras_pedidos");
+  igual([Number(rg.total_min), Number(rg.entrega_min), Number(rg.chegada_min)], [30, 30, 15], "total 30, em tela 30, coleta 15");
   const d2 = (await um("select to_char((now() at time zone 'America/Sao_Paulo')::date - 1, 'YYYY-MM-DD') d")).d;
   const h2 = (min) => new Date(new Date(`${d2}T18:00:00-03:00`).getTime() + min * 60000).toISOString();
   await rpc(mod, "importar_pedidos", { p_itens: [{ entrega_id: "limite35ped1", codigo: "LIM035", cidade: "LAGARTO - SE", loja: "Loja Teste",
@@ -338,7 +356,14 @@ await t("009z14: o Monitoramento avisa a partir de 35 min (um pedido de 40 min v
     entregador_nome: "Lia Limite", entregador_id: "lia0035", entregador_situacao: "ok", entregador_opcoes: [] }] });
   await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d2}T00:00:00-03:00`, p_ate: `${d2}T23:59:59-03:00` });
   const p = await um("select sinal_total, tem_sinal from pedidos_log where entrega_id = 'limite35ped1'");
-  igual([p.sinal_total, p.tem_sinal], [true, true], "40 min passa do limite de 35");
+  igual([p.sinal_total, p.tem_sinal], [true, true], "40 min passa do limite");
+  // 33 min do chamado, 32 com o pedido em tela, saindo sozinho: atraso do entregador
+  await rpc(mod, "importar_pedidos", { p_itens: [{ entrega_id: "limite30ped1", codigo: "LIM030", cidade: "LAGARTO - SE", loja: "Loja Teste",
+    chamado_em: h2(100), aceite_em: h2(101), chegou_em: h2(106), saiu_em: h2(108), entregue_em: h2(133), finalizado_em: h2(134),
+    entregador_nome: "Leo Limite", entregador_id: "leo0030", entregador_situacao: "ok", entregador_opcoes: [] }] });
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d2}T00:00:00-03:00`, p_ate: `${d2}T23:59:59-03:00` });
+  const q = await um("select sinal_total, causa from pedidos_log where entrega_id = 'limite30ped1'");
+  igual([q.sinal_total, q.causa], [true, "entregador"], "33 min (32 em tela, sozinho) = atraso do entregador");
 });
 
 await t("Não guarda CPF escrito no motivo", async () => {
