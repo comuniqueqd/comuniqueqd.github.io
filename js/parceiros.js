@@ -143,17 +143,93 @@
       c.quem_mais ? el("p", { class: "meta", text: `Quem mais ativou aqui: ${c.quem_mais.nome || "—"} (${c.quem_mais.n})` }) : null))));
   }
 
+  // ---------- Sem chamar (009z13, pedido do usuário) ----------
+  // Dos arquivos do Tableau (resumo por dia e loja): quem parou de chamar (3+ dias sem pedido, chamava 1 ou mais por
+  // dia), quem está chamando menos (última semana abaixo da metade da média das 4 anteriores) e os parceiros ativados
+  // que ainda não chamaram. Os dias contam até o último dia enviado de cada cidade (parceiros_sem_chamar).
+  const diaTxt = (d) => (d ? App.u.dia(d) : "—");
+  const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
+  function tarefaContato(loja, cidade, motivo) {
+    const mot = el("input", { maxlength: 300, value: motivo });
+    const erro = el("p", { class: "warn-msg", role: "alert", hidden: true });
+    const d = janela("Criar tarefa de contato",
+      el("p", { style: "margin:0", text: `${loja} · ${cidade}` }),
+      el("label", {}, "Motivo", mot),
+      el("p", { class: "meta", text: "A tarefa \u201cFazer contato\u201d fica aberta para a equipe em Atividades → Tarefas." }), erro,
+      el("div", { class: "actions" },
+        el("button", { class: "btn primary", type: "button", onclick: async (e) => {
+          const bt = e.currentTarget; bt.disabled = true;
+          try {
+            await rpc("criar_tarefa", { p_tipo: "fazer_contato", p_campos: { contato: loja, cidade, motivo: mot.value.trim() || motivo }, p_para: [] });
+            d.close(); toast("Tarefa de contato criada para a equipe.");
+          } catch (err) { bt.disabled = false; erro.textContent = msgErro(err); erro.hidden = false; }
+        } }, "Criar tarefa"),
+        el("button", { class: "btn link", type: "button", onclick: () => d.close() }, "Cancelar")));
+  }
+  function registrarAcordo(loja, cidade) {
+    location.hash = "#financeiro/acordos";
+    let n = 0;
+    const tentar = () => {   // a tela de Acordos é montada depois da troca de endereço
+      const e = $("#fi-ac-estab"), c = $("#fi-ac-cidade");
+      if (e && c && e.offsetParent) { e.value = loja; c.value = cidade; $("#fi-ac-texto")?.focus(); return; }
+      if (++n < 30) setTimeout(tentar, 100);
+    };
+    setTimeout(tentar, 100);
+  }
+  function linhaSem(x, txt, motivo) {
+    const nome = x.loja || x.estabelecimento;
+    return el("li", { class: "sem-chamar-linha" },
+      el("div", { class: "sem-chamar-txt" },
+        el("b", { text: nome }), " ",
+        el("span", { class: "meta", text: x.cidade }),
+        x.parceiro ? el("span", { class: "tag", text: "Parceiro ativado" }) : null,
+        el("p", { class: "meta", style: "margin:2px 0 0", text: txt })),
+      el("div", { class: "actions" },
+        el("button", { class: "btn small", type: "button", onclick: () => tarefaContato(nome, x.cidade, motivo) }, "Criar tarefa de contato"),
+        el("button", { class: "btn small", type: "button", onclick: () => registrarAcordo(nome, x.cidade) }, "Registrar acordo")));
+  }
+  function renderSemChamar() {
+    const box = $("#pa-sem-lista"), d = P.sem;
+    if (P.erro && !d) return box.replaceChildren(el("p", { class: "err", text: P.erro }));
+    if (!d) return box.replaceChildren(carregandoEl());
+    const sel = $("#pa-sem-cidade"), atual = sel.value;
+    sel.replaceChildren(el("option", { value: "", text: "Todas as cidades" }), ...d.cidades.map((c) => el("option", { value: c.cidade, text: c.cidade })));
+    sel.value = d.cidades.some((c) => c.cidade === atual) ? atual : "";
+    if (!d.cidades.length) return box.replaceChildren(vazio("Ainda não há pedidos do Tableau", "A lista sai dos arquivos que um moderador envia em Monitoramento → Enviar dados."));
+    const f = (l) => l.filter((x) => !sel.value || x.cidade === sel.value);
+    const parou = f(d.parou), menos = f(d.menos), sem = f(d.sem_pedido);
+    const ref = d.cidades.filter((c) => !sel.value || c.cidade === sel.value).map((c) => `${c.cidade} até ${diaTxt(c.ate)}`).join(" · ");
+    const grupo = (titulo, nota, itens, vazioTxt) => el("section", { class: "panel sem-chamar-grupo" },
+      el("h3", {}, titulo, " ", el("span", { class: "count", text: itens.length })),
+      el("p", { class: "an-nota", text: nota }),
+      itens.length ? el("ul", { class: "sem-chamar-lista" }, itens) : el("p", { class: "meta", text: vazioTxt }));
+    box.replaceChildren(
+      el("p", { class: "meta", text: `Dados do Tableau: ${ref}. Os dias contam até o último dia enviado.` }),
+      grupo("Parou de chamar", "Chamava 1 pedido ou mais por dia e está há 3 dias ou mais sem nenhum.",
+        parou.map((x) => linhaSem(x, `Último pedido há ${plural(x.dias, "dia", "dias")}, em ${diaTxt(x.ultimo)} · costumava chamar ${String(x.media_dia).replace(".", ",")} por dia`,
+          `Parou de chamar: último pedido em ${diaTxt(x.ultimo)}`)), "Nenhuma loja parou de chamar."),
+      grupo("Chamando menos", "Na última semana chamou menos da metade da média das 4 semanas anteriores.",
+        menos.map((x) => linhaSem(x, `${plural(x.semana, "pedido", "pedidos")} na última semana · antes, ${String(x.media_semana).replace(".", ",")} por semana · último em ${diaTxt(x.ultimo)}`,
+          `Chamando menos: ${x.semana} pedidos na última semana, antes ${x.media_semana} por semana`)), "Nenhuma loja caiu pela metade."),
+      grupo("Ativados que ainda não chamaram", "Parceiros registrados pela equipe que não aparecem nos pedidos da cidade.",
+        sem.map((x) => linhaSem(x, `Ativado há ${plural(x.dias, "dia", "dias")}${x.por ? ", por " + x.por : ""}`, "Ativado e ainda sem o primeiro pedido")),
+        "Todos os parceiros ativados já chamaram."));
+  }
+  $("#pa-sem-cidade")?.addEventListener("change", () => renderSemChamar());
+
   App.modulo({
     id: "parceiros", nome: "Parceiros",
     abas: [
       { id: "novo", nome: "Ativar parceiro", secao: "v-pa-novo" },
       { id: "lista", nome: "Parceiros ativos", secao: "v-pa-lista" },
       { id: "cidades", nome: "Ativações", secao: "v-pa-cidades" },
+      { id: "sem-chamar", nome: "Sem chamar", secao: "v-pa-sem" },   // 009z13
     ],
     padrao: () => "novo",
     async carregar(aba) {
       try {
-        if (aba === "lista") P.lista = await rpc("listar_parceiros", { p_busca: $("#pa-busca").value.trim() || null, p_cidade: $("#pa-filtro-cidade").value || null, p_meus: $("#pa-meus").checked });
+        if (aba === "sem-chamar") P.sem = await rpc("parceiros_sem_chamar", {});
+        else if (aba === "lista") P.lista = await rpc("listar_parceiros", { p_busca: $("#pa-busca").value.trim() || null, p_cidade: $("#pa-filtro-cidade").value || null, p_meus: $("#pa-meus").checked });
         else if (aba === "cidades") {
           // todas as ativações (o filtro de cidade é aplicado aqui no navegador: resumo e histórico)
           const [c, todos] = await Promise.all([rpc("parceiros_por_cidade"), rpc("listar_parceiros", { p_limite: 2000 })]);
@@ -167,7 +243,7 @@
         P.erro = null;
       } catch (e) { P.erro = msgErro(e); throw e; }
     },
-    render: (aba) => (aba === "lista" ? renderLista() : aba === "cidades" ? renderCidades() : renderNovo()),
+    render: (aba) => (aba === "sem-chamar" ? renderSemChamar() : aba === "lista" ? renderLista() : aba === "cidades" ? renderCidades() : renderNovo()),
   });
 
   // ---------- Notícias rápidas (tela inicial) ----------

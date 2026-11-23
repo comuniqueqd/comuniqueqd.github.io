@@ -1255,3 +1255,22 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; gap:
 .ped-nivel.n-neutro .ped-nivel-txt { color: var(--muted); }
 details.ped-mais { margin-top: 10px; }
 details.ped-mais > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--accent); }
+
+/* 009z13: a rota do pedido (quem saiu junto) */
+details.ped-rota { border-top: 1px solid var(--line); padding-top: 8px; }
+details.ped-rota > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--accent); }
+.ped-rota-lista { list-style: none; margin: 8px 0 4px; padding: 0; display: grid; gap: 6px; }
+.ped-rota-lista li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--r-controle); font-size: 14px; }
+.ped-rota-lista li.este { border-color: var(--line-forte); background: var(--accent-soft); }
+.ped-rota-ordem { font-family: var(--font-titulo); font-weight: 700; min-width: 2ch; }
+.ped-rota-txt { flex: 1 1 220px; min-width: 0; }
+.ped-rota-sinal { margin-left: 6px; }
+.ped-rota-fim { margin: 4px 0 0; font-size: 14px; font-weight: 600; }
+
+/* 009z13: Parceiros → Sem chamar */
+.sem-chamar-grupo { margin-top: 12px; }
+.sem-chamar-lista { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.sem-chamar-linha { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-controle); }
+.sem-chamar-txt { flex: 1 1 260px; min-width: 0; }
+.sem-chamar-txt .tag { margin-left: 6px; }
+.sem-chamar-linha .actions { margin: 0; }

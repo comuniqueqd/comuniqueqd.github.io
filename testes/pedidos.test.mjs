@@ -18,6 +18,7 @@ for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z9-escolher-entregador-pedido.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z10-analises-pedidos.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z11-analises-atraso-30.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z13-rota-e-bairro.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -281,6 +282,50 @@ await t("009z11: as Análises contam atraso a partir de 30 min e deixam de fora 
   const r2 = await rpc(sup, "analise_pedidos", { p_dias: 60 });
   verdade(r2.antigos === true && (r2.vazio || r2.ate < r.ate), "o dia sem as contas novas fica de fora e o aviso de reenviar aparece");
   await db.query("select resumir_pedidos(now() - interval '60 days', now())");
+});
+
+await t("009z13: guarda o bairro em maiúsculas e a rota de quem saiu junto, mesmo depois da limpeza", async () => {
+  const d1 = (await um("select to_char((now() at time zone 'America/Sao_Paulo')::date - 1, 'YYYY-MM-DD') d")).d;
+  const h1 = (min) => new Date(new Date(`${d1}T15:00:00-03:00`).getTime() + min * 60000).toISOString();
+  const rr = (id, m, bairro) => ({ entrega_id: id, codigo: id.slice(-6).toUpperCase(), cidade: "LAGARTO - SE", loja: "Loja Rota", bairro,
+    chamado_em: h1(0), aceite_em: h1(1), chegou_em: h1(4), saiu_em: h1(m.s), entregue_em: h1(m.e), finalizado_em: h1(m.e + 1),
+    entregador_nome: "Rui Rota", entregador_id: "rui0009", entregador_situacao: "ok", entregador_opcoes: [] });
+  await rpc(mod, "importar_pedidos", { p_itens: [rr("rotaped00001", { s: 6, e: 14 }, "  centro   novo "), rr("rotaped00002", { s: 7, e: 22 }, "Brejo"),
+    rr("rotaped00003", { s: 8, e: 50 }, "brejo")] });
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d1}T00:00:00-03:00`, p_ate: `${d1}T23:59:59-03:00` });
+  const p3 = await um("select bairro, rota_pedidos from pedidos_log where entrega_id = 'rotaped00003'");
+  igual(p3.bairro, "BREJO", "bairro em maiúsculas");
+  igual((await um("select bairro from pedidos_log where entrega_id = 'rotaped00001'")).bairro, "CENTRO NOVO", "espaços juntados");
+  igual(p3.rota_pedidos.map((x) => x.entrega_id), ["rotaped00001", "rotaped00002", "rotaped00003"], "os três, na ordem da entrega");
+  igual(p3.rota_pedidos.map((x) => x.bairro), ["CENTRO NOVO", "BREJO", "BREJO"]);
+  await db.query("delete from pedidos_log where entrega_id in ('rotaped00001', 'rotaped00002')");
+  const j = (await rpc(sup, "listar_pedidos", { p_busca: "rotaped00003" })).itens[0];
+  verdade(j && j.bairro === "BREJO" && j.rota_pedidos.length === 3, "o cartão ainda mostra a rota depois que os companheiros saíram do banco");
+  const rb = await um("select sum(pedidos)::int n from pedidos_resumo_bairro where dia = $1 and bairro = 'BREJO'", [d1]);
+  igual(rb.n, 2, "resumo por bairro");
+  const ab = await rpc(sup, "analise_pedidos_bairros", { p_dias: 30 });
+  verdade(!ab.vazio && ab.pedidos >= 3 && Array.isArray(ab.bairros), "análise por bairro: " + JSON.stringify(ab).slice(0, 120));
+  await erro(rpc(fora, "analise_pedidos_bairros", {}), "módulo");
+});
+
+await t("009z13: Sem chamar separa quem parou, quem está chamando menos e o parceiro ativado que ainda não chamou", async () => {
+  await db.query("insert into cidades (nome) values ('ESTANCIA - SE') on conflict do nothing");
+  const ref = (await um("select (now() at time zone 'America/Sao_Paulo')::date - 1 d")).d;
+  const dias = (await db.query("select generate_series($1::date - 40, $1::date, '1 day')::date d", [ref])).rows.map((x) => x.d);
+  for (const d of dias) {
+    const k = Math.round((new Date(ref) - d) / 86400000);   // dias antes do último
+    const linhas = [["Loja Viva", 3]];
+    if (k >= 5) linhas.push(["Loja Parada", 2]);              // parou há 5 dias
+    linhas.push(["Loja Fraca", k < 7 ? (k % 3 === 0 ? 1 : 0) : 4]);   // caiu de 28 para ~3 por semana
+    for (const [loja, q] of linhas) if (q) await db.query("insert into pedidos_resumo (dia, hora, cidade, loja, pedidos, atraso_min) values ($1, 12, 'ESTANCIA - SE', $2, $3, 30)", [d, loja, q]);
+  }
+  await rpc(mod, "registrar_parceiro", { p_estabelecimento: "Loja Parada", p_cidade: "ESTANCIA - SE" });
+  await rpc(mod, "registrar_parceiro", { p_estabelecimento: "Padaria Nova", p_cidade: "ESTANCIA - SE" });
+  const s = await rpc(sup, "parceiros_sem_chamar", { p_cidade: "ESTANCIA - SE" });
+  igual(s.parou.map((x) => [x.loja, x.dias, x.parceiro]), [["Loja Parada", 5, true]], "parou de chamar");
+  igual(s.menos.map((x) => x.loja), ["Loja Fraca"], "chamando menos");
+  igual(s.sem_pedido.map((x) => x.estabelecimento), ["Padaria Nova"], "ativado que ainda não chamou");
+  verdade(!s.parou.concat(s.menos).some((x) => x.loja === "Loja Viva"), "a loja que chama todo dia não aparece");
 });
 
 await t("Não guarda CPF escrito no motivo", async () => {

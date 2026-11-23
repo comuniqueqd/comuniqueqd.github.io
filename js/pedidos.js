@@ -66,7 +66,7 @@
   // arquivos: [{ nome, texto }] → { pedidos, avisos[], resumo }
   function ler(arquivos) {
     const dist = new Map();
-    const avisos = [], etapas = new Map(), nomes = new Map(), ids = new Map(), lidos = { etapas: 0, resumo: 0, entregadores: 0 };
+    const avisos = [], etapas = new Map(), nomes = new Map(), bairrosR = new Map(), ids = new Map(), lidos = { etapas: 0, resumo: 0, entregadores: 0 };
     const porArquivo = [];   // 009z6d: o que cada arquivo trouxe, para a lista da tela
     for (const a of arquivos) {
       const rows = linhas(a.texto), t = tipoArquivo(rows);
@@ -77,7 +77,7 @@
       const corpo = rows.slice(t.i + 1);
       if (t.tipo === "etapas") {
         const c = Object.fromEntries(["Entrega Id", "Código", "UF - Cidade", "Estabelecimento", "estabelecimentoId", "createdAt (pedido)", "Solicitado At",
-          "associadoAt", "Aceite At", "Chegou Loja At", "Saiu Loja At", "Entregue At", "Finalizado At"].map((n) => [n, ix(n)]));
+          "associadoAt", "Aceite At", "Chegou Loja At", "Saiu Loja At", "Entregue At", "Finalizado At", "Bairro da Entrega"].map((n) => [n, ix(n)]));
         const lojas = new Set();
         for (const r of corpo) {
           const id = (r[c["Entrega Id"]] || "").trim();
@@ -91,12 +91,17 @@
           etapas.set(id, { entrega_id: id, codigo: (r[c["Código"]] || "").trim() || null, cidade: cidadeComunique(r[c["UF - Cidade"]]),
             loja: (r[c["Estabelecimento"]] || "").trim() || null, loja_id: (r[c["estabelecimentoId"]] || "").trim() || null,
             pedido_em: g("createdAt (pedido)"), chamado_em: g("Solicitado At"), aceite_em: aceites[0] || null,
-            chegou_em: g("Chegou Loja At"), saiu_em: g("Saiu Loja At"), entregue_em: g("Entregue At"), finalizado_em: g("Finalizado At") });
+            chegou_em: g("Chegou Loja At"), saiu_em: g("Saiu Loja At"), entregue_em: g("Entregue At"), finalizado_em: g("Finalizado At"),
+            bairro: c["Bairro da Entrega"] >= 0 ? (r[c["Bairro da Entrega"]] || "").trim() || null : null });
         }
         if (lojas.size === 1 && corpo.length > 50) avisos.push(`"${a.nome}" tem uma loja só (${[...lojas][0]}). Se não foi de propósito, baixe de novo com Estabelecimento em (Tudo).`);
       } else if (t.tipo === "resumo") {
-        const ci = ix("Entrega Id"), ce = ix("Entregador");
-        for (const r of corpo) { const id = (r[ci] || "").trim(), e = (r[ce] || "").trim(); if (id && e && id !== "Total") nomes.set(id, e); }
+        const ci = ix("Entrega Id"), ce = ix("Entregador"), cb = ix("Bairro Entrega");
+        for (const r of corpo) {
+          const id = (r[ci] || "").trim(), e = (r[ce] || "").trim();
+          if (id && e && id !== "Total") nomes.set(id, e);
+          if (id && cb >= 0 && (r[cb] || "").trim()) bairrosR.set(id, r[cb].trim());   // 009z13: o bairro também vem no Resumo
+        }
       } else {
         const cn = ix("Nome"), cc = t.h.findIndex((n) => /munic|cidade/i.test(n));
         for (const r of corpo) {
@@ -122,7 +127,7 @@
       const op = nome ? ids.get(nomeChave(nome)) || [] : [];
       const daCidade = op.filter((o) => o.cidade === cidadeP);
       const [sit, id] = !nome || !op.length ? ["sem_id", null] : op.length === 1 ? ["ok", op[0].id] : daCidade.length === 1 ? ["conferir", daCidade[0].id] : ["escolher", null];
-      return { ...p, distancia_m: dist.get(p.entrega_id) ?? null, entregador_nome: nome ? titulo(nome) : null, entregador_id: id, entregador_situacao: sit,
+      return { ...p, bairro: p.bairro || bairrosR.get(p.entrega_id) || null, distancia_m: dist.get(p.entrega_id) ?? null, entregador_nome: nome ? titulo(nome) : null, entregador_id: id, entregador_situacao: sit,
         entregador_opcoes: sit === "conferir" || sit === "escolher" ? op.map((o) => ({ id: o.id, cidade: titulo(o.cidade) })) : [] };
     });
     const datas = pedidos.map((p) => p.chamado_em).filter(Boolean).sort();
@@ -347,6 +352,34 @@
     return el("p", { class: "ped-alerta", role: "note" },
       `Marcou “entregue” ${s === 1 ? "1 segundo" : s + " segundos"} depois de sair da loja${p.distancia_m != null ? `, para uma entrega de ${km(p.distancia_m)}` : ""}. Vale conferir se as etapas foram marcadas na hora certa (pode ser finalização falsa).`);
   }
+  // 009z13 (pedido do usuário): "Ver a rota" = os pedidos que saíram junto, na ordem da entrega
+  P.rotasAbertas = P.rotasAbertas || new Set();
+  const horaTxt = (t) => (t ? new Date(t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: App.u.FUSO }) : "—");
+  function rota(p) {
+    const lista = Array.isArray(p.rota_pedidos) ? p.rota_pedidos : [];
+    if (lista.length < 2) return null;
+    const outros = lista.length - 1, pos = lista.findIndex((x) => x.entrega_id === p.entrega_id) + 1;
+    const lojas = new Set(lista.map((x) => x.loja).filter(Boolean));
+    const saiu = lista.map((x) => x.saiu_em).filter(Boolean).sort()[0];
+    const d = el("details", { class: "ped-rota" },
+      el("summary", { text: `Ver a rota (${outros} ${outros === 1 ? "outro pedido" : "outros pedidos"})` }),
+      el("p", { class: "meta", text: `Saíram ${lojas.size > 1 ? "das lojas" : "da loja"} às ${horaTxt(saiu)}, com ${p.entregador_nome || "o mesmo entregador"}.` }),
+      el("ol", { class: "ped-rota-lista" }, lista.map((x, i) => {
+        const este = x.entrega_id === p.entrega_id;
+        return el("li", { class: este ? "este" : "" },
+          el("span", { class: "ped-rota-ordem", text: `${i + 1}º` }),
+          el("span", { class: "ped-rota-txt" },
+            el("b", { text: este ? "Este pedido" : x.codigo ? `Pedido ${x.codigo}` : "Pedido sem código" }),
+            [lojas.size > 1 ? x.loja : null, x.bairro, `entregue às ${horaTxt(x.entregue_em)}`, x.t_total != null ? `total ${Math.round(Number(x.t_total))} min` : null]
+              .filter(Boolean).map((t) => " · " + t).join(""),
+            x.sinal && !este ? el("span", { class: "pill bloqueado ped-rota-sinal", text: "passou do limite" }) : null),
+          !este && x.codigo ? copiarBtn(x.codigo, "Copiar", `Código ${x.codigo} copiado.`) : null);
+      })),
+      pos ? el("p", { class: "ped-rota-fim", text: `Este foi o ${pos}º de ${lista.length} entregas da rota.` }) : null);
+    if (P.rotasAbertas.has(p.entrega_id)) d.open = true;
+    d.addEventListener("toggle", () => (d.open ? P.rotasAbertas.add(p.entrega_id) : P.rotasAbertas.delete(p.entrega_id)));
+    return d;
+  }
   function card(p) {
     const [rot, cls] = rotulo(p), [f1, f2] = frase(p);
     return el("article", { class: "card linha-ped" + (p.atencao && !p.decisao ? " atencao" : "") },
@@ -354,9 +387,10 @@
         el("span", { class: "pill ped-sinal " + cls, text: rot }),
         el("span", { class: "meta ped-pedido", text: [p.codigo ? `Pedido #${p.codigo}` : "Pedido sem código", p.chamado_em ? dt(p.chamado_em) : null].filter(Boolean).join(" · ") })),
       ...entregador(p),
-      el("p", { class: "meta", text: [p.cidade, p.loja].filter(Boolean).join(" · ") }),
+      el("p", { class: "meta", text: [p.cidade, p.bairro, p.loja].filter(Boolean).join(" · ") }),
       el("p", { class: "ped-frase" }, el("b", { text: f1 }), f2),
       barra(p),
+      rota(p),
       foraDoLugar(p),
       sugestao(p),
       ...acoes(p));

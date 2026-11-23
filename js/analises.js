@@ -391,8 +391,9 @@
   async function carregarPedidos() {
     if (DP.chave === chavePed() && DP.d && Date.now() - DP.em < 300000) return;
     try {
-      const d = await rpc("analise_pedidos", { p_dias: A.periodo === "tudo" ? null : A.periodo, p_cidade: A.cidade || null });
-      DP.d = d; DP.chave = chavePed(); DP.erro = null; DP.em = Date.now();
+      const args = { p_dias: A.periodo === "tudo" ? null : A.periodo, p_cidade: A.cidade || null };
+      const [d, b] = await Promise.all([rpc("analise_pedidos", args), rpc("analise_pedidos_bairros", args).catch(() => null)]);  // 009z13: bairros
+      DP.d = d; DP.b = b; DP.chave = chavePed(); DP.erro = null; DP.em = Date.now();
       if (!A.cidades) A.cidades = d.cidades || [];
     } catch (e) { DP.erro = msgErro(e); }
   }
@@ -533,7 +534,16 @@
         ["Pedidos", (l) => String(l.pedidos)], [`Acima de ${LIM}`, (l) => pc(l.atraso, l.pedidos)],
         ["Esperaram na loja", (l) => (l.atraso ? `${l.espera_loja} de ${l.atraso} atrasados` : "—")],
         ["Período anterior", (l) => (l.antes ? tendencia(100 * l.atraso / l.pedidos, 100 * l.antes.atraso / l.antes.pedidos) : "sem dados antes")]]));
-    [cD1, cD2, cD3].forEach(largo);
+    // D4. bairros (009z13, pedido do usuário): onde a entrega mais demora
+    const B = DP.b, mediaB = B && B.pedidos ? B.atraso / B.pedidos : 0;
+    const linhaB = (x) => ({ rotulo: x.bairro, v: x.atraso / x.pedidos,
+      extra: `${pc(x.atraso, x.pedidos)} · ${x.atraso} de ${x.pedidos} · ${minTxt(x.media_cliente)} da loja ao cliente${x.antes ? " · " + tendencia(100 * x.atraso / x.pedidos, 100 * x.antes.atraso / x.antes.pedidos) : ""}` });
+    const listaB = B && !B.vazio ? B.bairros || [] : [];
+    const cD4 = cardT("Bairros: onde a entrega mais demora", `Parte dos pedidos de cada bairro que passou de ${LIM}, e o tempo médio da loja até o cliente. Bairros com 30 pedidos ou mais.`,
+      !B || B.vazio ? el("p", { class: "meta", text: "O bairro da entrega começou a ser guardado agora: aparece depois do próximo envio dos arquivos do Tableau." }) : null,
+      ...(B && !B.vazio ? linhasNivel(listaB.slice(0, 10).map(linhaB), mediaB, "Nenhum bairro com 30 pedidos ou mais no período.") : []),
+      listaB.length > 10 ? el("details", { class: "ped-mais" }, el("summary", { text: "Ver todos os bairros" }), ...linhasNivel(listaB.slice(10).map(linhaB), mediaB, "")) : null);
+    [cD1, cD2, cD3, cD4].forEach(largo);
     // E. causas por semana (009z11: a causa é a etapa que mais passou do próprio limite)
     const CAUSAS = [["entregador", "Entregador", "var(--bad)"], ["loja", "Espera na loja", "var(--ambar)"], ["aceite", "Demora para aceitar", "var(--accent)"],
       ["rota", "Rota com vários pedidos", "var(--warn)"], ["outras", "Soma de pequenas demoras", "var(--gray)"]];
@@ -548,7 +558,7 @@
           tot ? null : el("p", { class: "meta", text: "Nenhum atraso." }));
       })));
     largo(cE);
-    box.replaceChildren(cA, cB, cC, cD1, cD2, cD3, cE);
+    box.replaceChildren(cA, cB, cC, cD1, cD2, cD3, cD4, cE);
   }
   App.modulo({
     id: "analises", nome: "Análises",
