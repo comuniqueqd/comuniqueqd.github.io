@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009z16b">
+<link rel="stylesheet" href="estilo.css?v=009z17b">
 </head>
 <body>
 <a class="pular" href="#conteudo">Ir para o conteúdo</a>
@@ -460,13 +460,15 @@
       <div class="tiles filtro-contagem" role="group" aria-label="Filtrar pelo tipo" id="ped-tipos"></div>
       <select id="ped-cidade" aria-label="Cidade"><option value="">Todas as cidades</option></select>
     </div>
-    <div class="tiles filtro-contagem" role="group" aria-label="Filtrar pela situação" id="ped-situacoes"></div>
-    <details class="ped-mais-filtros"><summary>Mais filtros (período, loja, busca)</summary>
+    <div class="ped-linha-filtros">
+      <div class="tiles filtro-contagem" role="group" aria-label="Filtrar pela situação" id="ped-situacoes"></div>
+      <input id="ped-busca" class="ped-busca" type="search" placeholder="Buscar por entregador, ID ou código do pedido" aria-label="Buscar pedidos">
+    </div>
+    <details class="ped-mais-filtros"><summary>Mais filtros (período e loja)</summary>
       <div class="toolbar ped-filtros">
         <label class="ped-data">De <input id="ped-de" type="date"></label>
         <label class="ped-data">Até <input id="ped-ate" type="date"></label>
         <select id="ped-loja" aria-label="Loja"><option value="">Todas as lojas</option></select>
-        <input id="ped-busca" type="search" placeholder="Buscar por entregador, ID ou código do pedido" aria-label="Buscar pedidos">
       </div>
     </details>
     <div id="ped-lista" class="protege-foco"></div>
@@ -781,24 +783,24 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="js/base.js?v=009z16b"></script>
-<script src="js/icones.js?v=009z16b"></script>
-<script src="js/inicio.js?v=009z16b"></script>
-<script src="js/ativacao.js?v=009z16b"></script>
-<script src="js/bloqueios.js?v=009z16b"></script>
-<script src="js/pedidos.js?v=009z16b"></script>
-<script src="js/entregadores.js?v=009z16b"></script>
-<script src="js/atividades.js?v=009z16b"></script>
-<script src="js/painel.js?v=009z16b"></script>
-<script src="js/avisos.js?v=009z16b"></script>
-<script src="js/analises.js?v=009z16b"></script>
-<script src="js/registros.js?v=009z16b"></script>
-<script src="js/equipe.js?v=009z16b"></script>
-<script src="js/ferramentas.js?v=009z16b"></script>
-<script src="js/financeiro.js?v=009z16b"></script>
-<script src="js/parceiros.js?v=009z16b"></script>
-<script src="js/busca.js?v=009z16b"></script>
-<script src="js/sons.js?v=009z16b"></script>
-<script src="js/agora.js?v=009z16b"></script>
+<script src="js/base.js?v=009z17b"></script>
+<script src="js/icones.js?v=009z17b"></script>
+<script src="js/inicio.js?v=009z17b"></script>
+<script src="js/ativacao.js?v=009z17b"></script>
+<script src="js/bloqueios.js?v=009z17b"></script>
+<script src="js/pedidos.js?v=009z17b"></script>
+<script src="js/entregadores.js?v=009z17b"></script>
+<script src="js/atividades.js?v=009z17b"></script>
+<script src="js/painel.js?v=009z17b"></script>
+<script src="js/avisos.js?v=009z17b"></script>
+<script src="js/analises.js?v=009z17b"></script>
+<script src="js/registros.js?v=009z17b"></script>
+<script src="js/equipe.js?v=009z17b"></script>
+<script src="js/ferramentas.js?v=009z17b"></script>
+<script src="js/financeiro.js?v=009z17b"></script>
+<script src="js/parceiros.js?v=009z17b"></script>
+<script src="js/busca.js?v=009z17b"></script>
+<script src="js/sons.js?v=009z17b"></script>
+<script src="js/agora.js?v=009z17b"></script>
 </body>
 </html>

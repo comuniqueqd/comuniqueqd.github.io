@@ -22,6 +22,7 @@ for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z14-limite-35.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z15-limite-30.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z16-reenvio-que-vale.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z17-mais-entregadores.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });

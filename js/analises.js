@@ -387,6 +387,28 @@
   // Os cards desta aba saem de analise_pedidos (supabase/009z10-analises-pedidos.sql). Todos levam o marcador
   // "Tableau" (pedido do usuário), para separar a leva de análises que vem dos arquivos do Tableau.
   const DP = { d: null, chave: "", erro: null, em: 0 };
+  // 009z17 (pedido do usuário): listas longas com "Mostrar N" e busca; só a lista é redesenhada (o foco fica no campo)
+  DP.ui = DP.ui || {};
+  const normaliza = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  function listaControlada(chave, itens, textoBusca, rotuloBusca, montar) {
+    const st = (DP.ui[chave] = DP.ui[chave] || { n: 10, q: "" });
+    const saida = el("div", { class: "lista-ctl-saida" });
+    const desenhar = () => {
+      const q = normaliza(st.q.trim());
+      const achados = q ? itens.filter((x) => normaliza(textoBusca(x)).includes(q)) : itens;
+      const mostra = st.n ? achados.slice(0, st.n) : achados;
+      saida.replaceChildren(montar(mostra),
+        el("p", { class: "meta lista-ctl-conta", text: achados.length ? `Mostrando ${mostra.length} de ${achados.length}${q ? " encontrados" : ""}.` : "" }));
+    };
+    const sel = el("select", { "aria-label": "Quantos mostrar", onchange: (e) => { st.n = Number(e.target.value); desenhar(); } },
+      ...[[10, "10"], [25, "25"], [50, "50"], [100, "100"], [0, "Todos"]].map(([v, t]) => el("option", { value: String(v), text: t })));
+    sel.value = String(st.n);
+    const busca = el("input", { type: "search", placeholder: rotuloBusca, "aria-label": rotuloBusca, oninput: (e) => { st.q = e.target.value; desenhar(); } });
+    busca.value = st.q;
+    desenhar();
+    return el("div", { class: "lista-ctl protege-foco" },
+      itens.length > 10 || st.q ? el("div", { class: "lista-ctl-barra" }, el("label", {}, "Mostrar", sel), busca) : null, saida);
+  }
   const chavePed = () => `${A.periodo}|${A.cidade}`;
   async function carregarPedidos() {
     if (DP.chave === chavePed() && DP.d && Date.now() - DP.em < 300000) return;
@@ -442,13 +464,16 @@
     });
   }
   const irLoja = (loja) => { if (App.pedidos?.P) { Object.assign(App.pedidos.P.filtros, { loja, tipo: "", situacao: "" }); App.pedidos.P.limite = 50; } location.hash = "#monitoramento/pedidos"; };
-  function tabelaLojas(lista, colunas) {
+  // 009z17: cada tabela de lojas com "Mostrar N" e busca pelo nome (antes só as 10 primeiras)
+  function tabelaLojas(chave, lista, colunas) {
     if (!lista.length) return el("p", { class: "meta", text: "Nenhuma loja com 30 pedidos ou mais no período." });
-    return el("div", { class: "tablewrap" }, el("table", { class: "ped-lojas" },
-      el("thead", {}, el("tr", {}, el("th", { text: "Loja" }), ...colunas.map(([t]) => el("th", { text: t })))),
-      el("tbody", {}, lista.map((l) => el("tr", {},
-        el("td", {}, el("button", { class: "btn link", type: "button", title: "Ver os pedidos desta loja no Monitoramento", onclick: () => irLoja(l.loja) }, l.loja)),
-        ...colunas.map(([, f]) => el("td", { text: f(l) })))))));
+    return listaControlada(chave, lista, (l) => l.loja, "Buscar loja", (itens) => itens.length
+      ? el("div", { class: "tablewrap" }, el("table", { class: "ped-lojas" },
+          el("thead", {}, el("tr", {}, el("th", { text: "Loja" }), ...colunas.map(([t]) => el("th", { text: t })))),
+          el("tbody", {}, itens.map((l) => el("tr", {},
+            el("td", {}, el("button", { class: "btn link", type: "button", title: "Ver os pedidos desta loja no Monitoramento", onclick: () => irLoja(l.loja) }, l.loja)),
+            ...colunas.map(([, f]) => el("td", { text: f(l) })))))))
+      : el("p", { class: "meta", text: "Nenhuma loja encontrada com essa busca." }));
   }
   function renderPedidosAn() {
     prepararFiltros();
@@ -511,26 +536,28 @@
       ...linhasNivel([...entHora].sort((a, b) => b.v - a.v).slice(0, 5).map(linhaEnt), mediaEnt, "Nenhum caso no período."),
       entHora.length > 5 ? el("details", { class: "ped-mais" }, el("summary", { text: "Ver todos os horários" }), ...linhasNivel(entHora.map(linhaEnt), mediaEnt, "")) : null,
       el("h4", { text: "Quem mais repete" }),
-      en.quem.length ? el("div", { class: "tablewrap" }, el("table", {},
-        el("thead", {}, el("tr", {}, ...["Entregador", "Casos", "Até chegar na loja", "Até entregar", "Restrições"].map((x) => el("th", { text: x })))),
-        el("tbody", {}, en.quem.map((q) => el("tr", {},
-          el("td", {}, el("button", { class: "btn link link-ficha", type: "button", onclick: () => App.abrirFicha?.(q.id) }, q.nome || q.id)),
-          el("td", { text: String(q.casos) }), el("td", { text: String(q.chegada) }), el("td", { text: String(q.entrega) }), el("td", { text: String(q.restricoes) })))))) :
+      en.quem.length ? listaControlada("quem", en.quem, (q) => `${q.nome || ""} ${q.id || ""}`, "Buscar por ID ou nome", (lista) => lista.length
+        ? el("div", { class: "tablewrap" }, el("table", { class: "ped-quem" },
+            el("thead", {}, el("tr", {}, ...["Entregador", "Casos", "Até chegar na loja", "Até entregar", "Restrições"].map((x) => el("th", { text: x })))),
+            el("tbody", {}, lista.map((q) => el("tr", {},
+              el("td", {}, el("button", { class: "btn link link-ficha", type: "button", onclick: () => App.abrirFicha?.(q.id) }, q.nome || q.id)),
+              el("td", { text: String(q.casos) }), el("td", { text: String(q.chegada) }), el("td", { text: String(q.entrega) }), el("td", { text: String(q.restricoes) }))))))
+        : el("p", { class: "meta", text: "Ninguém encontrado com essa busca." })) :
         el("p", { class: "meta", text: "Ninguém no período." }));
     // D. lojas (um card por tipo de lentidão)
     const L = d.lojas || [];
-    const top = (f, ord) => L.filter(f).sort(ord).slice(0, 10);
+    const top = (f, ord) => L.filter(f).sort(ord);
     const cD1 = cardT("Lojas: preparo longo", "Do pedido do cliente até a loja chamar o entregador. Preparo longo atrasa o pedido antes de o entregador entrar na história. Lojas com 30 pedidos ou mais.",
-      tabelaLojas(top((l) => l.preparo_medio != null, (a, b) => b.preparo_medio - a.preparo_medio), [
+      tabelaLojas("lojas-preparo", top((l) => l.preparo_medio != null, (a, b) => b.preparo_medio - a.preparo_medio), [
         ["Pedidos", (l) => String(l.pedidos)], ["Preparo médio", (l) => minTxt(l.preparo_medio)],
         ["Acima de 30 min", (l) => pc(l.preparo30, l.n_preparo)], ["Hora em que mais demora", (l) => (l.pior_hora == null ? "—" : `${l.pior_hora}h (${minTxt(l.pior_hora_preparo)})`)],
         ["Período anterior", (l) => tendencia(l.preparo_medio, l.antes?.preparo_medio)]]));
     const cD2 = cardT("Lojas: espera na loja", "O entregador chegou e esperou para sair com o pedido. Espera acima de 10 min não conta contra o entregador.",
-      tabelaLojas(top((l) => l.espera_media != null && l.n_espera >= 10, (a, b) => b.espera_media - a.espera_media), [
+      tabelaLojas("lojas-espera", top((l) => l.espera_media != null && l.n_espera >= 10, (a, b) => b.espera_media - a.espera_media), [
         ["Pedidos", (l) => String(l.pedidos)], ["Espera média", (l) => minTxt(l.espera_media)],
         ["Acima de 10 min", (l) => pc(l.espera10, l.n_espera)], ["Período anterior", (l) => tendencia(l.espera_media, l.antes?.espera_media)]]));
     const cD3 = cardT(`Lojas: pedidos acima de ${LIM}`, `Do chamado até a entrega. “Esperaram na loja” conta os atrasados em que o entregador esperou mais de 10 min na loja, mesmo que o atraso tenha tido outra causa.`,
-      tabelaLojas(top(() => true, (a, b) => b.atraso / b.pedidos - a.atraso / a.pedidos), [
+      tabelaLojas("lojas-atraso", top(() => true, (a, b) => b.atraso / b.pedidos - a.atraso / a.pedidos), [
         ["Pedidos", (l) => String(l.pedidos)], [`Acima de ${LIM}`, (l) => pc(l.atraso, l.pedidos)],
         ["Esperaram na loja", (l) => (l.atraso ? `${l.espera_loja} de ${l.atraso} atrasados` : "—")],
         ["Período anterior", (l) => (l.antes ? tendencia(100 * l.atraso / l.pedidos, 100 * l.antes.atraso / l.antes.pedidos) : "sem dados antes")]]));
@@ -563,13 +590,13 @@
   App.modulo({
     id: "analises", nome: "Análises",
     abas: [
+      { id: "pedidos", nome: "Pedidos", secao: "v-an-pedidos", pode: () => !!S.me?.papel_bloqueios },  // 009z10: dados do Tableau; 009z17: primeira aba
       { id: "simples", nome: "Análises simples", secao: "v-an-simples" },
       { id: "complexas", nome: "Análises complexas", secao: "v-an-analises" },
       { id: "resumo", nome: "Resumo semanal", secao: "v-an-resumo" },
       { id: "tarefas", nome: "Painel das tarefas", secao: "v-at-painel" },  // 009m: o Painel das tarefas (antes em Atividades)
-      { id: "pedidos", nome: "Pedidos", secao: "v-an-pedidos", pode: () => !!S.me?.papel_bloqueios },  // 009z10: dados do Tableau
     ],
-    padrao: () => "simples",
+    padrao: () => (S.me?.papel_bloqueios ? "pedidos" : "simples"),   // 009z17: abre em Pedidos (quem não tem as restrições, nas simples)
     carregar: (aba) => (aba === "pedidos" ? carregarPedidos() : aba === "tarefas" ? App.painel.carregar() : aba === "resumo" ? carregarResumo() : carregarAnalises(aba === "complexas" ? "complexas" : "simples")),
     render: (aba) => (aba === "pedidos" ? renderPedidosAn() : aba === "tarefas" ? App.painel.render() : aba === "resumo" ? renderResumo() : aba === "complexas" ? renderComplexas() : (renderSimples(), renderUso())),
   });

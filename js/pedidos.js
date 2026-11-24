@@ -461,6 +461,8 @@
     const d = P.dados, box = $("#ped-lista");
     if (!d) return box.replaceChildren(carregandoEl());
     opcoes($("#ped-cidade"), d.cidades, "Todas as cidades");
+    // 009z17b (pedido do usuário): com uma cidade só (hoje, Lagarto), o seletor de cidade não aparece
+    $("#ped-cidade").hidden = (d.cidades || []).length <= 1 && !P.filtros.cidade;
     opcoes($("#ped-loja"), d.lojas, "Todas as lojas");
     // 009z10: vindo de uma loja das Análises, o filtro aparece escolhido e aberto
     if (P.filtros.loja) { $("#ped-loja").value = P.filtros.loja; const mf = $(".ped-mais-filtros"); if (mf) mf.open = true; }

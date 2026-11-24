@@ -82,6 +82,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z13-rota-e-bairro.sq
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z14-limite-35.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z15-limite-30.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z16-reenvio-que-vale.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z17-mais-entregadores.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
@@ -873,7 +874,10 @@ try {
 
   // 17. migração 005: análises, resumo semanal, aprovados no histórico e anexos
   await ir(s, "#analises");
-  ok(await esperar(s, "#v-an-simples:not([hidden]) #as-cards >> text=Ativação de entregadores"), "Análises abre nas simples");
+  ok(await esperar(s, "#v-an-pedidos:not([hidden])") && (await s.getAttribute("nav.tabs a >> nth=0", "href")) === "#analises/pedidos",
+    "009z17: Análises abre em Pedidos, a primeira aba (quem tem as restrições)");
+  await ir(s, "#analises/simples");
+  ok(await esperar(s, "#v-an-simples:not([hidden]) #as-cards >> text=Ativação de entregadores"), "Análises simples");
   for (const t of ["Por que não aprovou", "Restrições agora", "Com restrição agora, por cidade", "Quando você registra", "Quando a equipe registra", "Você no período", "Tempo até reincidir", "Conversão das infrações leves", "Infrações mais registradas", "Tratativas no prazo", "Atividades"])
     ok(await s.isVisible(`#as-cards h3:text-is('${t}')`), "análises simples: cartão " + t);
   ok(await s.isVisible("#as-cards >> text=Seu pico:") && (await s.$$("#as-cards .calor .c")).length === 336, "dois mapas dia × hora (você e a equipe), com o seu pico");
@@ -1017,6 +1021,9 @@ try {
     await ir(s, "#monitoramento/pedidos"); await s.reload();
     ok(await esperar(s, "#ped-lista .linha-ped:has-text('PED001')") && !(await s.isVisible('nav.tabs a[href="#monitoramento/enviar"]')), "009z6: o suporte vê a lista, sem a aba de envio");
     ok(await s.isVisible("#ped-tipos >> text=Acima de 30 min") && (await texto(s, "#ped-numeros")).includes("Pedidos acima de 30 min"), "009z15: o limite do total na tela vem do banco (30 min)");
+    ok(await s.isVisible("#ped-busca") && !(await s.isVisible("#ped-cidade"))
+      && (await s.$eval("#ped-busca", (x) => getComputedStyle(x).fontSize)) === (await s.$eval("#ped-tipos .tile .k", (x) => getComputedStyle(x).fontSize)),
+      "009z17b: busca à mostra (sem abrir Mais filtros), sem o seletor de cidade com uma cidade só, letras do mesmo tamanho das pílulas");
     { // 009z15: PED003 vira um atraso de aceite (31 min no total, 16 até alguém aceitar, 14 em tela), confere o aviso e volta ao normal
       const dz = new pg.Client({ connectionString: DB }); await dz.connect();
       const mexe = (m) => dz.query(`update pedidos_log set aceite_em = aceite_em + $1 * interval '1 minute', chegou_em = chegou_em + $1 * interval '1 minute',
@@ -1093,6 +1100,7 @@ try {
         "Lojas: pedidos acima de 30 min", "De onde veio o atraso, por semana"].every((t) => titulos.includes(t))
       && (await s.$$("#ap-cards .tag-tableau")).length === titulos.length, "009z10: os 7 cards, todos com o marcador Tableau: " + titulos.join(" | "));
     ok(await s.isVisible("#ap-cards .ped-an:has-text('Atraso do entregador') >> text=Rafa Teste Pedidos"), "009z10: quem mais repete mostra o entregador do pedido que precisou de atenção");
+    ok(await s.isVisible("#ap-cards .ped-an:has-text('Atraso do entregador') .lista-ctl-conta >> text=Mostrando"), "009z17: quem mais repete diz quantos estão aparecendo");
     ok(!/\bnull\b|undefined|NaN/.test(await texto(s, "#v-an-pedidos")), "009z10: nada de null/undefined/NaN nas análises dos pedidos");
     ok(await s.isVisible("#ap-cards .ped-an h3:has-text('Bairros: onde a entrega mais demora') .tag-tableau"), "009z13: card dos bairros nas Análises, marcado Tableau");
     ok(await s.isVisible("#ap-cards .ped-an:has-text('Quando o atraso acontece') >> text=Os 5 horários mais críticos")

@@ -1196,6 +1196,10 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; gap:
 .ped-linha-filtros { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; justify-content: space-between; }
 .ped-linha-filtros .filtro-contagem { flex: 1 1 auto; margin-bottom: 8px; }
 .ped-linha-filtros select { flex: 0 1 220px; min-width: 0; }
+/* 009z17b: busca sempre à mostra, ao lado das situações; seletor e busca no mesmo tamanho de letra das pílulas */
+.ped-linha-filtros select, .ped-linha-filtros .ped-busca, .ped-filtros select, .ped-filtros input { font-size: 14px; }
+.ped-linha-filtros .ped-busca { flex: 0 1 340px; min-width: 0; min-height: 38px; }
+.ped-linha-filtros select[hidden] { display: none; }
 .ped-mais-filtros { margin-bottom: 12px; }
 .ped-mais-filtros > summary { cursor: pointer; font-size: 14px; color: var(--accent); }
 .ped-mais-filtros[open] > summary { margin-bottom: 8px; }
@@ -1285,3 +1289,9 @@ details.pa-hist-box > summary { cursor: pointer; font-size: 14px; font-weight: 6
 button.alerta-revisar.bloco { width: 100%; font-size: 13px; }
 .lista-nomes { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .lista-nomes li { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+
+/* 009z17: listas com "Mostrar N" e busca nas Análises → Pedidos */
+.lista-ctl-barra { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 4px 0 8px; }
+.lista-ctl-barra label { display: inline-flex; align-items: center; gap: 6px; }
+.lista-ctl-barra input[type=search] { flex: 1 1 200px; min-width: 0; }
+.lista-ctl-conta { margin: 4px 0 0; }
