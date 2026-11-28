@@ -366,6 +366,23 @@ begin
     from public.pedidos_log where chamado_em between p_de and p_ate);
 end $$;
 
+-- ---------- 6a. só as cidades da Regras de equipe (pedido do usuário em 28/11) ----------
+-- O Tableau traz todas as cidades; os filtros e os números do Monitoramento só usam as cadastradas em cidades.
+create or replace function public.cidade_monitorada(p_cidade text)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.cidades c where c.nome = p_cidade);
+$$;
+do $$
+declare def text;
+begin
+  def := pg_get_functiondef('public.listar_pedidos(date, date, text, text, text, text, text, integer, integer)'::regprocedure);
+  if position('cidade_monitorada' in def) = 0 then
+    def := replace(def, 'from public.pedidos_log where tem_sinal and cidade is not null)',
+                        'from public.pedidos_log where tem_sinal and cidade is not null and public.cidade_monitorada(cidade))');
+    execute def;
+  end if;
+end $$;
+
 -- ---------- 6. aba Parceiros ----------
 -- Os 4 grupos, comparando a última semana (7 dias até o último dia enviado da cidade) com a média semanal das 4 anteriores:
 --   parou = 3+ dias sem pedido e média de 1+ por dia nas 4 semanas até o último pedido;
@@ -378,7 +395,7 @@ returns jsonb language plpgsql stable security definer set search_path = public 
 begin
   perform public.exigir_papel('moderador', 'monitorador', 'suporte');
   return (with d as (select cidade, loja, dia, sum(pedidos) n from public.pedidos_resumo
-                      where (p_cidade is null or cidade = p_cidade) and loja <> 'Sem loja' group by 1, 2, 3),
+                      where (p_cidade is null or cidade = p_cidade) and loja <> 'Sem loja' and public.cidade_monitorada(cidade) group by 1, 2, 3),
     ref as (select cidade, max(dia) ref, min(dia) inicio from d group by 1),
     l as (select d.cidade, d.loja, r.ref, r.inicio, max(d.dia) ultimo,
                  coalesce(sum(d.n) filter (where d.dia > r.ref - 7), 0) semana,
@@ -434,13 +451,14 @@ returns jsonb language plpgsql stable security definer set search_path = public 
 declare ate date; de date; lim integer;
 begin
   perform public.exigir_bloq('moderador', 'monitorador', 'suporte');
-  select max(dia) into ate from public.pedidos_resumo_entregador where p_cidade is null or cidade = p_cidade;
+  select max(dia) into ate from public.pedidos_resumo_entregador where (p_cidade is null or cidade = p_cidade) and public.cidade_monitorada(cidade);
   select analise_atraso_min into lim from public.parametros_pedidos where unico;
   if ate is null then
-    return jsonb_build_object('vazio', true, 'cidades', coalesce((select jsonb_agg(distinct cidade order by cidade) from public.pedidos_resumo_entregador), '[]'));
+    return jsonb_build_object('vazio', true, 'cidades', coalesce((select jsonb_agg(distinct cidade order by cidade) from public.pedidos_resumo_entregador where public.cidade_monitorada(cidade)), '[]'));
   end if;
   de := ate - greatest(1, least(coalesce(p_dias, 30), 120)) + 1;
-  return (with r as (select * from public.pedidos_resumo_entregador where dia between de and ate and (p_cidade is null or cidade = p_cidade)),
+  return (with r as (select * from public.pedidos_resumo_entregador where dia between de and ate and (p_cidade is null or cidade = p_cidade)
+                        and public.cidade_monitorada(cidade)),
     cid as (select cidade, sum(pedidos) pedidos, sum(atraso) atraso, sum(at_entregador) at_ent,
                    sum(soma_total) / nullif(sum(n_total), 0) tempo
               from r group by 1),
@@ -459,7 +477,7 @@ begin
     y as (select x.* from x where x.ganho > 0)
     select jsonb_build_object(
       'de', de, 'ate', ate, 'limite', lim,
-      'cidades', (select jsonb_agg(distinct cidade order by cidade) from public.pedidos_resumo_entregador),
+      'cidades', (select jsonb_agg(distinct cidade order by cidade) from public.pedidos_resumo_entregador where public.cidade_monitorada(cidade)),
       'pedidos', t.pedidos, 'atraso', t.atraso, 'at_entregador', t.at_ent,
       'sla', round(100 - t.atraso::numeric * 100 / nullif(t.pedidos, 0), 1),
       'n_cidades', (select count(*) from cid),
@@ -521,7 +539,8 @@ declare cid text; ate date; de date; cde date; cate date; lim integer;
 begin
   perform public.exigir_bloq('moderador', 'monitorador', 'suporte');
   select analise_atraso_min into lim from public.parametros_pedidos where unico;
-  cid := coalesce(p_cidade, (select cidade from public.pedidos_resumo group by 1 order by sum(pedidos) desc limit 1));
+  cid := (select coalesce(p_cidade, (select cidade from public.pedidos_resumo where public.cidade_monitorada(cidade) group by 1 order by sum(pedidos) desc limit 1))
+          where p_cidade is null or public.cidade_monitorada(p_cidade));
   if cid is null then return jsonb_build_object('vazio', true, 'cidades', '[]'::jsonb); end if;
   ate := coalesce(p_ate, (select max(dia) from public.pedidos_resumo where cidade = cid));
   de := coalesce(p_de, ate - 29);
@@ -551,7 +570,7 @@ begin
     mc as (select extract(dow from dia)::int dow, hora, sum(n) canc
              from public.pedidos_resumo_cancel where cidade = cid and dia between de and ate group by 1, 2)
     select jsonb_build_object('cidade', cid, 'de', de, 'ate', ate, 'comp_de', cde, 'comp_ate', cate, 'limite', lim,
-      'cidades', (select coalesce(jsonb_agg(c order by c), '[]') from (select distinct cidade c from public.pedidos_resumo) z),
+      'cidades', (select coalesce(jsonb_agg(c order by c), '[]') from (select distinct cidade c from public.pedidos_resumo where public.cidade_monitorada(cidade)) z),
       'pedidos', t.pedidos, 'atraso', t.atraso, 'sla', round(100 - t.atraso::numeric * 100 / nullif(t.pedidos, 0), 1),
       'assoc', round(t.assoc, 1),
       'cancelados', (select coalesce(sum(n), 0) from public.pedidos_resumo_cancel where cidade = cid and dia between de and ate),
@@ -668,7 +687,8 @@ returns jsonb language plpgsql stable security definer set search_path = public 
 declare cid text; ini date; fim date; hoje date := public.hoje_brasilia(); ult date;
 begin
   perform public.exigir_bloq('moderador', 'monitorador', 'suporte');
-  cid := coalesce(p_cidade, (select cidade from public.pedidos_resumo group by 1 order by sum(pedidos) desc limit 1));
+  cid := (select coalesce(p_cidade, (select cidade from public.pedidos_resumo where public.cidade_monitorada(cidade) group by 1 order by sum(pedidos) desc limit 1))
+          where p_cidade is null or public.cidade_monitorada(p_cidade));
   if cid is null then return jsonb_build_object('vazio', true); end if;
   ini := date_trunc('month', coalesce(p_mes, hoje))::date;
   fim := (ini + interval '1 month - 1 day')::date;
@@ -706,7 +726,7 @@ begin
     select jsonb_build_object('cidade', cid, 'mes', ini, 'hoje', hoje, 'ultimo_dado', ult,
       'clima_em', (select max(buscado_em) from public.clima_dia where cidade = cid),
       'tem_chave', (select clima_chave is not null from public.parametros_monitor where unico),
-      'cidades', (select coalesce(jsonb_agg(c order by c), '[]') from (select distinct cidade c from public.pedidos_resumo) z),
+      'cidades', (select coalesce(jsonb_agg(c order by c), '[]') from (select distinct cidade c from public.pedidos_resumo where public.cidade_monitorada(cidade)) z),
       'media', (select jsonb_build_object('tempo', round(tempo, 1), 'canc_pct', round(canc_pct, 1)) from media),
       'dias', jsonb_agg(jsonb_build_object('dia', p.dia, 'futuro', p.futuro, 'pontos', p.p_clima + p.p_tempo + p.p_canc,
           'p_clima', p.p_clima, 'p_tempo', p.p_tempo, 'p_canc', p.p_canc,
@@ -734,6 +754,7 @@ on conflict (chave) do nothing;
 revoke all on function public.classificar_pedidos(timestamptz, timestamptz) from public, anon, authenticated;
 revoke all on function public.montar_rotas(timestamptz, timestamptz) from public, anon, authenticated;
 revoke all on function public.resumir_pedidos(timestamptz, timestamptz) from public, anon, authenticated;
+revoke all on function public.cidade_monitorada(text) from public, anon, authenticated;
 grant execute on function public.importar_pedidos(jsonb) to authenticated;
 grant execute on function public.fechar_importacao_pedidos(timestamptz, timestamptz) to authenticated;
 grant execute on function public.monitor_parceiros(text) to authenticated;

@@ -542,6 +542,23 @@ await t("009z18: resumos mais antigos que guardar_resumo_dias (70) saem do banco
   igual(Number((await um("select count(*) c from pedidos_resumo_entregador where chave = 'guarda01'")).c), 1, "só o de 60 dias ficou");
 });
 
+await t("009z18: só as cidades da Regras de equipe aparecem no Monitoramento", async () => {
+  const d = (await um("select to_char((now() at time zone 'America/Sao_Paulo')::date - 2, 'YYYY-MM-DD') d")).d;
+  const hd = (min) => new Date(new Date(`${d}T15:00:00-03:00`).getTime() + min * 60000).toISOString();
+  await rpc(mod, "importar_pedidos", { p_itens: [{ entrega_id: "foracid00001", codigo: "FC1", cidade: "CIDADE DE FORA - XX", loja: "Loja Fora",
+    chamado_em: hd(0), aceite_em: hd(1), chegou_em: hd(25), saiu_em: hd(26), entregue_em: hd(50), finalizado_em: hd(51),
+    entregador_nome: "Fora Daqui", entregador_id: "for0001", entregador_situacao: "ok", entregador_opcoes: [] }] });
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d}T00:00:00-03:00`, p_ate: `${d}T23:59:59-03:00` });
+  const e = await rpc(sup, "monitor_entregadores", { p_min: 0 });
+  verdade(!e.cidades.includes("CIDADE DE FORA - XX") && !e.lista.some((x) => x.chave === "for0001"), "ranking sem a cidade de fora");
+  verdade(!(await rpc(sup, "monitor_cidade", {})).cidades.includes("CIDADE DE FORA - XX"), "Cidade sem ela");
+  igual((await rpc(sup, "monitor_cidade", { p_cidade: "CIDADE DE FORA - XX" })).vazio, true, "pedir a cidade de fora não traz nada");
+  verdade(!(await rpc(sup, "listar_pedidos", {})).cidades.includes("CIDADE DE FORA - XX"), "lista de atrasados sem ela");
+  await db.query("insert into cidades (nome) values ('CIDADE DE FORA - XX')");
+  verdade((await rpc(sup, "monitor_entregadores", { p_min: 0 })).cidades.includes("CIDADE DE FORA - XX"), "cadastrada em Regras de equipe, aparece");
+  await db.query("delete from cidades where nome = 'CIDADE DE FORA - XX'");
+});
+
 await t("Não guarda CPF escrito no motivo", async () => {
   await rpc(sup, "descartar_pedido", { p_entrega_id: "pedido000002", p_motivo: "outro", p_texto: "cliente CPF 123.456.789-09 ausente" });
   verdade(!(await um("select motivo from pedidos_log where entrega_id = 'pedido000002'")).motivo.includes("123.456"), "CPF ficou");
