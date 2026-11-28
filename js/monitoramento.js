@@ -454,7 +454,8 @@
            { id: "cidade", nome: "Cidade", secao: "v-mon-cidade" },
            { id: "calendario", nome: "Calendário", secao: "v-mon-calendario" },
            { id: "atrasados", nome: "Pedidos atrasados", secao: "v-bq-pedidos", oculta: true, dono: "entregadores" },
-           { id: "enviar", nome: "Enviar dados", secao: "v-mon-enviar", pode: mod }],
+           // 009z18b (pedido do usuário): "Enviar dados" é o botão do canto do título, como no desenho, e não uma aba
+           { id: "enviar", nome: "Enviar dados", secao: "v-mon-enviar", pode: mod, oculta: true }],
     padrao: () => "entregadores",
     async carregar(aba) {
       if (aba === "enviar") return;
@@ -468,6 +469,7 @@
       return carregar();
     },
     render(aba) {
+      document.querySelectorAll("[data-mon-enviar]").forEach((b) => (b.hidden = !mod()));
       if (aba === "enviar") App.pedidos.renderImportar();
       else if (aba === "parceiros") App.semChamar?.render();
       else if (aba === "cidade") renderCidade();

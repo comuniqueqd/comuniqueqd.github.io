@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009z18">
+<link rel="stylesheet" href="estilo.css?v=009z18b">
 </head>
 <body>
 <a class="pular" href="#conteudo">Ir para o conteúdo</a>
@@ -357,14 +357,14 @@
   </section>
   <section class="view" id="v-pa-sem" hidden>
     <div class="inicio-topo"><h2>Parceiros</h2>
-      <select id="pa-sem-cidade" aria-label="Cidade" style="width:auto"><option value="">Todas as cidades</option></select></div>
+      <select id="pa-sem-cidade" aria-label="Cidade" style="width:auto"><option value="">Todas as cidades</option></select><a class="btn" href="#monitoramento/enviar" data-mon-enviar hidden>Enviar dados</a></div>
     <p class="sub">Compara a última semana com a média das 4 semanas anteriores, até o último dia enviado de cada cidade. Escolha um grupo para ver a lista.</p>
     <div id="pa-sem-grupos" class="mon-grupos" role="group" aria-label="Grupos de parceiros"></div>
     <div id="pa-sem-lista" class="protege-foco"></div>
     <details class="panel mon-sem-pedido" id="pa-sem-pedido-box"><summary id="pa-sem-pedido-tit">Ativados que ainda não chamaram</summary><div id="pa-sem-pedido"></div></details>
   </section>
   <section class="view" id="v-mon-cidade" hidden>
-    <div class="inicio-topo"><h2>Cidade</h2><p class="meta" id="mc-dados" role="status"></p></div>
+    <div class="inicio-topo"><h2>Cidade</h2><p class="meta" id="mc-dados" role="status"></p><a class="btn" href="#monitoramento/enviar" data-mon-enviar hidden>Enviar dados</a></div>
     <form class="panel mon-filtros" id="mc-filtros">
       <label>Cidade <select id="mc-cidade"></select></label>
       <label>Bairro <input id="mc-bairro" type="search" placeholder="Nome do bairro"></label>
@@ -377,7 +377,7 @@
     <div id="mc-corpo" class="protege-foco"></div>
   </section>
   <section class="view" id="v-mon-calendario" hidden>
-    <div class="inicio-topo"><h2>Calendário</h2><p class="meta" id="mk-dados" role="status"></p></div>
+    <div class="inicio-topo"><h2>Calendário</h2><p class="meta" id="mk-dados" role="status"></p><a class="btn" href="#monitoramento/enviar" data-mon-enviar hidden>Enviar dados</a></div>
     <div class="mon-cidades" id="mk-cidades" role="group" aria-label="Cidade"></div>
     <details class="mon-como"><summary>Como a cor é calculada</summary>
       <p>Cada dia soma até 2 pontos em três frentes: clima (previsão de chuva), tempo de entrega e cancelamentos. Tempo e cancelamentos valem 1 ponto comparando com o mesmo dia da semana passada e 1 ponto comparando com o mesmo dia do mês passado. Dia que já aconteceu: o próprio dia contra os dois. Dia que vai acontecer: os dois dias de referência contra a média das últimas 4 semanas.</p>
@@ -386,7 +386,7 @@
     <div id="mk-corpo" class="protege-foco"></div>
   </section>
   <section class="view" id="v-mon-entregadores" hidden>
-    <div class="inicio-topo"><h2>Entregadores</h2><p class="meta" id="me-dados" role="status"></p></div>
+    <div class="inicio-topo"><h2>Entregadores</h2><p class="meta" id="me-dados" role="status"></p><a class="btn" href="#monitoramento/enviar" data-mon-enviar hidden>Enviar dados</a></div>
     <form class="panel mon-filtros" id="me-filtros">
       <label>Entregador <input id="me-busca" type="search" placeholder="Nome ou ID"></label>
       <label>Cidade <select id="me-cidade"><option value="">Todas as cidades</option></select></label>
@@ -828,25 +828,25 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="js/base.js?v=009z18"></script>
-<script src="js/icones.js?v=009z18"></script>
-<script src="js/inicio.js?v=009z18"></script>
-<script src="js/ativacao.js?v=009z18"></script>
-<script src="js/bloqueios.js?v=009z18"></script>
-<script src="js/pedidos.js?v=009z18"></script>
-<script src="js/monitoramento.js?v=009z18"></script>
-<script src="js/entregadores.js?v=009z18"></script>
-<script src="js/atividades.js?v=009z18"></script>
-<script src="js/painel.js?v=009z18"></script>
-<script src="js/avisos.js?v=009z18"></script>
-<script src="js/analises.js?v=009z18"></script>
-<script src="js/registros.js?v=009z18"></script>
-<script src="js/equipe.js?v=009z18"></script>
-<script src="js/ferramentas.js?v=009z18"></script>
-<script src="js/financeiro.js?v=009z18"></script>
-<script src="js/parceiros.js?v=009z18"></script>
-<script src="js/busca.js?v=009z18"></script>
-<script src="js/sons.js?v=009z18"></script>
-<script src="js/agora.js?v=009z18"></script>
+<script src="js/base.js?v=009z18b"></script>
+<script src="js/icones.js?v=009z18b"></script>
+<script src="js/inicio.js?v=009z18b"></script>
+<script src="js/ativacao.js?v=009z18b"></script>
+<script src="js/bloqueios.js?v=009z18b"></script>
+<script src="js/pedidos.js?v=009z18b"></script>
+<script src="js/monitoramento.js?v=009z18b"></script>
+<script src="js/entregadores.js?v=009z18b"></script>
+<script src="js/atividades.js?v=009z18b"></script>
+<script src="js/painel.js?v=009z18b"></script>
+<script src="js/avisos.js?v=009z18b"></script>
+<script src="js/analises.js?v=009z18b"></script>
+<script src="js/registros.js?v=009z18b"></script>
+<script src="js/equipe.js?v=009z18b"></script>
+<script src="js/ferramentas.js?v=009z18b"></script>
+<script src="js/financeiro.js?v=009z18b"></script>
+<script src="js/parceiros.js?v=009z18b"></script>
+<script src="js/busca.js?v=009z18b"></script>
+<script src="js/sons.js?v=009z18b"></script>
+<script src="js/agora.js?v=009z18b"></script>
 </body>
 </html>

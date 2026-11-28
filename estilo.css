@@ -1024,6 +1024,8 @@ header.top :focus-visible { outline-color: var(--ambar); }          /* o verde d
   nav.modulos a.lateral-marca[aria-current="page"] { background: transparent; color: var(--marca-ink); }
   nav.modulos a.lateral-marca:hover { border-color: transparent; border-bottom-color: var(--vidro-30); }
   .titlebar { justify-content: flex-end; }
+  /* 009z18b (pedido do usuário): o conteúdo começa logo depois da barra lateral e usa a largura da tela */
+  .wrap { max-width: 1440px; margin: 0; padding-left: 40px; padding-right: 40px; }
 }
 @media print { body { padding: 0 !important; } .barra-baixo, .bb-mais, nav.modulos { display: none !important; } }
 
@@ -1444,3 +1446,4 @@ button.alerta-revisar.bloco { width: 100%; font-size: 13px; }
 .mon-plano legend { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
 .mon-dia .res { font-size: 11px; font-weight: 600; line-height: 1.2; }
 @media (max-width: 640px) { .mon-dia .res { display: none; } }
+.inicio-topo [data-mon-enviar] { margin-left: auto; }

@@ -1005,8 +1005,10 @@ try {
     const ents = "entregadorId (entregadorQueroLog)\tNome\tnome (municipioQueroLog)\tUf\nraf0000001\tRafa Teste Pedidos\tLagarto\tSE";
     await ir(a, "#bloqueios/pedidos"); await a.reload();   // endereço antigo: leva ao Monitoramento
     ok(await esperar(a, "#v-bq-pedidos:not([hidden])") && await a.isVisible('nav.modulos a[data-mod="monitoramento"][aria-current="page"]') && await a.isVisible('nav.modulos a[data-mod="monitoramento"]'), "009z6b: Monitoramento é item próprio do menu; o endereço antigo leva até ele");
-    ok(await esperar(a, 'nav.tabs a[href="#monitoramento/enviar"]'), "009z6e: o moderador tem a aba Enviar dados no Monitoramento");
-    await a.click('nav.tabs a[href="#monitoramento/enviar"]');
+    await ir(a, "#monitoramento/entregadores");
+    ok(await esperar(a, "#v-mon-entregadores [data-mon-enviar]:not([hidden])") && !(await a.isVisible('nav.tabs a[href="#monitoramento/enviar"]')),
+      "009z18b: o moderador tem o botão Enviar dados no canto do título (não é aba)");
+    await a.click("#v-mon-entregadores [data-mon-enviar]");
     ok(await esperar(a, "#v-mon-enviar:not([hidden]) #ped-arquivos"), "009z6e: a aba Enviar dados tem a escolha de arquivos");
     // 009z6d: escolher em duas vezes soma (antes a 2ª escolha trocava a 1ª e as etapas sumiam)
     await a.setInputFiles("#ped-arquivos", [{ name: "Solicitacoes_por_place.csv", mimeType: "text/csv", buffer: utf16(etapas) }]);
@@ -1028,7 +1030,7 @@ try {
       const c = await dz.query("select etapa, n from pedidos_resumo_cancel where loja = 'Loja do Teste'"); await dz.end();
       ok(c.rows.length === 1 && c.rows[0].etapa === "sem_entregador", "009z18: o cancelado entra no resumo com a etapa em que parou"); }
     await ir(s, "#monitoramento"); await s.reload();
-    ok(await esperar(s, 'nav.tabs a[href="#monitoramento/entregadores"][aria-current="page"]') && !(await s.isVisible('nav.tabs a[href="#monitoramento/enviar"]'))
+    ok(await esperar(s, 'nav.tabs a[href="#monitoramento/entregadores"][aria-current="page"]') && !(await s.isVisible('nav.tabs a[href="#monitoramento/enviar"]')) && !(await s.isVisible('[data-mon-enviar]'))
       && !(await s.isVisible('nav.tabs a:has-text("Pedidos atrasados")')), "009z18: o Monitoramento abre em Entregadores; o suporte não tem Enviar dados; Pedidos atrasados não é aba");
     await s.selectOption("#me-min", "0");
     ok(await esperar(s, "#me-lista tr.mon-linha:has-text('Rafa Teste Pedidos')"), "009z18: o ranking mostra quem mais pesa no SLA");
