@@ -1170,12 +1170,10 @@ try {
   ok(await esperar(n7, "#tour-passo:popover-open >> text=Veja quem mais pesa e quem mais ajuda no SLA") && await n7.evaluate(() => document.activeElement?.closest("#tour-passo") != null)
       && (await n7.getAttribute("#tour-passo", "role")) === "dialog", "009n: tour das novidades abre no 1º passo, com o foco dentro do balão");
   await n7.screenshot({ path: path.join(PRINTS, "f1b-tour.png") });
-  // 009z13: a versão tem dois passos (os itens com "Mostrar onde": Monitoramento e Parceiros); o tour termina no 2º
-  ok(await n7.isVisible("#tour-passo >> text=Próximo"), "009n: o tour tem os passos da versão nova (009y1: saem dos itens da versão)");
-  await n7.click("#tour-passo >> text=Próximo");
-  ok(await esperar(n7, "#tour-passo:popover-open >> text=Descubra quem parou de chamar") && !(await n7.isVisible("#tour-passo >> text=Próximo")), "009z13: o 2º passo é o de Parceiros, e o tour termina nele");
+  // 009z18: a versão tem um passo só (o item com "Mostrar onde" aponta para o Monitoramento)
+  ok(!(await n7.isVisible("#tour-passo >> text=Próximo")), "009n: o tour tem os passos da versão nova (009y1: saem dos itens da versão): um só");
   await n7.click("#tour-passo >> text=Entendi");
-  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z14"), "009n: “Entendi” fecha o tour e ele não volta");
+  ok(!(await n7.$("#tour-passo")) && await n7.evaluate(() => localStorage.getItem("comunique-tour") === "009z18"), "009n: “Entendi” fecha o tour e ele não volta");
   await n7.reload(); await esperar(n7, "#v-inicio:not([hidden])"); await n7.waitForTimeout(800);
   ok(!(await n7.isVisible("dialog.janela")), "e não aparece de novo" + ((await n7.isVisible("dialog.janela")) ? ": " + (await n7.textContent("dialog.janela[open]").catch(() => "?")) : ""));
   // suporte envia sem nome: marca revisar e tarefa para o admin (opcional para os outros)
