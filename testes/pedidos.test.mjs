@@ -212,6 +212,7 @@ await t("Pedidos sem sinal são apagados depois de 7 dias (009z7); os com sinal 
 });
 
 await t("009z8: envio de várias semanas antigas fechado uma semana por vez não apaga as semanas ainda não calculadas", async () => {
+  await db.query("update parametros_pedidos set guardar_sinal_dias = 365, guardar_resumo_dias = 365 where unico");   // os testes antigos usam datas de meses atrás
   const em = (dias, min) => new Date(Date.now() - dias * 86400000 + min * 60000).toISOString();
   // semana A (40 dias atrás) e semana B (30 dias atrás): um pedido com atraso e um normal em cada
   const p = (id, dias, chegada) => ({ entrega_id: id, cidade: "LAGARTO - SE", entregador_nome: "Semana Teste " + id.slice(-1),
@@ -521,6 +522,7 @@ await t("009z18: Calendário soma clima, tempo e cancelamentos (semana e mês pa
 });
 
 await t("009z18: pedidos com sinal mais antigos que guardar_sinal_dias saem do banco (o resumo fica)", async () => {
+  await db.query("update parametros_pedidos set guardar_sinal_dias = 35, guardar_resumo_dias = 70 where unico");
   const d = (await um("select to_char((now() at time zone 'America/Sao_Paulo')::date - 50, 'YYYY-MM-DD') d")).d;
   const hd = (min) => new Date(new Date(`${d}T11:00:00-03:00`).getTime() + min * 60000).toISOString();
   await rpc(mod, "importar_pedidos", { p_itens: [{ entrega_id: "velho18_0001", codigo: "VE1", cidade: "LAGARTO - SE", loja: "Loja V",
@@ -529,6 +531,15 @@ await t("009z18: pedidos com sinal mais antigos que guardar_sinal_dias saem do b
   await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d}T00:00:00-03:00`, p_ate: `${d}T23:59:59-03:00` });
   igual(Number((await um("select count(*) c from pedidos_log where entrega_id = 'velho18_0001'")).c), 0, "apagado");
   igual(Number((await um("select sum(atraso) a from pedidos_resumo_entregador where chave = 'vel0001'")).a), 1, "resumo ficou");
+});
+
+await t("009z18: resumos mais antigos que guardar_resumo_dias (70) saem do banco; o que a comparação usa fica", async () => {
+  await db.query("update parametros_pedidos set guardar_sinal_dias = 35, guardar_resumo_dias = 70 where unico");
+  const velho = (await um("select public.hoje_brasilia() - 80 d")).d, novo = (await um("select public.hoje_brasilia() - 60 d")).d;
+  for (const d of [velho, novo]) await db.query("insert into pedidos_resumo_entregador (dia, cidade, chave, pedidos) values ($1, 'LAGARTO - SE', 'guarda01', 5) on conflict do nothing", [d]);
+  const d = (await um("select to_char((now() at time zone 'America/Sao_Paulo')::date - 4, 'YYYY-MM-DD') d")).d;
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d}T00:00:00-03:00`, p_ate: `${d}T23:59:59-03:00` });
+  igual(Number((await um("select count(*) c from pedidos_resumo_entregador where chave = 'guarda01'")).c), 1, "só o de 60 dias ficou");
 });
 
 await t("Não guarda CPF escrito no motivo", async () => {

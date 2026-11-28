@@ -4,7 +4,9 @@
 --   * resumos novos: cancelados (dia × hora × cidade × loja × bairro × etapa) e por entregador (dia × cidade × entregador),
 --     tempo até associar e tempo de entrega no resumo por hora/loja e no resumo por bairro;
 --   * a rota e os entregadores com o mesmo nome agora são separados por cidade;
---   * os pedidos com sinal são apagados depois de parametros_pedidos.guardar_sinal_dias (45), para caber todas as cidades;
+--   * só fica o que a comparação com o mês anterior precisa (pedido do usuário): os pedidos com sinal saem depois de
+--     parametros_pedidos.guardar_sinal_dias (35) e os resumos, a previsão do tempo e os planejamentos depois de
+--     guardar_resumo_dias (70: o mês atual inteiro contra o mês anterior, 30 dias contra os 30 antes, 8 semanas dos parceiros);
 --   * monitor_parceiros(p_cidade): os 4 grupos da aba Parceiros (parou, chamando menos, voltou, chamando mais) com as 8 semanas.
 -- Pode rodar de novo (a limpeza só apaga pedidos e resumos; as restrições ficam).
 
@@ -26,7 +28,9 @@ create index if not exists pedidos_log_entregador_idx on public.pedidos_log (ent
 
 alter table public.pedidos_dia add column if not exists cancelados integer not null default 0;
 
-alter table public.parametros_pedidos add column if not exists guardar_sinal_dias integer not null default 45;
+alter table public.parametros_pedidos add column if not exists guardar_sinal_dias integer not null default 35;
+alter table public.parametros_pedidos add column if not exists guardar_resumo_dias integer not null default 70;
+update public.parametros_pedidos set guardar_sinal_dias = 35, guardar_resumo_dias = 70 where unico;
 
 alter table public.pedidos_resumo add column if not exists n_associar integer not null default 0;
 alter table public.pedidos_resumo add column if not exists soma_associar numeric not null default 0;
@@ -344,6 +348,14 @@ begin
   -- pedidos com sinal: só os dos últimos guardar_sinal_dias (já estão nos resumos)
   delete from public.pedidos_log where chamado_em < now() - par.guardar_sinal_dias * interval '1 day';
   get diagnostics velhos = row_count;
+  -- resumos, previsão e planejamentos: só o que a comparação com o mês anterior usa
+  delete from public.pedidos_resumo where dia < public.hoje_brasilia() - par.guardar_resumo_dias;
+  delete from public.pedidos_resumo_bairro where dia < public.hoje_brasilia() - par.guardar_resumo_dias;
+  delete from public.pedidos_resumo_cancel where dia < public.hoje_brasilia() - par.guardar_resumo_dias;
+  delete from public.pedidos_resumo_entregador where dia < public.hoje_brasilia() - par.guardar_resumo_dias;
+  delete from public.pedidos_dia where dia < public.hoje_brasilia() - par.guardar_resumo_dias;
+  delete from public.clima_dia where dia < public.hoje_brasilia() - par.guardar_resumo_dias;
+  delete from public.planejamentos_dia where dia < public.hoje_brasilia() - par.guardar_resumo_dias;
   return (select jsonb_build_object(
       'pedidos', count(*) filter (where status = 'finalizado'), 'cancelados', count(*) filter (where status = 'cancelado'),
       'com_sinal', count(*) filter (where tem_sinal), 'atencao', count(*) filter (where atencao),
