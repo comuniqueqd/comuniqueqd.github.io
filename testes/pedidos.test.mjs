@@ -24,6 +24,7 @@ for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z16-reenvio-que-vale.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z17-mais-entregadores.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z18-monitoramento-novo.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z19-envio-que-cabe.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -529,6 +530,8 @@ await t("009z18: pedidos com sinal mais antigos que guardar_sinal_dias saem do b
     chamado_em: hd(0), aceite_em: hd(1), chegou_em: hd(25), saiu_em: hd(27), entregue_em: hd(50), finalizado_em: hd(51),
     entregador_nome: "Vel Ho", entregador_id: "vel0001", entregador_situacao: "ok", entregador_opcoes: [] }] });
   await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d}T00:00:00-03:00`, p_ate: `${d}T23:59:59-03:00` });
+  await db.query("update pedidos_log set importado_em = now() - interval '1 day' where entrega_id = 'velho18_0001'");   // 009z19: só sai no envio seguinte
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d}T00:00:00-03:00`, p_ate: `${d}T23:59:59-03:00` });
   igual(Number((await um("select count(*) c from pedidos_log where entrega_id = 'velho18_0001'")).c), 0, "apagado");
   igual(Number((await um("select sum(atraso) a from pedidos_resumo_entregador where chave = 'vel0001'")).a), 1, "resumo ficou");
 });
@@ -557,6 +560,23 @@ await t("009z18: só as cidades da Regras de equipe aparecem no Monitoramento", 
   await db.query("insert into cidades (nome) values ('CIDADE DE FORA - XX')");
   verdade((await rpc(sup, "monitor_entregadores", { p_min: 0 })).cidades.includes("CIDADE DE FORA - XX"), "cadastrada em Regras de equipe, aparece");
   await db.query("delete from cidades where nome = 'CIDADE DE FORA - XX'");
+});
+
+await t("009z19: envio de dias antigos (mais de 35 dias) fechado um dia por vez não apaga os dias ainda não calculados", async () => {
+  await db.query("update parametros_pedidos set guardar_sinal_dias = 35, guardar_resumo_dias = 70 where unico");
+  const d1 = (await um("select to_char(public.hoje_brasilia() - 45, 'YYYY-MM-DD') d")).d, d2 = (await um("select to_char(public.hoje_brasilia() - 44, 'YYYY-MM-DD') d")).d;
+  const p = (id, d, atraso) => ({ entrega_id: id, codigo: id.slice(-4), cidade: "LAGARTO - SE", loja: "Loja Antiga",
+    chamado_em: `${d}T12:00:00-03:00`, aceite_em: `${d}T12:01:00-03:00`, chegou_em: `${d}T12:${atraso ? 30 : 5}:00-03:00`, saiu_em: `${d}T12:${atraso ? 32 : 7}:00-03:00`,
+    entregue_em: `${d}T12:${atraso ? 50 : 20}:00-03:00`, finalizado_em: `${d}T12:${atraso ? 51 : 21}:00-03:00`, entregador_nome: "Ana Antiga", entregador_id: "ant0001", entregador_situacao: "ok", entregador_opcoes: [] });
+  await rpc(mod, "importar_pedidos", { p_itens: [p("antigo190001", d1, true), p("antigo190002", d1, false), p("antigo190003", d2, true), p("antigo190004", d2, false)] });
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d1}T00:00:00-03:00`, p_ate: `${d1}T23:59:59-03:00` });
+  igual(Number((await um("select count(*) c from pedidos_log where entrega_id in ('antigo190003', 'antigo190004')")).c), 2, "o 2º dia continua inteiro");
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d2}T00:00:00-03:00`, p_ate: `${d2}T23:59:59-03:00` });
+  igual(Number((await um("select sum(pedidos) n from pedidos_resumo where loja = 'Loja Antiga'")).n), 4, "os dois dias no resumo");
+  await db.query("update pedidos_log set importado_em = now() - interval '1 day' where entrega_id like 'antigo19%'");
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d2}T00:00:00-03:00`, p_ate: `${d2}T23:59:59-03:00` });
+  igual(Number((await um("select count(*) c from pedidos_log where entrega_id like 'antigo19%'")).c), 0, "no envio seguinte, os antigos saem");
+  igual(Number((await um("select sum(pedidos) n from pedidos_resumo where loja = 'Loja Antiga'")).n), 4, "e o resumo fica");
 });
 
 await t("Não guarda CPF escrito no motivo", async () => {

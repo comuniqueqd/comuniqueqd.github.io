@@ -84,6 +84,7 @@ await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z15-limite-30.sql"),
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z16-reenvio-que-vale.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z17-mais-entregadores.sql"), "utf8"));
 await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z18-monitoramento-novo.sql"), "utf8"));
+await db.query(fs.readFileSync(path.join(RAIZ, "supabase/009z19-envio-que-cabe.sql"), "utf8"));
 await db.query(`insert into bairros (cidade, nome, valor, taxa_log, apelidos) values ('LAGARTO - SE', 'CENTRO', 5.49, 0.99, '{}'),
   ('LAGARTO - SE', 'BREJO', 16.99, 0.99, '{}'), ('LAGARTO - SE', 'ADEMAR DE CARVALHO', 5.49, 0.99, '{ALDEMAR DE CARVALHO}')`);
 // histórico antigo de atraso (como a importação da planilha): 200 e 150 dias atrás
