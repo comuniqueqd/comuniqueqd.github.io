@@ -1447,3 +1447,4 @@ button.alerta-revisar.bloco { width: 100%; font-size: 13px; }
 .mon-dia .res { font-size: 11px; font-weight: 600; line-height: 1.2; }
 @media (max-width: 640px) { .mon-dia .res { display: none; } }
 .inicio-topo [data-mon-enviar] { margin-left: auto; }
+#ped-progresso.erro-envio { color: var(--bad); font-weight: 600; }

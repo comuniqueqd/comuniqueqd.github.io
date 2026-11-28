@@ -177,13 +177,17 @@
       for (let ini = ini0, n = 1; ini <= fim; ini += 86400000, n++) {
         prog.textContent = `Calculando os sinais: dia ${n} de ${dias} (${App.u.dia(new Date(ini).toISOString())})…`;
         // 009z20: dia que passou do limite de tempo tenta de novo (até 3 vezes, com uma pausa)
+        // 009z21: cada dia em 3 partes (sinais, resumo, limpar), cada uma com o próprio limite de tempo do Supabase
         let x;
-        for (let tentativa = 1; ; tentativa++) {
-          try { x = await rpc("fechar_importacao_pedidos", { p_de: new Date(ini).toISOString(), p_ate: new Date(Math.min(ini + 86400000 - 1000, fim)).toISOString() }); break; }
-          catch (e) {
-            if (!tempoEsgotado(e) || tentativa >= 3) throw e;
-            prog.textContent = `Calculando os sinais: dia ${n} de ${dias} (o banco demorou; tentando de novo)…`;
-            await esperar(5000);
+        const periodo = { p_de: new Date(ini).toISOString(), p_ate: new Date(Math.min(ini + 86400000 - 1000, fim)).toISOString() };
+        for (const etapa of ["sinais", "resumo", "limpar"]) {
+          for (let tentativa = 1; ; tentativa++) {
+            try { x = await rpc("fechar_importacao_pedidos", { ...periodo, p_etapa: etapa }); break; }
+            catch (e) {
+              if (!tempoEsgotado(e) || tentativa >= 4) throw e;
+              prog.textContent = `Calculando os sinais: dia ${n} de ${dias} (o banco demorou; tentando de novo)…`;
+              await esperar(5000 * tentativa);
+            }
           }
         }
         for (const k in r) r[k] += x[k] || 0;
@@ -193,8 +197,12 @@
       toast(`${r.pedidos.toLocaleString("pt-BR")} pedidos entregues e ${r.cancelados.toLocaleString("pt-BR")} cancelados no período.`);
       await carregar();
       location.hash = "#monitoramento/entregadores";
-    } catch (e) { toast(msgErro(e)); }
-    finally { P.enviando = false; btn.disabled = false; prog.textContent = ""; renderImportar(); }
+    } catch (e) { toast(msgErro(e)); P.erroEnvio = `Parou: ${msgErro(e)} Envie de novo os mesmos arquivos: o que já entrou não duplica.`; }
+    finally {
+      P.enviando = false; btn.disabled = false; prog.textContent = ""; renderImportar();
+      // 009z21: o erro fica escrito ao lado do botão (o aviso flutuante some em segundos)
+      if (P.erroEnvio) { const pg = $("#ped-progresso"); if (pg) { pg.textContent = P.erroEnvio; pg.classList.add("erro-envio"); } P.erroEnvio = null; }
+    }
   }
 
   function renderImportar() {

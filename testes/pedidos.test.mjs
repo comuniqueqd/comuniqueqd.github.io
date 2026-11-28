@@ -26,6 +26,7 @@ for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z18-monitoramento-novo.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z19-envio-que-cabe.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z20-envio-leve.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z21-calculo-em-partes.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -578,6 +579,23 @@ await t("009z19: envio de dias antigos (mais de 35 dias) fechado um dia por vez 
   await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d2}T00:00:00-03:00`, p_ate: `${d2}T23:59:59-03:00` });
   igual(Number((await um("select count(*) c from pedidos_log where entrega_id like 'antigo19%'")).c), 0, "no envio seguinte, os antigos saem");
   igual(Number((await um("select sum(pedidos) n from pedidos_resumo where loja = 'Loja Antiga'")).n), 4, "e o resumo fica");
+});
+
+await t("009z21: o cálculo em 3 partes (sinais, resumo, limpar) dá o mesmo que de uma vez", async () => {
+  const d = (await um("select to_char(public.hoje_brasilia() - 5, 'YYYY-MM-DD') d")).d;
+  const p = (id, atraso) => ({ entrega_id: id, codigo: id.slice(-4), cidade: "LAGARTO - SE", loja: "Loja Partes",
+    chamado_em: `${d}T13:00:00-03:00`, aceite_em: `${d}T13:01:00-03:00`, chegou_em: `${d}T13:${atraso ? 30 : 5}:00-03:00`, saiu_em: `${d}T13:${atraso ? 32 : 7}:00-03:00`,
+    entregue_em: `${d}T13:${atraso ? 50 : 20}:00-03:00`, finalizado_em: `${d}T13:${atraso ? 51 : 21}:00-03:00`, entregador_nome: "Pa Rtes", entregador_id: "par0001", entregador_situacao: "ok", entregador_opcoes: [] });
+  await rpc(mod, "importar_pedidos", { p_itens: [p("partes210001", true), p("partes210002", false)] });
+  const per = { p_de: `${d}T00:00:00-03:00`, p_ate: `${d}T23:59:59-03:00` };
+  igual((await rpc(mod, "fechar_importacao_pedidos", { ...per, p_etapa: "sinais" })).etapa, "sinais");
+  igual((await um("select sinal_chegada from pedidos_log where entrega_id = 'partes210001'")).sinal_chegada, true, "sinais calculados");
+  igual(Number((await um("select count(*) c from pedidos_resumo where loja = 'Loja Partes'")).c), 0, "resumo ainda não");
+  await rpc(mod, "fechar_importacao_pedidos", { ...per, p_etapa: "resumo" });
+  igual(Number((await um("select sum(pedidos) n from pedidos_resumo where loja = 'Loja Partes'")).n), 2, "resumo");
+  const r = await rpc(mod, "fechar_importacao_pedidos", { ...per, p_etapa: "limpar" });
+  verdade(r.pedidos >= 2, "limpar devolve os números de sempre");
+  await erro(rpc(mod, "fechar_importacao_pedidos", { ...per, p_etapa: "outra" }), "Etapa inválida");
 });
 
 await t("Não guarda CPF escrito no motivo", async () => {
