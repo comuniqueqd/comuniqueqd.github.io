@@ -151,14 +151,22 @@
   }
   function releer() { P.leitura = P.arquivos.length ? ler(P.arquivos) : null; renderImportar(); }
 
+  const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+  const tempoEsgotado = (e) => /statement timeout|57014|canceling statement/i.test(`${e?.message || ""} ${e?.code || ""}`);
   async function enviar(btn) {
     const l = P.leitura; if (!l?.pedidos.length || P.enviando) return;
     P.enviando = true; btn.disabled = true;
     const prog = $("#ped-progresso");
     try {
-      for (let i = 0; i < l.pedidos.length; i += 1000) {
-        prog.textContent = `Enviando ${Math.min(i + 1000, l.pedidos.length).toLocaleString("pt-BR")} de ${l.pedidos.length.toLocaleString("pt-BR")}…`;
-        await rpc("importar_pedidos", { p_itens: l.pedidos.slice(i, i + 1000) });
+      // 009z20: lotes de 500; se o Supabase passar do limite de tempo, o lote encolhe e tenta de novo (até 100 por vez)
+      let lote = 500;
+      for (let i = 0; i < l.pedidos.length;) {
+        prog.textContent = `Enviando ${Math.min(i + lote, l.pedidos.length).toLocaleString("pt-BR")} de ${l.pedidos.length.toLocaleString("pt-BR")}…`;
+        try { await rpc("importar_pedidos", { p_itens: l.pedidos.slice(i, i + lote) }); i += lote; }
+        catch (e) {
+          if (!tempoEsgotado(e) || lote <= 100) throw e;
+          lote = Math.max(100, Math.floor(lote / 2)); await esperar(3000);
+        }
       }
       // calcula os sinais um dia por vez (009z16b: uma semana inteira passava do limite de tempo do Supabase,
       // "canceling statement due to statement timeout"); dias inteiros de Brasília (o resumo das Análises é por dia)
@@ -168,7 +176,16 @@
       const dias = Math.round((fim + 1000 - ini0) / 86400000);
       for (let ini = ini0, n = 1; ini <= fim; ini += 86400000, n++) {
         prog.textContent = `Calculando os sinais: dia ${n} de ${dias} (${App.u.dia(new Date(ini).toISOString())})…`;
-        const x = await rpc("fechar_importacao_pedidos", { p_de: new Date(ini).toISOString(), p_ate: new Date(Math.min(ini + 86400000 - 1000, fim)).toISOString() });
+        // 009z20: dia que passou do limite de tempo tenta de novo (até 3 vezes, com uma pausa)
+        let x;
+        for (let tentativa = 1; ; tentativa++) {
+          try { x = await rpc("fechar_importacao_pedidos", { p_de: new Date(ini).toISOString(), p_ate: new Date(Math.min(ini + 86400000 - 1000, fim)).toISOString() }); break; }
+          catch (e) {
+            if (!tempoEsgotado(e) || tentativa >= 3) throw e;
+            prog.textContent = `Calculando os sinais: dia ${n} de ${dias} (o banco demorou; tentando de novo)…`;
+            await esperar(5000);
+          }
+        }
         for (const k in r) r[k] += x[k] || 0;
       }
       App.uso("pedidos:importar");
