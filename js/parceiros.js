@@ -174,17 +174,45 @@
     };
     setTimeout(tentar, 100);
   }
-  function linhaSem(x, txt, motivo) {
-    const nome = x.loja || x.estabelecimento;
-    return el("li", { class: "sem-chamar-linha" },
-      el("div", { class: "sem-chamar-txt" },
-        el("b", { text: nome }), " ",
-        el("span", { class: "meta", text: x.cidade }),
-        x.parceiro ? el("span", { class: "tag", text: "Parceiro ativado" }) : null,
-        el("p", { class: "meta", style: "margin:2px 0 0", text: txt })),
-      el("div", { class: "actions" },
-        el("button", { class: "btn small", type: "button", onclick: () => tarefaContato(nome, x.cidade, motivo) }, "Criar tarefa de contato"),
-        el("button", { class: "btn small", type: "button", onclick: () => registrarAcordo(nome, x.cidade) }, "Registrar acordo")));
+  // ---------- Monitoramento → Parceiros (009z18, desenho "Monitoramento: proposta das 4 abas") ----------
+  // Quatro grupos (monitor_parceiros): parou de chamar, chamando menos, voltou a chamar e chamando mais, cada loja com
+  // as barras das 8 semanas; e os ativados que ainda não chamaram.
+  const GRUPOS = [
+    { id: "parou", rotulo: "Parou de chamar", sub: "3 dias ou mais sem pedido", cor: "bad", ruim: true,
+      explica: "Média de 1 pedido ou mais por dia e nenhum pedido nos últimos 3 dias." },
+    { id: "menos", rotulo: "Chamando menos", sub: "última semana abaixo da metade", cor: "warn", ruim: true,
+      explica: "Última semana abaixo da metade da média semanal das 4 anteriores." },
+    { id: "voltou", rotulo: "Voltou a chamar", sub: "voltou depois de 7 dias ou mais parado", cor: "ok",
+      explica: "Ficou 7 dias ou mais sem pedido e voltou a chamar nesta semana." },
+    { id: "mais", rotulo: "Chamando mais", sub: "última semana acima de 1,5 vez a média", cor: "ok",
+      explica: "Última semana acima de 1,5 vez a média das 4 semanas anteriores." },
+  ];
+  P.grupo = "parou";
+  const num1 = (v) => String(v ?? "—").replace(".", ",");
+  function barrasSemanas(x, cor) {
+    const max = Math.max(1, ...x.semanas);
+    return el("div", { class: "mon-barras-box" },
+      el("div", { class: "mon-barras", role: "img", "aria-label": "Pedidos nas últimas 8 semanas: " + x.semanas.join(", ") },
+        x.semanas.map((v, i) => el("span", { class: "mon-barra" + (i === 7 ? " ultima " + cor : ""), style: `height:${Math.max(2, Math.round((v / max) * 36))}px` }))),
+      el("span", { class: "meta mon-barras-leg", text: "8 semanas" }));
+  }
+  function linhaParceiro(x, g) {
+    const ultimoTxt = x.dias === 0 ? "hoje" : x.dias === 1 ? "ontem" : `há ${x.dias} dias`;
+    const varTxt = g.id === "voltou" ? `voltou depois de ${plural(x.parado_dias, "dia", "dias")} parado` : x.variacao != null ? `${x.variacao > 0 ? "+" : "−"}${Math.abs(x.variacao)}%` : "";
+    const motivo = g.id === "parou" ? `Parou de chamar: último pedido em ${diaTxt(x.ultimo)}` : `Chamando menos: ${x.semana} pedidos na última semana, antes ${num1(x.media_semana)} por semana`;
+    return el("li", { class: "mon-parceiro" },
+      el("div", { class: "mon-parceiro-nome" },
+        el("b", { text: x.loja }), x.parceiro ? el("span", { class: "tag", text: "Parceiro ativado" }) : null,
+        el("span", { class: "meta", text: `${x.cidade} · último pedido ${ultimoTxt}` })),
+      barrasSemanas(x, g.cor),
+      el("div", { class: "mon-parceiro-num" },
+        el("span", { class: "meta", text: `Média: ${num1(x.media_semana ?? "—")} por semana` }),
+        el("b", { class: "mon-cor-" + g.cor, text: `Última: ${x.semana}${varTxt ? " · " + varTxt : ""}` })),
+      el("div", { class: "actions" }, g.ruim ? [
+        el("button", { class: "btn small primary", type: "button", onclick: () => tarefaContato(x.loja, x.cidade, motivo) }, "Criar tarefa de contato"),
+        el("button", { class: "btn small", type: "button", onclick: () => registrarAcordo(x.loja, x.cidade) }, "Registrar acordo")] : [
+        el("button", { class: "btn small", type: "button", onclick: () => App.mensagens?.abrir("parceiro_agradecimento", { estabelecimento: x.loja }) }, "Mensagem de agradecimento"),
+        el("button", { class: "btn small", type: "button", onclick: () => { location.hash = "#financeiro/acordos"; } }, "Ver acordos")]));
   }
   function renderSemChamar() {
     const box = $("#pa-sem-lista"), d = P.sem;
@@ -193,29 +221,33 @@
     const sel = $("#pa-sem-cidade"), atual = sel.value;
     sel.replaceChildren(el("option", { value: "", text: "Todas as cidades" }), ...d.cidades.map((c) => el("option", { value: c.cidade, text: c.cidade })));
     sel.value = d.cidades.some((c) => c.cidade === atual) ? atual : "";
-    if (!d.cidades.length) return box.replaceChildren(vazio("Ainda não há pedidos do Tableau", "A lista sai dos arquivos que um moderador envia em Monitoramento → Enviar dados."));
-    const f = (l) => l.filter((x) => !sel.value || x.cidade === sel.value);
-    const parou = f(d.parou), menos = f(d.menos), sem = f(d.sem_pedido);
-    const ref = d.cidades.filter((c) => !sel.value || c.cidade === sel.value).map((c) => `${c.cidade} até ${diaTxt(c.ate)}`).join(" · ");
-    const grupo = (titulo, nota, itens, vazioTxt) => el("section", { class: "panel sem-chamar-grupo" },
-      el("h3", {}, titulo, " ", el("span", { class: "count", text: itens.length })),
-      el("p", { class: "an-nota", text: nota }),
-      itens.length ? el("ul", { class: "sem-chamar-lista" }, itens) : el("p", { class: "meta", text: vazioTxt }));
-    box.replaceChildren(
-      el("p", { class: "meta", text: `Dados do Tableau: ${ref}. Os dias contam até o último dia enviado.` }),
-      grupo("Parou de chamar", "Chamava 1 pedido ou mais por dia e está há 3 dias ou mais sem nenhum.",
-        parou.map((x) => linhaSem(x, `Último pedido há ${plural(x.dias, "dia", "dias")}, em ${diaTxt(x.ultimo)} · costumava chamar ${String(x.media_dia).replace(".", ",")} por dia`,
-          `Parou de chamar: último pedido em ${diaTxt(x.ultimo)}`)), "Nenhuma loja parou de chamar."),
-      grupo("Chamando menos", "Na última semana chamou menos da metade da média das 4 semanas anteriores.",
-        menos.map((x) => linhaSem(x, `${plural(x.semana, "pedido", "pedidos")} na última semana · antes, ${String(x.media_semana).replace(".", ",")} por semana · último em ${diaTxt(x.ultimo)}`,
-          `Chamando menos: ${x.semana} pedidos na última semana, antes ${x.media_semana} por semana`)), "Nenhuma loja caiu pela metade."),
-      grupo("Ativados que ainda não chamaram", "Parceiros registrados pela equipe que não aparecem nos pedidos da cidade.",
-        sem.map((x) => linhaSem(x, `Ativado há ${plural(x.dias, "dia", "dias")}${x.por ? ", por " + x.por : ""}`, "Ativado e ainda sem o primeiro pedido")),
-        "Todos os parceiros ativados já chamaram."));
+    sel.hidden = d.cidades.length <= 1 && !sel.value;
+    if (!d.cidades.length) {
+      $("#pa-sem-grupos").replaceChildren(); $("#pa-sem-pedido-box").hidden = true;
+      return box.replaceChildren(vazio("Ainda não há pedidos do Tableau", "A lista sai dos arquivos que um moderador envia em Monitoramento → Enviar dados."));
+    }
+    const f = (l) => (l || []).filter((x) => !sel.value || x.cidade === sel.value);
+    $("#pa-sem-grupos").replaceChildren(...GRUPOS.map((g) => el("button", { type: "button", class: "mon-grupo", "aria-pressed": String(P.grupo === g.id),
+      onclick: () => { P.grupo = g.id; renderSemChamar(); } },
+      el("span", { class: "mon-grupo-rot" }, el("span", { class: "mon-ponto " + g.cor, "aria-hidden": "true" }), g.rotulo),
+      el("span", { class: "mon-grupo-n", text: f(d[g.id]).length }),
+      el("span", { class: "meta", text: g.sub }))));
+    const g = GRUPOS.find((x) => x.id === P.grupo), itens = f(d[g.id]);
+    const ref = d.cidades.filter((c) => !sel.value || c.cidade === sel.value).map((c) => `${c.cidade} até ${diaTxt(c.ate)}`);
+    box.replaceChildren(el("section", { class: "panel mon-lista-parceiros" },
+      el("div", { class: "mon-lista-cab" }, el("h3", { text: g.rotulo }), el("span", { class: "meta", text: g.explica })),
+      itens.length ? el("ul", {}, itens.map((x) => linhaParceiro(x, g))) : el("p", { class: "meta", text: "Nenhuma loja neste grupo." }),
+      el("p", { class: "meta", text: ref.length > 3 ? `Dados do Tableau de ${plural(ref.length, "cidade", "cidades")}.` : `Dados do Tableau: ${ref.join(" · ")}.` })));
+    const sem = f(d.sem_pedido);
+    $("#pa-sem-pedido-box").hidden = !sem.length;
+    $("#pa-sem-pedido-tit").textContent = `Ativados que ainda não chamaram (${sem.length})`;
+    $("#pa-sem-pedido").replaceChildren(el("ul", { class: "mon-sem-pedido-lista" }, sem.map((x) => el("li", {},
+      el("span", {}, el("b", { text: x.estabelecimento }), ` · ${x.cidade} · ativado há ${plural(x.dias, "dia", "dias")}${x.por ? ", por " + x.por : ""}`),
+      el("button", { class: "btn link", type: "button", onclick: () => tarefaContato(x.estabelecimento, x.cidade, "Ativado e ainda sem o primeiro pedido") }, "Criar tarefa de contato")))));
   }
   $("#pa-sem-cidade")?.addEventListener("change", () => renderSemChamar());
-  // 009z13b (pedido do usuário): a aba Sem chamar mora no Monitoramento (js/pedidos.js usa isto)
-  App.semChamar = { carregar: async () => { P.sem = await rpc("parceiros_sem_chamar", {}); }, render: renderSemChamar };
+  App.semChamar = { carregar: async () => { P.sem = await rpc("monitor_parceiros", {}); }, render: renderSemChamar };
+  App.registrarAcordo = registrarAcordo; App.tarefaContato = tarefaContato;
 
   App.modulo({
     id: "parceiros", nome: "Parceiros",

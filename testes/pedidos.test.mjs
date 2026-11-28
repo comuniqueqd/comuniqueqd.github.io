@@ -23,6 +23,7 @@ for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z15-limite-30.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z16-reenvio-que-vale.sql", import.meta.url), "utf8"));
 for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z17-mais-entregadores.sql", import.meta.url), "utf8"));
+for (let i = 0; i < 2; i++) await db.query(readFileSync(new URL("../supabase/009z18-monitoramento-novo.sql", import.meta.url), "utf8"));
 await liberarParaTestes(db);
 
 const pessoa = (email, nome) => ({ email, nome, sub: randomUUID() });
@@ -390,6 +391,144 @@ await t("009z16: reenvio do dia inteiro com uns poucos pedidos a menos refaz o r
   await rpc(mod, "importar_pedidos", { p_itens: Array.from({ length: 3 }, (_, i) => rv(i, "Brejo")) });
   await fecha();
   igual(await resumo(), 9, "envio parcial não troca o resumo");
+});
+
+await t("009z18: cancelados entram com a etapa e um resumo próprio, sem sinal e sem mexer nos finalizados", async () => {
+  const d = (await um("select to_char((now() at time zone 'America/Sao_Paulo')::date - 2, 'YYYY-MM-DD') d")).d;
+  const hd = (min) => new Date(new Date(`${d}T19:00:00-03:00`).getTime() + min * 60000).toISOString();
+  const base = (i, x) => ({ entrega_id: `canc18_${String(i).padStart(5, "0")}`, codigo: `CA${i}`, cidade: "ITABAIANA - SE", loja: "Loja Canc", bairro: "Centro",
+    chamado_em: hd(i), entregador_situacao: "sem_id", entregador_opcoes: [], ...x });
+  const fin = Array.from({ length: 6 }, (_, i) => base(i, { aceite_em: hd(i + 4), chegou_em: hd(i + 8), saiu_em: hd(i + 10), entregue_em: hd(i + 20),
+    finalizado_em: hd(i + 21), entregador_nome: "Zé Itabaiana", entregador_id: "ze00018", entregador_situacao: "ok" }));
+  const can = [base(100, { status: "cancelado" }), base(101, { status: "cancelado" }), base(102, { status: "cancelado", aceite_em: hd(110) }),
+    base(103, { status: "cancelado", aceite_em: hd(110), chegou_em: hd(115) }), base(104, { status: "cancelado", aceite_em: hd(110), chegou_em: hd(115), saiu_em: hd(118), entregue_em: hd(130), finalizado_em: hd(131) })];
+  const fecha = () => rpc(mod, "fechar_importacao_pedidos", { p_de: `${d}T00:00:00-03:00`, p_ate: `${d}T23:59:59-03:00` });
+  await rpc(mod, "importar_pedidos", { p_itens: fin });
+  await fecha();
+  await db.query("update pedidos_log set importado_em = now() - interval '1 day' where entrega_id like 'canc18_%'");
+  await rpc(mod, "importar_pedidos", { p_itens: can });
+  const r = await fecha();
+  igual(r.cancelados, 5, "cancelados no fechamento");
+  const pd = await um("select pedidos, cancelados from pedidos_dia where dia = $1 and cidade = 'ITABAIANA - SE'", [d]);
+  igual([pd.pedidos, pd.cancelados], [6, 5], "pedidos do dia");
+  igual(Number((await um("select sum(pedidos) n from pedidos_resumo where dia = $1 and cidade = 'ITABAIANA - SE'", [d])).n), 6, "finalizados no resumo (envio só de cancelados não troca)");
+  const et = Object.fromEntries((await db.query("select etapa, sum(n)::int n from pedidos_resumo_cancel where dia = $1 group by 1 order by 1", [d])).rows.map((x) => [x.etapa, x.n]));
+  igual(et, { depois_de_entregar: 1, indo_para_loja: 1, na_loja: 1, sem_entregador: 2 }, "etapas");
+  const sinal = await um("select count(*) filter (where tem_sinal)::int s from pedidos_log where entrega_id like 'canc18_01%'");
+  igual(sinal.s, 0, "cancelado não tem sinal");
+  // tempo até associar e tempo de entrega no resumo por hora/loja e por bairro
+  const rr = await um("select sum(n_associar)::int na, sum(soma_associar)::numeric sa, sum(n_total)::int nt, sum(soma_total)::numeric st from pedidos_resumo where dia = $1 and cidade = 'ITABAIANA - SE'", [d]);
+  igual([rr.na, Number(rr.sa), rr.nt, Number(rr.st)], [6, 24, 6, 120], "associar 4 min, total 20 min");
+  const rb = await um("select n_associar, lojas from pedidos_resumo_bairro where dia = $1 and cidade = 'ITABAIANA - SE' and bairro = 'CENTRO'", [d]);
+  igual([rb.n_associar, rb.lojas], [6, { "Loja Canc": 6 }], "bairro com as lojas");
+  // reenviar os finalizados não apaga os cancelados do resumo
+  await db.query("update pedidos_log set importado_em = now() - interval '1 day' where entrega_id like 'canc18_%'");
+  await db.query("delete from pedidos_log where status = 'cancelado' and entrega_id like 'canc18_%'");
+  await rpc(mod, "importar_pedidos", { p_itens: fin });
+  await fecha();
+  igual(Number((await um("select sum(n) n from pedidos_resumo_cancel where dia = $1", [d])).n), 5, "cancelados continuam");
+});
+
+await t("009z18: resumo por entregador (atrasos do entregador, chegada, em tela, finalização) e rota separada por cidade", async () => {
+  const d = (await um("select to_char((now() at time zone 'America/Sao_Paulo')::date - 3, 'YYYY-MM-DD') d")).d;
+  const hd = (min) => new Date(new Date(`${d}T11:00:00-03:00`).getTime() + min * 60000).toISOString();
+  const p = (i, cidade, nome, id, m) => ({ entrega_id: `ent18_${String(i).padStart(5, "0")}`, codigo: `EN${i}`, cidade, loja: "Loja E",
+    chamado_em: hd(m.c), aceite_em: hd(m.c + 1), chegou_em: hd(m.c + m.l), saiu_em: hd(m.c + m.s), entregue_em: hd(m.c + m.e), finalizado_em: hd(m.c + m.f),
+    entregador_nome: nome, entregador_id: id, entregador_situacao: id ? "ok" : "sem_id", entregador_opcoes: [] });
+  await rpc(mod, "importar_pedidos", { p_itens: [
+    p(1, "ITABAIANA - SE", "Mesmo Nome", "mes0001", { c: 0, l: 20, s: 22, e: 28, f: 29 }),      // chegada 19 min
+    p(2, "ITABAIANA - SE", "Mesmo Nome", "mes0001", { c: 60, l: 5, s: 6, e: 40, f: 41 }),       // 39 em tela sozinho + atraso
+    p(3, "ITABAIANA - SE", "Mesmo Nome", "mes0001", { c: 120, l: 5, s: 6, e: 15, f: 40 }),      // finalizou 25 min depois
+    p(4, "LAGARTO - SE", "Mesmo Nome", null, { c: 60, l: 3, s: 6, e: 12, f: 13 }),              // outra cidade, mesma hora de saída
+  ] });
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d}T00:00:00-03:00`, p_ate: `${d}T23:59:59-03:00` });
+  const e = await um("select pedidos, atraso, at_entregador, chegada, tela, finalizou, em_rota from pedidos_resumo_entregador where dia = $1 and chave = 'mes0001'", [d]);
+  igual([e.pedidos, e.atraso, e.at_entregador, e.chegada, e.tela, e.finalizou, e.em_rota], [3, 1, 2, 1, 1, 1, 0], "entregador");
+  igual((await um("select rota_n from pedidos_log where entrega_id = 'ent18_00002'")).rota_n, 1, "não junta com o homônimo de outra cidade");
+  verdade(await um("select 1 from pedidos_resumo_entregador where dia = $1 and chave = '?mesmo nome' and cidade = 'LAGARTO - SE'", [d]), "sem ID: chave pelo nome");
+});
+
+await t("009z18: Parceiros separa parou, chamando menos, voltou e chamando mais, com as 8 semanas", async () => {
+  await db.query("insert into cidades (nome) values ('BOQUIM - SE') on conflict do nothing");
+  const ref = (await um("select (now() at time zone 'America/Sao_Paulo')::date - 1 d")).d;
+  const dias = (await db.query("select generate_series($1::date - 60, $1::date, '1 day')::date d", [ref])).rows.map((x) => x.d);
+  for (const d of dias) {
+    const k = Math.round((new Date(ref) - d) / 86400000);
+    const linhas = [["B Viva", 2]];
+    if (k >= 5) linhas.push(["B Parada", 2]);
+    linhas.push(["B Fraca", k < 7 ? (k % 3 === 0 ? 1 : 0) : 4]);
+    if (k < 3 || k > 15) linhas.push(["B Voltou", 2]);   // parada do 3º ao 15º dia antes do último
+    linhas.push(["B Forte", k < 7 ? 6 : 2]);
+    for (const [loja, q] of linhas) if (q) await db.query("insert into pedidos_resumo (dia, hora, cidade, loja, pedidos, atraso_min) values ($1, 12, 'BOQUIM - SE', $2, $3, 30)", [d, loja, q]);
+  }
+  const s = await rpc(sup, "monitor_parceiros", { p_cidade: "BOQUIM - SE" });
+  igual(s.parou.map((x) => x.loja), ["B Parada"], "parou");
+  igual(s.menos.map((x) => x.loja), ["B Fraca"], "menos");
+  igual(s.voltou.map((x) => [x.loja, x.parado_dias]), [["B Voltou", 13]], "voltou");
+  igual(s.mais.map((x) => [x.loja, x.variacao]), [["B Forte", 200]], "mais");
+  const forte = s.mais[0];
+  igual(forte.semanas.length, 8, "8 semanas");
+  igual(forte.semanas[7], 42, "a última semana por último");
+});
+
+await t("009z18: ranking dos entregadores (quem mais pesa / quem mais ajuda no SLA) e o detalhe", async () => {
+  const r = await rpc(sup, "monitor_entregadores", { p_cidade: "ITABAIANA - SE", p_min: 0 });
+  const mes = r.lista.find((x) => x.chave === "mes0001");
+  verdade(mes, "Mesmo Nome no ranking");
+  igual([mes.pedidos, mes.at_entregador, mes.atraso], [3, 2, 1], "números");
+  igual(mes.impacto_cidade, Math.round(2 * 10000 / r.pedidos) / 100, "impacto = 2 atrasos do entregador / pedidos da cidade");
+  igual(r.lista[0].chave, "mes0001", "quem mais pesa primeiro");
+  verdade(r.sla > 0 && r.sla <= 100, "SLA");
+  const aj = await rpc(sup, "monitor_entregadores", { p_cidade: "ITABAIANA - SE", p_min: 0, p_modo: "ajuda" });
+  verdade(!aj.lista.some((x) => x.chave === "mes0001"), "quem atrasa acima da média não ajuda");
+  verdade(aj.lista.some((x) => x.chave === "ze00018"), "Zé, sem atrasos, ajuda");
+  igual((await rpc(sup, "monitor_entregadores", { p_cidade: "ITABAIANA - SE", p_min: 0, p_busca: "mes0" })).lista.map((x) => x.chave), ["mes0001"], "busca pelo ID");
+  igual((await rpc(sup, "monitor_entregadores", { p_cidade: "ITABAIANA - SE", p_min: 30 })).lista.length, 0, "mínimo de entregas");
+  const d = await rpc(sup, "monitor_entregador", { p_chave: "mes0001" });
+  igual([d.chegada, d.tela, d.finalizou, d.cidade], [1, 1, 1, "ITABAIANA - SE"], "de onde vêm");
+  igual(d.horas.length > 0, true, "quando mais atrasa");
+  await erro(rpc(fora, "monitor_entregadores", {}), "");
+});
+
+await t("009z18: Cidade traz bairros (associar, entrega, cancelados, lojas), lojas com atraso e o mapa com cancelados", async () => {
+  const c = await rpc(sup, "monitor_cidade", { p_cidade: "ITABAIANA - SE", p_min: 0 });
+  const centro = c.bairros.find((b) => b.bairro === "CENTRO");
+  verdade(centro, "bairro Centro");
+  igual([centro.assoc, centro.cancelados, centro.sem_entregador, centro.lojas], [4, 5, 2, ["Loja Canc"]], "Centro");
+  verdade(c.cidades.includes("ITABAIANA - SE") && c.sla > 0, "cidades e SLA");
+  verdade(c.mapa.some((x) => x.cancelados > 0), "mapa com cancelados");
+  igual(c.cancelados, 5, "cancelados no período");
+  const mes = await rpc(sup, "monitor_cidade", { p_cidade: "ITABAIANA - SE", p_comparar: "mes" });
+  verdade(mes.comp_de < mes.de, "comparar com o mês passado");
+});
+
+await t("009z18: Calendário soma clima, tempo e cancelamentos (semana e mês passados) e guarda o planejamento", async () => {
+  const hoje = (await um("select public.hoje_brasilia() d")).d;
+  const iso = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const amanha = iso(new Date(hoje.getTime() + 86400000));
+  await rpc(sup, "salvar_clima", { p_cidade: "ITABAIANA - SE", p_itens: [{ dia: amanha, chance: 85, chuva_mm: 9, descricao: "chuva forte", das: "18h", ate: "22h" }] });
+  await rpc(mon, "salvar_planejamento", { p_cidade: "ITABAIANA - SE", p_dia: amanha, p_convocar: 6, p_reforco_de: "18:00", p_reforco_ate: "22:00", p_acoes: ["mensagem", "xx"], p_observacao: "teste" });
+  await erro(rpc(sup, "salvar_planejamento", { p_cidade: "ITABAIANA - SE", p_dia: amanha, p_convocar: 1, p_reforco_de: null, p_reforco_ate: null, p_acoes: [], p_observacao: null }), "");
+  const c = await rpc(sup, "monitor_calendario", { p_cidade: "ITABAIANA - SE", p_mes: amanha });
+  const d = c.dias.find((x) => x.dia === amanha);
+  igual([d.p_clima, d.planejado, d.plano.acoes, d.plano.convocar, d.futuro], [2, true, ["mensagem"], 6, true], "amanhã: chuva forte e planejado");
+  verdade(d.nivel >= 1 && d.nivel <= 4 && d.pontos === d.p_clima + d.p_tempo + d.p_canc, "nível pelos pontos");
+  const ontem2 = c.dias.find((x) => x.pedidos > 0);
+  if (ontem2) verdade(!ontem2.futuro, "dia com dados já aconteceu");
+  await rpc(mod, "salvar_chave_clima", { p_chave: "abc123abc123abc123" });
+  igual(await rpc(sup, "chave_clima"), "abc123abc123abc123", "a chave do clima para quem é da equipe");
+  await erro(rpc(sup, "salvar_chave_clima", { p_chave: "zzzzzzzzzzzzzzzzzzzz" }), "");
+});
+
+await t("009z18: pedidos com sinal mais antigos que guardar_sinal_dias saem do banco (o resumo fica)", async () => {
+  const d = (await um("select to_char((now() at time zone 'America/Sao_Paulo')::date - 50, 'YYYY-MM-DD') d")).d;
+  const hd = (min) => new Date(new Date(`${d}T11:00:00-03:00`).getTime() + min * 60000).toISOString();
+  await rpc(mod, "importar_pedidos", { p_itens: [{ entrega_id: "velho18_0001", codigo: "VE1", cidade: "LAGARTO - SE", loja: "Loja V",
+    chamado_em: hd(0), aceite_em: hd(1), chegou_em: hd(25), saiu_em: hd(27), entregue_em: hd(50), finalizado_em: hd(51),
+    entregador_nome: "Vel Ho", entregador_id: "vel0001", entregador_situacao: "ok", entregador_opcoes: [] }] });
+  await rpc(mod, "fechar_importacao_pedidos", { p_de: `${d}T00:00:00-03:00`, p_ate: `${d}T23:59:59-03:00` });
+  igual(Number((await um("select count(*) c from pedidos_log where entrega_id = 'velho18_0001'")).c), 0, "apagado");
+  igual(Number((await um("select sum(atraso) a from pedidos_resumo_entregador where chave = 'vel0001'")).a), 1, "resumo ficou");
 });
 
 await t("Não guarda CPF escrito no motivo", async () => {

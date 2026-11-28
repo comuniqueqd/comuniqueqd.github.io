@@ -6,7 +6,7 @@
   const App = window.App;
   const { $, el, janela, norm, dt, toast, vazio, carregandoEl, rpc, msgErro, copiavel } = App.u;
   const S = App.S;
-  const P = { dados: null, filtros: { de: "", ate: "", cidade: "", loja: "", busca: "", tipo: "atrasos", situacao: "a_decidir" }, limite: 50, leitura: null, enviando: false };
+  const P = { dados: null, filtros: { de: "", ate: "", cidade: "", loja: "", busca: "", tipo: "atrasos", situacao: "" }, limite: 50, leitura: null, enviando: false };
   const papel = () => S.me?.papel_bloqueios;
   const mod = () => papel() === "moderador";
   const plural = (n, um, varios) => App.u.plural(n, um, varios);
@@ -88,7 +88,7 @@
           const g = (n) => (c[n] >= 0 ? quando(r[c[n]]) : null);
           const aceites = [g("associadoAt"), g("Aceite At")].filter(Boolean).sort();
           lojas.add(r[c["Estabelecimento"]]);
-          etapas.set(id, { entrega_id: id, codigo: (r[c["Código"]] || "").trim() || null, cidade: cidadeComunique(r[c["UF - Cidade"]]),
+          etapas.set(id, { entrega_id: id, status: a.status === "cancelado" ? "cancelado" : "finalizado", codigo: (r[c["Código"]] || "").trim() || null, cidade: cidadeComunique(r[c["UF - Cidade"]]),
             loja: (r[c["Estabelecimento"]] || "").trim() || null, loja_id: (r[c["estabelecimentoId"]] || "").trim() || null,
             pedido_em: g("createdAt (pedido)"), chamado_em: g("Solicitado At"), aceite_em: aceites[0] || null,
             chegou_em: g("Chegou Loja At"), saiu_em: g("Saiu Loja At"), entregue_em: g("Entregue At"), finalizado_em: g("Finalizado At"),
@@ -111,16 +111,17 @@
         }
       }
       const fonte = t.tipo === "etapas" ? etapas : t.tipo === "resumo" ? nomes : ids;
-      const info = { nome: a.nome, tipo: t.tipo, n: fonte.size - antes[t.tipo] };
+      const info = { nome: a.nome, tipo: t.tipo, n: fonte.size - antes[t.tipo], status: a.status };
       if (t.tipo === "etapas") {
         const ds = [...etapas.values()].slice(antes.etapas).map((p) => p.chamado_em).filter(Boolean).sort();
         info.de = ds[0]; info.ate = ds[ds.length - 1];
       }
       porArquivo.push(info);
     }
+    const temFin = arquivos.some((a) => a.status !== "cancelado" && porArquivo.some((x) => x.nome === a.nome && x.tipo === "etapas"));
     if (!lidos.etapas) avisos.push("Falta o arquivo do painel \"Entregas por Loja (com tempo)\": é ele que traz os tempos de cada pedido.");
-    if (lidos.etapas && !lidos.resumo) avisos.push("Falta o \"Resumo filtro\": sem ele, os pedidos chegam sem o nome do entregador.");
-    if (lidos.etapas && !lidos.entregadores) avisos.push("Falta o \"Tempo de entrega dos entregadores\": sem ele, o ID de cada entregador fica para quem for decidir.");
+    if (temFin && !lidos.resumo) avisos.push("Falta o \"Resumo filtro\": sem ele, os pedidos chegam sem o nome do entregador.");
+    if (temFin && !lidos.entregadores) avisos.push("Falta o \"Tempo de entrega dos entregadores\": sem ele, o ID de cada entregador fica para quem for decidir.");
     const pedidos = [...etapas.values()].map((p) => {
       const nome = nomes.get(p.entrega_id);
       const cidadeP = nomeChave((p.cidade || "").replace(/\s+-\s+[A-Z]{2}$/, ""));
@@ -132,6 +133,7 @@
     });
     const datas = pedidos.map((p) => p.chamado_em).filter(Boolean).sort();
     const resumo = { pedidos: pedidos.length, de: datas[0] || null, ate: datas[datas.length - 1] || null,
+      cancelados: pedidos.filter((p) => p.status === "cancelado").length,
       com_entregador: pedidos.filter((p) => p.entregador_nome).length, com_id: pedidos.filter((p) => p.entregador_id).length,
       cidades: [...new Set(pedidos.map((p) => p.cidade).filter(Boolean))].sort(), lidos };
     return { pedidos, avisos, resumo, porArquivo };
@@ -141,7 +143,7 @@
   P.arquivos = [];
   async function lerArquivos(files) {
     for (const f of files) {
-      const a = { nome: f.name, texto: decodificar(await f.arrayBuffer()) };
+      const a = { nome: f.name, texto: decodificar(await f.arrayBuffer()), status: /cancel/i.test(f.name) ? "cancelado" : "finalizado" };
       const i = P.arquivos.findIndex((x) => x.nome === a.nome);
       if (i >= 0) P.arquivos[i] = a; else P.arquivos.push(a);
     }
@@ -160,7 +162,7 @@
       }
       // calcula os sinais um dia por vez (009z16b: uma semana inteira passava do limite de tempo do Supabase,
       // "canceling statement due to statement timeout"); dias inteiros de Brasília (o resumo das Análises é por dia)
-      const r = { pedidos: 0, com_sinal: 0, atencao: 0 };
+      const r = { pedidos: 0, cancelados: 0, com_sinal: 0, atencao: 0 };
       const fim = new Date(l.resumo.ate.slice(0, 10) + "T23:59:59-03:00").getTime();
       const ini0 = new Date(l.resumo.de.slice(0, 10) + "T00:00:00-03:00").getTime();
       const dias = Math.round((fim + 1000 - ini0) / 86400000);
@@ -171,9 +173,9 @@
       }
       App.uso("pedidos:importar");
       P.leitura = null; P.arquivos = [];
-      toast(`${r.pedidos.toLocaleString("pt-BR")} pedidos no período; ${plural(r.com_sinal, "pedido fora do limite", "pedidos fora do limite")} (${r.atencao} com atenção).`);
+      toast(`${r.pedidos.toLocaleString("pt-BR")} pedidos entregues e ${r.cancelados.toLocaleString("pt-BR")} cancelados no período.`);
       await carregar();
-      location.hash = "#monitoramento/pedidos";   // 009z6e: depois de enviar, volta para a lista
+      location.hash = "#monitoramento/entregadores";
     } catch (e) { toast(msgErro(e)); }
     finally { P.enviando = false; btn.disabled = false; prog.textContent = ""; renderImportar(); }
   }
@@ -186,19 +188,24 @@
     const r = l?.resumo;
     const TIPO = { etapas: "Etapas", resumo: "Resumo filtro", entregadores: "Tempo de entrega dos entregadores" };
     const descr = (x) => !x.tipo ? "não reconhecido"
-      : x.tipo === "etapas" ? `${TIPO.etapas}: ${x.n.toLocaleString("pt-BR")} pedidos${x.de ? ` de ${App.u.dia(x.de)} a ${App.u.dia(x.ate)}` : ""}`
+      : x.tipo === "etapas" ? `${TIPO.etapas}: ${x.n.toLocaleString("pt-BR")} pedidos ${x.status === "cancelado" ? "cancelados" : "entregues"}${x.de ? ` de ${App.u.dia(x.de)} a ${App.u.dia(x.ate)}` : ""}`
       : x.tipo === "resumo" ? `${TIPO.resumo}: ${x.n.toLocaleString("pt-BR")} entregas com o entregador`
       : `${TIPO.entregadores}: ${x.n.toLocaleString("pt-BR")} nomes com ID`;
     const lista = l?.porArquivo?.length ? el("div", { class: "ped-escolhidos" },
       el("p", { class: "meta", text: `Arquivos escolhidos (${l.porArquivo.length}). Escolher de novo soma à lista.` }),
       el("ul", {}, l.porArquivo.map((x) => el("li", { class: x.tipo ? "" : "nao" },
         el("span", { class: "ped-arq-nome", text: x.nome }), el("span", { class: "meta", text: descr(x) }),
+        x.tipo === "etapas" ? el("select", { "aria-label": "Situação dos pedidos de " + x.nome, disabled: P.enviando,
+          onchange: (e) => { const a = P.arquivos.find((y) => y.nome === x.nome); if (a) a.status = e.target.value; releer(); } },
+          el("option", { value: "finalizado", selected: x.status !== "cancelado" }, "Finalizados"),
+          el("option", { value: "cancelado", selected: x.status === "cancelado" }, "Cancelados")) : null,
         el("button", { class: "btn link", type: "button", "aria-label": "Tirar " + x.nome, disabled: P.enviando,
           onclick: () => { P.arquivos = P.arquivos.filter((a) => a.nome !== x.nome); releer(); } }, "Tirar")))),
       el("button", { class: "btn link", type: "button", disabled: P.enviando, onclick: () => { P.arquivos = []; releer(); } }, "Limpar a lista")) : null;
     $("#ped-importar-corpo").replaceChildren(...[
       el("ol", { class: "ped-passos" },
-        el("li", { text: "\"Entregas por Loja (com tempo)\": Estabelecimento (Tudo), Status FINALIZADO, o período que quiser (uma semana por arquivo, se ficar pesado)." }),
+        el("li", { text: "\"Entregas por Loja (com tempo)\": Estabelecimento (Tudo), UF - Cidade (Tudo), Status FINALIZADO, o período que quiser (uma semana por arquivo, se ficar pesado)." }),
+        el("li", { text: "O mesmo painel de novo, com Status CANCELADO: na lista abaixo, marque esse arquivo como \"Cancelados\"." }),
         el("li", { text: "\"Resumo filtro\": o mesmo período, Estabelecimento e Entregador em (Tudo)." }),
         el("li", { text: "\"Tempo de entrega dos entregadores\": os meses do período marcados, município em (Tudo)." })),
       el("p", { class: "meta", text: "Em cada painel: Download, Tabela de referência cruzada, CSV. Pode escolher todos os arquivos de uma vez; reenviar um período não repete pedidos." }),
@@ -207,9 +214,9 @@
       ...(l ? [
         ...l.avisos.map((a) => el("p", { class: "warn-msg", text: a })),
         r.pedidos ? el("p", { class: "ped-resumo-leitura" },
-          el("b", { text: `${r.pedidos.toLocaleString("pt-BR")} pedidos` }),
-          ` de ${App.u.dia(r.de)} a ${App.u.dia(r.ate)} (${r.cidades.join(", ") || "sem cidade"}); `,
-          `${Math.round((100 * r.com_entregador) / r.pedidos)}% com o entregador e ${Math.round((100 * r.com_id) / r.pedidos)}% com o ID.`) : null,
+          el("b", { text: `${(r.pedidos - r.cancelados).toLocaleString("pt-BR")} pedidos entregues e ${r.cancelados.toLocaleString("pt-BR")} cancelados` }),
+          ` de ${App.u.dia(r.de)} a ${App.u.dia(r.ate)} (${plural(r.cidades.length, "cidade", "cidades")}); `,
+          r.pedidos > r.cancelados ? `${Math.round((100 * r.com_entregador) / (r.pedidos - r.cancelados))}% dos entregues com o entregador e ${Math.round((100 * r.com_id) / (r.pedidos - r.cancelados))}% com o ID.` : "") : null,
         r.pedidos ? el("div", { class: "actions" },
           el("button", { class: "btn primary", type: "button", disabled: P.enviando, onclick: (e) => enviar(e.currentTarget) }, `Enviar ${r.pedidos.toLocaleString("pt-BR")} pedidos`),
           el("span", { class: "meta", id: "ped-progresso", role: "status" })) : null] : [])].filter(Boolean));
@@ -340,8 +347,7 @@
   function acoes(p) {
     const ficha = p.entregador_id ? el("button", { class: "btn link ped-ficha", type: "button", onclick: () => App.abrirFicha?.(p.entregador_id) }, "Ficha do entregador") : null;
     if (!p.decisao) return [el("div", { class: "actions" },
-      el("button", { class: "btn" + (naoDoEntregador(p) || (!p.sinal_chegada && !p.sinal_total) ? "" : " primary"), type: "button", onclick: () => abrirConfirmar(p) }, "Confirmar restrição"),
-      el("button", { class: "btn", type: "button", onclick: () => abrirDescartar(p) }, "Descartar"),
+      el("button", { class: "btn" + (naoDoEntregador(p) || (!p.sinal_chegada && !p.sinal_total) ? "" : " primary"), type: "button", onclick: () => abrirConfirmar(p) }, "Registrar restrição"),
       p.codigo ? el("span", { class: "ped-dir" }, copiarBtn(p.codigo, "Copiar código", "Código do pedido copiado.")) : null), ficha];
     const quem = `${p.decidido_por_nome || "alguém"} em ${dt(p.decidido_em)}`;
     return [el("div", { class: "actions ped-decidido" },
@@ -467,9 +473,11 @@
     // 009z10: vindo de uma loja das Análises, o filtro aparece escolhido e aberto
     if (P.filtros.loja) { $("#ped-loja").value = P.filtros.loja; const mf = $(".ped-mais-filtros"); if (mf) mf.open = true; }
     pilhas(); numeros();
+    // 009z18: a lista abre pelo entregador (aba Entregadores → "Ver os pedidos atrasados")
+    $("#ped-titulo").textContent = P.titulo ? `Pedidos atrasados de ${P.titulo}` : "Pedidos atrasados";
     $("#ped-atualizado").textContent = d.periodo?.de
       ? `Dados de ${App.u.dia(d.periodo.de)} a ${App.u.dia(d.periodo.ate)}${d.importado_em ? ` · enviados em ${dt(d.importado_em)}` : ""}` : "";
-    if (!d.periodo?.de) return box.replaceChildren(vazio("Nenhum pedido ainda", mod() ? "Envie os arquivos do Tableau na aba Enviar dados, aqui no Monitoramento." : "Quando um moderador enviar os dados do Tableau, os pedidos fora do limite aparecem aqui."));
+    if (!d.periodo?.de) return box.replaceChildren(vazio("Nenhum pedido ainda", mod() ? "Envie os arquivos do Tableau na aba Enviar dados, aqui no Monitoramento." : "Quando um moderador enviar os dados do Tableau, os pedidos atrasados aparecem aqui."));
     if (!d.itens.length) return box.replaceChildren(vazio("Nada com esses filtros", ""));
     box.replaceChildren(...[el("div", { class: "ped-grade" }, d.itens.map(card)),
       d.total > d.itens.length ? el("div", { class: "actions" }, el("button", { class: "btn", type: "button", onclick: () => { P.limite += 50; recarregar(); } },
@@ -535,7 +543,7 @@
         await recarregar();
       } catch (e) { btn.disabled = false; erro.textContent = msgErro(e); erro.hidden = false; }
     }
-    const d = janela("Confirmar restrição",
+    const d = janela("Registrar restrição",
       el("p", { class: "meta", style: "margin:0", text: [p.codigo ? `Pedido ${p.codigo}` : null, p.loja, p.cidade, p.chamado_em ? dt(p.chamado_em) : null].filter(Boolean).join(" · ") }),
       el("div", { class: "ped-sinais" }, el("span", { class: "pill ped-sinal " + rotulo(p)[1], text: rotulo(p)[0] })),
       el("div", { class: "grid2" }, el("label", {}, "ID do entregador", id), el("label", {}, "Nome do entregador", nome)),
@@ -591,23 +599,14 @@
   $("#ped-ate").addEventListener("change", (e) => mudou("ate", e.target.value, true));
   $("#ped-cidade").addEventListener("change", (e) => mudou("cidade", e.target.value, true));
   $("#ped-loja").addEventListener("change", (e) => mudou("loja", e.target.value, true));
-  $("#ped-busca").addEventListener("input", (e) => mudou("busca", e.target.value));
+  $("#ped-busca").addEventListener("input", (e) => { P.titulo = null; mudou("busca", e.target.value); });
 
-  App.pedidos = { carregar, render, ler, linhas, decodificar, P };
-  // 009z6b (pedido do usuário): item próprio no menu, "Monitoramento"; mesmo acesso das Restrições
-  App.modulo({
-    id: "monitoramento", nome: "Monitoramento",
-    acesso: () => !!papel(),
-    abas: [{ id: "pedidos", nome: "Pedidos fora do limite", secao: "v-bq-pedidos" },
-           { id: "sem-chamar", nome: "Sem chamar", secao: "v-pa-sem" },   // 009z13b: veio de Parceiros
-           { id: "enviar", nome: "Enviar dados", secao: "v-mon-enviar", pode: mod }],   // 009z6e: o envio saiu de cima da lista
-    padrao: () => "pedidos",
-    async carregar(aba) {
-      if (aba === "enviar") return;
-      if (aba === "sem-chamar") return App.semChamar?.carregar();
-      const B = App.bloqueios?.B;   // as cidades da janela de confirmar vêm das regras das Restrições
-      await Promise.all([carregar(), B && !B.regras ? rpc("regras_bloqueio").then((d) => { B.regras = d; B.regrasEm = Date.now(); }) : null]);
-    },
-    render(aba) { if (aba === "enviar") renderImportar(); else if (aba === "sem-chamar") App.semChamar?.render(); else render(); },
-  });
+  // 009z18: "Ver os pedidos atrasados" de um entregador (aba Entregadores)
+  function doEntregador(x) {
+    P.filtros = { de: "", ate: "", cidade: "", loja: "", busca: x ? x.id || x.nome || "" : "", tipo: "atrasos", situacao: "" };
+    P.titulo = x ? x.nome || x.id : null; P.limite = 50; P.dados = null;
+    $("#ped-busca").value = P.filtros.busca;
+    location.hash = "#monitoramento/atrasados";
+  }
+  App.pedidos = { carregar, render, renderImportar, ler, linhas, decodificar, doEntregador, P };
 })();

@@ -363,9 +363,11 @@
                      "atividades/avisos": "avisos/para-mim", "registros": "avisos/equipe", "registros/feed": "avisos/equipe",
                      "atividades/painel": "analises/tarefas",
                      // 009z6b: os Pedidos fora do limite saíram das Restrições para o item próprio Monitoramento
-                     "bloqueios/pedidos": "monitoramento/pedidos",
+                     "bloqueios/pedidos": "monitoramento/atrasados", "monitoramento/pedidos": "monitoramento/atrasados",
+                     // 009z18: Sem chamar virou a aba Parceiros do Monitoramento
+                     "monitoramento/sem-chamar": "monitoramento/parceiros",
                      // 009z13b: Ativações entrou em Parceiros ativos; Sem chamar foi para o Monitoramento
-                     "parceiros/cidades": "parceiros/lista", "parceiros/sem-chamar": "monitoramento/sem-chamar" };
+                     "parceiros/cidades": "parceiros/lista", "parceiros/sem-chamar": "monitoramento/parceiros" };
   const abasPermitidas = (m) => m.abas.filter((a) => !a.pode || a.pode());
   App.atual = { mod: null, aba: null };
   // Grupos: módulos que aparecem juntos sob um item só do menu, com uma segunda barra para escolher entre eles.
@@ -503,9 +505,11 @@
         m.contador ? el("span", { class: "count" + (m.alerta ? " alert" : ""), "data-espelho": m.contador, hidden: true, text: "0" }) : null)) : []));
     // abas do módulo
     const nav = $("nav.tabs");
-    nav.hidden = abas.length < 2;
+    // 009z18: aba "oculta" (abre por um link de outra tela) não aparece na barra; o destaque fica na aba "dono"
+    const visiveis = abas.filter((x) => !x.oculta), daVez = aba.oculta ? aba.dono : aba.id;
+    nav.hidden = visiveis.length < 2;
     nav.setAttribute("aria-label", "Telas de " + mod.nome);
-    nav.replaceChildren(...abas.map((x) => el("a", { href: `#${mod.id}/${x.id}`, "data-view": x.id, "aria-current": x.id === aba.id ? "page" : null },
+    nav.replaceChildren(...visiveis.map((x) => el("a", { href: `#${mod.id}/${x.id}`, "data-view": x.id, "aria-current": x.id === daVez ? "page" : null },
       x.nome, x.contador ? el("span", { class: "count" + (x.alerta ? " alert" : ""), id: x.contador, hidden: true, text: "0" }) : null)));
     // contadores voltam a aparecer na hora (os spans das abas foram recriados)
     for (const [id, n] of Object.entries(App.valores)) App.contador(id, n);
@@ -589,7 +593,7 @@
   // (a página não recarrega sozinha). Ao voltar para a aba (no máximo uma vez a cada 5 min) e, com a aba aberta, a cada 30 min, o app confere o versao.txt
   // do site e, se mudou, mostra um aviso com "Atualizar agora". VERSAO_APP = o conteúdo do versao.txt
   // desta publicação (trocar os dois juntos, com o ?v= do index.html).
-  const VERSAO_APP = "009z17b";
+  const VERSAO_APP = "009z18";
   let versaoConferida = 0;
   async function conferirVersao(forcar = false) {
     if (!forcar && Date.now() - versaoConferida < 300000) return;

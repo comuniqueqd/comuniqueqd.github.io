@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=009z17b">
+<link rel="stylesheet" href="estilo.css?v=009z18">
 </head>
 <body>
 <a class="pular" href="#conteudo">Ir para o conteúdo</a>
@@ -356,10 +356,54 @@
       <div id="pa-historico" class="protege-foco"></div></details>
   </section>
   <section class="view" id="v-pa-sem" hidden>
-    <div class="inicio-topo"><h2>Sem chamar</h2>
+    <div class="inicio-topo"><h2>Parceiros</h2>
       <select id="pa-sem-cidade" aria-label="Cidade" style="width:auto"><option value="">Todas as cidades</option></select></div>
-    <p class="sub">Lojas que pararam de chamar ou estão chamando menos, e parceiros ativados que ainda não fizeram o primeiro pedido. Vem dos arquivos do Tableau.</p>
-    <div id="pa-sem-lista"></div>
+    <p class="sub">Compara a última semana com a média das 4 semanas anteriores, até o último dia enviado de cada cidade. Escolha um grupo para ver a lista.</p>
+    <div id="pa-sem-grupos" class="mon-grupos" role="group" aria-label="Grupos de parceiros"></div>
+    <div id="pa-sem-lista" class="protege-foco"></div>
+    <details class="panel mon-sem-pedido" id="pa-sem-pedido-box"><summary id="pa-sem-pedido-tit">Ativados que ainda não chamaram</summary><div id="pa-sem-pedido"></div></details>
+  </section>
+  <section class="view" id="v-mon-cidade" hidden>
+    <div class="inicio-topo"><h2>Cidade</h2><p class="meta" id="mc-dados" role="status"></p></div>
+    <form class="panel mon-filtros" id="mc-filtros">
+      <label>Cidade <select id="mc-cidade"></select></label>
+      <label>Bairro <input id="mc-bairro" type="search" placeholder="Nome do bairro"></label>
+      <label>Data inicial <input id="mc-de" type="date"></label>
+      <label>Data final <input id="mc-ate" type="date"></label>
+      <label>Comparar com <select id="mc-comparar"><option value="anterior">Período anterior (mesmo tamanho)</option><option value="mes">Mesmo período do mês passado</option></select></label>
+      <label>Ordenar por <select id="mc-ordem"><option value="assoc">Tempo até associar</option><option value="pct">% de atrasadas</option><option value="total">Tempo de entrega</option><option value="pedidos">Entregas</option><option value="cancelados">Cancelados</option></select></label>
+      <label>Mínimo de entregas <select id="mc-min"><option value="30">30 ou mais</option><option value="10">10 ou mais</option><option value="0">Qualquer</option></select></label>
+    </form>
+    <div id="mc-corpo" class="protege-foco"></div>
+  </section>
+  <section class="view" id="v-mon-calendario" hidden>
+    <div class="inicio-topo"><h2>Calendário</h2><p class="meta" id="mk-dados" role="status"></p></div>
+    <div class="mon-cidades" id="mk-cidades" role="group" aria-label="Cidade"></div>
+    <details class="mon-como"><summary>Como a cor é calculada</summary>
+      <p>Cada dia soma até 2 pontos em três frentes: clima (previsão de chuva), tempo de entrega e cancelamentos. Tempo e cancelamentos valem 1 ponto comparando com o mesmo dia da semana passada e 1 ponto comparando com o mesmo dia do mês passado. Dia que já aconteceu: o próprio dia contra os dois. Dia que vai acontecer: os dois dias de referência contra a média das últimas 4 semanas.</p>
+      <p>0 ou 1 ponto = tranquilo, 2 = atenção, 3 = alto, 4 = crítico, 5 ou 6 = extremo.</p>
+    </details>
+    <div id="mk-corpo" class="protege-foco"></div>
+  </section>
+  <section class="view" id="v-mon-entregadores" hidden>
+    <div class="inicio-topo"><h2>Entregadores</h2><p class="meta" id="me-dados" role="status"></p></div>
+    <form class="panel mon-filtros" id="me-filtros">
+      <label>Entregador <input id="me-busca" type="search" placeholder="Nome ou ID"></label>
+      <label>Cidade <select id="me-cidade"><option value="">Todas as cidades</option></select></label>
+      <label>Período <select id="me-dias"><option value="30">Últimos 30 dias</option><option value="7">Últimos 7 dias</option><option value="60">Últimos 60 dias</option></select></label>
+      <label>Mínimo de entregas <select id="me-min"><option value="30">30 ou mais</option><option value="10">10 ou mais</option><option value="0">Qualquer</option></select></label>
+    </form>
+    <div id="me-numeros" class="mon-numeros"></div>
+    <div class="mon-lista-topo">
+      <h3 id="me-lista-tit">Quem mais pesa no SLA</h3>
+      <div class="seg" role="group" aria-label="Ordem da lista">
+        <button type="button" data-me-modo="pesa" aria-pressed="true">Quem mais pesa</button>
+        <button type="button" data-me-modo="ajuda" aria-pressed="false">Quem mais ajuda</button>
+      </div>
+      <span class="meta" id="me-contagem"></span>
+    </div>
+    <p class="meta mon-explica" id="me-explica"></p>
+    <div id="me-lista" class="protege-foco"></div>
   </section>
 
   <!-- 009b: Financeiro -->
@@ -450,18 +494,19 @@
   <section class="view" id="v-bq-pedidos" hidden>
     <div class="ped-topo">
       <div>
-        <h2>Pedidos fora do limite</h2>
-        <p class="sub">Pedidos que passaram do limite. Nada é aplicado sozinho: cada caso vira uma sugestão, e uma pessoa confirma ou descarta.</p>
+        <h2 id="ped-titulo">Pedidos atrasados</h2>
+        <p class="sub" id="ped-sub">Os pedidos que passaram do limite nos últimos 45 dias. Para registrar uma restrição, abra o pedido e confira.</p>
+        <a class="btn small" href="#monitoramento/entregadores" id="ped-voltar">Voltar para Entregadores</a>
       </div>
       <p class="meta ped-atualizado" id="ped-atualizado" role="status"></p>
     </div>
-    <div class="ped-numeros" id="ped-numeros"></div>
+    <div class="ped-numeros" id="ped-numeros" hidden></div>
     <div class="ped-linha-filtros">
       <div class="tiles filtro-contagem" role="group" aria-label="Filtrar pelo tipo" id="ped-tipos"></div>
       <select id="ped-cidade" aria-label="Cidade"><option value="">Todas as cidades</option></select>
     </div>
     <div class="ped-linha-filtros">
-      <div class="tiles filtro-contagem" role="group" aria-label="Filtrar pela situação" id="ped-situacoes"></div>
+      <div class="tiles filtro-contagem" role="group" aria-label="Filtrar pela situação" id="ped-situacoes" hidden></div>
       <input id="ped-busca" class="ped-busca" type="search" placeholder="Buscar por entregador, ID ou código do pedido" aria-label="Buscar pedidos">
     </div>
     <details class="ped-mais-filtros"><summary>Mais filtros (período e loja)</summary>
@@ -783,24 +828,25 @@
 <script src="supabase-config.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha384-BWcjm9OdFth9TbhCxZPdm+gAOUMAzQy9nmTs12ioXdCcbVnJaPMn+fMUoQCLt60R" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="js/base.js?v=009z17b"></script>
-<script src="js/icones.js?v=009z17b"></script>
-<script src="js/inicio.js?v=009z17b"></script>
-<script src="js/ativacao.js?v=009z17b"></script>
-<script src="js/bloqueios.js?v=009z17b"></script>
-<script src="js/pedidos.js?v=009z17b"></script>
-<script src="js/entregadores.js?v=009z17b"></script>
-<script src="js/atividades.js?v=009z17b"></script>
-<script src="js/painel.js?v=009z17b"></script>
-<script src="js/avisos.js?v=009z17b"></script>
-<script src="js/analises.js?v=009z17b"></script>
-<script src="js/registros.js?v=009z17b"></script>
-<script src="js/equipe.js?v=009z17b"></script>
-<script src="js/ferramentas.js?v=009z17b"></script>
-<script src="js/financeiro.js?v=009z17b"></script>
-<script src="js/parceiros.js?v=009z17b"></script>
-<script src="js/busca.js?v=009z17b"></script>
-<script src="js/sons.js?v=009z17b"></script>
-<script src="js/agora.js?v=009z17b"></script>
+<script src="js/base.js?v=009z18"></script>
+<script src="js/icones.js?v=009z18"></script>
+<script src="js/inicio.js?v=009z18"></script>
+<script src="js/ativacao.js?v=009z18"></script>
+<script src="js/bloqueios.js?v=009z18"></script>
+<script src="js/pedidos.js?v=009z18"></script>
+<script src="js/monitoramento.js?v=009z18"></script>
+<script src="js/entregadores.js?v=009z18"></script>
+<script src="js/atividades.js?v=009z18"></script>
+<script src="js/painel.js?v=009z18"></script>
+<script src="js/avisos.js?v=009z18"></script>
+<script src="js/analises.js?v=009z18"></script>
+<script src="js/registros.js?v=009z18"></script>
+<script src="js/equipe.js?v=009z18"></script>
+<script src="js/ferramentas.js?v=009z18"></script>
+<script src="js/financeiro.js?v=009z18"></script>
+<script src="js/parceiros.js?v=009z18"></script>
+<script src="js/busca.js?v=009z18"></script>
+<script src="js/sons.js?v=009z18"></script>
+<script src="js/agora.js?v=009z18"></script>
 </body>
 </html>

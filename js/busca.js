@@ -118,10 +118,17 @@
   campo.placeholder = "Buscar ID ou nome (Ctrl+K)";
 
   // ---------- o que há de novo ----------
-  const VERSAO = "009z14";
+  const VERSAO = "009z18";
   // 008, 008b e 008c saem como atualizações ligadas: cada uma no seu bloco, da mais nova para a mais antiga
   // (pedido do usuário: acrescentar as novas sem tirar as anteriores).
   const VERSOES = [
+    { versao: "009z18", tema: "Monitoramento novo", itens: [
+      ["Veja quem mais pesa e quem mais ajuda no SLA", "O Monitoramento abre em Entregadores: o SLA (entregas em até 30 min), o ranking do impacto de cada entregador e, ao clicar na linha, de onde vêm os atrasos. “Ver os pedidos atrasados” abre os pedidos dele, com Registrar restrição.", 'nav.modulos a[data-mod="monitoramento"]'],
+      ["Acompanhe os parceiros em quatro grupos", "A aba Parceiros separa quem parou de chamar, quem está chamando menos, quem voltou e quem está chamando mais, com as barras das últimas 8 semanas."],
+      ["Encontre os bairros e horários difíceis", "A aba Cidade mostra os bairros com mais demora para associar, as lojas com mais atrasos e o mapa de atrasos e cancelamentos por dia e hora."],
+      ["Planeje os dias de risco", "A aba Calendário pinta cada dia pela chuva prevista, pelo tempo de entrega e pelos cancelamentos, comparando com a semana e o mês passados, e guarda o planejamento do dia."],
+      ["Envie também os cancelados", "Em Enviar dados, o arquivo de etapas baixado com Status CANCELADO entra marcado como Cancelados, para todas as cidades de uma vez."],
+    ] },
     { versao: "009z14", tema: "A rota, o bairro e quem parou de chamar", itens: [
       ["Veja quem saiu junto no mesmo pedido", "No Monitoramento, o cartão do pedido que saiu em rota tem “Ver a rota”: os outros pedidos, na ordem da entrega, com o bairro e o horário.", 'nav.modulos a[data-mod="monitoramento"]'],
       ["Saiba o bairro de cada entrega", "O cartão do pedido mostra cidade, bairro e loja, e as Análises dos pedidos ganharam o card dos bairros onde a entrega mais demora."],
